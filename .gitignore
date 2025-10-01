@@ -44,3 +44,4 @@ bin_linux/src
 !libstdc++-6.dll
 *.vsidx
 *.sqlite
+.vs/slnx.sqlite
