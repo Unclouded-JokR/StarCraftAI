@@ -1,6 +1,7 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
+#include "../../visualstudio/CombatManager.h"
 
 StarterBot::StarterBot()
 {
@@ -39,9 +40,13 @@ void StarterBot::onFrame()
     // Draw unit health bars, which brood war unfortunately does not do
     Tools::DrawUnitHealthBars();
 
+    //Combat testing, non-worker units will start attacking once enemies are within LOS
+	Combat::Update();
+
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
 }
+
 
 // Send our idle workers to mine minerals so they don't just stand there
 void StarterBot::sendIdleWorkersToMinerals()
@@ -141,13 +146,13 @@ void StarterBot::onSendText(std::string text)
 // so this will trigger when you issue the build command for most units
 void StarterBot::onUnitCreate(BWAPI::Unit unit)
 { 
-	
+	BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
 }
 
 // Called whenever a unit finished construction, with a pointer to the unit
 void StarterBot::onUnitComplete(BWAPI::Unit unit)
 {
-	
+    BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
 }
 
 // Called whenever a unit appears, with a pointer to the destroyed unit
