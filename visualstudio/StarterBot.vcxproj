@@ -24,6 +24,12 @@
     <ClInclude Include="..\src\starterbot\ReplayParser.h" />
     <ClInclude Include="..\src\starterbot\StarterBot.h" />
     <ClInclude Include="..\src\starterbot\Tools.h" />
+    <ClInclude Include="BuildManager.h" />
+    <ClInclude Include="CombatManager.h" />
+    <ClInclude Include="EconomyManager.h" />
+    <ClInclude Include="InformationManager.h" />
+    <ClInclude Include="ScoutingManager.h" />
+    <ClInclude Include="StrategyManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\starterbot\main.cpp" />
@@ -31,6 +37,12 @@
     <ClCompile Include="..\src\starterbot\ReplayParser.cpp" />
     <ClCompile Include="..\src\starterbot\StarterBot.cpp" />
     <ClCompile Include="..\src\starterbot\Tools.cpp" />
+    <ClCompile Include="BuildManager.cpp" />
+    <ClCompile Include="CombatManager.cpp" />
+    <ClCompile Include="EconomyManager.cpp" />
+    <ClCompile Include="InformationManager.cpp" />
+    <ClCompile Include="ScoutingManager.cpp" />
+    <ClCompile Include="StrategyManager.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>StarterBot</ProjectName>
