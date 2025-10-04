@@ -1,6 +1,7 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
+#include "../../visualstudio/StrategyManager.h"
 #include "../../visualstudio/CombatManager.h"
 
 StarterBot::StarterBot()
@@ -20,6 +21,9 @@ void StarterBot::onStart()
 
     // Call MapTools OnStart
     m_mapTools.onStart();
+
+    //Strategy Manager OnStart()
+    strategyManager.onStart();
 }
 
 // Called on each frame of the game
@@ -42,6 +46,9 @@ void StarterBot::onFrame()
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
 	Combat::Update();
+
+    //Strategy
+    strategyManager.onFrame();
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
