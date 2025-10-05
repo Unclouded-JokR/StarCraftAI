@@ -2,6 +2,72 @@
 
 #include <BWAPI.h>
 
+class State
+{
+public:
+	State() {}
+	virtual void enter() {}
+	virtual void exit(State* state) {}
+	virtual void evaluate(State* state) {}
+	virtual ~State() {}
+};
+
+class Rage : public State
+{
+public:
+	int timeWhenRageEntered = 0;
+	int rageTime = (30 * 24); //30 Seconds
+
+	void enter() override
+	{
+		const int frame = BWAPI::Broodwar->getFrameCount();
+		const int seconds = frame / (24);
+
+		timeWhenRageEntered = seconds;
+
+		BWAPI::Broodwar->sendText("Entered Rage");
+	}
+
+	void exit(State* state) override
+	{
+		BWAPI::Broodwar->sendText("Rage Ended");
+		state->enter();
+	}
+
+	void evaluate(State* state) override 
+	{
+		const int frame = BWAPI::Broodwar->getFrameCount();
+		const int seconds = frame / (24);
+
+		//Add strategy anlysis here
+
+		if (seconds == rageTime + timeWhenRageEntered)
+			exit(state);
+	}
+};
+
+class Content : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Content");
+		std::cout << "Content Entered" << '\n';
+	}
+
+	void exit(State* state) override
+	{
+		BWAPI::Broodwar->sendText("No longer Content");
+	}
+
+	void evaluate(State* state) override
+	{
+
+	}
+};
+
+
 class StrategyManager
 {
 public:
@@ -14,22 +80,7 @@ public:
 	void onFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
 	void onEnd(bool isWinner);
-	//add evaluate position function to add to ego for when we are in a stronger position.
 
 private:
-	//State currentState; //set to idle state
+	State* currentState; //go over smart pointers
 };
-
-//class State
-//{
-//public:
-//	virtual void enter();
-//	virtual void exit();
-//	virtual void evaluate();
-//};
-
-//Rage
-//Content
-//Denial
-//Ego
-//Angry
