@@ -15,8 +15,9 @@ void StrategyManager::onStart()
 
 void StrategyManager::onFrame()
 {
-	int frame = BWAPI::Broodwar->getFrameCount();
-	int seconds = frame / (24);
+	const int frame = BWAPI::Broodwar->getFrameCount();
+	int previousFrameSecond = 0;
+	const int seconds = frame / (24);
 
 	State* state = StrategyManager::currentState->evaluate();
 	if (state != NULL)
@@ -27,6 +28,10 @@ void StrategyManager::onFrame()
 		StrategyManager::currentState->enter();
 	}
 
-	/*if(seconds % 5 == 0)
-		std::cout << seconds << " have passed since last encounter with enemy." << '\n';*/
+	if (seconds % 5 == 0)
+	{
+		StrategyManager::boredomMeter += boredomPerSecond;
+	}
+
+	StrategyManager::printBoredomMeter();
 }

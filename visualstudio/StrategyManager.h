@@ -75,6 +75,9 @@ class StrategyManager
 {
 public:
 	StrategyManager();
+	float boredomMeter = 0.0f; //Value between 0-1
+	float angerMeter = 0.0f; //Value between 0-1;
+
 	float boredomPerSecond = 0.0001f;
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
@@ -82,6 +85,28 @@ public:
 	void onFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
 	void onEnd(bool isWinner);
+
+
+	void printBoredomMeter()
+	{
+		std::cout << "Boredometer = [";
+
+		for (float i = 0.0; i < 1.0; i += .1f)
+		{
+			if (boredomMeter > i)
+			{
+				std::cout << "=";
+			}
+			else
+			{
+				std::cout << "-";
+			}
+		}
+
+		std::cout << "] ";
+
+		std::cout << (boredomMeter * 100.0f) << "\n";
+	}
 
 private:
 	State* currentState; //go over smart pointers
