@@ -5,14 +5,37 @@
 class State
 {
 public:
-	State() {}
-	virtual void enter() {}
-	virtual void exit(State* state) {}
-	virtual void evaluate(State* state) {}
-	virtual ~State() {}
+	State() = default;
+	virtual void enter() = 0;
+	virtual void exit() = 0;
+	virtual State* evaluate() = 0;
+	virtual ~State() = default;
 };
 
-class Rage : public State
+
+class ContentState : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Content");
+		std::cout << "Content Entered" << '\n';
+	}
+
+	void exit() override
+	{
+		BWAPI::Broodwar->sendText("No longer Content");
+	}
+
+	State* evaluate() override
+	{
+		return NULL;
+	}
+};
+
+
+class RageState : public State
 {
 public:
 	int timeWhenRageEntered = 0;
@@ -28,42 +51,22 @@ public:
 		BWAPI::Broodwar->sendText("Entered Rage");
 	}
 
-	void exit(State* state) override
+	void exit() override
 	{
 		BWAPI::Broodwar->sendText("Rage Ended");
-		state->enter();
 	}
 
-	void evaluate(State* state) override 
+	State* evaluate() override 
 	{
 		const int frame = BWAPI::Broodwar->getFrameCount();
 		const int seconds = frame / (24);
 
 		//Add strategy anlysis here
 
-		if (seconds == rageTime + timeWhenRageEntered)
-			exit(state);
-	}
-};
+		if (seconds == rageTime + timeWhenRageEntered) //CHeck if rage levels are still not above expected
+			return new ContentState();
 
-class Content : public State
-{
-public:
-
-	void enter() override
-	{
-		BWAPI::Broodwar->sendText("Entered Content");
-		std::cout << "Content Entered" << '\n';
-	}
-
-	void exit(State* state) override
-	{
-		BWAPI::Broodwar->sendText("No longer Content");
-	}
-
-	void evaluate(State* state) override
-	{
-
+		return NULL;
 	}
 };
 
@@ -72,7 +75,6 @@ class StrategyManager
 {
 public:
 	StrategyManager();
-
 	float boredomPerSecond = 0.0001f;
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
