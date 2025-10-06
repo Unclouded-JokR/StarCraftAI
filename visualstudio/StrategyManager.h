@@ -34,6 +34,90 @@ public:
 	}
 };
 
+class BoredomState : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Bored");
+		std::cout << "Content Entered" << '\n';
+	}
+
+	void exit() override
+	{
+		BWAPI::Broodwar->sendText("No longer Bored");
+	}
+
+	State* evaluate() override
+	{
+		return NULL;
+	}
+};
+
+class DenialState : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Denial");
+		std::cout << "Content Entered" << '\n';
+	}
+
+	void exit() override
+	{
+		BWAPI::Broodwar->sendText("No longer in Denial");
+	}
+
+	State* evaluate() override
+	{
+		return NULL;
+	}
+};
+
+class EgoState : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Ego");
+		std::cout << "Content Entered" << '\n';
+	}
+
+	void exit() override
+	{
+		BWAPI::Broodwar->sendText("No longer Egoing");
+	}
+
+	State* evaluate() override
+	{
+		return NULL;
+	}
+};
+
+class AngryState : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Angry");
+		std::cout << "Content Entered" << '\n';
+	}
+
+	void exit() override
+	{
+		BWAPI::Broodwar->sendText("No longer Angy");
+	}
+
+	State* evaluate() override
+	{
+		return NULL;
+	}
+};
+
 
 class RageState : public State
 {
@@ -86,12 +170,11 @@ public:
 	void onUnitDestroy(BWAPI::Unit unit);
 	void onEnd(bool isWinner);
 
-
 	void printBoredomMeter()
 	{
 		std::cout << "Boredometer = [";
 
-		for (float i = 0.0; i < 1.0; i += .1f)
+		for (float i = 0.1f; i < 1.0f; i += .1f)
 		{
 			if (boredomMeter > i)
 			{
