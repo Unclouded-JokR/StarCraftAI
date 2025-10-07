@@ -9,9 +9,9 @@
     <ClCompile Include="CombatManager.cpp" />
     <ClCompile Include="ScoutingManager.cpp" />
     <ClCompile Include="EconomyManager.cpp" />
-    <ClCompile Include="BuildManager.cpp" />
     <ClCompile Include="StrategyManager.cpp" />
     <ClCompile Include="InformationManager.cpp" />
+    <ClCompile Include="BuildManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
