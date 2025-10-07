@@ -1,5 +1,6 @@
 #include "StrategyManager.h"
 #include <BWAPI.h>
+constexpr int FRAMES_PER_SECOND = 24;
 
 StrategyManager::StrategyManager()
 {
@@ -22,29 +23,16 @@ void BoredomState::exit(StrategyManager& strategyManager)
 
 void BoredomState::evaluate(StrategyManager& strategyManager)
 {
-	if (strategyManager.boredomMeter >= 1.0f)
+	if (strategyManager.boredomMeter >= 1.0f || strategyManager.angerMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::angryState;
-		enter(strategyManager);
-		return;
-	}
-	else if (strategyManager.angerMeter >= 1.0f)
-	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::angryState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::angryState);
 		return;
 	}
 	else if (strategyManager.egoMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::egoState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::egoState);
 		return;
 	}
-
-
 }
 
 void ContentState::enter(StrategyManager& strategyManager)
@@ -66,23 +54,17 @@ void ContentState::evaluate(StrategyManager& strategyManager)
 {
 	if (strategyManager.boredomMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::boredomState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::boredomState);
 		return;
 	}
 	else if (strategyManager.angerMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::denialState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::denialState);
 		return;
 	}
 	else if (strategyManager.egoMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::egoState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::egoState);
 		return;
 	}
 }
@@ -103,23 +85,17 @@ void DenialState::evaluate(StrategyManager& strategyManager)
 {
 	if (strategyManager.boredomMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::boredomState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::boredomState);
 		return;
 	}
 	else if (strategyManager.angerMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::angryState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::angryState);
 		return;
 	}
 	else if (strategyManager.egoMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::egoState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::egoState);
 		return;
 	}
 
@@ -140,16 +116,12 @@ void EgoState::evaluate(StrategyManager& strategyManager)
 {
 	if (strategyManager.boredomMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::boredomState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::boredomState);
 		return;
 	}
 	else if (strategyManager.angerMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::denialState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::denialState);
 		return;
 	}
 
@@ -159,7 +131,7 @@ void EgoState::evaluate(StrategyManager& strategyManager)
 void AngryState::enter(StrategyManager& strategyManager)
 {
 	BWAPI::Broodwar->sendText("Entered Angry");
-	std::cout << "Content Entered" << '\n';
+	std::cout << "Angry Entered" << '\n';
 }
 
 void AngryState::exit(StrategyManager& strategyManager)
@@ -171,9 +143,7 @@ void AngryState::evaluate(StrategyManager& strategyManager)
 {
 	if (strategyManager.egoMeter >= 1.0f)
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::egoState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::egoState);
 		return;
 	}
 
@@ -183,7 +153,7 @@ void AngryState::evaluate(StrategyManager& strategyManager)
 void RageState::enter(StrategyManager& strategyManager)
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	const int seconds = frame / (24);
+	const int seconds = frame / (FRAMES_PER_SECOND);
 
 	timeWhenRageEntered = seconds;
 
@@ -208,9 +178,7 @@ void RageState::evaluate(StrategyManager& strategyManager)
 
 	if (seconds == rageTime + timeWhenRageEntered) //Check if rage levels are still not above expected
 	{
-		exit(strategyManager);
-		strategyManager.currentState = &StrategyManager::contentState;
-		enter(strategyManager);
+		strategyManager.changeState(&StrategyManager::contentState);
 		return;
 	}
 
@@ -228,14 +196,14 @@ AngryState StrategyManager::angryState;
 void StrategyManager::onStart()
 {
 	std::cout << "StrategyManager is a go!" << '\n';
-	StrategyManager::currentState = new ContentState();
+	StrategyManager::currentState = &StrategyManager::contentState;
 	currentState->enter(*this);
 }
 
 void StrategyManager::onFrame()
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	const int seconds = frame / (24);
+	const int seconds = frame / (FRAMES_PER_SECOND);
 
 	if ((frame - previousFrameSecond) == 24)
 	{
@@ -245,7 +213,7 @@ void StrategyManager::onFrame()
 
 	StrategyManager::currentState->evaluate(*this);
 
-	StrategyManager::printBoredomMeter();
+	//StrategyManager::printBoredomMeter();
 }
 
 void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
@@ -260,6 +228,13 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 	{
 		std::cout << "Enemy unit died" << std::endl;
 	}
+}
+
+void StrategyManager::changeState(State* state)
+{
+	currentState->exit(*this);
+	currentState = state;
+	currentState->enter(*this);
 }
 
 void StrategyManager::printBoredomMeter()
@@ -289,7 +264,7 @@ void StrategyManager::printAngerMeter()
 
 	for (float i = 0.1f; i < 1.0f; i += .1f)
 	{
-		if (boredomMeter > i)
+		if (angerMeter > i)
 		{
 			std::cout << "=";
 		}

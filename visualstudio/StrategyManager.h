@@ -73,6 +73,7 @@ public:
 	void onUnitDestroy(BWAPI::Unit unit);
 	void printBoredomMeter();
 	void printAngerMeter();
+	void changeState(State*);
 
 	static ContentState contentState;
 	static BoredomState boredomState;
