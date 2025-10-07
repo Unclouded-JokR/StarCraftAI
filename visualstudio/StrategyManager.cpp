@@ -19,6 +19,12 @@ void StrategyManager::onFrame()
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / (24);
 
+	if ((frame - previousFrameSecond) == 24)
+	{
+		previousFrameSecond = frame;
+		StrategyManager::boredomMeter += boredomPerSecond;
+	}
+
 	State* state = StrategyManager::currentState->evaluate(*this);
 	if (state != nullptr)
 	{
@@ -28,13 +34,21 @@ void StrategyManager::onFrame()
 		StrategyManager::currentState->enter();
 	}
 
-	if ((frame - previousFrameSecond) == 24)
-	{
-		previousFrameSecond = frame;
-		StrategyManager::boredomMeter += boredomPerSecond;
-	}
-
 	//StrategyManager::printBoredomMeter();
+}
+
+void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
+{
+	BWAPI::Player owner = unit->getPlayer();
+
+	if (owner == BWAPI::Broodwar->self())
+	{
+		std::cout << "Our unit died" << std::endl;
+	}
+	else if(owner == BWAPI::Broodwar->enemy())
+	{
+		std::cout << "Enemy unit died" << std::endl;
+	}
 }
 
 void StrategyManager::printBoredomMeter()

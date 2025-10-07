@@ -129,7 +129,7 @@ void StarterBot::onEnd(bool isWinner)
 void StarterBot::onUnitDestroy(BWAPI::Unit unit)
 {
 	BWAPI::Broodwar->sendText("A unit was destroyed!");
-	
+    strategyManager.onUnitDestroy(unit);
 }
 
 // Called whenever a unit is morphed, with a pointer to the unit
