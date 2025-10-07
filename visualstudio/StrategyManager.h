@@ -162,7 +162,7 @@ public:
 	float boredomMeter = 0.0f; //Value between 0-1
 	float angerMeter = 0.0f; //Value between 0-1;
 
-	float boredomPerSecond = 0.0001f;
+	float boredomPerSecond = 0.01f;
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
 	void onStart();
@@ -172,7 +172,7 @@ public:
 
 	void printBoredomMeter()
 	{
-		std::cout << "Boredometer = [";
+		std::cout << "Boredom Meter = [";
 
 		for (float i = 0.1f; i < 1.0f; i += .1f)
 		{
@@ -188,7 +188,28 @@ public:
 
 		std::cout << "] ";
 
-		std::cout << (boredomMeter * 100.0f) << "\n";
+		std::cout << (boredomMeter * 100.0f) << "%\n";
+	}
+
+	void printAngerMeter()
+	{
+		std::cout << "Anger Meter = [";
+
+		for (float i = 0.1f; i < 1.0f; i += .1f)
+		{
+			if (boredomMeter > i)
+			{
+				std::cout << "=";
+			}
+			else
+			{
+				std::cout << "-";
+			}
+		}
+
+		std::cout << "] ";
+
+		std::cout << (angerMeter * 100.0f) << "%\n";
 	}
 
 private:

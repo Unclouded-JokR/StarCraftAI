@@ -6,6 +6,8 @@ StrategyManager::StrategyManager()
 
 }
 
+int previousFrameSecond = 0;
+
 void StrategyManager::onStart()
 {
 	std::cout << "StrategyManager is a go!" << '\n';
@@ -16,7 +18,6 @@ void StrategyManager::onStart()
 void StrategyManager::onFrame()
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	int previousFrameSecond = 0;
 	const int seconds = frame / (24);
 
 	State* state = StrategyManager::currentState->evaluate();
@@ -28,8 +29,10 @@ void StrategyManager::onFrame()
 		StrategyManager::currentState->enter();
 	}
 
-	if (seconds % 5 == 0)
+	//std::cout << "Frame " << frame << ": " << frame << " - " << 24 << " = " << (frame - previousFrameSecond) << "\n";
+	if ((frame - previousFrameSecond) == 24)
 	{
+		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
 	}
 
