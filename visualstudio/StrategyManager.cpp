@@ -5,7 +5,6 @@ StrategyManager::StrategyManager()
 {
 
 }
-
 int previousFrameSecond = 0;
 
 void StrategyManager::onStart()
@@ -20,8 +19,8 @@ void StrategyManager::onFrame()
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / (24);
 
-	State* state = StrategyManager::currentState->evaluate();
-	if (state != NULL)
+	State* state = StrategyManager::currentState->evaluate(*this);
+	if (state != nullptr)
 	{
 		StrategyManager::currentState->exit();
 		delete StrategyManager::currentState;
@@ -29,12 +28,53 @@ void StrategyManager::onFrame()
 		StrategyManager::currentState->enter();
 	}
 
-	//std::cout << "Frame " << frame << ": " << frame << " - " << 24 << " = " << (frame - previousFrameSecond) << "\n";
 	if ((frame - previousFrameSecond) == 24)
 	{
 		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
 	}
 
-	StrategyManager::printBoredomMeter();
+	//StrategyManager::printBoredomMeter();
+}
+
+void StrategyManager::printBoredomMeter()
+{
+	std::cout << "Boredom Meter = [";
+
+	for (float i = 0.1f; i < 1.0f; i += .1f)
+	{
+		if (boredomMeter > i)
+		{
+			std::cout << "=";
+		}
+		else
+		{
+			std::cout << "-";
+		}
+	}
+
+	std::cout << "] ";
+
+	std::cout << (boredomMeter * 100.0f) << "%\n";
+}
+
+void StrategyManager::printAngerMeter()
+{
+	std::cout << "Anger Meter = [";
+
+	for (float i = 0.1f; i < 1.0f; i += .1f)
+	{
+		if (boredomMeter > i)
+		{
+			std::cout << "=";
+		}
+		else
+		{
+			std::cout << "-";
+		}
+	}
+
+	std::cout << "] ";
+
+	std::cout << (angerMeter * 100.0f) << "%\n";
 }

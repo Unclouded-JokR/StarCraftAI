@@ -2,16 +2,58 @@
 
 #include <BWAPI.h>
 
+class State;
+class StrategyManager
+{
+public:
+	StrategyManager();
+	float boredomMeter = 0.0f; //Value between 0-1
+	float angerMeter = 0.0f; //Value between 0-1;
+	float boredomPerSecond = 0.01f;
+	float angerFromUnitDeath = .005f;
+	float egoFromEnemyUnitDeath = .01f;
+
+	void onStart();
+	void onFrame();
+	void onUnitDestroy(BWAPI::Unit unit);
+	void onEnd(bool isWinner);
+	void printBoredomMeter();
+	void printAngerMeter();
+
+private:
+	State* currentState; //go over smart pointers
+};
+
 class State
 {
 public:
 	State() = default;
 	virtual void enter() = 0;
 	virtual void exit() = 0;
-	virtual State* evaluate() = 0;
+	virtual State* evaluate(StrategyManager &strategyManager) = 0;
 	virtual ~State() = default;
 };
 
+class BoredomState : public State
+{
+public:
+
+	void enter() override
+	{
+		BWAPI::Broodwar->sendText("Entered Bored");
+		std::cout << "Boredom Entered" << '\n';
+	}
+
+	void exit() override
+	{
+		BWAPI::Broodwar->sendText("No longer Bored");
+	}
+
+	State* evaluate(StrategyManager &strategyManager) override
+	{
+		return nullptr;
+	}
+};
 
 class ContentState : public State
 {
@@ -28,30 +70,14 @@ public:
 		BWAPI::Broodwar->sendText("No longer Content");
 	}
 
-	State* evaluate() override
+	State* evaluate(StrategyManager& strategyManager) override
 	{
-		return NULL;
-	}
-};
+		if (strategyManager.boredomMeter >= 1.0f)
+		{
+			return new BoredomState();
+		}
 
-class BoredomState : public State
-{
-public:
-
-	void enter() override
-	{
-		BWAPI::Broodwar->sendText("Entered Bored");
-		std::cout << "Content Entered" << '\n';
-	}
-
-	void exit() override
-	{
-		BWAPI::Broodwar->sendText("No longer Bored");
-	}
-
-	State* evaluate() override
-	{
-		return NULL;
+		return nullptr;
 	}
 };
 
@@ -70,9 +96,9 @@ public:
 		BWAPI::Broodwar->sendText("No longer in Denial");
 	}
 
-	State* evaluate() override
+	State* evaluate(StrategyManager& strategyManager) override
 	{
-		return NULL;
+		return nullptr;
 	}
 };
 
@@ -91,9 +117,9 @@ public:
 		BWAPI::Broodwar->sendText("No longer Egoing");
 	}
 
-	State* evaluate() override
+	State* evaluate(StrategyManager& strategyManager) override
 	{
-		return NULL;
+		return nullptr;
 	}
 };
 
@@ -112,12 +138,11 @@ public:
 		BWAPI::Broodwar->sendText("No longer Angy");
 	}
 
-	State* evaluate() override
+	State* evaluate(StrategyManager& strategyManager) override
 	{
-		return NULL;
+		return nullptr;
 	}
 };
-
 
 class RageState : public State
 {
@@ -140,78 +165,16 @@ public:
 		BWAPI::Broodwar->sendText("Rage Ended");
 	}
 
-	State* evaluate() override 
+	State* evaluate(StrategyManager &strategyManager) override
 	{
 		const int frame = BWAPI::Broodwar->getFrameCount();
 		const int seconds = frame / (24);
 
 		//Add strategy anlysis here
 
-		if (seconds == rageTime + timeWhenRageEntered) //CHeck if rage levels are still not above expected
+		if (seconds == rageTime + timeWhenRageEntered) //Check if rage levels are still not above expected
 			return new ContentState();
 
-		return NULL;
+		return nullptr;
 	}
-};
-
-
-class StrategyManager
-{
-public:
-	StrategyManager();
-	float boredomMeter = 0.0f; //Value between 0-1
-	float angerMeter = 0.0f; //Value between 0-1;
-
-	float boredomPerSecond = 0.01f;
-	float angerFromUnitDeath = .005f;
-	float egoFromEnemyUnitDeath = .01f;
-	void onStart();
-	void onFrame();
-	void onUnitDestroy(BWAPI::Unit unit);
-	void onEnd(bool isWinner);
-
-	void printBoredomMeter()
-	{
-		std::cout << "Boredom Meter = [";
-
-		for (float i = 0.1f; i < 1.0f; i += .1f)
-		{
-			if (boredomMeter > i)
-			{
-				std::cout << "=";
-			}
-			else
-			{
-				std::cout << "-";
-			}
-		}
-
-		std::cout << "] ";
-
-		std::cout << (boredomMeter * 100.0f) << "%\n";
-	}
-
-	void printAngerMeter()
-	{
-		std::cout << "Anger Meter = [";
-
-		for (float i = 0.1f; i < 1.0f; i += .1f)
-		{
-			if (boredomMeter > i)
-			{
-				std::cout << "=";
-			}
-			else
-			{
-				std::cout << "-";
-			}
-		}
-
-		std::cout << "] ";
-
-		std::cout << (angerMeter * 100.0f) << "%\n";
-	}
-
-private:
-	State* currentState; //go over smart pointers
 };
