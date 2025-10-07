@@ -16,7 +16,6 @@ public:
 	void onStart();
 	void onFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
-	void onEnd(bool isWinner);
 	void printBoredomMeter();
 	void printAngerMeter();
 
