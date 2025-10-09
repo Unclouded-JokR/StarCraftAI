@@ -1,6 +1,5 @@
 #include "StrategyManager.h"
 #include <BWAPI.h>
-constexpr int FRAMES_PER_SECOND = 24;
 
 StrategyManager::StrategyManager()
 {
@@ -218,13 +217,19 @@ void StrategyManager::onFrame()
 
 void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 {
-	BWAPI::Player owner = unit->getPlayer();
+	if (unit == nullptr)
+		return;
 
-	if (owner == BWAPI::Broodwar->self())
+	//need to make this more dynammic for scouts and what not but for now this works for general case.
+
+	BWAPI::Player owner = unit->getPlayer();
+	BWAPI::UnitType unitType = unit->getType();
+
+	if (owner == BWAPI::Broodwar->self() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
 		std::cout << "Our unit died" << std::endl;
 	}
-	else if(owner == BWAPI::Broodwar->enemy())
+	else if(owner == BWAPI::Broodwar->enemy() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
 		std::cout << "Enemy unit died" << std::endl;
 	}
