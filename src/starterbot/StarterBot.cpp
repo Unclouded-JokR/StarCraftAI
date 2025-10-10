@@ -45,7 +45,7 @@ void StarterBot::onFrame()
     Tools::DrawUnitHealthBars();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
-	Combat::Update();
+	CombatManager::Update();
 
     //Strategy
     strategyManager.onFrame();

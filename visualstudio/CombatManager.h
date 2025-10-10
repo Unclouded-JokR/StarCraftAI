@@ -1,6 +1,6 @@
 #pragma once
-class CombatManager
-{
+class CombatManager{
+public:
+    static void Update();
     void AttackClosest();
-    void Update();
 };
