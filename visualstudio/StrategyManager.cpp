@@ -143,7 +143,9 @@ void StrategyAngryState::enter(StrategyManager& strategyManager)
 
 void StrategyAngryState::exit(StrategyManager& strategyManager)
 {
-	BWAPI::Broodwar->sendText("No longer Angy");
+	BWAPI::Broodwar->sendText("No longer Angry");
+	strategyManager.angerMeter = 0.0f;
+	strategyManager.boredomMeter = 0.0f;
 }
 
 void StrategyAngryState::evaluate(StrategyManager& strategyManager)

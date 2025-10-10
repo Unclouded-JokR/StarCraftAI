@@ -1,8 +1,13 @@
 #pragma once
+#include "StrategyManager.h"
+
 #include <BWAPI.h>
 
 class ProtoBotCommander
 {
+public:
+	StrategyManager strategyManager;
+
 	void onStart();
 	void onFrame();
 	void onEnd(bool isWinner);
