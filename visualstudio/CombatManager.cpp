@@ -2,12 +2,12 @@
 
 #include "../src/starterbot/Tools.h"
 
-void Combat::Update() {
+void CombatManager::Update() {
 	// Send out all units to attack nearest enemy. For testing.
 	AttackClosest();
 }
 
-void Combat::AttackClosest() {
+void CombatManager::AttackClosest() {
 	BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
 	BWAPI::Unitset myUnits = BWAPI::Broodwar->self()->getUnits();
 	for (auto& unit : myUnits)
