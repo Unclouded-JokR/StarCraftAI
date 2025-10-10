@@ -1,10 +1,5 @@
 #include "ProtoBotCommander.h"
 
-ProtoBotCommander::ProtoBotCommander()
-{
-
-}
-
 void ProtoBotCommander::onStart()
 {
 	ProtoBotCommander::strategyManager.onStart();

@@ -118,7 +118,6 @@ public:
 class StrategyManager
 {
 public:
-	StrategyManager();
 	float boredomMeter = 0.0f; //Value between 0-1
 	float angerMeter = 0.0f; //Value between 0-1;
 	float egoMeter = 0.0f; //Value between 0-1;

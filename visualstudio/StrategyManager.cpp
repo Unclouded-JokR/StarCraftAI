@@ -1,10 +1,6 @@
 #include "StrategyManager.h"
 #include <BWAPI.h>
 
-StrategyManager::StrategyManager()
-{
-
-}
 int previousFrameSecond = 0;
 
 #pragma region StateDefinitions
