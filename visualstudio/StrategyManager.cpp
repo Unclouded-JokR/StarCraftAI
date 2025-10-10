@@ -12,12 +12,15 @@ void StrategyBoredomState::enter(StrategyManager& strategyManager)
 {
 	BWAPI::Broodwar->sendText("Entered Bored");
 	std::cout << "Boredom Entered" << std::endl;
+
 	strategyManager.boredomMeter = 0.0f;
 }
 
 void StrategyBoredomState::exit(StrategyManager& strategyManager)
 {
 	BWAPI::Broodwar->sendText("No longer Bored");
+
+	strategyManager.boredomMeter = 0.0f;
 }
 
 void StrategyBoredomState::evaluate(StrategyManager& strategyManager)
@@ -39,9 +42,10 @@ void StrategyContentState::enter(StrategyManager& strategyManager)
 	BWAPI::Broodwar->sendText("Entered Content");
 	std::cout << "Content Entered" << std::endl;
 
-	//Set Defaults
+	//After rage or at the start of the game. All emotional meters will be 0.
 	strategyManager.angerMeter = 0.0f;
 	strategyManager.boredomMeter = 0.0f;
+	strategyManager.egoMeter = 0.0f;
 }
 
 void StrategyContentState::exit(StrategyManager& strategyManager)
@@ -78,6 +82,8 @@ void StrategyDenialState::enter(StrategyManager& strategyManager)
 void StrategyDenialState::exit(StrategyManager& strategyManager)
 {
 	BWAPI::Broodwar->sendText("No longer in Denial");
+
+	strategyManager.angerMeter = 0.0f;
 }
 
 void StrategyDenialState::evaluate(StrategyManager& strategyManager)
@@ -109,6 +115,8 @@ void StrategyEgoState::enter(StrategyManager& strategyManager)
 void StrategyEgoState::exit(StrategyManager& strategyManager)
 {
 	BWAPI::Broodwar->sendText("No longer Egoing");
+
+	strategyManager.egoMeter = 0.0f;
 }
 
 void StrategyEgoState::evaluate(StrategyManager& strategyManager)
@@ -184,12 +192,12 @@ void StrategyRageState::evaluate(StrategyManager& strategyManager)
 }
 #pragma endregion
 
-StrategyContentState StrategyManager::contentState;
-StrategyBoredomState StrategyManager::boredomState;
-StrategyEgoState StrategyManager::egoState;
-StrategyDenialState StrategyManager::denialState;
-StrategyRageState StrategyManager::rageState;
-StrategyAngryState StrategyManager::angryState;
+StrategyContentState StrategyManager::contentState("Content");
+StrategyBoredomState StrategyManager::boredomState("Boredom");
+StrategyEgoState StrategyManager::egoState("Ego");
+StrategyDenialState StrategyManager::denialState("Denial");
+StrategyRageState StrategyManager::rageState("Rage");
+StrategyAngryState StrategyManager::angryState("Angry");
 
 
 void StrategyManager::onStart()
@@ -204,15 +212,24 @@ void StrategyManager::onFrame()
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / (FRAMES_PER_SECOND);
 
+	
 	if ((frame - previousFrameSecond) == 24)
 	{
 		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
 	}
 
+	/*if (BWAPI::Broodwar->self()->supplyTotal() > BWAPI::Broodwar->enemy()->supplyUsed() / 2)
+	{
+		
+	}*/
+
+	//Divide by 2 because zergs workers costs .5 supply
+	std::cout << "Enemy total supply " << BWAPI::Broodwar->enemy()->supplyUsed() / 2 << std::endl;
+
 	StrategyManager::currentState->evaluate(*this);
 
-	//StrategyManager::printBoredomMeter();
+	StrategyManager::printBoredomMeter();
 }
 
 void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
@@ -225,14 +242,25 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 	BWAPI::Player owner = unit->getPlayer();
 	BWAPI::UnitType unitType = unit->getType();
 
+
+	/*
+	* For both cases we want to consider the priority of units, workers will add the most points to ego and anger.
+	* 
+	* For now we will add a constant value for all units. Need to create a forumla the considers the unittype and the score of a unit.
+	*/
 	if (owner == BWAPI::Broodwar->self() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
 		std::cout << "Our unit died" << std::endl;
+		StrategyManager::angerMeter += StrategyManager::angerFromUnitDeath;
 	}
 	else if(owner == BWAPI::Broodwar->enemy() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
 		std::cout << "Enemy unit died" << std::endl;
+		StrategyManager::angerMeter += StrategyManager::egoFromEnemyUnitDeath;
 	}
+
+	//Reset boredom to 0 since we had a confrontation
+	StrategyManager::boredomMeter = 0.0f;
 }
 
 void StrategyManager::changeState(StrategyState* state)
@@ -260,7 +288,7 @@ void StrategyManager::printBoredomMeter()
 
 	std::cout << "] ";
 
-	std::cout << (boredomMeter * 100.0f) << "%\n";
+	std::cout << (boredomMeter * 100.0f) << "% " << StrategyManager::currentState->printStateName() << std::endl;
 }
 
 void StrategyManager::printAngerMeter()
@@ -281,5 +309,5 @@ void StrategyManager::printAngerMeter()
 
 	std::cout << "] ";
 
-	std::cout << (angerMeter * 100.0f) << "%\n";
+	std::cout << (angerMeter * 100.0f) << "% " << StrategyManager::currentState->printStateName() << std::endl;;
 }

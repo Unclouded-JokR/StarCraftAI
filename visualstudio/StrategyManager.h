@@ -6,10 +6,18 @@ class StrategyManager;
 
 class StrategyState {
 public:
+	std::string stringStateName;
+	StrategyState(std::string stateName) : stringStateName(stateName) {}
+
 	virtual void enter(StrategyManager& strategyManager) = 0;
 	virtual void exit(StrategyManager& strategyManager) = 0;
 	virtual void evaluate(StrategyManager& strategyManager) = 0;
 	virtual ~StrategyState() = default;
+
+	std::string printStateName()
+	{
+		return "Current state is: " + stringStateName + ".";
+	}
 };
 
 /*
@@ -22,6 +30,7 @@ public:
 */
 class StrategyBoredomState : public StrategyState {
 public:
+	StrategyBoredomState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
 	void exit(StrategyManager& strategyManager) override;
 	void evaluate(StrategyManager& strategyManager) override;
@@ -37,6 +46,7 @@ public:
 */
 class StrategyContentState : public StrategyState {
 public:
+	StrategyContentState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
 	void exit(StrategyManager& strategyManager) override;
 	void evaluate(StrategyManager& strategyManager) override;
@@ -51,6 +61,7 @@ public:
 */
 class StrategyDenialState : public StrategyState {
 public:
+	StrategyDenialState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
 	void exit(StrategyManager& strategyManager) override;
 	void evaluate(StrategyManager& strategyManager) override;
@@ -64,6 +75,7 @@ public:
 */
 class StrategyEgoState : public StrategyState {
 public:
+	StrategyEgoState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
 	void exit(StrategyManager& strategyManager) override;
 	void evaluate(StrategyManager& strategyManager) override;
@@ -77,6 +89,7 @@ public:
 */
 class StrategyAngryState : public StrategyState {
 public:
+	StrategyAngryState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
 	void exit(StrategyManager& strategyManager) override;
 	void evaluate(StrategyManager& strategyManager) override;
@@ -96,6 +109,7 @@ public:
 	int timeWhenRageEntered = 0;
 	int rageTime = 30 * FRAMES_PER_SECOND;
 
+	StrategyRageState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
 	void exit(StrategyManager& strategyManager) override;
 	void evaluate(StrategyManager& strategyManager) override;
@@ -118,6 +132,7 @@ public:
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
 	void printBoredomMeter();
 	void printAngerMeter();
+	void printCurrentState();
 	void changeState(StrategyState*);
 	void battleLost(); //Optionally can makes these two a single function with a bool parameter 
 	void battleWon();
