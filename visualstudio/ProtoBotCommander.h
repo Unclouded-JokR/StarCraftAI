@@ -1,11 +1,23 @@
 #pragma once
 #include "StrategyManager.h"
+#include "EconomyManager.h"
+#include "InformationManager.h"
+#include "ScoutingManager.h"
+#include "BuildManager.h"
+#include "CombatManager.h"
+
 
 #include <BWAPI.h>
 
 class ProtoBotCommander
 {
 public:
+	EconomyManager economyManager;
+	InformationManager informationManager;
+	ScoutingManager scoutingManager;
+	BuildManager buildManager;
+	//Change this to be a class instead of namespace
+	//CombatManager combatManager; 
 	StrategyManager strategyManager;
 
 	void onStart();
