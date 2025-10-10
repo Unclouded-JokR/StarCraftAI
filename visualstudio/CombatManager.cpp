@@ -4,7 +4,7 @@
 
 void CombatManager::Update() {
 	// Send out all units to attack nearest enemy. For testing.
-	AttackClosest();
+	//AttackClosest();
 }
 
 void CombatManager::AttackClosest() {
