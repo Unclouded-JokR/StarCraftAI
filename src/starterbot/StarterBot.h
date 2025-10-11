@@ -3,6 +3,7 @@
 #include "MapTools.h"
 
 #include <BWAPI.h>
+#include "../../visualstudio/ScoutingManager.h"
 
 class StarterBot
 {
@@ -30,4 +31,7 @@ public:
 	void onUnitShow(BWAPI::Unit unit);
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
+
+private:
+	ScoutingManager scoutingManager;
 };

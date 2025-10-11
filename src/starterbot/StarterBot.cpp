@@ -1,7 +1,15 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
-#include "../../visualstudio/CombatManager.h"
+
+#include "CombatManager.h"
+#include "ScoutingManager.h"
+
+#include <BWAPI.h>
+#include <bwem.h>
+
+
+using namespace BWEM;
 
 StarterBot::StarterBot()
 {
@@ -18,6 +26,16 @@ void StarterBot::onStart()
     // Enable the flag that tells BWAPI top let users enter input while bot plays
     BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
+    // Initialize BWEM with BWAPI's game pointer
+    Map::Instance().Initialize();
+
+    // Find the bases for the starting locations
+    bool foundBases = Map::Instance().FindBasesForStartingLocations();
+    assert(foundBases);     // make sure we found the bases
+
+    scoutingManager.onStart();
+
+
     // Call MapTools OnStart
     m_mapTools.onStart();
 }
@@ -25,9 +43,11 @@ void StarterBot::onStart()
 // Called on each frame of the game
 void StarterBot::onFrame()
 {
+    
     // Update our MapTools information
     m_mapTools.onFrame();
 
+    
     // Send our idle workers to mine minerals so they don't just stand there
     sendIdleWorkersToMinerals();
 
@@ -39,6 +59,9 @@ void StarterBot::onFrame()
 
     // Draw unit health bars, which brood war unfortunately does not do
     Tools::DrawUnitHealthBars();
+
+    // Instantly assign a scout for testing (We will change this based on build order)
+    scoutingManager.onFrame();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
 	Combat::Update();
