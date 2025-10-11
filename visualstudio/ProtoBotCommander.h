@@ -5,8 +5,8 @@
 #include "ScoutingManager.h"
 #include "BuildManager.h"
 #include "CombatManager.h"
-
-
+#include "UnitManager.h"
+#include "RequestManager.h"
 #include <BWAPI.h>
 
 class ProtoBotCommander
@@ -31,5 +31,15 @@ public:
 	void onUnitShow(BWAPI::Unit unit);
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
+
+	//Dont know the right implementation for this but will have these methods for now
+	void requestUnit(BWAPI::Unit unit);
+	void requestUnit(BWAPI::Unitset &unit);
+	void requestUnit(BWAPI::UnitType type);
+
+private:
+	UnitManager unitManager;
+	RequestManager requestManager;
+	//Add spenderManager?
 };
 
