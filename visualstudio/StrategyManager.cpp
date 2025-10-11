@@ -223,11 +223,11 @@ void StrategyManager::onFrame()
 	}*/
 
 	//Divide by 2 because zergs workers costs .5 supply
-	std::cout << "Enemy total supply " << BWAPI::Broodwar->enemy()->supplyUsed() / 2 << std::endl;
+	//std::cout << "Enemy total supply " << BWAPI::Broodwar->self()->supplyUsed() / 2 << std::endl;
 
 	StrategyManager::currentState->evaluate(*this);
 
-	StrategyManager::printBoredomMeter();
+	//StrategyManager::printBoredomMeter();
 }
 
 void StrategyManager::onUnitDestroy(BWAPI::Unit unit)

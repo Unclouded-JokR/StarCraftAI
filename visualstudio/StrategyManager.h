@@ -131,7 +131,6 @@ public:
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
 	void printBoredomMeter();
 	void printAngerMeter();
-	void printCurrentState();
 	void changeState(StrategyState*);
 	void battleLost(); //Optionally can makes these two a single function with a bool parameter 
 	void battleWon();
