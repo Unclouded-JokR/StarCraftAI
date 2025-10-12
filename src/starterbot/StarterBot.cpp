@@ -24,6 +24,9 @@ void StarterBot::onStart()
 
     //Strategy Manager OnStart()
     strategyManager.onStart();
+
+    // Check if player race is Protoss
+    raceCheck();
 }
 
 // Called on each frame of the game
@@ -99,6 +102,7 @@ void StarterBot::buildAdditionalSupply()
     const int unusedSupply = Tools::GetTotalSupply(true) - BWAPI::Broodwar->self()->supplyUsed();
 
     // If we have a sufficient amount of supply, we don't need to do anything
+    // Build depot when remaining supply is 3 or less, subject to change
     if (unusedSupply >= 4) { return; }
 
     // Otherwise, we are going to build a supply provider
@@ -153,13 +157,13 @@ void StarterBot::onSendText(std::string text)
 // so this will trigger when you issue the build command for most units
 void StarterBot::onUnitCreate(BWAPI::Unit unit)
 { 
-	BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
+	//BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
 }
 
 // Called whenever a unit finished construction, with a pointer to the unit
 void StarterBot::onUnitComplete(BWAPI::Unit unit)
 {
-    BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
+    //BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
 }
 
 // Called whenever a unit appears, with a pointer to the destroyed unit
@@ -181,4 +185,12 @@ void StarterBot::onUnitHide(BWAPI::Unit unit)
 void StarterBot::onUnitRenegade(BWAPI::Unit unit)
 { 
 	
+}
+
+void StarterBot::raceCheck()
+{
+    BWAPI::Race playerRace = BWAPI::Broodwar->self()->getRace();
+    if (playerRace != BWAPI::Races::Protoss)
+    BWAPI::Broodwar->printf("Protoss only! Start a new game");
+    BWAPI::Broodwar->pauseGame();
 }
