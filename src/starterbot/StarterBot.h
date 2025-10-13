@@ -2,6 +2,7 @@
 
 #include "MapTools.h"
 #include "../../visualstudio/StrategyManager.h"
+#include "../../visualstudio//InformationManager.h"
 
 #include <BWAPI.h>
 
@@ -9,6 +10,7 @@ class StarterBot
 {
     MapTools m_mapTools;
 	StrategyManager strategyManager;
+	InformationManager informationManager;
 
 public:
 

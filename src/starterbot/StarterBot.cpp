@@ -3,6 +3,7 @@
 #include "MapTools.h"
 #include "../../visualstudio/StrategyManager.h"
 #include "../../visualstudio/CombatManager.h"
+#include "../../visualstudio/InformationManager.h"
 
 StarterBot::StarterBot()
 {
@@ -24,6 +25,9 @@ void StarterBot::onStart()
 
     //Strategy Manager OnStart()
     strategyManager.onStart();
+
+    //Information Manager Startup
+    informationManager.onStart();
 }
 
 // Called on each frame of the game
