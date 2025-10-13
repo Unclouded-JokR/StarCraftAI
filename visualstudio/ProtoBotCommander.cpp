@@ -7,6 +7,7 @@ void ProtoBotCommander::onStart()
 
 void ProtoBotCommander::onFrame()
 {
+	//Might want to pass unit set to all managers in order to not have to loop through units again and again.
 	ProtoBotCommander::strategyManager.onFrame();
 }
 
@@ -43,9 +44,4 @@ void ProtoBotCommander::onUnitHide(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 {
 
-}
-
-void ProtoBotCommander::requestUnit(BWAPI::Unit unit)
-{
-	ProtoBotCommander::requestManager.requestUnit(unit);
 }

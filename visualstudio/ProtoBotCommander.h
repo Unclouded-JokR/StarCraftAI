@@ -11,15 +11,20 @@
 
 class ProtoBotCommander
 {
+private:
+	UnitManager unitManager;
+	RequestManager requestManager;
+	//Add spenderManager?
+
 public:
 	EconomyManager economyManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
 	BuildManager buildManager;
-	//Change this to be a class instead of namespace
-	//CombatManager combatManager; 
+	CombatManager combatManager; 
 	StrategyManager strategyManager;
 
+	//Standard bot methods
 	void onStart();
 	void onFrame();
 	void onEnd(bool isWinner);
@@ -33,13 +38,8 @@ public:
 	void onUnitRenegade(BWAPI::Unit unit);
 
 	//Dont know the right implementation for this but will have these methods for now
-	void requestUnit(BWAPI::Unit unit);
-	void requestUnit(BWAPI::Unitset &unit);
-	void requestUnit(BWAPI::UnitType type);
-
-private:
-	UnitManager unitManager;
-	RequestManager requestManager;
-	//Add spenderManager?
+	BWAPI::Unit requestUnit(BWAPI::UnitType type);
+	BWAPI::Unitset& requestUnits(BWAPI::UnitType type, int numUnits);
 };
 
+ProtoBotCommander commander;
