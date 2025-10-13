@@ -16,29 +16,47 @@ void BuildManager::onStart()
 void BuildManager::onFrame()
 {
     const BWAPI::UnitType workerType = BWAPI::Broodwar->self()->getRace().getWorker();
-    int workersOwned = Tools::CountUnitsOfType(workerType, BWAPI::Broodwar->self()->getUnits());
+    int currentSupply = BWAPI::Broodwar->self()->supplyUsed();
+    int currentMineral = BWAPI::Broodwar->self()->minerals();
+    if (currentMineral > 500) {} 
     BWAPI::Unitset myUnits = BWAPI::Broodwar->self()->getUnits();
-    switch (workersOwned)
+    //Continually train zealots with excess minerals
+    if (currentMineral > 500) {
+        for (auto& unit : myUnits)
+        {
+	        if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway) {
+		    unit->train(BWAPI::UnitTypes::Protoss_Zealot);
+	        }
+        }
+    }
+    switch (currentSupply)
+    //currentSupply value is doubled of what shown ingame
+    //Todo: need workers for vespene
     {
-        case 10:
+        case 20:
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
     break;
-        case 12:
+        case 24:
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
     break;
-        case 14:
+        case 28:
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
     break;
-        case 17:
-	//gateway->train(BWAPI::UnitTypes::Protoss_Zealot);}   
+        case 34:
+    for (auto& unit : myUnits)
+    {
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway) {
+		unit->train(BWAPI::UnitTypes::Protoss_Dragoon);
+	}
+    }
     break;
-         case 25:
+         case 50:
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Robotics_Facility);
     break;
-        case 29:
+        case 58:
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
     break;
-        case 38:
+        case 76:
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Observatory);
     break;
     }
