@@ -1,6 +1,4 @@
 #include "UnitManager.h"
-#include "ProtoBotCommander.cpp"
-
 
 void UnitManager::addUnit(BWAPI::Unit unit)
 {
