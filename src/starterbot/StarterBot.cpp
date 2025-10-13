@@ -86,8 +86,8 @@ void StarterBot::sendIdleWorkersToMinerals()
 void StarterBot::trainAdditionalWorkers()
 {
     const BWAPI::UnitType workerType = BWAPI::Broodwar->self()->getRace().getWorker();
-    int workersWanted = 40;
-    int workersOwned = Tools::CountUnitsOfType(workerType, BWAPI::Broodwar->self()->getUnits());
+    const int workersWanted = 40;
+    const int workersOwned = Tools::CountUnitsOfType(workerType, BWAPI::Broodwar->self()->getUnits());
     if (workersOwned < workersWanted)
     {
         // get the unit pointer to my depot
