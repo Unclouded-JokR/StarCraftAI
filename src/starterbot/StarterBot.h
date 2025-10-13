@@ -1,13 +1,15 @@
 #pragma once
 
 #include "MapTools.h"
+#include "../../visualstudio/StrategyManager.h"
 
 #include <BWAPI.h>
-#include "../../visualstudio/ScoutingManager.h"
+#include <ScoutingManager.h>
 
 class StarterBot
 {
     MapTools m_mapTools;
+	StrategyManager strategyManager;
 
 public:
 

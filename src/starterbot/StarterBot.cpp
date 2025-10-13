@@ -38,6 +38,9 @@ void StarterBot::onStart()
 
     // Call MapTools OnStart
     m_mapTools.onStart();
+
+    //Strategy Manager OnStart()
+    strategyManager.onStart();
 }
 
 // Called on each frame of the game
@@ -64,7 +67,10 @@ void StarterBot::onFrame()
     scoutingManager.onFrame();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
-	Combat::Update();
+	CombatManager::Update();
+
+    //Strategy
+    strategyManager.onFrame();
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
@@ -145,7 +151,7 @@ void StarterBot::onEnd(bool isWinner)
 void StarterBot::onUnitDestroy(BWAPI::Unit unit)
 {
 	BWAPI::Broodwar->sendText("A unit was destroyed!");
-	
+    strategyManager.onUnitDestroy(unit);
 }
 
 // Called whenever a unit is morphed, with a pointer to the unit
