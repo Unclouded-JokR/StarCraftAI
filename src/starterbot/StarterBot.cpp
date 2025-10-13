@@ -1,6 +1,7 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
+<<<<<<< HEAD
 
 #include "CombatManager.h"
 #include "ScoutingManager.h"
@@ -10,6 +11,8 @@
 
 
 using namespace BWEM;
+=======
+>>>>>>> deeee577411e81e935bb222afb4f9ca45e9a92cb
 
 StarterBot::StarterBot()
 {
