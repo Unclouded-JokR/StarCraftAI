@@ -41,6 +41,12 @@ void StarterBot::onStart()
 
     //Strategy Manager OnStart()
     strategyManager.onStart();
+
+    // Call BuildManager OnStart
+    buildManager.onStart();
+
+    // Check if playing as Protoss
+    playerRaceCheck();
 }
 
 // Called on each frame of the game
@@ -67,10 +73,13 @@ void StarterBot::onFrame()
     scoutingManager.onFrame();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
-	CombatManager::Update();
+	combatManager.Update();
 
     //Strategy
     strategyManager.onFrame();
+
+    // Update BuildManager
+    buildManager.onFrame();
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
@@ -121,7 +130,8 @@ void StarterBot::buildAdditionalSupply()
     const int unusedSupply = Tools::GetTotalSupply(true) - BWAPI::Broodwar->self()->supplyUsed();
 
     // If we have a sufficient amount of supply, we don't need to do anything
-    if (unusedSupply >= 4) { return; }
+    // Build depot when remaining supply is 1 or less, subject to change
+    if (unusedSupply >= 3) { return; }
 
     // Otherwise, we are going to build a supply provider
     const BWAPI::UnitType supplyProviderType = BWAPI::Broodwar->self()->getRace().getSupplyProvider();
@@ -175,13 +185,13 @@ void StarterBot::onSendText(std::string text)
 // so this will trigger when you issue the build command for most units
 void StarterBot::onUnitCreate(BWAPI::Unit unit)
 { 
-	BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
+	//BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
 }
 
 // Called whenever a unit finished construction, with a pointer to the unit
 void StarterBot::onUnitComplete(BWAPI::Unit unit)
 {
-    BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
+    //BWAPI::Broodwar->sendText(unit->getType().getName().c_str());
 }
 
 // Called whenever a unit appears, with a pointer to the destroyed unit
@@ -203,4 +213,14 @@ void StarterBot::onUnitHide(BWAPI::Unit unit)
 void StarterBot::onUnitRenegade(BWAPI::Unit unit)
 { 
 	
+}
+
+void StarterBot::playerRaceCheck()
+{
+    BWAPI::Race playerRace = BWAPI::Broodwar->self()->getRace();
+    if (playerRace != BWAPI::Races::Protoss)
+    {
+    BWAPI::Broodwar->printf("Bot must be playing as Protoss! Start a new game");
+    BWAPI::Broodwar->pauseGame();
+    }
 }

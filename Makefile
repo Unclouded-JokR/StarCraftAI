@@ -1,6 +1,7 @@
 # This file is based on "Makefile Cookbook" from the https://makefiletutorial.com/.
 
 TARGET_EXEC := StarterBot.exe
+# Change to ./bin_linux for Linux builds
 BIN_DIR := ./bin
 SRC_DIR := ./src
 BWEM_DIR := ./BWEM
@@ -30,8 +31,8 @@ INC_FLAGS += -Isrc/bwapi/include -I./BWEM/src
 
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
-CXXFLAGS += -std=gnu++17 -O2   
-CXXFLAGS += -static-libgcc -static-libstdc++            
+CXXFLAGS += -std=gnu++17 -O0 -g 
+# CXXFLAGS += -static-libgcc -static-libstdc++            
 CPPFLAGS := $(INC_FLAGS) -MMD -MP -DNOMINMAX
 
 LDFLAGS += -static-libgcc -static-libstdc++

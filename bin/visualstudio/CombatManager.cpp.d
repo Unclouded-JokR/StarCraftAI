@@ -1,6 +1,6 @@
 bin/./visualstudio/CombatManager.cpp.o: visualstudio/CombatManager.cpp \
- visualstudio/CombatManager.h src/bwapi/include/BWAPI.h \
- src/bwapi/include/BWAPI/InterfaceEvent.h \
+ visualstudio/CombatManager.h visualstudio/../src/starterbot/Tools.h \
+ src/bwapi/include/BWAPI.h src/bwapi/include/BWAPI/InterfaceEvent.h \
  src/bwapi/include/BWAPI/Interface.h src/bwapi/include/BWAPI/AIModule.h \
  src/bwapi/include/BWAPI/Position.h \
  src/bwapi/include/BWAPI/TournamentAction.h \
@@ -27,8 +27,9 @@ bin/./visualstudio/CombatManager.cpp.o: visualstudio/CombatManager.cpp \
  src/bwapi/include/BWAPI/Regionset.h src/bwapi/include/BWAPI/Streams.h \
  src/bwapi/include/BWAPI/TechType.h src/bwapi/include/BWAPI/UnitCommand.h \
  src/bwapi/include/BWAPI/UnitCommandType.h \
- src/bwapi/include/BWAPI/Unitset.h visualstudio/../src/starterbot/Tools.h
+ src/bwapi/include/BWAPI/Unitset.h
 visualstudio/CombatManager.h:
+visualstudio/../src/starterbot/Tools.h:
 src/bwapi/include/BWAPI.h:
 src/bwapi/include/BWAPI/InterfaceEvent.h:
 src/bwapi/include/BWAPI/Interface.h:
@@ -76,4 +77,3 @@ src/bwapi/include/BWAPI/TechType.h:
 src/bwapi/include/BWAPI/UnitCommand.h:
 src/bwapi/include/BWAPI/UnitCommandType.h:
 src/bwapi/include/BWAPI/Unitset.h:
-visualstudio/../src/starterbot/Tools.h:

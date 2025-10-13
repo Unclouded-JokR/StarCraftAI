@@ -29,8 +29,11 @@ bin/./src/starterbot/StarterBot.cpp.o: src/starterbot/StarterBot.cpp \
  src/bwapi/include/BWAPI/TechType.h src/bwapi/include/BWAPI/UnitCommand.h \
  src/bwapi/include/BWAPI/UnitCommandType.h \
  src/bwapi/include/BWAPI/Unitset.h \
- src/starterbot/../../visualstudio/ScoutingManager.h \
- src/starterbot/Tools.h visualstudio/CombatManager.h BWEM/src/bwem.h \
+ src/starterbot/../../visualstudio/StrategyManager.h \
+ src/starterbot/../../visualstudio/BuildManager.h \
+ src/starterbot/../../visualstudio/CombatManager.h \
+ src/starterbot/../../visualstudio/InformationManager.h \
+ visualstudio/ScoutingManager.h src/starterbot/Tools.h BWEM/src/bwem.h \
  BWEM/src/map.h BWEM/src/tiles.h BWEM/src/area.h BWEM/src/bwapiExt.h \
  BWEM/src/utils.h BWEM/src/defs.h BWEM/src/cp.h BWEM/src/base.h \
  BWEM/src/neutral.h BWEM/src/gridMap.h BWEM/src/examples.h \
@@ -85,9 +88,12 @@ src/bwapi/include/BWAPI/TechType.h:
 src/bwapi/include/BWAPI/UnitCommand.h:
 src/bwapi/include/BWAPI/UnitCommandType.h:
 src/bwapi/include/BWAPI/Unitset.h:
-src/starterbot/../../visualstudio/ScoutingManager.h:
+src/starterbot/../../visualstudio/StrategyManager.h:
+src/starterbot/../../visualstudio/BuildManager.h:
+src/starterbot/../../visualstudio/CombatManager.h:
+src/starterbot/../../visualstudio/InformationManager.h:
+visualstudio/ScoutingManager.h:
 src/starterbot/Tools.h:
-visualstudio/CombatManager.h:
 BWEM/src/bwem.h:
 BWEM/src/map.h:
 BWEM/src/tiles.h:

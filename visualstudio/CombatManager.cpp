@@ -1,5 +1,4 @@
 #include "CombatManager.h"
-
 #include "../src/starterbot/Tools.h"
 
 void CombatManager::Update() {
