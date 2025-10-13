@@ -27,7 +27,7 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-	ProtoBotCommander::unitManager.addUnit(unit);
+	// ProtoBotCommander::unitManager.addUnit(unit);
 }
 
 void ProtoBotCommander::onUnitShow(BWAPI::Unit unit)
@@ -47,5 +47,5 @@ void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 
 void ProtoBotCommander::requestUnit(BWAPI::Unit unit)
 {
-	ProtoBotCommander::requestManager.requestUnit(unit);
+	// ProtoBotCommander::requestManager.requestUnit(unit);
 }
