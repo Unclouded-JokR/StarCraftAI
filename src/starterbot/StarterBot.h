@@ -4,6 +4,7 @@
 #include "../../visualstudio/StrategyManager.h"
 #include "../../visualstudio/BuildManager.h"
 #include "../../visualstudio/CombatManager.h"
+#include "../../visualstudio//InformationManager.h"
 
 #include <BWAPI.h>
 
@@ -13,6 +14,7 @@ class StarterBot
 	StrategyManager strategyManager;
 	CombatManager combatManager;
 	BuildManager buildManager;
+	InformationManager informationManager;
 
 public:
 
