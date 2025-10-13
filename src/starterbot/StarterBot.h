@@ -2,6 +2,8 @@
 
 #include "MapTools.h"
 #include "../../visualstudio/StrategyManager.h"
+#include "../../visualstudio/BuildManager.h"
+#include "../../visualstudio/CombatManager.h"
 
 #include <BWAPI.h>
 
@@ -9,6 +11,8 @@ class StarterBot
 {
     MapTools m_mapTools;
 	StrategyManager strategyManager;
+	CombatManager combatManager;
+	BuildManager buildManager;
 
 public:
 
@@ -34,5 +38,6 @@ public:
 	void onUnitRenegade(BWAPI::Unit unit);
 
 	//Custom Functions
-	void raceCheck();
+	void playerRaceCheck();
+
 };

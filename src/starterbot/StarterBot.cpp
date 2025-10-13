@@ -1,8 +1,6 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
-#include "../../visualstudio/StrategyManager.h"
-#include "../../visualstudio/CombatManager.h"
 
 StarterBot::StarterBot()
 {
@@ -25,8 +23,11 @@ void StarterBot::onStart()
     //Strategy Manager OnStart()
     strategyManager.onStart();
 
-    // Check if player race is Protoss
-    raceCheck();
+    // Call BuildManager OnStart
+    buildManager.onStart();
+
+    // Check if playing as Protoss
+    playerRaceCheck();
 }
 
 // Called on each frame of the game
@@ -48,10 +49,13 @@ void StarterBot::onFrame()
     Tools::DrawUnitHealthBars();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
-	CombatManager::Update();
+	combatManager.Update();
 
     //Strategy
     strategyManager.onFrame();
+
+    // Update BuildManager
+    buildManager.onFrame();
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
@@ -82,8 +86,8 @@ void StarterBot::sendIdleWorkersToMinerals()
 void StarterBot::trainAdditionalWorkers()
 {
     const BWAPI::UnitType workerType = BWAPI::Broodwar->self()->getRace().getWorker();
-    const int workersWanted = 40;
-    const int workersOwned = Tools::CountUnitsOfType(workerType, BWAPI::Broodwar->self()->getUnits());
+    int workersWanted = 40;
+    int workersOwned = Tools::CountUnitsOfType(workerType, BWAPI::Broodwar->self()->getUnits());
     if (workersOwned < workersWanted)
     {
         // get the unit pointer to my depot
@@ -102,8 +106,8 @@ void StarterBot::buildAdditionalSupply()
     const int unusedSupply = Tools::GetTotalSupply(true) - BWAPI::Broodwar->self()->supplyUsed();
 
     // If we have a sufficient amount of supply, we don't need to do anything
-    // Build depot when remaining supply is 3 or less, subject to change
-    if (unusedSupply >= 4) { return; }
+    // Build depot when remaining supply is 1 or less, subject to change
+    if (unusedSupply >= 3) { return; }
 
     // Otherwise, we are going to build a supply provider
     const BWAPI::UnitType supplyProviderType = BWAPI::Broodwar->self()->getRace().getSupplyProvider();
@@ -187,10 +191,12 @@ void StarterBot::onUnitRenegade(BWAPI::Unit unit)
 	
 }
 
-void StarterBot::raceCheck()
+void StarterBot::playerRaceCheck()
 {
     BWAPI::Race playerRace = BWAPI::Broodwar->self()->getRace();
     if (playerRace != BWAPI::Races::Protoss)
-    BWAPI::Broodwar->printf("Protoss only! Start a new game");
+    {
+    BWAPI::Broodwar->printf("Bot must be playing as Protoss! Start a new game");
     BWAPI::Broodwar->pauseGame();
+    }
 }
