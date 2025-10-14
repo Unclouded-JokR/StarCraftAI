@@ -1,8 +1,6 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
-<<<<<<< HEAD
-
 #include "CombatManager.h"
 #include "ScoutingManager.h"
 
@@ -11,8 +9,6 @@
 
 
 using namespace BWEM;
-=======
->>>>>>> deeee577411e81e935bb222afb4f9ca45e9a92cb
 
 StarterBot::StarterBot()
 {
@@ -26,7 +22,7 @@ void StarterBot::onStart()
 	BWAPI::Broodwar->setLocalSpeed(10);
     BWAPI::Broodwar->setFrameSkip(0);
     
-    // Enable the flag that tells BWAPI top let users enter input while bot plays
+    // Enable the flag that tells BWAPI to let users enter input while bot plays
     BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
     // Initialize BWEM with BWAPI's game pointer
@@ -47,6 +43,9 @@ void StarterBot::onStart()
 
     // Call BuildManager OnStart
     buildManager.onStart();
+
+    //Information Manager startup
+    informationManager.onStart();
 
     // Check if playing as Protoss
     playerRaceCheck();
@@ -83,6 +82,9 @@ void StarterBot::onFrame()
 
     // Update BuildManager
     buildManager.onFrame();
+
+    //Information
+    informationManager.onFrame();
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
