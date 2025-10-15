@@ -1,9 +1,6 @@
 #pragma once
-
-
-#include <BWAPI.h>
-namespace Combat
-{
+class CombatManager{
+public:
+    static void Update();
     void AttackClosest();
-    void Update();
-}
+};
