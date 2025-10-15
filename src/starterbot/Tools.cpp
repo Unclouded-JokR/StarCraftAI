@@ -21,10 +21,10 @@ BWAPI::Unit Tools::GetClosestUnitToWOWorker(BWAPI::Position p, const BWAPI::Unit
 
     for (auto& u : units)
     {
-        if (!closestUnitWOWorker || (u->getDistance(p) < closestUnitWOWorker->getDistance(p) && u->assigned == 0))
+        /*if (!closestUnitWOWorker || (u->getDistance(p) < closestUnitWOWorker->getDistance(p) && u->assigned == 0))
         {
             closestUnitWOWorker = u;
-        }
+        }*/
     }
 
     return closestUnitWOWorker;

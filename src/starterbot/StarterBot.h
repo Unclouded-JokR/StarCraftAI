@@ -5,9 +5,9 @@
 #include "../../visualstudio/BuildManager.h"
 #include "../../visualstudio/CombatManager.h"
 #include "../../visualstudio/InformationManager.h"
+#include "../../visualstudio/ScoutingManager.h"
 
 #include <BWAPI.h>
-#include "ScoutingManager.h"
 
 class StarterBot
 {

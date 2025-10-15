@@ -1,8 +1,6 @@
 #include "StarterBot.h"
 #include "Tools.h"
 #include "MapTools.h"
-#include "CombatManager.h"
-#include "ScoutingManager.h"
 
 #include <BWAPI.h>
 #include <bwem.h>
