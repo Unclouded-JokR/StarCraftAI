@@ -32,7 +32,4 @@
     <ClInclude Include="RequestManager.h" />
     <ClInclude Include="ProtoBotCommander.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Makefile" />
-  </ItemGroup>
 </Project>

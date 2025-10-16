@@ -50,9 +50,6 @@
     <ClCompile Include="StrategyManager.cpp" />
     <ClCompile Include="UnitManager.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Makefile" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>StarterBot</ProjectName>
     <ProjectGuid>{B2D2AD6C-D98B-42D0-8E4B-3C79D9DB27B7}</ProjectGuid>
