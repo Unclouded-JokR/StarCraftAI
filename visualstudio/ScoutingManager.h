@@ -1,3 +1,4 @@
+/*
 #pragma once
 #include <BWAPI.h>
 class ScoutingManager
@@ -11,4 +12,5 @@ private:
     std::vector<BWAPI::TilePosition> targets;
     int nextTarget = 0;
 };
+*/
 

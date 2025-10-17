@@ -1,3 +1,4 @@
+/*
 #include "ScoutingManager.h"
 #include <BWAPI.h>
 #include <bwem.h>
@@ -94,3 +95,4 @@ void ScoutingManager::onFrame() {
         scout->move(Position(Broodwar->self()->getStartLocation()));
     }
 }
+*/

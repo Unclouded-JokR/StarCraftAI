@@ -3,10 +3,10 @@
 #include "MapTools.h"
 
 #include <BWAPI.h>
-#include <bwem.h>
+//#include <bwem.h>
 
 
-using namespace BWEM;
+//using namespace BWEM;
 
 StarterBot::StarterBot()
 {
@@ -24,13 +24,13 @@ void StarterBot::onStart()
     BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
     // Initialize BWEM with BWAPI's game pointer
-    Map::Instance().Initialize();
+    //Map::Instance().Initialize();
 
     // Find the bases for the starting locations
-    bool foundBases = Map::Instance().FindBasesForStartingLocations();
-    assert(foundBases);     // make sure we found the bases
+    //bool foundBases = Map::Instance().FindBasesForStartingLocations();
+    //assert(foundBases);     // make sure we found the bases
 
-    scoutingManager.onStart();
+    //scoutingManager.onStart();
 
 
     // Call MapTools OnStart
@@ -70,7 +70,7 @@ void StarterBot::onFrame()
     Tools::DrawUnitHealthBars();
 
     // Instantly assign a scout for testing (We will change this based on build order)
-    scoutingManager.onFrame();
+    //scoutingManager.onFrame();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
 	combatManager.Update();

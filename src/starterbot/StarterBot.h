@@ -16,7 +16,7 @@ class StarterBot
 	CombatManager combatManager;
 	BuildManager buildManager;
 	InformationManager informationManager;
-	ScoutingManager scoutingManager;
+	//ScoutingManager scoutingManager;
 
 public:
 

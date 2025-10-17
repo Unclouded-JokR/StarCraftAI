@@ -14,7 +14,7 @@ class ProtoBotCommander
 public:
 	EconomyManager economyManager;
 	InformationManager informationManager;
-	ScoutingManager scoutingManager;
+	//ScoutingManager scoutingManager;
 	BuildManager buildManager;
 	//Change this to be a class instead of namespace
 	//CombatManager combatManager; 
