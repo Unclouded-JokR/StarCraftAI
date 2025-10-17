@@ -52,7 +52,8 @@ bin/./src/starterbot/main.cpp.o: src/starterbot/main.cpp \
  src/starterbot/../../visualstudio/BuildManager.h \
  src/starterbot/../../visualstudio/CombatManager.h \
  src/starterbot/../../visualstudio/InformationManager.h \
- visualstudio/ScoutingManager.h src/starterbot/ReplayParser.h
+ src/starterbot/../../visualstudio/ScoutingManager.h \
+ src/starterbot/ReplayParser.h
 src/bwapi/include/BWAPI.h:
 src/bwapi/include/BWAPI/InterfaceEvent.h:
 src/bwapi/include/BWAPI/Interface.h:
@@ -128,5 +129,5 @@ src/starterbot/../../visualstudio/StrategyManager.h:
 src/starterbot/../../visualstudio/BuildManager.h:
 src/starterbot/../../visualstudio/CombatManager.h:
 src/starterbot/../../visualstudio/InformationManager.h:
-visualstudio/ScoutingManager.h:
+src/starterbot/../../visualstudio/ScoutingManager.h:
 src/starterbot/ReplayParser.h:
