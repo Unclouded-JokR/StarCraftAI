@@ -58,7 +58,7 @@ void StarterBot::onFrame()
 
     
     // Send our idle workers to mine minerals so they don't just stand there
-    sendIdleWorkersToMinerals();
+    //sendIdleWorkersToMinerals();
 
     // Train more workers so we can gather more income
     trainAdditionalWorkers();
@@ -70,7 +70,7 @@ void StarterBot::onFrame()
     Tools::DrawUnitHealthBars();
 
     // Instantly assign a scout for testing (We will change this based on build order)
-    scoutingManager.onFrame();
+    //scoutingManager.onFrame();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
 	combatManager.Update();
@@ -86,11 +86,13 @@ void StarterBot::onFrame()
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
+
+    economyManager.OnFrame();
 }
 
 
 // Send our idle workers to mine minerals so they don't just stand there
-void StarterBot::sendIdleWorkersToMinerals()
+/*void StarterBot::sendIdleWorkersToMinerals()
 {
     // Let's send all of our starting workers to the closest mineral to them
     // First we need to loop over all of the units that we (BWAPI::Broodwar->self()) own
@@ -107,7 +109,7 @@ void StarterBot::sendIdleWorkersToMinerals()
             if (closestMineral) { unit->rightClick(closestMineral); }
         }
     }
-}
+}*/
 
 // Train more workers so we can gather more income
 void StarterBot::trainAdditionalWorkers()

@@ -6,6 +6,9 @@
 #include "../../visualstudio/CombatManager.h"
 #include "../../visualstudio/InformationManager.h"
 #include "../../visualstudio/ScoutingManager.h"
+#include "../../visualstudio/EconomyManager.h"
+
+
 
 #include <BWAPI.h>
 
@@ -17,6 +20,7 @@ class StarterBot
 	BuildManager buildManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
+	EconomyManager economyManager;
 
 public:
 
@@ -45,3 +49,4 @@ public:
 	void playerRaceCheck();
 
 };
+

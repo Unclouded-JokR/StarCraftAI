@@ -584,4 +584,5 @@ namespace BWAPI
   {
     return this->issueCommand(UnitCommand::placeCOP(this, target));
   }
+
 };
