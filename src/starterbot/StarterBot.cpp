@@ -56,7 +56,7 @@ void StarterBot::onFrame()
     // Update our MapTools information
     m_mapTools.onFrame();
 
-    
+    sendWorkersToGas();
     // Send our idle workers to mine minerals so they don't just stand there
     //sendIdleWorkersToMinerals();
 
@@ -90,6 +90,24 @@ void StarterBot::onFrame()
     economyManager.OnFrame();
 }
 
+//Add this to Economy manager later
+void StarterBot::sendWorkersToGas()
+{
+
+    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
+    for ( auto u : myUnits )
+    {
+        if ( u->getType().isRefinery() )
+        {
+            
+            BWAPI::Unit pClosestIdleWorker = u->getClosestUnit(BWAPI::Filter::IsWorker && BWAPI::Filter::IsIdle);
+            if ( pClosestIdleWorker)
+            {
+                pClosestIdleWorker->gather(u);
+            }
+        }
+    }
+}
 
 // Send our idle workers to mine minerals so they don't just stand there
 /*void StarterBot::sendIdleWorkersToMinerals()

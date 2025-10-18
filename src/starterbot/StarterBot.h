@@ -47,6 +47,7 @@ public:
 
 	//Custom Functions
 	void playerRaceCheck();
+	void sendWorkersToGas();
 
 };
 
