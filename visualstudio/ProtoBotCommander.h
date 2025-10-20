@@ -40,6 +40,9 @@ public:
 	//Dont know the right implementation for this but will have these methods for now
 	BWAPI::Unit requestUnit(BWAPI::UnitType type);
 	BWAPI::Unitset& requestUnits(BWAPI::UnitType type, int numUnits);
+
+	BWAPI::Unit getUnitToBuild();
+	void getUnitToScout();
 };
 
 ProtoBotCommander commander;
