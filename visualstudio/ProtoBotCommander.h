@@ -16,8 +16,7 @@ public:
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
 	BuildManager buildManager;
-	//Change this to be a class instead of namespace
-	//CombatManager combatManager; 
+	CombatManager combatManager; 
 	StrategyManager strategyManager;
 
 	void onStart();
