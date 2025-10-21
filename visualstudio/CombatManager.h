@@ -7,7 +7,8 @@ class CombatManager{
 public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
-    static void Update();
+    void onFrame();
+    void Update();
     void AttackClosest();
     void assignUnit(BWAPI::Unit unit);
 };

@@ -67,7 +67,7 @@ void ProtoBotCommander::onFrame()
 	//Uncomment this once onFrame does not steal a worker.
 	//scoutingManager.onFrame();
 	
-	combatManager.Update();
+	combatManager.onFrame();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
