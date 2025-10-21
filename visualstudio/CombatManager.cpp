@@ -1,4 +1,5 @@
 #include "CombatManager.h"
+#include "ProtoBotCommander.h"
 #include "../src/starterbot/Tools.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)

@@ -1,4 +1,5 @@
 #include "BuildManager.h"
+#include "ProtoBotCommander.h"
 #include "../src/starterbot/Tools.h"
 #include "../src/starterbot/MapTools.h"
 
