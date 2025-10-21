@@ -1,4 +1,5 @@
 #include "InformationManager.h"
+#include "ProtoBotCommander.h"
 
 InformationManager::InformationManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {

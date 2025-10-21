@@ -1,4 +1,5 @@
 #include "StrategyManager.h"
+#include "ProtoBotCommander.h"
 #include <BWAPI.h>
 
 int previousFrameSecond = 0;
@@ -208,6 +209,8 @@ void StrategyManager::onStart()
 	std::cout << "StrategyManager is a go!" << '\n';
 	StrategyManager::currentState = &StrategyManager::contentState;
 	currentState->enter(*this);
+	commanderReference->testPrint("Strategy");
+
 }
 
 void StrategyManager::onFrame()
@@ -230,7 +233,7 @@ void StrategyManager::onFrame()
 	//Divide by 2 because zergs workers costs .5 supply
 	//std::cout << "Enemy total supply " << BWAPI::Broodwar->self()->supplyUsed() / 2 << std::endl;
 
-	StrategyManager::currentState->evaluate(*this);
+	currentState->evaluate(*this);
 
 	//StrategyManager::printBoredomMeter();
 }

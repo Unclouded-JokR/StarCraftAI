@@ -1,4 +1,5 @@
 #include "EconomyManager.h"
+#include "ProtoBotCommander.h"
 
 EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {

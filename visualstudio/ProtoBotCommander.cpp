@@ -159,3 +159,8 @@ void ProtoBotCommander::getUnitToScout()
 
 	//scoutingManager.assignScout();
 }
+
+void ProtoBotCommander::testPrint(std::string moduleName)
+{
+	std::cout << moduleName << std::endl;
+}

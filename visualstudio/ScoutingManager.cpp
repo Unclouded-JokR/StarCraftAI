@@ -1,4 +1,5 @@
 #include "ScoutingManager.h"
+#include "ProtoBotCommander.h"
 #include <BWAPI.h>
 #include <bwem.h>
 #include <algorithm>
