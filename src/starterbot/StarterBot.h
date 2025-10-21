@@ -15,12 +15,12 @@
 class StarterBot
 {
     MapTools m_mapTools;
-	StrategyManager strategyManager;
-	CombatManager combatManager;
-	BuildManager buildManager;
-	InformationManager informationManager;
-	ScoutingManager scoutingManager;
-	EconomyManager economyManager;
+	//StrategyManager strategyManager;
+	//CombatManager combatManager;
+	//BuildManager buildManager;
+	//InformationManager informationManager;
+	//ScoutingManager scoutingManager;
+	//EconomyManager economyManager;
 
 public:
 

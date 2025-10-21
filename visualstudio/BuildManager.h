@@ -1,7 +1,12 @@
 #pragma once
+
+class ProtoBotCommander;
+
 class BuildManager{
 public:
-    BuildManager();
+    ProtoBotCommander* commanderReference;
+
+    BuildManager(ProtoBotCommander* commanderReference);
 
     void onStart();
     void onFrame();

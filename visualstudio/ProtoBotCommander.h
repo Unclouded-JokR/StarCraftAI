@@ -7,11 +7,17 @@
 #include "CombatManager.h"
 #include "UnitManager.h"
 #include "RequestManager.h"
+#include "../../src/starterbot/MapTools.h"
+#include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
+#include "../../BWEM/src/bwem.h"
+
+using namespace BWEM;
 
 class ProtoBotCommander
 {
 public:
+	MapTools m_mapTools;
 	EconomyManager economyManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
@@ -19,6 +25,7 @@ public:
 	CombatManager combatManager; 
 	StrategyManager strategyManager;
 
+	ProtoBotCommander();
 	void onStart();
 	void onFrame();
 	void onEnd(bool isWinner);
@@ -30,15 +37,6 @@ public:
 	void onUnitShow(BWAPI::Unit unit);
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
-
-	//Dont know the right implementation for this but will have these methods for now
-	void requestUnit(BWAPI::Unit unit);
-	void requestUnit(BWAPI::Unitset &unit);
-	void requestUnit(BWAPI::UnitType type);
-
-private:
-	UnitManager unitManager;
-	RequestManager requestManager;
-	//Add spenderManager?
+	void drawDebugInformation();
 };
 

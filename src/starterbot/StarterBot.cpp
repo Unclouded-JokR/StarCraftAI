@@ -30,20 +30,20 @@ void StarterBot::onStart()
     bool foundBases = Map::Instance().FindBasesForStartingLocations();
     assert(foundBases);     // make sure we found the bases
 
-    scoutingManager.onStart();
+    //scoutingManager.onStart();
 
 
     // Call MapTools OnStart
     m_mapTools.onStart();
 
     //Strategy Manager OnStart()
-    strategyManager.onStart();
+    //strategyManager.onStart();
 
     // Call BuildManager OnStart
-    buildManager.onStart();
+    //buildManager.onStart();
 
     //Information Manager startup
-    informationManager.onStart();
+    //informationManager.onStart();
 
     // Check if playing as Protoss
     playerRaceCheck();
@@ -73,21 +73,21 @@ void StarterBot::onFrame()
     //scoutingManager.onFrame();
 
     //Combat testing, non-worker units will start attacking once enemies are within LOS
-	combatManager.Update();
+	//combatManager.Update();
 
     //Strategy
-    strategyManager.onFrame();
+    //strategyManager.onFrame();
 
     // Update BuildManager
-    buildManager.onFrame();
+    //buildManager.onFrame();
 
     //Information
-    informationManager.onFrame();
+    //informationManager.onFrame();
 
     // Draw some relevent information to the screen to help us debug the bot
     drawDebugInformation();
 
-    economyManager.OnFrame();
+    //economyManager.OnFrame();
 }
 
 //Add this to Economy manager later
@@ -184,7 +184,7 @@ void StarterBot::onEnd(bool isWinner)
 void StarterBot::onUnitDestroy(BWAPI::Unit unit)
 {
 	BWAPI::Broodwar->sendText("A unit was destroyed!");
-    strategyManager.onUnitDestroy(unit);
+    //strategyManager.onUnitDestroy(unit);
 }
 
 // Called whenever a unit is morphed, with a pointer to the unit

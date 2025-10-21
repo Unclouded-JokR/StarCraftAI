@@ -1,6 +1,11 @@
 #include "CombatManager.h"
 #include "../src/starterbot/Tools.h"
 
+CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+{
+
+}
+
 void CombatManager::Update() {
 	// Send out all units to attack nearest enemy. For testing.
 	//AttackClosest();

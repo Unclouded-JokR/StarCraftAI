@@ -1,5 +1,10 @@
 #include "EconomyManager.h"
 
+EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+{
+
+}
+
 void EconomyManager::OnFrame()
 {
     for (const auto& unit : assignedWorkers)

@@ -3,7 +3,7 @@
 #include "../src/starterbot/MapTools.h"
 
 // constructor for BuildManager
-BuildManager::BuildManager()
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
     
 }

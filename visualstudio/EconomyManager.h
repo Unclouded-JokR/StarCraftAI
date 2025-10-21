@@ -1,11 +1,15 @@
 #pragma once
-
 #include <BWAPI.h>
 #include <unordered_map>
+
+class ProtoBotCommander;
 
 class EconomyManager
 {
 public:
+	ProtoBotCommander* commanderReference;
+
+	EconomyManager(ProtoBotCommander* commanderReference);
 	BWAPI::Unit GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWAPI::Unitset& units);
 	BWAPI::Unit GetClosestUnitToWOWorker(BWAPI::Position p, const BWAPI::Unitset& units);
 	void OnFrame();

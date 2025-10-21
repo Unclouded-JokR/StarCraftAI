@@ -1,6 +1,6 @@
 #include <BWAPI.h>
 #include <BWAPI/Client.h>
-#include "StarterBot.h"
+#include "../../visualstudio/ProtoBotCommander.h"
 #include "ReplayParser.h"
 #include <iostream>
 #include <thread>
@@ -53,7 +53,8 @@ int main(int argc, char * argv[])
 
 void PlayGame()
 {
-    StarterBot bot;
+    //StarterBot bot;
+    ProtoBotCommander bot;
 
     // The main game loop, which continues while we are connected to BWAPI and in a game
     while (BWAPI::BWAPIClient.isConnected() && BWAPI::Broodwar->isInGame())

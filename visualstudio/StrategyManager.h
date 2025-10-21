@@ -115,9 +115,12 @@ public:
 	void evaluate(StrategyManager& strategyManager) override;
 };
 
+class ProtoBotCommander;
+
 class StrategyManager
 {
 public:
+	ProtoBotCommander* commanderReference;
 	float boredomMeter = 0.0f; //Value between 0-1
 	float angerMeter = 0.0f; //Value between 0-1;
 	float egoMeter = 0.0f; //Value between 0-1;
@@ -126,6 +129,7 @@ public:
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
 
+	StrategyManager(ProtoBotCommander* commanderToAsk);
 	void onStart();
 	void onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers

@@ -7,6 +7,11 @@
 using namespace BWAPI;
 using namespace BWEM;
 
+ScoutingManager::ScoutingManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+{
+
+}
+
 void ScoutingManager::onStart() {
     if (!Map::Instance().Initialized()) {
         Broodwar->printf("ScoutingManager: BWEM not initialized yet.");
