@@ -209,7 +209,6 @@ void StrategyManager::onStart()
 	std::cout << "StrategyManager is a go!" << '\n';
 	StrategyManager::currentState = &StrategyManager::contentState;
 	currentState->enter(*this);
-	commanderReference->testPrint("Strategy");
 
 }
 

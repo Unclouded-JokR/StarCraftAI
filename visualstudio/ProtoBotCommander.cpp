@@ -29,14 +29,26 @@ void ProtoBotCommander::onStart()
 	m_mapTools.onStart();
 
 	/*
+	* Use this to query the BuildManager to randomly select a build order based on the enemy race. 
+	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
+	* 
+	* 100 for Protoss, 200 for Terran, 300 for Zerg
+	* 
+	* the next two digits would be the id of the build order we would randomly select. 
+	* 0 - 99 (max would be 99 but there is no way we would need that many)
+	* 
+	* We could reduce these digits to tens instead to decrease memeory usage.
+	*/
+
+	std::string enemyRace = enemyRaceCheck();
+	std::cout << enemyRace << std::endl;
+
+	/*
 	* Protobot Modules
 	*/
 	strategyManager.onStart();
 	buildManager.onStart();
 	informationManager.onStart();
-
-	//Shouldnt need to check this but will leave this here just in case.
-	//playerRaceCheck();
 }
 
 void ProtoBotCommander::onFrame()
@@ -160,7 +172,20 @@ void ProtoBotCommander::getUnitToScout()
 	//scoutingManager.assignScout();
 }
 
-void ProtoBotCommander::testPrint(std::string moduleName)
+std::string ProtoBotCommander::enemyRaceCheck()
 {
-	std::cout << moduleName << std::endl;
+	BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
+
+	if (enemyRace == BWAPI::Races::Protoss)
+	{
+		return "Protoss_";
+	}
+	else if (enemyRace == BWAPI::Races::Terran)
+	{
+		return "Terran_";
+	}
+	else
+	{
+		return "Zerg_";
+	}
 }

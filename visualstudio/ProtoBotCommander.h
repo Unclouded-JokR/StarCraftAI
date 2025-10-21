@@ -50,7 +50,6 @@ public:
 	*/
 	void getUnitToScout();
 	BWAPI::Unit getUnitToBuild();
-
-	void testPrint(std::string moduleName);
+	std::string enemyRaceCheck();
 };
 
