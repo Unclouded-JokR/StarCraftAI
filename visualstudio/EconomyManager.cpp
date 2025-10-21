@@ -66,3 +66,13 @@ BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWA
     if (!unit) { return nullptr; }
     return GetClosestUnitToWOWorker(unit->getPosition(), units);
 }
+
+void EconomyManager::assignUnit(BWAPI::Unit unit)
+{
+
+}
+
+BWAPI::Unit EconomyManager::getAvalibleWorker()
+{
+    return nullptr;
+}

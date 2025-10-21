@@ -1,4 +1,5 @@
 #pragma once
+#include <BWAPI.h>
 
 class ProtoBotCommander;
 
@@ -10,4 +11,5 @@ public:
 
     void onStart();
     void onFrame();
+    void assignBuilding(BWAPI::Unit unit);
 };

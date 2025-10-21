@@ -24,3 +24,8 @@ void CombatManager::AttackClosest() {
 		}
 	}
 }
+
+void CombatManager::assignUnit(BWAPI::Unit unit)
+{
+
+}

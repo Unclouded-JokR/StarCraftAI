@@ -16,5 +16,7 @@ public:
 	std::unordered_map<BWAPI::Unit, int> assigned;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedWorkers;
 
+	void assignUnit(BWAPI::Unit unit);
+	BWAPI::Unit getAvalibleWorker();
 };
 

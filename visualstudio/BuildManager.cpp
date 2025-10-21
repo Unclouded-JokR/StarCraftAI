@@ -61,3 +61,8 @@ void BuildManager::onFrame()
     break;
     }
 }
+
+void BuildManager::assignBuilding(BWAPI::Unit unit)
+{
+
+}

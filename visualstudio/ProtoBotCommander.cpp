@@ -77,7 +77,7 @@ void ProtoBotCommander::onEnd(bool isWinner)
 
 void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 {
-	ProtoBotCommander::strategyManager.onUnitDestroy(unit);
+	strategyManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
@@ -87,7 +87,22 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-	
+	if (unit->getPlayer() != BWAPI::Broodwar->self())
+		return;
+
+	if (unit->getType().isBuilding())
+	{
+		buildManager.assignBuilding(unit);
+	}
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Probe)
+	{
+		economyManager.assignUnit(unit);
+	}
+	else
+	{
+		combatManager.assignUnit(unit);
+	}
 }
 
 void ProtoBotCommander::onUnitShow(BWAPI::Unit unit)
@@ -123,4 +138,24 @@ void ProtoBotCommander::drawDebugInformation()
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), "Hello, World!\n");
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
+}
+
+BWAPI::Unit ProtoBotCommander::getUnitToBuild()
+{
+	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
+	return economyManager.getAvalibleWorker();
+}
+
+void ProtoBotCommander::getUnitToScout()
+{
+	if (((BWAPI::Broodwar->getFrameCount() / FRAMES_PER_SECOND) / 60) >= 5)
+	{
+		//ask combat manager for a unit to scout.
+	}
+	else
+	{
+		BWAPI::Unit unit = economyManager.getAvalibleWorker();
+	}
+
+	//scoutingManager.assignScout();
 }
