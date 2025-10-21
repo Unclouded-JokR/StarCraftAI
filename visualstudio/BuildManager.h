@@ -1,8 +1,15 @@
 #pragma once
+#include <BWAPI.h>
+
+class ProtoBotCommander;
+
 class BuildManager{
 public:
-    BuildManager();
+    ProtoBotCommander* commanderReference;
+
+    BuildManager(ProtoBotCommander* commanderReference);
 
     void onStart();
     void onFrame();
+    void assignBuilding(BWAPI::Unit unit);
 };

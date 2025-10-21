@@ -1,5 +1,10 @@
 #include "InformationManager.h"
 
+InformationManager::InformationManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+{
+
+}
+
 void InformationManager::onStart()
 {
     _knownEnemies.clear();

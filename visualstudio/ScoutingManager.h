@@ -1,8 +1,14 @@
 #pragma once
 #include <BWAPI.h>
+
+class ProtoBotCommander;
+
 class ScoutingManager
 {
 public:
+    ProtoBotCommander* commanderReference;
+
+    ScoutingManager(ProtoBotCommander* commanderReference);
     void onStart();
     void onFrame();
     

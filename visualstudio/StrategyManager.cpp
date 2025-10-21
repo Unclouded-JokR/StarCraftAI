@@ -198,6 +198,11 @@ StrategyRageState StrategyManager::rageState("Rage");
 StrategyAngryState StrategyManager::angryState("Angry");
 
 
+StrategyManager::StrategyManager(ProtoBotCommander *commanderReference) : commanderReference(commanderReference)
+{
+
+}
+
 void StrategyManager::onStart()
 {
 	std::cout << "StrategyManager is a go!" << '\n';

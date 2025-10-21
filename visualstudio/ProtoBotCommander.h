@@ -7,11 +7,19 @@
 #include "CombatManager.h"
 #include "UnitManager.h"
 #include "RequestManager.h"
+#include "../../src/starterbot/MapTools.h"
+#include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
+#include "../../BWEM/src/bwem.h"
+
+#define FRAMES_PER_SECOND 24
+
+using namespace BWEM;
 
 class ProtoBotCommander
 {
 public:
+	MapTools m_mapTools;
 	EconomyManager economyManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
@@ -19,6 +27,11 @@ public:
 	CombatManager combatManager; 
 	StrategyManager strategyManager;
 
+	ProtoBotCommander();
+
+	/*
+	* BWAPI specific methods
+	*/
 	void onStart();
 	void onFrame();
 	void onEnd(bool isWinner);
@@ -30,15 +43,12 @@ public:
 	void onUnitShow(BWAPI::Unit unit);
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
+	void drawDebugInformation();
 
-	//Dont know the right implementation for this but will have these methods for now
-	void requestUnit(BWAPI::Unit unit);
-	void requestUnit(BWAPI::Unitset &unit);
-	void requestUnit(BWAPI::UnitType type);
-
-private:
-	UnitManager unitManager;
-	RequestManager requestManager;
-	//Add spenderManager?
+	/*
+	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
+	*/
+	void getUnitToScout();
+	BWAPI::Unit getUnitToBuild();
 };
 

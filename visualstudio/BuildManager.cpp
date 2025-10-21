@@ -3,7 +3,7 @@
 #include "../src/starterbot/MapTools.h"
 
 // constructor for BuildManager
-BuildManager::BuildManager()
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
     
 }
@@ -60,4 +60,9 @@ void BuildManager::onFrame()
     Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Observatory);
     break;
     }
+}
+
+void BuildManager::assignBuilding(BWAPI::Unit unit)
+{
+
 }
