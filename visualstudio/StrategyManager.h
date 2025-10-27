@@ -138,6 +138,7 @@ public:
 	void changeState(StrategyState*);
 	void battleLost(); //Optionally can makes these two a single function with a bool parameter 
 	void battleWon();
+	std::string getCurrentStateName();
 
 	static StrategyContentState contentState;
 	static StrategyBoredomState boredomState;

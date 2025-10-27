@@ -48,8 +48,12 @@ public:
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
 	*/
-	void getUnitToScout();
-	BWAPI::Unit getUnitToBuild();
 	std::string enemyRaceCheck();
+
+	//Ecconomy Manager methods
+	BWAPI::Unit getUnitToBuild();
+	//BWAPI::Unitset getAllUnitsAssignedToNexus();
+
+	void getUnitToScout();
 };
 

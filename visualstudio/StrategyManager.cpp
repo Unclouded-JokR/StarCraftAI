@@ -237,6 +237,11 @@ void StrategyManager::onFrame()
 	//StrategyManager::printBoredomMeter();
 }
 
+std::string StrategyManager::getCurrentStateName()
+{
+	return currentState->stringStateName;
+}
+
 void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 {
 	if (unit == nullptr)

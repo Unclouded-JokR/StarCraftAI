@@ -40,15 +40,47 @@ void ProtoBotCommander::onStart()
 	* We could reduce these digits to tens instead to decrease memeory usage.
 	*/
 
+	/*
+	* [TO DO]:
+	* Create code to select opening randomly for avalible openings.
+	* Have functions that can ask building manager how many openings we have.
+	*
+	*/
 	std::string enemyRace = enemyRaceCheck();
-	std::cout << enemyRace << std::endl;
+	std::cout << enemyRace << '\n';
+
+	/*
+	* [TO DO]:
+	* Initalize ecconomy manager instance.
+	* Assign workers.
+	* 
+	*/
+	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+	for (BWAPI::Unit unit : units)
+	{
+		if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
+		{
+			//send ecconmy manager signal to create new instance.
+		}
+	}
+
+	//Assign 4 workers at the start of the game to the ecconomy manager. 
+	for(BWAPI::Unit unit : units)
+	{
+		if (unit->getType().isWorker())
+		{
+			economyManager.assignUnit(unit);
+		}
+	}
 
 	/*
 	* Protobot Modules
 	*/
-	strategyManager.onStart();
-	buildManager.onStart();
 	informationManager.onStart();
+	strategyManager.onStart();
+	//scoutingManager.onStart();
+	//building manager on start does nothing as of now.
+	//buildManager.onStart();
 }
 
 void ProtoBotCommander::onFrame()
@@ -102,6 +134,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
 
+	//Need to add case if the unit is a nexus
 	if (unit->getType().isBuilding())
 	{
 		buildManager.assignBuilding(unit);
@@ -147,7 +180,8 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 
 void ProtoBotCommander::drawDebugInformation()
 {
-	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), "Hello, World!\n");
+	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
+	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 }
