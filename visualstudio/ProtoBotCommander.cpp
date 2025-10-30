@@ -22,8 +22,8 @@ void ProtoBotCommander::onStart()
 	Map::Instance().Initialize();
 
 	// Find the bases for the starting locations
-	bool foundBases = Map::Instance().FindBasesForStartingLocations();
-	assert(foundBases);     // make sure we found the bases
+	//bool foundBases = Map::Instance().FindBasesForStartingLocations();
+	//assert(foundBases);     // make sure we found the bases
 
 	// Call MapTools OnStart
 	m_mapTools.onStart();
@@ -33,7 +33,8 @@ void ProtoBotCommander::onStart()
 	*/
 	strategyManager.onStart();
 	buildManager.onStart();
-	informationManager.onStart();
+	//informationManager.onStart();
+	combatManager.onStart();
 
 	//Shouldnt need to check this but will leave this here just in case.
 	//playerRaceCheck();
@@ -57,7 +58,7 @@ void ProtoBotCommander::onFrame()
 	/*
 	* Protobot Modules
 	*/
-	informationManager.onFrame();
+	//informationManager.onFrame();
 	strategyManager.onFrame();
 	buildManager.onFrame();
 
@@ -78,11 +79,11 @@ void ProtoBotCommander::onEnd(bool isWinner)
 void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 {
 	strategyManager.onUnitDestroy(unit);
+	combatManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
-
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
