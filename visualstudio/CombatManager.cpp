@@ -87,6 +87,12 @@ void CombatManager::assignUnit(BWAPI::Unit unit)
 	}
 }
 
+void CombatManager::allSquadsMove(BWAPI::Position position) {
+	for (auto& squad : Squads) {
+		squad.move(position);
+	}
+}
+
 bool CombatManager::isAssigned(BWAPI::Unit unit) {
 	return unitSquadMap.find(unit->getID()) != unitSquadMap.end();
 }

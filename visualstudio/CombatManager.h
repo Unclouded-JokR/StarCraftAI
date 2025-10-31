@@ -18,6 +18,7 @@ public:
     void attack();
     void addSquad();
     void removeSquad(int squadId);
+    void allSquadsMove(BWAPI::Position position);
     void redistributeUnits();
     void assignUnit(BWAPI::Unit unit);
     void drawDebugInfo();

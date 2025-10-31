@@ -15,9 +15,7 @@ void Squad::removeUnit(BWAPI::Unit unit) {
 }
 
 void Squad::move(BWAPI::Position position) {
-	for (auto& unit : units) {
-		unit->move(position);
-	}
+	units.attack(position);
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {
