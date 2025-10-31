@@ -156,6 +156,11 @@ void StrategyAngryState::evaluate(StrategyManager& strategyManager)
 		strategyManager.changeState(&StrategyManager::egoState);
 		return;
 	}
+	else if (strategyManager.angerMeter >= 1.0f || strategyManager.boredomMeter >= 1.0f)
+	{
+		strategyManager.changeState(&StrategyManager::rageState);
+		return;
+	}
 
 
 }
@@ -164,8 +169,11 @@ void StrategyRageState::enter(StrategyManager& strategyManager)
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / (FRAMES_PER_SECOND);
-
 	timeWhenRageEntered = seconds;
+
+	strategyManager.boredomMeter = 0.0f;
+	strategyManager.angerMeter = 0.0f;
+	strategyManager.egoMeter = 0.0f;
 
 	BWAPI::Broodwar->sendText("Entered Rage");
 }
@@ -182,7 +190,7 @@ void StrategyRageState::exit(StrategyManager& strategyManager)
 void StrategyRageState::evaluate(StrategyManager& strategyManager)
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	const int seconds = frame / (24);
+	const int seconds = frame / FRAMES_PER_SECOND;
 
 	//Add strategy anlysis here
 

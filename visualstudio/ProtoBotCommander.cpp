@@ -112,7 +112,7 @@ void ProtoBotCommander::onFrame()
 	informationManager.onFrame();
 
 	Action action = strategyManager.onFrame();
-	std::cout << action.type << "\n";
+	//std::cout << action.type << "\n";
 
 	switch(action.type)
 	{	

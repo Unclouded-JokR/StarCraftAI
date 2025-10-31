@@ -108,7 +108,7 @@ public:
 class StrategyRageState : public StrategyState {
 public:
 	int timeWhenRageEntered = 0;
-	int rageTime = 30 * FRAMES_PER_SECOND;
+	int rageTime = 30; //in seconds
 
 	StrategyRageState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
