@@ -92,12 +92,12 @@ struct Build
 
 struct Attack
 {
-
+	BWAPI::TilePosition position;
 };
 
 struct Defend
 {
-
+	BWAPI::TilePosition position;
 };
 
 struct None

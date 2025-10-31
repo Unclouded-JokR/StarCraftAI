@@ -5,7 +5,6 @@
 int previousFrameSecond = 0;
 std::vector<int> expansionTimes = { 5, 10, 20, 30, 40 , 50 };
 int minutesPassedIndex = 0;
-
 int frameSinceLastScout = 0;
 
 #pragma region StateDefinitions
@@ -205,13 +204,12 @@ StrategyAngryState StrategyManager::angryState("Angry");
 
 StrategyManager::StrategyManager(ProtoBotCommander *commanderReference) : commanderReference(commanderReference)
 {
-
+	StrategyManager::currentState = &StrategyManager::contentState;
 }
 
 void StrategyManager::onStart()
 {
 	std::cout << "StrategyManager is a go!" << '\n';
-	StrategyManager::currentState = &StrategyManager::contentState;
 	currentState->enter(*this);
 
 	//Test logic to select a random build order that will be passed to the strategy manager. We can take into account the state the bot was in when it lost in later iterations.
@@ -237,14 +235,6 @@ Action StrategyManager::onFrame()
 		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
 	}
-
-	/*if (BWAPI::Broodwar->self()->supplyTotal() > BWAPI::Broodwar->enemy()->supplyUsed() / 2)
-	{
-		
-	}*/
-
-	//Divide by 2 because zergs workers costs .5 supply
-	//std::cout << "Enemy total supply " << BWAPI::Broodwar->self()->supplyUsed() / 2 << std::endl;
 
 	currentState->evaluate(*this);
 
@@ -281,15 +271,14 @@ Action StrategyManager::onFrame()
 	}
 	else if(buildOrderCompleted)
 	{
-		/*for (size_t i = 0; i < expansionTimes.size(); ++i)
+		if (minutesPassedIndex < expansionTimes.size() && seconds / 60 > expansionTimes.at(minutesPassedIndex))
 		{
-			if (seconds / 60 > expansionTimes[i])
-			{
-				Exapnd action;
-				action.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-				return action;
-			}
-		}*/
+			minutesPassedIndex++;
+
+			Expand actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+			return action;
+		}
 	}
 	#pragma endregion
 
@@ -324,6 +313,12 @@ Action StrategyManager::onFrame()
 		action.type = ActionType::Action_Scout;
 		return action;
 	}
+	#pragma endregion
+
+	#pragma region Building
+
+	//Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
+
 	#pragma endregion
 
 
