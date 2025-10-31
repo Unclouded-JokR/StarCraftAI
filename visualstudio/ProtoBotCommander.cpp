@@ -49,6 +49,9 @@ void ProtoBotCommander::onStart()
 	std::string enemyRace = enemyRaceCheck();
 	std::cout << enemyRace << '\n';
 
+	//Need build order structure to be implemented.
+	//vector<BuildOrder> build_orders = buildManager.getBuildOrders(enemyRace);
+
 	/*
 	* [TO DO]:
 	* Initalize ecconomy manager instance.
@@ -77,7 +80,12 @@ void ProtoBotCommander::onStart()
 	* Protobot Modules
 	*/
 	informationManager.onStart();
+
+	//Replace with commented out line when multiple build orders are in place.
 	strategyManager.onStart();
+	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
+	
+
 	//scoutingManager.onStart();
 	//building manager on start does nothing as of now.
 	//buildManager.onStart();
@@ -102,7 +110,47 @@ void ProtoBotCommander::onFrame()
 	* Protobot Modules
 	*/
 	informationManager.onFrame();
-	strategyManager.onFrame();
+
+	Action action = strategyManager.onFrame();
+	std::cout << action.type << "\n";
+
+	switch(action.type)
+	{	
+		case ActionType::Action_Expand:
+		{
+			Expand value = get<Expand>(action.commanderAction);
+			BWAPI::Unit unit = getUnitToBuild();
+			buildManager.buildBuilding(unit, value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Build:
+		{
+			Build value = get<Build>(action.commanderAction);
+			BWAPI::Unit unit = getUnitToBuild();
+			buildManager.buildBuilding(unit, value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Scout:
+		{
+			Scout value = get<Scout>(action.commanderAction);
+			BWAPI::Unit unit = getUnitToBuild();
+			getUnitToScout();
+			break;
+		}
+		case ActionType::Action_Attack:
+		{
+			break;
+		}
+		case ActionType::Action_Defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
 	buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
@@ -134,7 +182,14 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
 
-	//Need to add case if the unit is a nexus
+	const BWAPI::UnitType unit_type = unit->getType();
+
+	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units.
+	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator)
+	{
+		//assign unit to the ecconomy manager
+	}
+
 	if (unit->getType().isBuilding())
 	{
 		buildManager.assignBuilding(unit);
@@ -190,6 +245,21 @@ BWAPI::Unit ProtoBotCommander::getUnitToBuild()
 {
 	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
 	return economyManager.getAvalibleWorker();
+}
+
+const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
+{
+	return informationManager.getKnownEnemies();
+}
+
+const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemyBuildings()
+{
+	return informationManager.getKnownEnemyBuildings();
+}
+
+bool ProtoBotCommander::buildOrderCompleted()
+{
+	return buildManager.isBuildOrderCompleted();
 }
 
 void ProtoBotCommander::getUnitToScout()

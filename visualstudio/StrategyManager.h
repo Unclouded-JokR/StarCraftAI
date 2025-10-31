@@ -1,5 +1,6 @@
 #pragma once
 #include <BWAPI.h>
+#include <variant>
 #define FRAMES_PER_SECOND 24
 
 class StrategyManager;
@@ -116,6 +117,7 @@ public:
 };
 
 class ProtoBotCommander;
+struct Action;
 
 class StrategyManager
 {
@@ -131,7 +133,7 @@ public:
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 	void onStart();
-	void onFrame();
+	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
 	void printBoredomMeter();
 	void printAngerMeter();

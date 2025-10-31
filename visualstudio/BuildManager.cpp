@@ -67,3 +67,14 @@ void BuildManager::assignBuilding(BWAPI::Unit unit)
 {
 
 }
+
+bool BuildManager::isBuildOrderCompleted()
+{
+    //Return true if BO is completed
+    return false;
+}
+
+void BuildManager::buildBuilding(BWAPI::Unit unit, BWAPI::UnitType building)
+{
+
+}

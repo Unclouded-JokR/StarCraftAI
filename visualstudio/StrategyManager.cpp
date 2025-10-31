@@ -3,6 +3,10 @@
 #include <BWAPI.h>
 
 int previousFrameSecond = 0;
+std::vector<int> expansionTimes = { 5, 10, 20, 30, 40 , 50 };
+int minutesPassedIndex = 0;
+
+int frameSinceLastScout = 0;
 
 #pragma region StateDefinitions
 void StrategyBoredomState::enter(StrategyManager& strategyManager)
@@ -210,10 +214,20 @@ void StrategyManager::onStart()
 	StrategyManager::currentState = &StrategyManager::contentState;
 	currentState->enter(*this);
 
+	//Test logic to select a random build order that will be passed to the strategy manager. We can take into account the state the bot was in when it lost in later iterations.
+	std::vector<int> myVector = { 10, 20, 30, 40, 50 };
+	const size_t test = myVector.size();
+	const int chooseRandBuildOrder = rand() % test;
+	//return build order chosen
 }
 
-void StrategyManager::onFrame()
+Action StrategyManager::onFrame()
 {
+	None none;
+	Action action;
+	action.commanderAction = none;
+	action.type = ActionType::Action_None;
+
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / (FRAMES_PER_SECOND);
 
@@ -234,7 +248,88 @@ void StrategyManager::onFrame()
 
 	currentState->evaluate(*this);
 
+	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
+	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
+	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
+	
+	//WorkerSet workerSet = commanderReference.checkWorkerSetNeedsAssimilator();
+
+	#pragma region Expand
+	if (supplyUsed + 4 >= totalSupply)
+	{
+		Expand actionToTake;
+		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Probe;
+
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Expand;
+		return action;
+	}
+	/*else if(workerSet != nullptr)
+	{
+		Exapnd action;
+		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
+	}*/
+	//If we have a stock pile of minerals
+	else if (BWAPI::Broodwar->self()->minerals() > 3000)
+	{
+		Expand actionToTake;
+		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Expand;
+		return action;
+	}
+	else if(buildOrderCompleted)
+	{
+		/*for (size_t i = 0; i < expansionTimes.size(); ++i)
+		{
+			if (seconds / 60 > expansionTimes[i])
+			{
+				Exapnd action;
+				action.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+				return action;
+			}
+		}*/
+	}
+	#pragma endregion
+
+	//#pragma region Build Anti-Air
+	//const std::set<BWAPI::Unit>& knownEnemyUnits = commanderReference->getKnownEnemyUnits();
+	//const std::map<BWAPI::Unit, EnemyBuildingInfo>& knownEnemyBuildings = commanderReference->getKnownEnemyBuildings();
+
+	//for (const BWAPI::Unit unit : knownEnemyUnits)
+	//{
+	//	if (unit->isFlying())
+	//	{
+	//		//Build anti air around base
+	//	}
+	//}
+
+	//for (const auto building : knownEnemyBuildings)
+	//{
+	//	if (building.first->isFlying())
+	//	{
+	//		//Build anti air around base
+	//	}
+	//}
+	//#pragma endregion
+
+	#pragma region Scout
+	if (buildOrderCompleted && frame - frameSinceLastScout >= 200)
+	{
+		frameSinceLastScout = frame;
+		Scout actionToTake;
+
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Scout;
+		return action;
+	}
+	#pragma endregion
+
+
 	//StrategyManager::printBoredomMeter();
+
+	return action;
 }
 
 std::string StrategyManager::getCurrentStateName()
