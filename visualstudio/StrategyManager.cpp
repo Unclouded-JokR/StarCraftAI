@@ -6,6 +6,7 @@ int previousFrameSecond = 0;
 std::vector<int> expansionTimes = { 5, 10, 20, 30, 40 , 50 };
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
+int frameSinceLastBuild = 0;
 
 #pragma region StateDefinitions
 void StrategyBoredomState::enter(StrategyManager& strategyManager)
@@ -229,7 +230,7 @@ Action StrategyManager::onFrame()
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / (FRAMES_PER_SECOND);
 
-	
+
 	if ((frame - previousFrameSecond) == 24)
 	{
 		previousFrameSecond = frame;
@@ -241,10 +242,10 @@ Action StrategyManager::onFrame()
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
-	
+
 	//WorkerSet workerSet = commanderReference.checkWorkerSetNeedsAssimilator();
 
-	#pragma region Expand
+#pragma region Expand
 	if (supplyUsed + 4 >= totalSupply)
 	{
 		Expand actionToTake;
@@ -269,7 +270,7 @@ Action StrategyManager::onFrame()
 		action.type = ActionType::Action_Expand;
 		return action;
 	}
-	else if(buildOrderCompleted)
+	else if (buildOrderCompleted)
 	{
 		if (minutesPassedIndex < expansionTimes.size() && seconds / 60 > expansionTimes.at(minutesPassedIndex))
 		{
@@ -280,7 +281,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 	}
-	#pragma endregion
+#pragma endregion
 
 	//#pragma region Build Anti-Air
 	//const std::set<BWAPI::Unit>& knownEnemyUnits = commanderReference->getKnownEnemyUnits();
@@ -303,7 +304,7 @@ Action StrategyManager::onFrame()
 	//}
 	//#pragma endregion
 
-	#pragma region Scout
+#pragma region Scout
 	if (buildOrderCompleted && frame - frameSinceLastScout >= 200)
 	{
 		frameSinceLastScout = frame;
@@ -318,6 +319,30 @@ Action StrategyManager::onFrame()
 	#pragma region Building
 
 	//Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
+	if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
+	{
+		frameSinceLastBuild = frame;
+		const int buildingToBuild = rand() % 100;
+		Build actionToTake;
+		action.type = Action_Build;
+
+		if (buildingToBuild <= 60)
+		{
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+		}
+		else if (buildingToBuild <= 80)
+		{
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
+		}
+		else
+		{
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
+		}
+		action.commanderAction = actionToTake;
+
+		return action;
+	}
+	
 
 	#pragma endregion
 

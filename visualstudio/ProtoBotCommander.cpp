@@ -118,22 +118,21 @@ void ProtoBotCommander::onFrame()
 	{	
 		case ActionType::Action_Expand:
 		{
-			Expand value = get<Expand>(action.commanderAction);
+			const Expand value = get<Expand>(action.commanderAction);
 			BWAPI::Unit unit = getUnitToBuild();
 			buildManager.buildBuilding(unit, value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Build:
 		{
-			Build value = get<Build>(action.commanderAction);
+			const Build value = get<Build>(action.commanderAction);
 			BWAPI::Unit unit = getUnitToBuild();
 			buildManager.buildBuilding(unit, value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Scout:
 		{
-			Scout value = get<Scout>(action.commanderAction);
-			BWAPI::Unit unit = getUnitToBuild();
+			const Scout value = get<Scout>(action.commanderAction);
 			getUnitToScout();
 			break;
 		}
