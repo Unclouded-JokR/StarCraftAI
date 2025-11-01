@@ -11,7 +11,8 @@ BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderRef
 
 void BuildManager::onStart()
 {
-
+    //Make false at the start of a game.
+    buildOrderCompleted = false;
 }
 
 void BuildManager::onFrame()
@@ -70,8 +71,7 @@ void BuildManager::assignBuilding(BWAPI::Unit unit)
 
 bool BuildManager::isBuildOrderCompleted()
 {
-    //Return true if BO is completed
-    return false;
+    return buildOrderCompleted;
 }
 
 void BuildManager::buildBuilding(BWAPI::Unit unit, BWAPI::UnitType building)

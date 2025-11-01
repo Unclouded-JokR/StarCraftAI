@@ -6,6 +6,7 @@ class ProtoBotCommander;
 class BuildManager{
 public:
     ProtoBotCommander* commanderReference;
+    bool buildOrderCompleted = false;
 
     BuildManager(ProtoBotCommander* commanderReference);
 
