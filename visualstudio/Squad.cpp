@@ -62,5 +62,9 @@ void Squad::drawDebugInfo() {
 		if (command.getTarget() != nullptr) {
 			BWAPI::Broodwar->drawLineMap(unit->getPosition(), command.getTarget()->getPosition(), squadColor);
 		}
+
+		// Draw squad ID above unit
+		BWAPI::Position textPos(unit->getPosition().x - 20, unit->getPosition().y + 20);
+		BWAPI::Broodwar->drawTextMap(textPos, "Squad %d", squadId);
 	}
 }
