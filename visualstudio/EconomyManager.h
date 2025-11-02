@@ -238,6 +238,7 @@ public:
 			{
 				BWAPI::Unit assignedMineral = assignedResource[unit];
 				mineralWorkerCount[assignedMineral] -= 1;
+				assignedResource.erase(unit);
 				unitToReturn = unit;
 				break;
 			}
@@ -245,9 +246,29 @@ public:
 
 		if (unitToReturn != nullptr)
 		{
-			workers.erase(unitToReturn);
 			return unitToReturn;
 		}
+		
+		//Choose random unit if we did not find unit.
+		const int random = rand() % workers.size();
+		std::cout << "Random Index Choosen: " << random << "\n";
+
+		int index = 0;
+		for (BWAPI::Unit unit : workers)
+		{
+			if (index == random)
+			{
+				BWAPI::Unit assignedMineral = assignedResource[unit];
+				mineralWorkerCount[assignedMineral] -= 1;
+				unitToReturn = unit;
+				assignedResource.erase(unit);
+				break;
+			} 
+
+			index++;
+		}
+
+		return unitToReturn;
 
 		//if (unitToReturn != nullptr)
 		//{

@@ -104,36 +104,36 @@ void ProtoBotCommander::onFrame()
 	*/
 	informationManager.onFrame();
 
-	action action = strategymanager.onframe();
-	std::cout << action.type << "\n";
+	Action action = strategyManager.onFrame();
+	//std::cout << action.type << "\n";
 
-	switch(action.type)
-	{	
-		case actiontype::action_expand:
+	switch (action.type)
+	{
+		case ActionType::Action_Expand:
 		{
-			const expand value = get<expand>(action.commanderaction);
-			bwapi::unit unit = getunittobuild();
-			buildmanager.buildbuilding(unit, value.unittobuild);
+			const Expand value = get<Expand>(action.commanderAction);
+			BWAPI::Unit unit = getUnitToBuild();
+			buildManager.buildBuilding(unit, value.unitToBuild);
 			break;
 		}
-		case actiontype::action_build:
+		case ActionType::Action_Build:
 		{
-			const build value = get<build>(action.commanderaction);
-			bwapi::unit unit = getunittobuild();
-			buildmanager.buildbuilding(unit, value.unittobuild);
+			const Build value = get<Build>(action.commanderAction);
+			BWAPI::Unit unit = getUnitToBuild();
+			buildManager.buildBuilding(unit, value.unitToBuild);
 			break;
 		}
-		case actiontype::action_scout:
+		case ActionType::Action_Scout:
 		{
-			const scout value = get<scout>(action.commanderaction);
-			getunittoscout();
+			const Scout value = get<Scout>(action.commanderAction);
+			getUnitToScout();
 			break;
 		}
-		case actiontype::action_attack:
+		case ActionType::Action_Attack:
 		{
 			break;
 		}
-		case actiontype::action_defend:
+		case ActionType::Action_Defend:
 		{
 			break;
 		}
@@ -225,8 +225,9 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	std::string 
+	std::string buildOrderSelectedString = "Selected Build Order: " + buildOrderSelected + "\n";
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
+	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 20), buildOrderSelectedString.c_str());
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 }

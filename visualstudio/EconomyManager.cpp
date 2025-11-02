@@ -63,6 +63,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
             if (alreadyExists == false)
             {
+                //[TODO]: Also need to transfer workers to expansion.
                 nexusEconomies.push_back(NexusEconomy(unit, nexusEconomies.size() + 1));
             }
             else
@@ -112,4 +113,11 @@ BWAPI::Unit EconomyManager::getAvalibleWorker()
             return unit;
         }
     }
+
+    /*for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        BWAPI::Unit unitToReturn = nexusEconomy.getWorker();
+
+        if(unitToReturn != nullptr) return unitToReturn;
+    }*/
 }
