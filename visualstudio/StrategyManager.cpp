@@ -216,7 +216,7 @@ StrategyManager::StrategyManager(ProtoBotCommander *commanderReference) : comman
 	StrategyManager::currentState = &StrategyManager::contentState;
 }
 
-void StrategyManager::onStart()
+std::string StrategyManager::onStart()
 {
 	std::cout << "StrategyManager is a go!" << '\n';
 	currentState->enter(*this);
@@ -226,6 +226,8 @@ void StrategyManager::onStart()
 	const size_t test = myVector.size();
 	const int chooseRandBuildOrder = rand() % test;
 	//return build order chosen
+
+	return "2_Gateway_Observer";
 }
 
 Action StrategyManager::onFrame()

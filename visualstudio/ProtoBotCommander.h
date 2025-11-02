@@ -30,6 +30,11 @@ public:
 	CombatManager combatManager; 
 	StrategyManager strategyManager;
 
+	/*
+	* Used for Debugging
+	*/
+	std::string buildOrderSelected;
+
 	ProtoBotCommander();
 
 	/*

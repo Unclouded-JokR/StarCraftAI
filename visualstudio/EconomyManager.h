@@ -13,6 +13,7 @@ class ProtoBotCommander;
 class NexusEconomy
 {
 public:
+	const int nexusID;
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
 	BWAPI::Unitset minerals;
@@ -20,13 +21,17 @@ public:
 	std::unordered_map<BWAPI::Unit, int> mineralWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
 	int assimilatorWorkerCount = 0;
-	const int nexusID;
+
+	//Calculated maximums based on number of miners.
 	int maximumWorkerAmount;
 	int optimalWorkerAmount;
-	int maximumWorkers;
-	int maximumWorkerPerMineral;
 
+	//Values that can change based on overtime.
+	int maximumWorkerPerMineral;
+	int maximumWorkers;
 	bool overtime = false;
+
+	//So we dont overflow the terminal.
 	int lastPrintFrame = 0;
 
 	NexusEconomy(BWAPI::Unit nexus, int id) : nexus(nexus) , nexusID(id)
@@ -56,6 +61,7 @@ public:
 		std::cout << "Total Minerals: " << minerals.size() << "\n";
 	}
 
+	//[TODO] need to call deconstructor if a nexus dies and send back all the workers.
 	~NexusEconomy()
 	{
 
@@ -81,7 +87,7 @@ public:
 				//Worker is already assigned
 				if (assignedResource.find(worker) != assignedResource.end())
 				{
-					if (worker->isCarryingMinerals())
+					/*if (worker->isCarryingMinerals())
 					{
 						worker->rightClick(nexus);
 					}
@@ -89,7 +95,9 @@ public:
 					{
 						BWAPI::Unit closestMineral = assignedResource[worker];
 						worker->gather(closestMineral);
-					}
+					}*/
+					BWAPI::Unit closestMineral = assignedResource[worker];
+					worker->gather(closestMineral);
 					continue;
 				}
 
@@ -102,17 +110,9 @@ public:
 				}
 
 				BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
-				if (closestMineral == nullptr)
-				{
-					continue;
-				}
-				else
-				{
-					mineralWorkerCount[closestMineral] += 1;
-					assignedResource[worker] = closestMineral;
-					worker->gather(closestMineral);
-					continue;
-				}
+				mineralWorkerCount[closestMineral] += 1;
+				assignedResource[worker] = closestMineral;
+				worker->gather(closestMineral);
 			}
 		}
 
@@ -202,15 +202,6 @@ public:
 		}
 
 		return closestMineral;
-
-		////Case for having 2 or 3 workers per mineral
-		//for (BWAPI::Unit mineral : minerals)
-		//{
-		//	if (mineralWorkerCount[mineral] < workerCap)
-		//	{
-		//		return mineral;
-		//	}
-		//}
 	}
 
 	void assignWorker(BWAPI::Unit unit)

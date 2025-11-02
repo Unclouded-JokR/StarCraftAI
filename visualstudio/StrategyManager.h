@@ -132,7 +132,7 @@ public:
 	float egoFromEnemyUnitDeath = .01f;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
-	void onStart();
+	std::string onStart();
 	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
 	void printBoredomMeter();

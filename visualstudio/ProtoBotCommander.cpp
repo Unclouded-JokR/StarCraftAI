@@ -74,11 +74,12 @@ void ProtoBotCommander::onStart()
 	informationManager.onStart();
 
 	//Replace with commented out line when multiple build orders are in place.
-	strategyManager.onStart();
+	buildOrderSelected = strategyManager.onStart();
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 	
 
 	//scoutingManager.onStart();
+	
 	//building manager on start does nothing as of now.
 	//buildManager.onStart();
 }
@@ -103,44 +104,44 @@ void ProtoBotCommander::onFrame()
 	*/
 	informationManager.onFrame();
 
-	//Action action = strategyManager.onFrame();
-	////std::cout << action.type << "\n";
+	action action = strategymanager.onframe();
+	std::cout << action.type << "\n";
 
-	//switch(action.type)
-	//{	
-	//	case ActionType::Action_Expand:
-	//	{
-	//		const Expand value = get<Expand>(action.commanderAction);
-	//		BWAPI::Unit unit = getUnitToBuild();
-	//		buildManager.buildBuilding(unit, value.unitToBuild);
-	//		break;
-	//	}
-	//	case ActionType::Action_Build:
-	//	{
-	//		const Build value = get<Build>(action.commanderAction);
-	//		BWAPI::Unit unit = getUnitToBuild();
-	//		buildManager.buildBuilding(unit, value.unitToBuild);
-	//		break;
-	//	}
-	//	case ActionType::Action_Scout:
-	//	{
-	//		const Scout value = get<Scout>(action.commanderAction);
-	//		getUnitToScout();
-	//		break;
-	//	}
-	//	case ActionType::Action_Attack:
-	//	{
-	//		break;
-	//	}
-	//	case ActionType::Action_Defend:
-	//	{
-	//		break;
-	//	}
-	//	default:
-	//	{
-	//		break;
-	//	}
-	//}
+	switch(action.type)
+	{	
+		case actiontype::action_expand:
+		{
+			const expand value = get<expand>(action.commanderaction);
+			bwapi::unit unit = getunittobuild();
+			buildmanager.buildbuilding(unit, value.unittobuild);
+			break;
+		}
+		case actiontype::action_build:
+		{
+			const build value = get<build>(action.commanderaction);
+			bwapi::unit unit = getunittobuild();
+			buildmanager.buildbuilding(unit, value.unittobuild);
+			break;
+		}
+		case actiontype::action_scout:
+		{
+			const scout value = get<scout>(action.commanderaction);
+			getunittoscout();
+			break;
+		}
+		case actiontype::action_attack:
+		{
+			break;
+		}
+		case actiontype::action_defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
 
 	buildManager.onFrame();
 
@@ -224,6 +225,7 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
+	std::string 
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
