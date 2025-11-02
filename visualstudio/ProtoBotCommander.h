@@ -48,6 +48,10 @@ public:
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
 
+	//Get rid of these
+	void sendWorkersToGas();
+	void trainAdditionalWorkers();
+
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
 	*/

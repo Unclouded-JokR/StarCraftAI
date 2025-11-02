@@ -93,7 +93,6 @@ void StarterBot::onFrame()
 //Add this to Economy manager later
 void StarterBot::sendWorkersToGas()
 {
-
     const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
     for ( auto u : myUnits )
     {

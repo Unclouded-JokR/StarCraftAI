@@ -59,18 +59,10 @@ void ProtoBotCommander::onStart()
 	* 
 	*/
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+
 	for (BWAPI::Unit unit : units)
 	{
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
-		{
-			//send ecconmy manager signal to create new instance.
-		}
-	}
-
-	//Assign 4 workers at the start of the game to the ecconomy manager. 
-	for(BWAPI::Unit unit : units)
-	{
-		if (unit->getType().isWorker())
 		{
 			economyManager.assignUnit(unit);
 		}
@@ -111,44 +103,44 @@ void ProtoBotCommander::onFrame()
 	*/
 	informationManager.onFrame();
 
-	Action action = strategyManager.onFrame();
-	//std::cout << action.type << "\n";
+	//Action action = strategyManager.onFrame();
+	////std::cout << action.type << "\n";
 
-	switch(action.type)
-	{	
-		case ActionType::Action_Expand:
-		{
-			const Expand value = get<Expand>(action.commanderAction);
-			BWAPI::Unit unit = getUnitToBuild();
-			buildManager.buildBuilding(unit, value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Build:
-		{
-			const Build value = get<Build>(action.commanderAction);
-			BWAPI::Unit unit = getUnitToBuild();
-			buildManager.buildBuilding(unit, value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Scout:
-		{
-			const Scout value = get<Scout>(action.commanderAction);
-			getUnitToScout();
-			break;
-		}
-		case ActionType::Action_Attack:
-		{
-			break;
-		}
-		case ActionType::Action_Defend:
-		{
-			break;
-		}
-		default:
-		{
-			break;
-		}
-	}
+	//switch(action.type)
+	//{	
+	//	case ActionType::Action_Expand:
+	//	{
+	//		const Expand value = get<Expand>(action.commanderAction);
+	//		BWAPI::Unit unit = getUnitToBuild();
+	//		buildManager.buildBuilding(unit, value.unitToBuild);
+	//		break;
+	//	}
+	//	case ActionType::Action_Build:
+	//	{
+	//		const Build value = get<Build>(action.commanderAction);
+	//		BWAPI::Unit unit = getUnitToBuild();
+	//		buildManager.buildBuilding(unit, value.unitToBuild);
+	//		break;
+	//	}
+	//	case ActionType::Action_Scout:
+	//	{
+	//		const Scout value = get<Scout>(action.commanderAction);
+	//		getUnitToScout();
+	//		break;
+	//	}
+	//	case ActionType::Action_Attack:
+	//	{
+	//		break;
+	//	}
+	//	case ActionType::Action_Defend:
+	//	{
+	//		break;
+	//	}
+	//	default:
+	//	{
+	//		break;
+	//	}
+	//}
 
 	buildManager.onFrame();
 
@@ -183,25 +175,22 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	const BWAPI::UnitType unit_type = unit->getType();
 
-	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units.
-	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator)
-	{
-		//assign unit to the ecconomy manager
-	}
-
-	if (unit->getType().isBuilding())
-	{
-		buildManager.assignBuilding(unit);
-	}
-
-	if (unit->getType() == BWAPI::UnitTypes::Protoss_Probe)
+	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
+	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator || unit_type == BWAPI::UnitTypes::Protoss_Probe)
 	{
 		economyManager.assignUnit(unit);
+		return;
 	}
-	else
+
+	//Give all buildings to the Building Manager.
+	if (unit_type.isBuilding())
 	{
-		combatManager.assignUnit(unit);
+		buildManager.assignBuilding(unit);
+		return;
 	}
+		
+	//Gone through all cases assume it is a combat unit 
+	combatManager.assignUnit(unit);
 }
 
 void ProtoBotCommander::onUnitShow(BWAPI::Unit unit)

@@ -8,32 +8,9 @@ EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commande
 
 void EconomyManager::OnFrame()
 {
-    for (const auto& unit : assignedWorkers)
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        if (unit.second->isIdle())
-        {
-            assigned[unit.first] = 0;
-        }
-        
-
-    }
-
-    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-    for (auto& unit : myUnits)
-    {
-        // Check the unit type, if it is an idle worker, then we want to send it somewhere
-        if (unit->getType().isWorker() && unit->isIdle())
-        {
-            // Get the closest mineral to this worker unit
-            BWAPI::Unit closestMineral = GetClosestUnitToWOWorker(unit, BWAPI::Broodwar->getMinerals());
-
-            // If a valid mineral was found, right click it with the unit in order to start harvesting
-            if (closestMineral) 
-            {  
-                unit->rightClick(closestMineral); 
-                assignedWorkers[closestMineral] = unit;
-            }
-        }
+        nexusEconomy.OnFrame();
     }
 }
 
@@ -70,10 +47,69 @@ BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWA
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
-    
+    switch (unit->getType())
+    {
+        case BWAPI::UnitTypes::Protoss_Nexus:
+        {
+            bool alreadyExists = false;
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (nexusEconomy.nexus == unit)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+
+            if (alreadyExists == false)
+            {
+                nexusEconomies.push_back(NexusEconomy(unit, nexusEconomies.size() + 1));
+            }
+            else
+            {
+                std::cout << "Nexus Already Exists" << "\n";
+            }
+               
+            break;
+        }
+        case BWAPI::UnitTypes::Protoss_Assimilator:
+        {
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                {
+                    nexusEconomy.assignAssimilator(unit);
+                    std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    break;
+                }
+            }
+            break;
+        }
+        case BWAPI::UnitTypes::Protoss_Probe:
+        {
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                {
+                    std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    nexusEconomy.assignWorker(unit);
+                    break;
+                }
+            }
+            break;
+        }
+    }
 }
 
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
-    return nullptr;
+    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
+
+    for (auto& unit : myUnits)
+    {
+        if (unit->getType().isWorker())
+        {
+            return unit;
+        }
+    }
 }
