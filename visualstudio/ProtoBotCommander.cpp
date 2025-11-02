@@ -32,12 +32,14 @@ void ProtoBotCommander::onStart()
 	* Protobot Modules
 	*/
 	strategyManager.onStart();
-	buildManager.onStart();
-	//informationManager.onStart();
-	combatManager.onStart();
+	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
+	
 
-	//Shouldnt need to check this but will leave this here just in case.
-	//playerRaceCheck();
+	//scoutingManager.onStart();
+	//building manager on start does nothing as of now.
+	//buildManager.onStart();
+
+	combatManager.onStart();
 }
 
 void ProtoBotCommander::onFrame()
