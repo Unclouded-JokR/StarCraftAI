@@ -57,7 +57,7 @@ Squad& CombatManager::addSquad(){
 	BWAPI::Color randomColor(r, g, b);
 
 	int id = Squads.size() + 1;
-	int unitSize = 4;
+	int unitSize = 2;
 
 	Squad newSquad(0, id, randomColor, unitSize);
 	Squads.push_back(newSquad);
