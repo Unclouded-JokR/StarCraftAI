@@ -158,7 +158,7 @@ void ProtoBotCommander::onFrame()
 	//Uncomment this once onFrame does not steal a worker.
 	//scoutingManager.onFrame();
 	
-	combatManager.Update();
+	combatManager.onFrame();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -169,11 +169,11 @@ void ProtoBotCommander::onEnd(bool isWinner)
 void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 {
 	strategyManager.onUnitDestroy(unit);
+	combatManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
-
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)

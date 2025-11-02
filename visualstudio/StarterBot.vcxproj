@@ -33,6 +33,7 @@
     <ClInclude Include="ScoutingManager.h" />
     <ClInclude Include="StrategyManager.h" />
     <ClInclude Include="UnitManager.h" />
+	<ClInclude Include="Squad.h" />
 	<ClInclude Include="..\BWEM\EasyBMP_1.06\EasyBMP.h" />
 	<ClInclude Include="..\BWEM\src\area.h" />
 	<ClInclude Include="..\BWEM\src\base.h" />
@@ -67,6 +68,7 @@
     <ClCompile Include="ScoutingManager.cpp" />
     <ClCompile Include="StrategyManager.cpp" />
     <ClCompile Include="UnitManager.cpp" />
+	<ClCompile Include="Squad.cpp" />
 	<CLCompile Include="..\BWEM\EasyBMP_1.06\EasyBMP.cpp" />
 	<ClCompile Include="..\BWEM\src\area.cpp" />
 	<ClCompile Include="..\BWEM\src\base.cpp" />
