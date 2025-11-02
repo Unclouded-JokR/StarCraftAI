@@ -14,13 +14,12 @@ public:
     void onStart();
     void onFrame();
     void onUnitDestroy(BWAPI::Unit unit);
-    void update();
     void attack();
-    void addSquad();
+    Squad& addSquad();
     void removeSquad(int squadId);
     void allSquadsMove(BWAPI::Position position);
-    void redistributeUnits();
-    void assignUnit(BWAPI::Unit unit);
+    void removeEmptySquads();
+    Squad assignUnit(BWAPI::Unit unit);
     void drawDebugInfo();
     bool isAssigned(BWAPI::Unit unit);
 };

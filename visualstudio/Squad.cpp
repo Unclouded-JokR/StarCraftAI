@@ -2,11 +2,12 @@
 #include "Squad.h"
 #include "../src/starterbot/Tools.h"
 
-Squad::Squad(int squadType, int squadId, BWAPI::Color squadColor)
+Squad::Squad(int squadType, int squadId, BWAPI::Color squadColor, int unitSize)
 {
 	this->squadType = squadType;
 	this->squadId = squadId;
 	this->squadColor = squadColor;
+	this->unitSize = unitSize;
 	this->units = BWAPI::Unitset();
 }
 
@@ -15,10 +16,15 @@ void Squad::removeUnit(BWAPI::Unit unit) {
 }
 
 void Squad::move(BWAPI::Position position) {
-	units.attack(position);
+	units.move(position);
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {
+	if (std::find(units.begin(), units.end(), unit) != units.end()) {
+		// Avoids adding duplicate units
+		return;
+	}
+
 	units.insert(unit);
 	BWAPI::Broodwar->printf("Unit %d added to Squad %d", unit->getID(), squadId);
 }
@@ -41,6 +47,10 @@ void Squad::attack() {
 
 void Squad::drawDebugInfo() {
 	for (auto & unit : units) {
+		if (!unit || !unit->exists()) {
+			continue;
+		}
+
 		BWAPI::UnitCommand command = unit->getLastCommand();
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 5, squadColor, true);
 		if (command.getTargetPosition() != BWAPI::Positions::None) {
