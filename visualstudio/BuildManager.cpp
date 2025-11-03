@@ -5,7 +5,7 @@
 
 bool alreadySentRequest = false;
 // constructor for BuildManager
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(commanderReference)
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
     
 }
