@@ -4,6 +4,10 @@
 #include "../src/starterbot/MapTools.h"
 
 bool alreadySentRequest = false;
+bool alreadySentRequest1 = false;
+bool alreadySentRequest2 = false;
+bool alreadySentRequest3 = false;
+
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
 {
     
@@ -19,6 +23,8 @@ void BuildManager::onFrame()
 {
     int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
     int currentMineral = BWAPI::Broodwar->self()->minerals();
+
+    spenderManager.OnFrame();
 
     //Continually train dragoons with excess minerals
     if (currentMineral > 500) {
@@ -40,17 +46,29 @@ void BuildManager::onFrame()
         }
         case 10:
         {
-            Tools::BuildBuilding(commanderReference->getUnitToBuild(), BWAPI::UnitTypes::Protoss_Gateway);
+            if (alreadySentRequest1 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
+                alreadySentRequest1 = true;
+            }
             break;
         }
         case 12:
         {
-            Tools::BuildBuilding(commanderReference->getUnitToBuild(), BWAPI::UnitTypes::Protoss_Assimilator);
+            if (alreadySentRequest2 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
+                alreadySentRequest2 = true;
+            }
             break;
         }
         case 14:
         {
-            Tools::BuildBuilding(commanderReference->getUnitToBuild(), BWAPI::UnitTypes::Protoss_Cybernetics_Core);
+            if (alreadySentRequest3 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
+                alreadySentRequest3 = true;
+            }
             break;
         }
         case 15:
@@ -88,8 +106,6 @@ void BuildManager::onFrame()
             break;
         }
     }
-
-    spenderManager.OnFrame();
 }
 
 void BuildManager::buildUnitType(BWAPI::UnitType unitToTrain)

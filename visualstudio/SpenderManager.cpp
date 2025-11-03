@@ -32,11 +32,13 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    for (std::vector<BuildRequest>::iterator it = buildReuqests.begin(); it < buildReuqests.end(); ++it)
+    //[TODO]: fix this iterator is causing errors.
+    for (std::vector<BuildRequest>::iterator it = buildReuqests.begin(); it != buildReuqests.end();)
     {
         if (holds_alternative<BWAPI::UnitType>(it->unitRequest))
         {
             BWAPI::UnitType temp = get<BWAPI::UnitType>(it->unitRequest);
+
             mineralPrice = temp.mineralPrice();
             gasPrice = temp.gasPrice();
 
@@ -47,9 +49,16 @@ void SpenderManager::OnFrame()
 
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
-                buildReuqests.erase(it);
+                
+                //Why?
+                it = buildReuqests.erase(it);
+            }
+            else
+            {
+                it++;
             }
         }
+
     }
 
     //for (BuildRequest& buildRequest : buildReuqests)
