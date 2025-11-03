@@ -7,6 +7,7 @@
 #include "CombatManager.h"
 #include "UnitManager.h"
 #include "RequestManager.h"
+#include "SpenderManager.h"
 #include "../../src/starterbot/MapTools.h"
 #include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>

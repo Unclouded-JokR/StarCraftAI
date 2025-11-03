@@ -4,8 +4,7 @@
 #include "../src/starterbot/MapTools.h"
 
 bool alreadySentRequest = false;
-// constructor for BuildManager
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
 {
     
 }
@@ -32,7 +31,11 @@ void BuildManager::onFrame()
     {
         case 8:
         {
-            Tools::BuildBuilding(commanderReference->getUnitToBuild(), BWAPI::UnitTypes::Protoss_Pylon);
+            if (alreadySentRequest == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest = true;
+            }
             break;
         }
         case 10:
@@ -85,6 +88,8 @@ void BuildManager::onFrame()
             break;
         }
     }
+
+    spenderManager.OnFrame();
 }
 
 void BuildManager::buildUnitType(BWAPI::UnitType unitToTrain)
