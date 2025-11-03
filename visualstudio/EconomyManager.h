@@ -82,25 +82,10 @@ public:
 		{
 			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(255, 0, 0), true);
 
-			if (worker->isIdle())
+			//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
+			if (!worker->isCarryingMinerals())
 			{
-				//Worker is already assigned
-				if (assignedResource.find(worker) != assignedResource.end())
-				{
-					/*if (worker->isCarryingMinerals())
-					{
-						worker->rightClick(nexus);
-					}
-					else
-					{
-						BWAPI::Unit closestMineral = assignedResource[worker];
-						worker->gather(closestMineral);
-					}*/
-					BWAPI::Unit closestMineral = assignedResource[worker];
-					worker->gather(closestMineral);
-					continue;
-				}
-
+				//[TODO]: need to assign workers to assimilator incase they die, dont change who is assigned.
 				if (assimilator != nullptr && assimilatorWorkerCount < WORKERS_PER_ASSIMILATOR)
 				{
 					worker->gather(assimilator);
@@ -109,10 +94,23 @@ public:
 					continue;
 				}
 
-				BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
-				mineralWorkerCount[closestMineral] += 1;
-				assignedResource[worker] = closestMineral;
-				worker->gather(closestMineral);
+				if (assignedResource.find(worker) == assignedResource.end())
+				{
+					BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
+					mineralWorkerCount[closestMineral] += 1;
+					assignedResource[worker] = closestMineral;
+					worker->gather(closestMineral);
+				}
+			}
+			else
+			{
+				if (assignedResource.find(worker) != assignedResource.end())
+				{
+					BWAPI::Unit assignedMineral = assignedResource[worker];
+					assignedResource.erase(worker);
+					mineralWorkerCount[assignedMineral] -= 1;
+					continue;
+				}
 			}
 		}
 
@@ -138,7 +136,7 @@ public:
 	//Return true if the unit was apart of instance of NexusEconomy
 	//[TODO]: need to figure out what to do with units once a mineral patch or gas is done.
 	//[TODO]: also need to figure out edge case when unit destroyed is a nexus
-	bool onUnitDestroy(BWAPI::Unit unit)
+	bool OnUnitDestroy(BWAPI::Unit unit)
 	{
 		if (unit->getPlayer() != BWAPI::Broodwar->self())
 			return false;
@@ -191,7 +189,8 @@ public:
 		{
 			for (BWAPI::Unit mineral : minerals)
 			{
-				int distanceFromWorker = worker->getDistance(mineral);
+				const int distanceFromWorker = worker->getDistance(mineral);
+				const int workersAssignedToMineral = mineralWorkerCount[mineral];
 
 				if (mineralWorkerCount[mineral] < maximumWorkerPerMineral && distanceFromWorker < closestMineralDistance)
 				{
@@ -304,11 +303,9 @@ public:
 	std::vector<NexusEconomy> nexusEconomies;
 
 	void OnFrame();
+	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
 	BWAPI::Unit getAvalibleWorker();
-
-
-
 
 	std::unordered_map<BWAPI::Unit, int> assigned;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedWorkers;

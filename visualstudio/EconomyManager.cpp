@@ -14,35 +14,14 @@ void EconomyManager::OnFrame()
     }
 }
 
-BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BWAPI::Unitset& units)
+void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    BWAPI::Unit closestUnitWOWorker = nullptr;
-
-    for (auto& u : units)
+    //End loop early if we found the nexusEconomy that had the destroyed unit
+    //[TODO]: Need to deconstruct nexusEconomy if its a nexus.
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        if (assigned.count(u) == 0)
-        {
-            assigned[u] = 0;
-        }
+        if (nexusEconomy.OnUnitDestroy(unit) == true) break;
     }
-
-    for (auto& u : units)
-    {
-        if (!closestUnitWOWorker || (u->getDistance(p) < closestUnitWOWorker->getDistance(p) && assigned[u] == 0))
-        {
-            closestUnitWOWorker = u;
-        }
-    }
-
-    assigned[closestUnitWOWorker] = 1;
-    //assignedWorkers[closestUnitWOWorker]
-    return closestUnitWOWorker;
-}
-
-BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWAPI::Unitset& units)
-{
-    if (!unit) { return nullptr; }
-    return GetClosestUnitToWOWorker(unit->getPosition(), units);
 }
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)
