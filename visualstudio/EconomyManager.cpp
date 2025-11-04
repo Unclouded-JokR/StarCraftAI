@@ -47,7 +47,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
             }
             else
             {
-                std::cout << "Nexus Already Exists" << "\n";
+                //std::cout << "Nexus Already Exists" << "\n";
             }
                
             break;
@@ -59,7 +59,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
                 if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
                 {
                     nexusEconomy.assignAssimilator(unit);
-                    std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
                     break;
                 }
             }
@@ -71,7 +71,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
             {
                 if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
                 {
-                    std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
                     nexusEconomy.assignWorker(unit);
                     break;
                 }
@@ -83,20 +83,10 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
-    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-
-    for (auto& unit : myUnits)
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        if (unit->getType().isWorker())
-        {
-            return unit;
-        }
-    }
-
-    /*for (NexusEconomy& nexusEconomy : nexusEconomies)
-    {
-        BWAPI::Unit unitToReturn = nexusEconomy.getWorker();
+        BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
 
         if(unitToReturn != nullptr) return unitToReturn;
-    }*/
+    }
 }

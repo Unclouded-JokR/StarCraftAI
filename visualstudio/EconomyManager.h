@@ -50,7 +50,7 @@ public:
 
 		optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
 		maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
-		maximumWorkers = optimalWorkerAmount;
+		maximumWorkers = optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
 
 		for (BWAPI::Unit mineral : minerals)
 		{
@@ -83,7 +83,7 @@ public:
 			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(255, 0, 0), true);
 
 			//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
-			if (!worker->isCarryingMinerals())
+			if (!worker->isCarryingMinerals() || worker->isIdle())
 			{
 				//[TODO]: need to assign workers to assimilator incase they die, dont change who is assigned.
 				if (assimilator != nullptr && assimilatorWorkerCount < WORKERS_PER_ASSIMILATOR)
@@ -217,38 +217,121 @@ public:
 	void workOverTime()
 	{
 		maximumWorkers = maximumWorkerAmount;
-		maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL;
+		maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL + WORKERS_PER_ASSIMILATOR;
 	}
 
+	//Hand workers to combat or scout when we dont need them anymore.
 	void breakTime()
 	{
 		maximumWorkers = optimalWorkerAmount;
-		maximumWorkerPerMineral = MAXIMUM_WORKERS_PER_MINERAL;
+		maximumWorkerPerMineral = MAXIMUM_WORKERS_PER_MINERAL + WORKERS_PER_ASSIMILATOR;
 	}
 
-	//[TODO]: make sure we are handing off probe properlly
-	BWAPI::Unit getWorker()
+	BWAPI::Unit getWorkerToScout()
 	{
 		BWAPI::Unit unitToReturn = nullptr;
 
+		//Get idle units if possible.
 		for (BWAPI::Unit unit : workers)
 		{
 			if (unit->isIdle())
 			{
-				BWAPI::Unit assignedMineral = assignedResource[unit];
-				mineralWorkerCount[assignedMineral] -= 1;
-				assignedResource.erase(unit);
-				unitToReturn = unit;
+				if (assignedResource.find(unit) != assignedResource.end())
+				{
+					BWAPI::Unit assignedMineral = assignedResource[unit];
+					mineralWorkerCount[assignedMineral] -= 1;
+					assignedResource.erase(unit);
+					unitToReturn = unit;
+				}
+				else
+				{
+					unitToReturn = unit;
+				}
+				workers.erase(unit);
 				break;
 			}
 		}
 
-		if (unitToReturn != nullptr)
+		if (unitToReturn != nullptr) return unitToReturn;
+
+		//Choose random unit if we did not find unit.
+
+		for (BWAPI::Unit unit : workers)
 		{
-			return unitToReturn;
+			if (unit->isCarryingMinerals())
+			{
+				unitToReturn = unit;
+			}
+			workers.erase(unit);
 		}
+
+		if (unitToReturn != nullptr) return unitToReturn;
+
+		//If not unit is avalible that meets prior conditions choose unit randomly for now.
+		const int random = rand() % workers.size();
+		std::cout << "Random Index Choosen: " << random << "\n";
+
+		int index = 0;
+		for (BWAPI::Unit unit : workers)
+		{
+			if (index == random)
+			{
+				BWAPI::Unit assignedMineral = assignedResource[unit];
+				mineralWorkerCount[assignedMineral] -= 1;
+				unitToReturn = unit;
+				assignedResource.erase(unit);
+				workers.erase(unit);
+				break;
+			}
+
+			index++;
+		}
+
+		return unitToReturn;
+	}
+	//[TODO]: make sure we are handing off probe properlly
+	BWAPI::Unit getWorkerToBuild()
+	{
+		BWAPI::Unit unitToReturn = nullptr;
+
+		//Get idle units if possible.
+		for (BWAPI::Unit unit : workers)
+		{
+			if (unit->isIdle())
+			{
+				if (assignedResource.find(unit) != assignedResource.end())
+				{
+					BWAPI::Unit assignedMineral = assignedResource[unit];
+					mineralWorkerCount[assignedMineral] -= 1;
+					assignedResource.erase(unit);
+					unitToReturn = unit;
+				}
+				else
+				{
+					unitToReturn = unit;
+				}
+				break;
+			}
+		}
+
+		if (unitToReturn != nullptr) return unitToReturn;
 		
 		//Choose random unit if we did not find unit.
+
+		for (BWAPI::Unit unit : workers)
+		{
+			if (unit->isCarryingMinerals())
+			{
+				/*BWAPI::Unit assignedMineral = assignedResource[unit];
+				mineralWorkerCount[assignedMineral] -= 1;
+				assignedResource.erase(unit);*/
+				unitToReturn = unit;
+			}
+		}
+
+		if (unitToReturn != nullptr) return unitToReturn;
+
+		//If not unit is avalible that meets prior conditions choose unit randomly for now.
 		const int random = rand() % workers.size();
 		std::cout << "Random Index Choosen: " << random << "\n";
 
@@ -268,31 +351,6 @@ public:
 		}
 
 		return unitToReturn;
-
-		//if (unitToReturn != nullptr)
-		//{
-		//	/*BWAPI::Unit assinedMineral = assignedResource[unitToReturn];
-		//	workers.erase(unitToReturn);
-		//	mineralWorkerCount
-		//	return unitToReturn;*/
-		//}
-
-		//for (BWAPI::Unit unit : workers)
-		//{
-		//	if (unit->isCarryingMinerals())
-		//	{
-		//		unitToReturn = unit;
-		//		break;
-		//	}
-		//}
-
-		//else
-		//{
-		//	workers.erase(unitToReturn);
-		//}
-		//
-		//return unitToReturn;
-		return nullptr;
 	}
 };
 

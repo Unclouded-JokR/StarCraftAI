@@ -32,7 +32,7 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    //[TODO]: fix this iterator is causing errors.
+    
     for (std::vector<BuildRequest>::iterator it = buildReuqests.begin(); it != buildReuqests.end();)
     {
         if (holds_alternative<BWAPI::UnitType>(it->unitRequest))

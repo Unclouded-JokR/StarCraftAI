@@ -255,6 +255,8 @@ Action StrategyManager::onFrame()
 
 	//WorkerSet workerSet = commanderReference.checkWorkerSetNeedsAssimilator();
 
+	if (BWAPI::Broodwar->getFrameCount() % 120 != 0) return action;
+
 #pragma region Expand
 	if (buildOrderCompleted) 
 	{
@@ -265,6 +267,7 @@ Action StrategyManager::onFrame()
 
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
+			std::cout << "BUILD MORE PYLONS" << "\n";
 			return action;
 		}
 		/*else if(workerSet != nullptr)

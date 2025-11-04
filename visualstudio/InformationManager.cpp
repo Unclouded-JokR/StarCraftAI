@@ -60,13 +60,13 @@ void InformationManager::onFrame()
     }
 
     // Comment this out if you don't want the terminal output to be flooded
-    if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
+    /*if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
     {
         std::cout << "Tracking " << _knownEnemies.size() << " enemy units, "
             << _knownEnemyBuildings.size() << " enemy buildings.\n";
         printKnownEnemies();
         printKnownEnemyBuildings();
-    }
+    }*/
 }
 
 void InformationManager::onUnitDestroy(BWAPI::Unit unit)

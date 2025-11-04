@@ -6,11 +6,24 @@
 
 class ProtoBotCommander;
 
+struct BuildOrderInstruction
+{
+    int supply;
+    BWAPI::UnitType buildingToConstruct = BWAPI::UnitTypes::None;
+    BWAPI::UnitType unitToTrain = BWAPI::UnitTypes::None;
+};
+
+struct BuildOrder
+{
+    std::vector<BuildOrderInstruction> buildOrderInstructions;
+};
+
 class BuildManager
 {
 public:
     ProtoBotCommander* commanderReference;
     SpenderManager spenderManager;
+    BuildOrder selectedBuildOrder;
     BWAPI::Unitset buildings;
     bool buildOrderCompleted = false;
 
@@ -19,7 +32,7 @@ public:
     void onFrame();
     void assignBuilding(BWAPI::Unit unit);
     bool isBuildOrderCompleted();
-    void buildBuilding(BWAPI::Unit unit, BWAPI::UnitType building);
+    void buildBuilding(BWAPI::UnitType building);
     void buildUnitType(BWAPI::UnitType unit);
     void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
 };

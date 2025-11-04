@@ -81,7 +81,7 @@ void ProtoBotCommander::onStart()
 	//scoutingManager.onStart();
 	
 	//building manager on start does nothing as of now.
-	//buildManager.onStart();
+	buildManager.onStart();
 }
 
 void ProtoBotCommander::onFrame()
@@ -112,15 +112,13 @@ void ProtoBotCommander::onFrame()
 		case ActionType::Action_Expand:
 		{
 			const Expand value = get<Expand>(action.commanderAction);
-			BWAPI::Unit unit = getUnitToBuild();
-			buildManager.buildBuilding(unit, value.unitToBuild);
+			buildManager.buildBuilding(value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Build:
 		{
 			const Build value = get<Build>(action.commanderAction);
-			BWAPI::Unit unit = getUnitToBuild();
-			buildManager.buildBuilding(unit, value.unitToBuild);
+			buildManager.buildBuilding(value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Scout:
@@ -184,7 +182,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	}
 
 	//Give all buildings to the Building Manager.
-	if (unit_type.isBuilding())
+	if (unit_type.isBuilding() && unit_type != BWAPI::UnitTypes::Protoss_Pylon)
 	{
 		buildManager.assignBuilding(unit);
 		return;
