@@ -38,14 +38,12 @@ public:
 	{
 		maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL;
 
-		BWAPI::Unitset unitsInRadius = nexus->getUnitsInRadius(150);
+		BWAPI::Unitset unitsInRadius = nexus->getUnitsInRadius(512, BWAPI::Filter::IsMineralField);
 
 		for (BWAPI::Unit unit : unitsInRadius)
 		{
-			if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field)
-			{
-				minerals.insert(unit);
-			}
+			std::cout << unit->getType() << "\n";
+			minerals.insert(unit);
 		}
 
 		optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
@@ -69,6 +67,8 @@ public:
 
 	void OnFrame()
 	{
+		BWAPI::Broodwar->drawEllipseMap(nexus->getPosition(), 256, 256, BWAPI::Color(255, 0, 0), false);
+
 		int frame = BWAPI::Broodwar->getFrameCount();
 		for (BWAPI::Unit mineral : minerals)
 		{
@@ -227,6 +227,70 @@ public:
 		maximumWorkerPerMineral = MAXIMUM_WORKERS_PER_MINERAL + WORKERS_PER_ASSIMILATOR;
 	}
 
+	BWAPI::Unitset getWorkersToTransfer(int numberOfWorkersForTransfer)
+	{
+		BWAPI::Unitset unitsToReturn;
+
+		//Get idle units if possible.
+		for (BWAPI::Unit unit : workers)
+		{
+			if (unit->isIdle())
+			{
+				if (assignedResource.find(unit) != assignedResource.end())
+				{
+					BWAPI::Unit assignedMineral = assignedResource[unit];
+					mineralWorkerCount[assignedMineral] -= 1;
+					assignedResource.erase(unit);
+					workers.erase(unit);
+					unitsToReturn.insert(unit);
+				}
+				else
+				{
+					workers.erase(unit);
+					unitsToReturn.insert(unit);
+				}
+			}
+
+			if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
+		}
+
+		if (unitsToReturn.size() == numberOfWorkersForTransfer) return unitsToReturn;
+
+		//Choose random unit if we did not find unit.
+
+		for (BWAPI::Unit unit : workers)
+		{
+			if (unit->isCarryingMinerals())
+			{
+				/*BWAPI::Unit assignedMineral = assignedResource[unit];
+				mineralWorkerCount[assignedMineral] -= 1;
+				assignedResource.erase(unit);*/
+				workers.erase(unit);
+				unitsToReturn.insert(unit);
+			}
+
+			if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
+		}
+
+		if (unitsToReturn.size() == numberOfWorkersForTransfer) return unitsToReturn;
+
+		//If not enough units we found, get units until we meet the number of workers needs
+		for (BWAPI::Unit unit : workers)
+		{
+			BWAPI::Unit assignedMineral = assignedResource[unit];
+			mineralWorkerCount[assignedMineral] -= 1;
+			assignedResource.erase(unit);
+			workers.erase(unit);
+			unitsToReturn.insert(unit);
+
+			if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
+		}
+
+		std::cout << "Got " << unitsToReturn.size() << " Workers\n";
+
+		return unitsToReturn;
+	}
+
 	BWAPI::Unit getWorkerToScout()
 	{
 		BWAPI::Unit unitToReturn = nullptr;
@@ -289,6 +353,7 @@ public:
 
 		return unitToReturn;
 	}
+
 	//[TODO]: make sure we are handing off probe properlly
 	BWAPI::Unit getWorkerToBuild()
 	{

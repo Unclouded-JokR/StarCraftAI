@@ -118,7 +118,7 @@ void BuildManager::onFrame()
     }*/
 
 
-    /*switch (currentSupply)
+    switch (currentSupply)
     {
         case 8:
         {
@@ -211,7 +211,7 @@ void BuildManager::onFrame()
         {
             break;
         }
-    }*/
+    }
 }
 
 void BuildManager::buildUnitType(BWAPI::UnitType unitToTrain)

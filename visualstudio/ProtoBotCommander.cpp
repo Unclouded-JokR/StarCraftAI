@@ -104,42 +104,42 @@ void ProtoBotCommander::onFrame()
 	*/
 	informationManager.onFrame();
 
-	Action action = strategyManager.onFrame();
-	//std::cout << action.type << "\n";
+	//Action action = strategyManager.onFrame();
+	////std::cout << action.type << "\n";
 
-	switch (action.type)
-	{
-		case ActionType::Action_Expand:
-		{
-			const Expand value = get<Expand>(action.commanderAction);
-			buildManager.buildBuilding(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Build:
-		{
-			const Build value = get<Build>(action.commanderAction);
-			buildManager.buildBuilding(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Scout:
-		{
-			const Scout value = get<Scout>(action.commanderAction);
-			getUnitToScout();
-			break;
-		}
-		case ActionType::Action_Attack:
-		{
-			break;
-		}
-		case ActionType::Action_Defend:
-		{
-			break;
-		}
-		default:
-		{
-			break;
-		}
-	}
+	//switch (action.type)
+	//{
+	//	case ActionType::Action_Expand:
+	//	{
+	//		const Expand value = get<Expand>(action.commanderAction);
+	//		buildManager.buildBuilding(value.unitToBuild);
+	//		break;
+	//	}
+	//	case ActionType::Action_Build:
+	//	{
+	//		const Build value = get<Build>(action.commanderAction);
+	//		buildManager.buildBuilding(value.unitToBuild);
+	//		break;
+	//	}
+	//	case ActionType::Action_Scout:
+	//	{
+	//		const Scout value = get<Scout>(action.commanderAction);
+	//		getUnitToScout();
+	//		break;
+	//	}
+	//	case ActionType::Action_Attack:
+	//	{
+	//		break;
+	//	}
+	//	case ActionType::Action_Defend:
+	//	{
+	//		break;
+	//	}
+	//	default:
+	//	{
+	//		break;
+	//	}
+	//}
 
 	buildManager.onFrame();
 

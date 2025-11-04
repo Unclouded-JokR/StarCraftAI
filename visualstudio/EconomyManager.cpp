@@ -42,8 +42,22 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
             if (alreadyExists == false)
             {
-                //[TODO]: Also need to transfer workers to expansion.
-                nexusEconomies.push_back(NexusEconomy(unit, nexusEconomies.size() + 1));
+                //[TODO]: Current expansion implementation is not working.
+                NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1);
+                nexusEconomies.push_back(temp);
+
+                //When we create a new nexus ecconomy transfer workers.
+                //[TODO]: Should also get the nexus that is closests when transfering.
+                if (nexusEconomies.size() > 1)
+                {
+                    BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(temp.minerals.size());
+
+                    for (BWAPI::Unit worker : workersToTransfer)
+                    {
+                        temp.assignWorker(worker);
+                    }
+                    std::cout << "New nexus workers: " << temp.workers.size() << "\n";
+                }
             }
             else
             {
