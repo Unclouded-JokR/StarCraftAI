@@ -28,6 +28,7 @@
     <ClInclude Include="CombatManager.h" />
     <ClInclude Include="EconomyManager.h" />
     <ClInclude Include="InformationManager.h" />
+    <ClInclude Include="NexusEconomy.h" />
     <ClInclude Include="ProtoBotCommander.h" />
     <ClInclude Include="RequestManager.h" />
     <ClInclude Include="ScoutingManager.h" />
@@ -63,6 +64,7 @@
     <ClCompile Include="CombatManager.cpp" />
     <ClCompile Include="EconomyManager.cpp" />
     <ClCompile Include="InformationManager.cpp" />
+    <ClCompile Include="NexusEconomy.cpp" />
     <ClCompile Include="ProtoBotCommander.cpp" />
     <ClCompile Include="RequestManager.cpp" />
     <ClCompile Include="ScoutingManager.cpp" />

@@ -258,15 +258,17 @@ Action StrategyManager::onFrame()
 #pragma region Expand
 	if (buildOrderCompleted) 
 	{
-		if (supplyUsed + 4 >= totalSupply)
+		if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon))
 		{
-			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Probe;
+			if (supplyUsed + 2 == totalSupply && !commanderReference->alreadyBuildingSupply())
+			{
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
-			action.commanderAction = actionToTake;
-			action.type = ActionType::Action_Expand;
-			std::cout << "BUILD MORE PYLONS" << "\n";
-			return action;
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
 		}
 		/*else if(workerSet != nullptr)
 		{

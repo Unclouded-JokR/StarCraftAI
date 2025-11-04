@@ -34,6 +34,7 @@
     <ClCompile Include="..\BWEM\src\utils.cpp" />
     <ClCompile Include="..\BWEM\src\winutils.cpp" />
     <ClCompile Include="SpenderManager.cpp" />
+    <ClCompile Include="NexusEconomy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -69,5 +70,6 @@
     <ClInclude Include="..\BWEM\src\utils.h" />
     <ClInclude Include="..\BWEM\src\winutils.h" />
     <ClInclude Include="SpenderManager.h" />
+    <ClInclude Include="NexusEconomy.h" />
   </ItemGroup>
 </Project>

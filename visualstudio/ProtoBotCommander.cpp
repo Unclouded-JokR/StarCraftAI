@@ -104,42 +104,42 @@ void ProtoBotCommander::onFrame()
 	*/
 	informationManager.onFrame();
 
-	//Action action = strategyManager.onFrame();
-	////std::cout << action.type << "\n";
+	Action action = strategyManager.onFrame();
+	//std::cout << action.type << "\n";
 
-	//switch (action.type)
-	//{
-	//	case ActionType::Action_Expand:
-	//	{
-	//		const Expand value = get<Expand>(action.commanderAction);
-	//		buildManager.buildBuilding(value.unitToBuild);
-	//		break;
-	//	}
-	//	case ActionType::Action_Build:
-	//	{
-	//		const Build value = get<Build>(action.commanderAction);
-	//		buildManager.buildBuilding(value.unitToBuild);
-	//		break;
-	//	}
-	//	case ActionType::Action_Scout:
-	//	{
-	//		const Scout value = get<Scout>(action.commanderAction);
-	//		getUnitToScout();
-	//		break;
-	//	}
-	//	case ActionType::Action_Attack:
-	//	{
-	//		break;
-	//	}
-	//	case ActionType::Action_Defend:
-	//	{
-	//		break;
-	//	}
-	//	default:
-	//	{
-	//		break;
-	//	}
-	//}
+	switch (action.type)
+	{
+		case ActionType::Action_Expand:
+		{
+			const Expand value = get<Expand>(action.commanderAction);
+			buildManager.buildBuilding(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Build:
+		{
+			const Build value = get<Build>(action.commanderAction);
+			buildManager.buildBuilding(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Scout:
+		{
+			const Scout value = get<Scout>(action.commanderAction);
+			getUnitToScout();
+			break;
+		}
+		case ActionType::Action_Attack:
+		{
+			break;
+		}
+		case ActionType::Action_Defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
 
 	buildManager.onFrame();
 
@@ -164,13 +164,28 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
+	if (unit->getPlayer() != BWAPI::Broodwar->self())
+		return;
 
+	buildingsBeingMade.insert(unit);
+}
+
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType type)
+{
+	for (BWAPI::Unit unit : buildingsBeingMade)
+	{
+		if (unit->getType() == type) return true;
+	}
+
+	return false;
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
+
+	buildingsBeingMade.erase(unit);
 
 	const BWAPI::UnitType unit_type = unit->getType();
 
@@ -249,6 +264,11 @@ const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemy
 bool ProtoBotCommander::buildOrderCompleted()
 {
 	return buildManager.isBuildOrderCompleted();
+}
+
+bool ProtoBotCommander::alreadyBuildingSupply()
+{
+	return buildManager.alreadyBuildingSupply();
 }
 
 void ProtoBotCommander::getUnitToScout()

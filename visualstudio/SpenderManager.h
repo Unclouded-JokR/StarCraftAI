@@ -19,7 +19,9 @@ public:
 
     SpenderManager(ProtoBotCommander* commanderReference);
     void addRequest(BWAPI::UnitType unitType);
+    //void addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting);
     bool canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas);
+    bool isAlreadyBuildingSupply();
     void OnFrame();
 };
 

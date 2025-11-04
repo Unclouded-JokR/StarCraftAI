@@ -1,4 +1,5 @@
 #include "EconomyManager.h"
+#include "NexusEconomy.h"
 #include "ProtoBotCommander.h"
 
 EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
@@ -43,7 +44,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
             if (alreadyExists == false)
             {
                 //[TODO]: Current expansion implementation is not working.
-                NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1);
+                NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
                 nexusEconomies.push_back(temp);
 
                 //When we create a new nexus ecconomy transfer workers.
@@ -95,12 +96,28 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
     }
 }
 
+//[TODO]: Fix getting a unit from a nexus ecconomy
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
-    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+
+    for (BWAPI::Unit unit : units)
+    {
+        if (unit->getType().isWorker())
+        {
+            return unit;
+        }
+    }
+
+    /*for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
 
         if(unitToReturn != nullptr) return unitToReturn;
-    }
+    }*/
+}
+
+void EconomyManager::needWorkerUnit(BWAPI::Unit nexus)
+{ 
+    //commanderReference.buil
 }

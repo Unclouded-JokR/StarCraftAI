@@ -35,6 +35,7 @@ public:
 	* Used for Debugging
 	*/
 	std::string buildOrderSelected;
+	BWAPI::Unitset buildingsBeingMade;
 
 	ProtoBotCommander();
 
@@ -53,6 +54,7 @@ public:
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
 
 	//Get rid of these
 	void sendWorkersToGas();
@@ -73,6 +75,7 @@ public:
 
 	//Build Manager Methods
 	bool buildOrderCompleted();
+	bool alreadyBuildingSupply();
 
 	void getUnitToScout();
 };

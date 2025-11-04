@@ -24,6 +24,33 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
     return false;
 }
 
+bool SpenderManager::isAlreadyBuildingSupply()
+{
+    if (buildReuqests.size() == 0)
+    {
+        return false;
+    }
+
+    std::cout << buildReuqests.size() << "\n";
+
+    for (BuildRequest& buildRequest : buildReuqests)
+    {
+        if (holds_alternative<BWAPI::UnitType>(buildRequest.unitRequest))
+        {
+            const BWAPI::UnitType unitInQueue = get<BWAPI::UnitType>(buildRequest.unitRequest);
+
+            if (unitInQueue == BWAPI::UnitTypes::Protoss_Pylon)
+            {
+                //std::cout << "Pylon in queue" << "\n";
+                return true;
+            }
+        }
+    } 
+
+    //std::cout << "Pylon not in Queue" << "\n";
+    return false;
+}
+
 void SpenderManager::OnFrame()
 {
     int currentMineralCount = BWAPI::Broodwar->self()->minerals();
