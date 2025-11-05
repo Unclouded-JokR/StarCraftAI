@@ -31,6 +31,7 @@ public:
 	int maximumWorkerPerMineral;
 	int maximumWorkers;
 	bool overtime = false;
+	bool requestAlreadyMade = false;
 
 	//So we dont overflow the terminal.
 	int lastPrintFrame = 0;

@@ -8,10 +8,33 @@ SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commande
 
 void SpenderManager::addRequest(BWAPI::UnitType unitType)
 {
-    BuildRequest request;
-    request.unitRequest = unitType;
+    BuildRequest requestToAdd;
+    BuildStructureRequest temp;
+    temp.buildingType = unitType;
+    requestToAdd.request = temp;
 
-    buildReuqests.push_back(request);
+    buildRequests.push_back(requestToAdd);
+}
+
+void SpenderManager::addRequest(BWAPI::UpgradeType upgradeToResearch)
+{
+    BuildRequest requestToAdd;
+    ResearchUpgradeRequest temp;
+    temp.upgradeType = upgradeToResearch;
+    requestToAdd.request = temp;
+
+    buildRequests.push_back(requestToAdd);
+}
+
+void SpenderManager::addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting)
+{
+    BuildRequest requestToAdd;
+    TrainUnitRequest temp;
+    temp.unitType = unitToTrain;
+    temp.building = buildingRequesting;
+    requestToAdd.request = temp;
+
+    buildRequests.push_back(requestToAdd);
 }
 
 bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas)
@@ -26,28 +49,26 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
 
 bool SpenderManager::isAlreadyBuildingSupply()
 {
-    if (buildReuqests.size() == 0)
+    if (buildRequests.size() == 0)
     {
         return false;
     }
 
-    std::cout << buildReuqests.size() << "\n";
-
-    for (BuildRequest& buildRequest : buildReuqests)
+    for (BuildRequest& buildRequest : buildRequests)
     {
-        if (holds_alternative<BWAPI::UnitType>(buildRequest.unitRequest))
+        if (holds_alternative<BuildStructureRequest>(buildRequest.request))
         {
-            const BWAPI::UnitType unitInQueue = get<BWAPI::UnitType>(buildRequest.unitRequest);
+            const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
 
-            if (unitInQueue == BWAPI::UnitTypes::Protoss_Pylon)
+            if (buildingInQueue.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
             {
-                //std::cout << "Pylon in queue" << "\n";
+                std::cout << "Pylon in queue" << "\n";
                 return true;
             }
         }
     } 
 
-    //std::cout << "Pylon not in Queue" << "\n";
+    std::cout << "Pylon not in Queue" << "\n";
     return false;
 }
 
@@ -59,26 +80,74 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    
-    for (std::vector<BuildRequest>::iterator it = buildReuqests.begin(); it != buildReuqests.end();)
-    {
-        if (holds_alternative<BWAPI::UnitType>(it->unitRequest))
-        {
-            BWAPI::UnitType temp = get<BWAPI::UnitType>(it->unitRequest);
+    if(BWAPI::Broodwar->getFrameCount() % 48 == 0) std::cout << "Requests.size() =  " << buildRequests.size() << "\n";
 
-            mineralPrice = temp.mineralPrice();
-            gasPrice = temp.gasPrice();
+    for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
+    {
+        if (holds_alternative<BuildStructureRequest>(it->request))
+        {
+            const BuildStructureRequest temp = get<BuildStructureRequest>(it->request);
+
+            mineralPrice = temp.buildingType.mineralPrice();
+            gasPrice = temp.buildingType.gasPrice();
 
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
                 BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
-                Tools::BuildBuilding(unitAvalible, temp);
+                Tools::BuildBuilding(unitAvalible, temp.buildingType);
 
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
                 
                 //Why?
-                it = buildReuqests.erase(it);
+                it = buildRequests.erase(it);
+                //std::cout << "Building " << temp.buildingType << "\n";
+            }
+            else
+            {
+                it++;
+            }
+        }
+        else if(holds_alternative<TrainUnitRequest>(it->request))
+        {
+            const TrainUnitRequest temp = get<TrainUnitRequest>(it->request);
+
+            mineralPrice = temp.unitType.mineralPrice();
+            gasPrice = temp.unitType.gasPrice();
+
+            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
+            {
+                temp.building->train(temp.unitType);
+
+                currentMineralCount -= mineralPrice;
+                currentGasCount -= gasPrice;
+
+                //Why?
+                it = buildRequests.erase(it);
+                //std::cout << "Training " << temp.unitType << "\n";
+            }
+            else
+            {
+                it++;
+            }
+        }
+        else if (holds_alternative<ResearchUpgradeRequest>(it->request))
+        {
+            ResearchUpgradeRequest temp = get<ResearchUpgradeRequest>(it->request);
+
+            mineralPrice = temp.upgradeType.mineralPrice();
+            gasPrice = temp.upgradeType.gasPrice();
+
+            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
+            {
+                temp.building->upgrade(temp.upgradeType);
+
+                currentMineralCount -= mineralPrice;
+                currentGasCount -= gasPrice;
+
+                //Why?
+                it = buildRequests.erase(it);
+                //std::cout << "Researching " << temp.upgradeType << "\n";
             }
             else
             {
@@ -87,34 +156,4 @@ void SpenderManager::OnFrame()
         }
 
     }
-
-    //for (BuildRequest& buildRequest : buildReuqests)
-    //{
-    //    if (holds_alternative<BWAPI::UnitType>(buildRequest.unitRequest))
-    //    {
-    //        BWAPI::UnitType temp = get<BWAPI::UnitType>(buildRequest.unitRequest);
-    //        mineralPrice = temp.mineralPrice();
-    //        gasPrice = temp.gasPrice();
-
-    //        if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
-    //        {
-    //            BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
-    //            Tools::BuildBuilding(unitAvalible, temp);
-    //            buildReuqests.erase(buildReuqests.begin());
-    //        }
-    //    }
-    //    /*else if (holds_alternative<BWAPI::UpgradeType>(buildRequest.unitRequest))
-    //    {
-    //        BWAPI::UpgradeType temp = get<BWAPI::UpgradeType>(buildRequest.unitRequest);
-    //        mineralPrice = temp.mineralPrice();
-    //        gasPrice = temp.gasPrice();
-
-    //        if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
-    //        {
-    //            BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
-    //            Tools::BuildBuilding(unitAvalible, temp);
-    //            buildReuqests.erase(buildReuqests.begin());
-    //        }
-    //    }*/
-    //}
 }

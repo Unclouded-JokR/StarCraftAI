@@ -76,6 +76,7 @@ public:
 	//Build Manager Methods
 	bool buildOrderCompleted();
 	bool alreadyBuildingSupply();
+	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 
 	void getUnitToScout();
 };

@@ -157,9 +157,19 @@ void ProtoBotCommander::onEnd(bool isWinner)
 	std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
 }
 
+/*
+* When a unit is destroyed send a broadcast out to all modules.
+* 
+* Each module will check if the unit is a assigned to their module. If the unit is, remove the unit. Others drop the message.
+*/
 void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 {
 	strategyManager.onUnitDestroy(unit);
+	economyManager.onUnitDestroy(unit);
+	//combatManager.onUnitDestroy(unit);
+	informationManager.onUnitDestroy(unit);
+	//scoutingManager.onUnitDestroy(unit);
+	//buildManager.OnUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
@@ -249,6 +259,11 @@ BWAPI::Unit ProtoBotCommander::getUnitToBuild()
 {
 	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
 	return economyManager.getAvalibleWorker();
+}
+
+void ProtoBotCommander::requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building)
+{
+	buildManager.trainUnit(worker, building);
 }
 
 const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()

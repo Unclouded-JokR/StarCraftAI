@@ -5,21 +5,38 @@
 
 class ProtoBotCommander;
 
-//Sould change this to be a smart reuqest but for now this works.
+struct TrainUnitRequest
+{
+    BWAPI::UnitType unitType;
+    BWAPI::Unit building;
+};
+
+struct BuildStructureRequest
+{
+    BWAPI::UnitType buildingType;
+};
+
+struct ResearchUpgradeRequest
+{
+    BWAPI::UpgradeType upgradeType;
+    BWAPI::Unit building;
+};
+
 struct BuildRequest
 {
-    std::variant<BWAPI::UnitType, BWAPI::UpgradeType> unitRequest;
+    std::variant<TrainUnitRequest, BuildStructureRequest, ResearchUpgradeRequest> request;
 };
 
 class SpenderManager
 {
 public:
-    std::vector<BuildRequest> buildReuqests;
+    std::vector<BuildRequest> buildRequests;
     ProtoBotCommander* commanderReference;
 
     SpenderManager(ProtoBotCommander* commanderReference);
     void addRequest(BWAPI::UnitType unitType);
-    //void addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting);
+    void addRequest(BWAPI::UpgradeType upgradeToResearch);
+    void addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting);
     bool canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas);
     bool isAlreadyBuildingSupply();
     void OnFrame();

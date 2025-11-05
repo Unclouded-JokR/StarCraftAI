@@ -34,6 +34,9 @@ NexusEconomy::~NexusEconomy()
 
 void NexusEconomy::OnFrame()
 {
+	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
+	const int supplyTotal = BWAPI::Broodwar->self()->supplyTotal() / 2;
+
 	BWAPI::Broodwar->drawEllipseMap(nexus->getPosition(), 256, 256, BWAPI::Color(255, 0, 0), false);
 
 	int frame = BWAPI::Broodwar->getFrameCount();
@@ -81,11 +84,19 @@ void NexusEconomy::OnFrame()
 		}
 	}
 
+	if (!nexus->isTraining() && workers.size() < maximumWorkers) nexus->train(BWAPI::UnitTypes::Protoss_Probe);
+
 	//Train more workers until we reach the workerCap
-	if (!nexus->isTraining() && workers.size() < maximumWorkers)
+	/*if (!nexus->isTraining() && workers.size() < maximumWorkers && !requestAlreadyMade)
 	{
-		economyReference->needWorkerUnit(nexus);
+		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
+		requestAlreadyMade = true;
 	}
+
+	if (nexus->isTraining() && requestAlreadyMade)
+	{
+		requestAlreadyMade = false;
+	}*/
 
 	/*if (frame - lastPrintFrame >= 240)
 	{
@@ -358,9 +369,6 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 	{
 		if (unit->isCarryingMinerals())
 		{
-			/*BWAPI::Unit assignedMineral = assignedResource[unit];
-			mineralWorkerCount[assignedMineral] -= 1;
-			assignedResource.erase(unit);*/
 			unitToReturn = unit;
 		}
 	}

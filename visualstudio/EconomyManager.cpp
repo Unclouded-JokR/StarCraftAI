@@ -99,7 +99,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 //[TODO]: Fix getting a unit from a nexus ecconomy
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
-    BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+    /*BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
     for (BWAPI::Unit unit : units)
     {
@@ -107,17 +107,17 @@ BWAPI::Unit EconomyManager::getAvalibleWorker()
         {
             return unit;
         }
-    }
+    }*/
 
-    /*for (NexusEconomy& nexusEconomy : nexusEconomies)
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
 
         if(unitToReturn != nullptr) return unitToReturn;
-    }*/
+    }
 }
 
-void EconomyManager::needWorkerUnit(BWAPI::Unit nexus)
+void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 { 
-    //commanderReference.buil
+    commanderReference->requestUnitToTrain(worker, nexus);
 }

@@ -118,7 +118,7 @@ void BuildManager::onFrame()
     }*/
 
 
-    /*switch (currentSupply)
+    switch (currentSupply)
     {
         case 8:
         {
@@ -211,7 +211,7 @@ void BuildManager::onFrame()
         {
             break;
         }
-    }*/
+    }
 }
 
 void BuildManager::buildUnitType(BWAPI::UnitType unitToTrain)
@@ -260,5 +260,5 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
 
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
-    //spenderManager.addRequest(unitToTrain, unit);
+    spenderManager.addRequest(unitToTrain, unit);
 }

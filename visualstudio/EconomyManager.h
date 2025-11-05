@@ -18,7 +18,7 @@ public:
 	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
 	BWAPI::Unit getAvalibleWorker();
-	void needWorkerUnit(BWAPI::Unit nexus);
+	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 };
 
 
