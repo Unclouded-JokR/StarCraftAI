@@ -8,13 +8,16 @@ EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commande
 
 void EconomyManager::OnFrame()
 {
-    for (const auto& unit : assignedWorkers)
+    for (auto& unit : assignedWorkers)
     {
-        if (unit.second->isIdle())
+        for (auto& unit2 : unit.second)
         {
-            assigned[unit.first] = 0;
+            if (unit2->isIdle())
+            {
+                assigned[unit.first]--;
+                unit.second.erase(std::remove(unit.second.begin(), unit.second.end(), unit2), unit.second.end());
+            }
         }
-        
 
     }
 
@@ -24,6 +27,7 @@ void EconomyManager::OnFrame()
         // Check the unit type, if it is an idle worker, then we want to send it somewhere
         if (unit->getType().isWorker() && unit->isIdle())
         {
+
             // Get the closest mineral to this worker unit
             BWAPI::Unit closestMineral = GetClosestUnitToWOWorker(unit, BWAPI::Broodwar->getMinerals());
 
@@ -31,7 +35,7 @@ void EconomyManager::OnFrame()
             if (closestMineral) 
             {  
                 unit->rightClick(closestMineral); 
-                assignedWorkers[closestMineral] = unit;
+                assignedWorkers[closestMineral].push_back(unit);
             }
         }
     }
@@ -57,7 +61,7 @@ BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BW
         }
     }
 
-    assigned[closestUnitWOWorker] = 1;
+    assigned[closestUnitWOWorker]++;
     //assignedWorkers[closestUnitWOWorker]
     return closestUnitWOWorker;
 }
