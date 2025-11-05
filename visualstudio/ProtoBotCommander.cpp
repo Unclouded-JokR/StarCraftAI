@@ -121,7 +121,7 @@ void ProtoBotCommander::onFrame()
 			buildManager.buildBuilding(value.unitToBuild);
 			break;
 		}
-		case ActionType::Action_Scout:
+		/*case ActionType::Action_Scout:
 		{
 			const Scout value = get<Scout>(action.commanderAction);
 			getUnitToScout();
@@ -134,7 +134,7 @@ void ProtoBotCommander::onFrame()
 		case ActionType::Action_Defend:
 		{
 			break;
-		}
+		}*/
 		default:
 		{
 			break;
@@ -259,6 +259,11 @@ BWAPI::Unit ProtoBotCommander::getUnitToBuild()
 {
 	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
 	return economyManager.getAvalibleWorker();
+}
+
+void ProtoBotCommander::requestBuild(BWAPI::UnitType building)
+{
+	buildManager.buildBuilding(building);
 }
 
 void ProtoBotCommander::requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building)

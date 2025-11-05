@@ -5,7 +5,7 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 {
 	maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL;
 
-	BWAPI::Unitset unitsInRadius = nexus->getUnitsInRadius(512, BWAPI::Filter::IsMineralField);
+	BWAPI::Unitset unitsInRadius = nexus->getUnitsInRadius(320, BWAPI::Filter::IsMineralField);
 
 	for (BWAPI::Unit unit : unitsInRadius)
 	{

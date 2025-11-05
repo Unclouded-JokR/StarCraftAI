@@ -131,6 +131,8 @@ public:
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
 
+	bool pylonBeingWarpedIn = false;
+
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 	std::string onStart();
 	Action onFrame();

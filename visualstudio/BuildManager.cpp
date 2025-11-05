@@ -147,7 +147,7 @@ void BuildManager::onFrame()
             }
             break;
         }
-        case 14:
+        /*case 14:
         {
             if (alreadySentRequest3 == false)
             {
@@ -210,7 +210,7 @@ void BuildManager::onFrame()
         default:
         {
             break;
-        }
+        }*/
     }
 }
 

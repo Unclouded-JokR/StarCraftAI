@@ -77,6 +77,7 @@ public:
 	bool buildOrderCompleted();
 	bool alreadyBuildingSupply();
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
+	void requestBuild(BWAPI::UnitType building);
 
 	void getUnitToScout();
 };

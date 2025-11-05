@@ -96,19 +96,9 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
     }
 }
 
-//[TODO]: Fix getting a unit from a nexus ecconomy
+//[TODO]: Get the closest worker to the request we are trying to make.
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
-    /*BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
-
-    for (BWAPI::Unit unit : units)
-    {
-        if (unit->getType().isWorker())
-        {
-            return unit;
-        }
-    }*/
-
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();

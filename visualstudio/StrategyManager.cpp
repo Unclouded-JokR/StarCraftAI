@@ -258,6 +258,11 @@ Action StrategyManager::onFrame()
 #pragma region Expand
 	if (buildOrderCompleted) 
 	{
+		/*if (supplyUsed + 2 >= totalSupply && !commanderReference->alreadyBuildingSupply() && !commanderReference->alreadyBuildingSupply())
+		{
+			commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Pylon);
+		}*/
+
 		/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon))
 		{
 			if (supplyUsed + 2 == totalSupply && !commanderReference->alreadyBuildingSupply())
@@ -269,7 +274,7 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
-		}*/
+		}
 		/*else if(workerSet != nullptr)
 		{
 			Exapnd action;

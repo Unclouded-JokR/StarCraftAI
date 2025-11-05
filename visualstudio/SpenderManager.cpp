@@ -62,7 +62,7 @@ bool SpenderManager::isAlreadyBuildingSupply()
 
             if (buildingInQueue.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
             {
-                std::cout << "Pylon in queue" << "\n";
+                //std::cout << "Pylon in queue" << "\n";
                 return true;
             }
         }
@@ -95,6 +95,8 @@ void SpenderManager::OnFrame()
             {
                 BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
                 Tools::BuildBuilding(unitAvalible, temp.buildingType);
+
+                //Need to add units to data structure that keeps track of them until they completed the build.
 
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
