@@ -247,7 +247,7 @@ Action StrategyManager::onFrame()
 		StrategyManager::boredomMeter += boredomPerSecond;
 	}
 
-	currentState->evaluate(*this);
+	//currentState->evaluate(*this);
 
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;

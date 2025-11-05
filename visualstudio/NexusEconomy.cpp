@@ -56,13 +56,13 @@ void NexusEconomy::OnFrame()
 		if (!worker->isCarryingMinerals() || worker->isIdle())
 		{
 			//[TODO]: need to assign workers to assimilator incase they die, dont change who is assigned.
-			if (assimilator != nullptr && assimilatorWorkerCount < WORKERS_PER_ASSIMILATOR)
+			/*if (assimilator != nullptr && assimilatorWorkerCount < WORKERS_PER_ASSIMILATOR)
 			{
 				worker->gather(assimilator);
 				std::cout << "Assigning Worker to Assimilator" << "\n";
 				assimilatorWorkerCount += 1;
 				continue;
-			}
+			}*/
 
 			if (assignedResource.find(worker) == assignedResource.end())
 			{
@@ -82,9 +82,21 @@ void NexusEconomy::OnFrame()
 				continue;
 			}
 		}
+
+
 	}
 
 	if (!nexus->isTraining() && workers.size() < maximumWorkers) nexus->train(BWAPI::UnitTypes::Protoss_Probe);
+
+
+	if (BWAPI::Broodwar->getFrameCount() % 500 == 0 && BWAPI::Broodwar->getFrameCount() != 0)
+	{
+		std::cout << "Frame: " << BWAPI::Broodwar->getFrameCount() << " Minerals Gathered: " << BWAPI::Broodwar->self()->gatheredMinerals() << "\n";
+	}
+	else if(BWAPI::Broodwar->getFrameCount() == 0)
+	{
+		std::cout << "Frame: " << BWAPI::Broodwar->getFrameCount() << " Minerals Gathered: " << 0 << "\n";
+	}
 
 	//Train more workers until we reach the workerCap
 	/*if (!nexus->isTraining() && workers.size() < maximumWorkers && !requestAlreadyMade)

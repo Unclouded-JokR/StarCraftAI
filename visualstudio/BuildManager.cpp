@@ -129,7 +129,7 @@ void BuildManager::onFrame()
             }
             break;
         }
-        case 10:
+        /*case 10:
         {
             if (alreadySentRequest1 == false)
             {
@@ -137,8 +137,8 @@ void BuildManager::onFrame()
                 alreadySentRequest1 = true;
             }
             break;
-        }
-        case 12:
+        }*/
+        /*case 12:
         {
             if (alreadySentRequest2 == false)
             {
@@ -146,7 +146,7 @@ void BuildManager::onFrame()
                 alreadySentRequest2 = true;
             }
             break;
-        }
+        }*/
         /*case 14:
         {
             if (alreadySentRequest3 == false)

@@ -80,7 +80,7 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    if(BWAPI::Broodwar->getFrameCount() % 48 == 0) std::cout << "Requests.size() =  " << buildRequests.size() << "\n";
+    //if(BWAPI::Broodwar->getFrameCount() % 48 == 0) std::cout << "Requests.size() =  " << buildRequests.size() << "\n";
 
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
     {
