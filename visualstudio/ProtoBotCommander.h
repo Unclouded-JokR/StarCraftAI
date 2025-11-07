@@ -10,6 +10,9 @@
 #include "../../src/starterbot/MapTools.h"
 #include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
+#include <vector> 
+#include <cstdlib>
+#include <variant>
 #include "../../BWEM/src/bwem.h"
 
 #define FRAMES_PER_SECOND 24
@@ -48,8 +51,61 @@ public:
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
 	*/
-	void getUnitToScout();
-	BWAPI::Unit getUnitToBuild();
 	std::string enemyRaceCheck();
+
+	//Ecconomy Manager Methods
+	BWAPI::Unit getUnitToBuild();
+	//BWAPI::Unitset getAllUnitsAssignedToNexus();
+	
+	//Information Manager Methods
+	const std::set<BWAPI::Unit>& getKnownEnemyUnits();
+	const std::map<BWAPI::Unit, EnemyBuildingInfo>& getKnownEnemyBuildings();
+
+	//Build Manager Methods
+	bool buildOrderCompleted();
+
+	void getUnitToScout();
 };
 
+enum ActionType {
+	Action_Expand,
+	Action_Scout,
+	Action_Build,
+	Action_Attack,
+	Action_Defend,
+	Action_None
+};
+
+struct Expand 
+{
+	BWAPI::UnitType unitToBuild;
+};
+
+struct Scout {
+
+};
+
+struct Build
+{
+	BWAPI::UnitType unitToBuild;
+};
+
+struct Attack
+{
+	BWAPI::TilePosition position;
+};
+
+struct Defend
+{
+	BWAPI::TilePosition position;
+};
+
+struct None
+{
+
+};
+
+struct Action {
+	std::variant<Expand, Scout, Build, Attack, Defend, None> commanderAction;
+	ActionType type;
+};

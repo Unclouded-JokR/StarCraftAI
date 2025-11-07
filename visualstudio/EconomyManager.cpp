@@ -3,7 +3,7 @@
 
 EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
-
+    
 }
 
 void EconomyManager::OnFrame()
@@ -74,7 +74,7 @@ BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWA
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
-
+    
 }
 
 BWAPI::Unit EconomyManager::getAvalibleWorker()

@@ -119,6 +119,7 @@ void ParseReplay()
         if (!BWAPI::BWAPIClient.isConnected())
         {
             std::cout << "Disconnected\n";
+            BWAPI::BWAPIClient.disconnect();
             break;
         }
     }

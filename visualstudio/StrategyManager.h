@@ -1,5 +1,6 @@
 #pragma once
 #include <BWAPI.h>
+#include <variant>
 #define FRAMES_PER_SECOND 24
 
 class StrategyManager;
@@ -107,7 +108,7 @@ public:
 class StrategyRageState : public StrategyState {
 public:
 	int timeWhenRageEntered = 0;
-	int rageTime = 30 * FRAMES_PER_SECOND;
+	int rageTime = 30; //in seconds
 
 	StrategyRageState(std::string stateName) : StrategyState(stateName) {}
 	void enter(StrategyManager& strategyManager) override;
@@ -116,6 +117,7 @@ public:
 };
 
 class ProtoBotCommander;
+struct Action;
 
 class StrategyManager
 {
@@ -131,13 +133,14 @@ public:
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 	void onStart();
-	void onFrame();
+	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
 	void printBoredomMeter();
 	void printAngerMeter();
 	void changeState(StrategyState*);
 	void battleLost(); //Optionally can makes these two a single function with a bool parameter 
 	void battleWon();
+	std::string getCurrentStateName();
 
 	static StrategyContentState contentState;
 	static StrategyBoredomState boredomState;
