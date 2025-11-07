@@ -8,46 +8,40 @@ EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commande
 
 void EconomyManager::OnFrame()
 {
-    for (const auto& unit : assignedWorkers)
+    for (auto& unit : assignedWorkers)
     {
-        for (const auto& un : unit.second)
+        for (auto& unit2 : unit.second)
         {
-            if (un->isIdle())
+            if (unit2->isIdle())
             {
                 assigned[unit.first]--;
+                unit.second.erase(std::remove(unit.second.begin(), unit.second.end(), unit2), unit.second.end());
             }
         }
 
     }
-    
-    //I will replace myUnits with availableWorkers here
+
     const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-
-    if(myUnits.size() >= BWAPI::Broodwar->getMinerals().size() * workers_per_hs)
-    {
-        workers_per_hs++;
-    }
-
-    
     for (auto& unit : myUnits)
     {
         // Check the unit type, if it is an idle worker, then we want to send it somewhere
         if (unit->getType().isWorker() && unit->isIdle())
         {
+
             // Get the closest mineral to this worker unit
-            BWAPI::Unit closestMineral = GetClosestUnitToWOWorker(unit, BWAPI::Broodwar->getMinerals(), workers_per_hs);
+            BWAPI::Unit closestMineral = GetClosestUnitToWOWorker(unit, BWAPI::Broodwar->getMinerals());
 
             // If a valid mineral was found, right click it with the unit in order to start harvesting
-            if (closestMineral) 
-            {  
-                unit->rightClick(closestMineral); 
+            if (closestMineral)
+            {
+                unit->rightClick(closestMineral);
                 assignedWorkers[closestMineral].push_back(unit);
             }
         }
     }
 }
 
-BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BWAPI::Unitset& units, int workers_from_com)
+BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BWAPI::Unitset& units)
 {
     BWAPI::Unit closestUnitWOWorker = nullptr;
 
@@ -61,7 +55,7 @@ BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BW
 
     for (auto& u : units)
     {
-        if (!closestUnitWOWorker || (u->getDistance(p) < closestUnitWOWorker->getDistance(p) && assigned[u] < workers_from_com))
+        if (!closestUnitWOWorker || (u->getDistance(p) < closestUnitWOWorker->getDistance(p) && assigned[u] == 0))
         {
             closestUnitWOWorker = u;
         }
@@ -72,18 +66,14 @@ BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BW
     return closestUnitWOWorker;
 }
 
-BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWAPI::Unitset& units, int workers_from_com)
+BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWAPI::Unitset& units)
 {
     if (!unit) { return nullptr; }
-    return GetClosestUnitToWOWorker(unit->getPosition(), units, workers_from_com);
+    return GetClosestUnitToWOWorker(unit->getPosition(), units);
 }
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
-    if (unit->getType().isWorker())
-    {
-        available_workers.push_back(unit);
-    }
 
 }
 
