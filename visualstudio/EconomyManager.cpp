@@ -15,7 +15,7 @@ void EconomyManager::OnFrame()
             if (unit2->isIdle())
             {
                 assigned[unit.first]--;
-                unit.second.erase(std::remove(unit.second.begin(), unit.second.end(), unit2), unit.second.end());
+                //unit.second.erase(std::remove(unit.second.begin(), unit.second.end(), unit2), unit.second.end());
             }
         }
 

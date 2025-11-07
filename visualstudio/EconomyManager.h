@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+//<<<<<<< HEAD
 #pragma once
 #include <BWAPI.h>
 #include <unordered_map>
@@ -24,6 +24,7 @@ public:
 	void assignUnit(BWAPI::Unit unit);
 	BWAPI::Unit getAvalibleWorker();
 };
+/*
 =======
 #pragma once
 #include <BWAPI.h>
@@ -52,3 +53,4 @@ public:
 };
 
 >>>>>>> 3ce017aaacb86dcdfaa08f7d917aba3aea17c5a4
+*/
