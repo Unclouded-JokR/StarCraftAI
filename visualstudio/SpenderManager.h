@@ -32,13 +32,29 @@ class SpenderManager
 public:
     std::vector<BuildRequest> buildRequests;
     ProtoBotCommander* commanderReference;
+    std::vector<BWAPI::UnitType> plannedBuildings;
+    std::vector<BWAPI::UnitType> plannedUnits;
 
     SpenderManager(ProtoBotCommander* commanderReference);
+    
+    //Request to construct building
     void addRequest(BWAPI::UnitType unitType);
+
+    //Request to research upgrade
     void addRequest(BWAPI::UpgradeType upgradeToResearch);
+
+    //Request to train unit
     void addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting);
+
+    //Checks to make sure we can afford the unit and have avalible supply
     bool canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas);
+    int availableMinerals();
+    int availableGas();
+    int availableSupply();
+
     bool isAlreadyBuildingSupply();
     void OnFrame();
+    void onUnitCreate(BWAPI::Unit unit);
+    void printQueue();
 };
 

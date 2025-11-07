@@ -32,6 +32,7 @@ public:
     BuildManager(ProtoBotCommander* commanderReference);
     void onStart();
     void onFrame();
+    void onCreate(BWAPI::Unit unit);
     void assignBuilding(BWAPI::Unit unit);
     bool isBuildOrderCompleted();
     bool alreadyBuildingSupply();

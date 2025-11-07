@@ -164,11 +164,14 @@ void ProtoBotCommander::onEnd(bool isWinner)
 */
 void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 {
-	strategyManager.onUnitDestroy(unit);
+	//Managers that deal with unit assignments
 	economyManager.onUnitDestroy(unit);
 	//combatManager.onUnitDestroy(unit);
-	informationManager.onUnitDestroy(unit);
 	//scoutingManager.onUnitDestroy(unit);
+
+	//Managers that deal with unit information updates
+	strategyManager.onUnitDestroy(unit);
+	informationManager.onUnitDestroy(unit);
 	//buildManager.OnUnitDestroy(unit);
 }
 
@@ -176,10 +179,14 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
-
+	
+	//[TODO] need to filter this to only have buildings and move this to build manager;
 	buildingsBeingMade.insert(unit);
+
+	buildManager.onCreate(unit);
 }
 
+//[TODO] Move this to building manager
 bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType type)
 {
 	for (BWAPI::Unit unit : buildingsBeingMade)

@@ -258,23 +258,45 @@ Action StrategyManager::onFrame()
 #pragma region Expand
 	if (buildOrderCompleted) 
 	{
-		/*if (supplyUsed + 2 >= totalSupply && !commanderReference->alreadyBuildingSupply() && !commanderReference->alreadyBuildingSupply())
+		//Check if we should build a pylon
+		if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon))
 		{
-			commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Pylon);
-		}*/
-
-		/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon))
-		{
-			if (supplyUsed + 2 == totalSupply && !commanderReference->alreadyBuildingSupply())
+			if (supplyUsed + 3 >= totalSupply && !commanderReference->alreadyBuildingSupply() && !pylonRequestSent)
 			{
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
+
+				pylonRequestSent = true;
 
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
 		}
+		else
+		{
+			pylonRequestSent = false;
+		}
+
+		/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus))
+		{
+			if (BWAPI::Broodwar->self()->minerals() > 3000 && !nexusRequestSent)
+			{
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+				nexusRequestSent = true;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
+		}
+		else
+		{
+			nexusRequestSent = false;
+		}*/
+
 		/*else if(workerSet != nullptr)
 		{
 			Exapnd action;

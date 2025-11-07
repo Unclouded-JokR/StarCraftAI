@@ -120,7 +120,7 @@ void BuildManager::onFrame()
 
     switch (currentSupply)
     {
-        case 8:
+        /*case 8:
         {
             if (alreadySentRequest == false)
             {
@@ -128,7 +128,7 @@ void BuildManager::onFrame()
                 alreadySentRequest = true;
             }
             break;
-        }
+        }*/
         /*case 10:
         {
             if (alreadySentRequest1 == false)
@@ -261,4 +261,9 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
     spenderManager.addRequest(unitToTrain, unit);
+}
+
+void BuildManager::onCreate(BWAPI::Unit unit)
+{
+    spenderManager.onUnitCreate(unit);
 }

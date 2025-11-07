@@ -6,11 +6,12 @@ SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commande
     std::cout << "Spender Manager Made!" << "\n";
 }
 
-void SpenderManager::addRequest(BWAPI::UnitType unitType)
+void SpenderManager::addRequest(BWAPI::UnitType building)
 {
     BuildRequest requestToAdd;
     BuildStructureRequest temp;
-    temp.buildingType = unitType;
+
+    temp.buildingType = building;
     requestToAdd.request = temp;
 
     buildRequests.push_back(requestToAdd);
@@ -35,6 +36,68 @@ void SpenderManager::addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildin
     requestToAdd.request = temp;
 
     buildRequests.push_back(requestToAdd);
+}
+
+void SpenderManager::printQueue()
+{
+    std::cout << "Build Request Queue:" << "\n";
+
+    int index = 1;
+    for (BuildRequest buildRequest : buildRequests)
+    {
+        if (holds_alternative<BuildStructureRequest>(buildRequest.request))
+        {
+            const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
+            std::cout << "Index: " << index << " " << buildingInQueue.buildingType << "\n";
+        }
+        else if (holds_alternative<TrainUnitRequest>(buildRequest.request))
+        {
+            const TrainUnitRequest unitInQueue = get<TrainUnitRequest>(buildRequest.request);
+            std::cout << "Index: " << index << " " << unitInQueue.unitType << "\n";
+        }
+        else if (holds_alternative<ResearchUpgradeRequest>(buildRequest.request))
+        {
+            const ResearchUpgradeRequest upgradeInQueue = get<ResearchUpgradeRequest>(buildRequest.request);
+            std::cout << "Index: " << index << " " << upgradeInQueue.upgradeType << "\n";
+        }
+        index++;
+    }
+}
+
+int SpenderManager::availableMinerals()
+{
+    int currentMineralCount = BWAPI::Broodwar->self()->minerals();
+
+    for (BWAPI::UnitType building : plannedBuildings)
+    {
+        currentMineralCount -= building.mineralPrice();
+    }
+
+    return currentMineralCount;
+}
+
+int SpenderManager::availableGas()
+{
+    int currentGasCount = BWAPI::Broodwar->self()->gas();
+
+    for (BWAPI::UnitType building : plannedBuildings)
+    {
+        currentGasCount -= building.gasPrice();
+    }
+
+    return currentGasCount;
+}
+
+int SpenderManager::availableSupply()
+{
+    int unusedSupply = (BWAPI::Broodwar->self()->supplyTotal() - BWAPI::Broodwar->self()->supplyUsed()) / 2;
+
+    for (BWAPI::UnitType unit : plannedUnits)
+    {
+        unusedSupply -= unit.supplyRequired();
+    }
+
+    return unusedSupply;
 }
 
 bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas)
@@ -74,13 +137,14 @@ bool SpenderManager::isAlreadyBuildingSupply()
 
 void SpenderManager::OnFrame()
 {
-    int currentMineralCount = BWAPI::Broodwar->self()->minerals();
-    int currentGasCount = BWAPI::Broodwar->self()->gas();
+    int currentMineralCount = availableMinerals();
+    int currentGasCount = availableGas();
+    int currentSupply = availableSupply();
 
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    //if(BWAPI::Broodwar->getFrameCount() % 48 == 0) std::cout << "Requests.size() =  " << buildRequests.size() << "\n";
+    //if (BWAPI::Broodwar->getFrameCount() % 48 == 0) printQueue();
 
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
     {
@@ -93,8 +157,10 @@ void SpenderManager::OnFrame()
 
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
+                //Need to get unit in on frame not here
                 BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
                 Tools::BuildBuilding(unitAvalible, temp.buildingType);
+                plannedBuildings.push_back(temp.buildingType);
 
                 //Need to add units to data structure that keeps track of them until they completed the build.
 
@@ -117,12 +183,15 @@ void SpenderManager::OnFrame()
             mineralPrice = temp.unitType.mineralPrice();
             gasPrice = temp.unitType.gasPrice();
 
-            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
+            //[TODO] Still getting supply blocked, need to make sure this is fixed. Create lock and unlock mechanism for a more sophisticated method.
+            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount) && currentSupply - temp.unitType.supplyProvided() >= 0)
             {
                 temp.building->train(temp.unitType);
+                plannedUnits.push_back(temp.unitType);
 
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
+                currentSupply -= temp.unitType.supplyProvided();
 
                 //Why?
                 it = buildRequests.erase(it);
@@ -157,5 +226,26 @@ void SpenderManager::OnFrame()
             }
         }
 
+    }
+}
+
+void SpenderManager::onUnitCreate(BWAPI::Unit unit)
+{
+    for (std::vector<BWAPI::UnitType>::iterator it = plannedBuildings.begin(); it != plannedBuildings.end(); ++it)
+    {
+        if (unit->getType() == *it)
+        {
+            it = plannedBuildings.erase(it);
+            break;
+        }
+    }
+
+    for (std::vector<BWAPI::UnitType>::iterator it = plannedUnits.begin(); it != plannedUnits.end(); ++it)
+    {
+        if (unit->getType() == *it)
+        {
+            it = plannedUnits.erase(it);
+            break;
+        }
     }
 }
