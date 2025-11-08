@@ -3,7 +3,7 @@
 #include "../src/starterbot/Tools.h"
 #include "../src/starterbot/MapTools.h"
 
-bool alreadySentRequest = false;
+bool alreadySentRequest0 = false;
 bool alreadySentRequest1 = false;
 bool alreadySentRequest2 = false;
 bool alreadySentRequest3 = false;
@@ -60,10 +60,10 @@ void BuildManager::onFrame()
     {
     case 8:
     {
-        if (alreadySentRequest3 == false)
+        if (alreadySentRequest0 == false)
         {
             spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-            alreadySentRequest3 = true;
+            alreadySentRequest0 = true;
         }
         break;
     }

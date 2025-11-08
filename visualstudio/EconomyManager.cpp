@@ -29,73 +29,73 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
     switch (unit->getType())
     {
-    case BWAPI::UnitTypes::Protoss_Nexus:
-    {
-        bool alreadyExists = false;
-        for (const NexusEconomy& nexusEconomy : nexusEconomies)
+        case BWAPI::UnitTypes::Protoss_Nexus:
         {
-            if (nexusEconomy.nexus == unit)
+            bool alreadyExists = false;
+            for (const NexusEconomy& nexusEconomy : nexusEconomies)
             {
-                alreadyExists = true;
-                break;
-            }
-        }
-
-        if (alreadyExists == false)
-        {
-            //[TODO]: Current expansion implementation is not working as intended.
-            // Workers should be assigned to the correct nexus economy and mine ONLY the minerals around their nexus.
-            //Minerals are not being picked up properlly when we expand and workers are not being transfered.
-
-            NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
-            nexusEconomies.push_back(temp);
-
-            //[TODO]: Transfer workers from main to the next nexus economy.
-            if (nexusEconomies.size() > 1)
-            {
-                BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(temp.minerals.size());
-
-                for (BWAPI::Unit worker : workersToTransfer)
+                if (nexusEconomy.nexus == unit)
                 {
-                    temp.assignWorker(worker);
+                    alreadyExists = true;
+                    break;
                 }
-                std::cout << "New nexus workers: " << temp.workers.size() << "\n";
             }
-        }
-        else
-        {
-            std::cout << "Nexus Already Exists" << "\n";
-        }
 
-        break;
-    }
-    case BWAPI::UnitTypes::Protoss_Assimilator:
-    {
-        //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
-        for (NexusEconomy& nexusEconomy : nexusEconomies)
-        {
-            if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+            if (alreadyExists == false)
             {
-                nexusEconomy.assignAssimilator(unit);
-                //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
-                break;
+                //[TODO]: Current expansion implementation is not working as intended.
+                // Workers should be assigned to the correct nexus economy and mine ONLY the minerals around their nexus.
+                //Minerals are not being picked up properlly when we expand and workers are not being transfered.
+
+                NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
+                nexusEconomies.push_back(temp);
+
+                //[TODO]: Transfer workers from main to the next nexus economy.
+                if (nexusEconomies.size() > 1)
+                {
+                    BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(temp.minerals.size());
+
+                    for (BWAPI::Unit worker : workersToTransfer)
+                    {
+                        temp.assignWorker(worker);
+                    }
+                    std::cout << "New nexus workers: " << temp.workers.size() << "\n";
+                }
             }
-        }
-        break;
-    }
-    case BWAPI::UnitTypes::Protoss_Probe:
-    {
-        for (NexusEconomy& nexusEconomy : nexusEconomies)
-        {
-            if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+            else
             {
-                //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
-                nexusEconomy.assignWorker(unit);
-                break;
+                std::cout << "Nexus Already Exists" << "\n";
             }
+
+            break;
         }
-        break;
-    }
+        case BWAPI::UnitTypes::Protoss_Assimilator:
+        {
+            //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                {
+                    nexusEconomy.assignAssimilator(unit);
+                    //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    break;
+                }
+            }
+            break;
+        }
+        case BWAPI::UnitTypes::Protoss_Probe:
+        {
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                {
+                    //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    nexusEconomy.assignWorker(unit);
+                    break;
+                }
+            }
+            break;
+        }
     }
 }
 
