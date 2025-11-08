@@ -241,13 +241,13 @@ Action StrategyManager::onFrame()
 	const int seconds = frame / (FRAMES_PER_SECOND);
 
 
-	/*if ((frame - previousFrameSecond) == 24)
+	if ((frame - previousFrameSecond) == 24)
 	{
 		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
-	}*/
+	}
 
-	//currentState->evaluate(*this);
+	currentState->evaluate(*this);
 
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
