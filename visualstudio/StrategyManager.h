@@ -23,11 +23,11 @@ public:
 
 /*
 *								[Boredom State]
-* 
+*
 * [Notes]:
 * Start making slightly more aggressive moves with the hopes of getting into combat.
 * Can optionally make this  that the enemy player is playing a more potentially more defensive or expand style of play.
-* 
+*
 */
 class StrategyBoredomState : public StrategyState {
 public:
@@ -43,7 +43,7 @@ public:
 *[Notes]:
 * Normal play and decision making.
 * Will try to pick the best move based on time and enemy considerations.
-* 
+*
 */
 class StrategyContentState : public StrategyState {
 public:
@@ -57,8 +57,8 @@ public:
 *								[Denial State]
 *
 *[Notes]:
-* Plays quicker and makes more rash decisions, can make the time to choose the best descision quicker. 
-* 
+* Plays quicker and makes more rash decisions, can make the time to choose the best descision quicker.
+*
 */
 class StrategyDenialState : public StrategyState {
 public:
@@ -72,7 +72,7 @@ public:
 *								[Ego State]
 *
 *[Notes]:
-* Makes greedier decisions that other states would not choose. Takes more time to decide what decision to make. 
+* Makes greedier decisions that other states would not choose. Takes more time to decide what decision to make.
 */
 class StrategyEgoState : public StrategyState {
 public:
@@ -102,7 +102,7 @@ public:
 *[Notes]:
 * Very aggressive moves, with the main goal of killing the enemy units that have killed them (get the score of a unit)
 * and with the hopes of killing a enemy expansion or highly valued units like workers and what not.
-* 
+*
 * Might use cheese strats here to make enemy lose workers like dropships.
 */
 class StrategyRageState : public StrategyState {
@@ -132,7 +132,7 @@ public:
 	float egoFromEnemyUnitDeath = .01f;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
-	void onStart();
+	std::string onStart();
 	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
 	void printBoredomMeter();
