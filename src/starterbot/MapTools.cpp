@@ -353,10 +353,10 @@ std::string MapTools::fixMapName(const std::string& s) const
 
     for (auto c : s)
     {
-        if (std::isalnum(c) || c == '.')
+        /*if (std::isalnum(c) || c == '.')
         {
             ss << c;
-        }
+        }*/
     }
 
     return ss.str();
