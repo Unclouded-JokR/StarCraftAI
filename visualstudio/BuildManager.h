@@ -23,19 +23,22 @@ class BuildManager
 public:
     ProtoBotCommander* commanderReference;
     SpenderManager spenderManager;
-
     BuildOrder selectedBuildOrder;
-    bool buildOrderCompleted = false;
 
+    bool buildOrderCompleted = false;
     BWAPI::Unitset buildings;
 
     BuildManager(ProtoBotCommander* commanderReference);
     void onStart();
     void onFrame();
     void onCreate(BWAPI::Unit unit);
+    void onUnitDestroy(BWAPI::Unit unit);
+
     void assignBuilding(BWAPI::Unit unit);
     bool isBuildOrderCompleted();
     bool alreadyBuildingSupply();
+    bool alreadySentRequest(int unitID);
+
     void buildBuilding(BWAPI::UnitType building);
     void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
     void buildUnitType(BWAPI::UnitType unit);

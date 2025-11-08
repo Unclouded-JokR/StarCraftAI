@@ -34,6 +34,7 @@ public:
     ProtoBotCommander* commanderReference;
     std::vector<BWAPI::UnitType> plannedBuildings;
     std::vector<BWAPI::UnitType> plannedUnits;
+    std::vector<int> requestIdentifiers; //list of the buildings that have already sent train commands, can also do this for upgrades.
 
     SpenderManager(ProtoBotCommander* commanderReference);
     
@@ -54,8 +55,11 @@ public:
     int availableSupply();
 
     bool isAlreadyBuildingSupply();
+    bool buildingAlreadyMadeRequest(int unitID);
+
     void OnFrame();
     void onUnitCreate(BWAPI::Unit unit);
     void printQueue();
+    void removeRequestID(int unitID);
 };
 

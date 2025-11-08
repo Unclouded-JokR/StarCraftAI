@@ -35,6 +35,7 @@ NexusEconomy::~NexusEconomy()
 void NexusEconomy::OnFrame()
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
+
 	for (BWAPI::Unit mineral : minerals)
 	{
 		BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(mineral->getID()).c_str());
@@ -85,15 +86,11 @@ void NexusEconomy::OnFrame()
 		}
 	}
 
-	if (!nexus->isTraining() && workers.size() < maximumWorkers && !requestAlreadyMade)
+	//if (frame % 48 == 0) std::cout << "Nexus already sent request == " << !economyReference->checkRequestAlreadySent(nexus->getID()) << "\n";
+
+	if (!nexus->isTraining() && workers.size() < maximumWorkers && !economyReference->checkRequestAlreadySent(nexus->getID()))
 	{
 		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
-		requestAlreadyMade = true;
-	}
-
-	if (nexus->isTraining() && requestAlreadyMade)
-	{
-		requestAlreadyMade = false;
 	}
 
 	//Debug Print Statements

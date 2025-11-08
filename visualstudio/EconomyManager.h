@@ -19,6 +19,7 @@ public:
 	void assignUnit(BWAPI::Unit unit);
 	BWAPI::Unit getAvalibleWorker();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
+	bool checkRequestAlreadySent(int unitID);
 };
 
 

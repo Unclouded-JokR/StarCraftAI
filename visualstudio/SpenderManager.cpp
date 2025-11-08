@@ -33,6 +33,10 @@ void SpenderManager::addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildin
     TrainUnitRequest temp;
     temp.unitType = unitToTrain;
     temp.building = buildingRequesting;
+
+    //Add unit to already sent requests
+    requestIdentifiers.push_back(buildingRequesting->getID());
+
     requestToAdd.request = temp;
 
     buildRequests.push_back(requestToAdd);
@@ -183,10 +187,12 @@ void SpenderManager::OnFrame()
             mineralPrice = temp.unitType.mineralPrice();
             gasPrice = temp.unitType.gasPrice();
 
-            //[TODO] Still getting supply blocked, need to make sure this is fixed. Create lock and unlock mechanism for a more sophisticated method.
+            //Check if we train a unit we are not going to get supply blocked.
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount) && ((currentSupply - (temp.unitType.supplyRequired() / 2)) >= 0))
             {
                 temp.building->train(temp.unitType);
+                removeRequestID(temp.building->getID());
+
                 plannedUnits.push_back(temp.unitType);
 
                 currentMineralCount -= mineralPrice;
@@ -248,6 +254,28 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
         if (unit->getType() == *it)
         {
             it = plannedUnits.erase(it);
+            break;
+        }
+    }
+}
+
+bool SpenderManager::buildingAlreadyMadeRequest(int unitID)
+{
+    for (const int requestIdentifier : requestIdentifiers)
+    {
+        if (requestIdentifier == unitID) return true;
+    }
+
+    return false;
+}
+
+void SpenderManager::removeRequestID(int unitID)
+{
+    for (std::vector<int>::iterator it = requestIdentifiers.begin(); it != requestIdentifiers.end(); ++it)
+    {
+        if (*it == unitID)
+        {
+            it = requestIdentifiers.erase(it);
             break;
         }
     }

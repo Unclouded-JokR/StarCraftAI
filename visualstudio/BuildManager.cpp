@@ -22,7 +22,7 @@ BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderRef
 void BuildManager::onStart()
 {
     //Make false at the start of a game.
-    buildOrderCompleted = true;
+    buildOrderCompleted = false;
 
     BuildOrderInstruction insturction1;
     insturction1.supply = 8;
@@ -120,16 +120,16 @@ void BuildManager::onFrame()
 
     switch (currentSupply)
     {
-        /*case 8:
+        case 8:
         {
-            if (alreadySentRequest == false)
+            if (alreadySentRequest3 == false)
             {
                 spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-                alreadySentRequest = true;
+                alreadySentRequest3 = true;
             }
             break;
-        }*/
-        /*case 10:
+        }
+        case 10:
         {
             if (alreadySentRequest1 == false)
             {
@@ -137,16 +137,17 @@ void BuildManager::onFrame()
                 alreadySentRequest1 = true;
             }
             break;
-        }*/
-        /*case 12:
+        }
+        case 12:
         {
             if (alreadySentRequest2 == false)
             {
                 spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
                 alreadySentRequest2 = true;
+                buildOrderCompleted = true;
             }
             break;
-        }*/
+        }
         /*case 14:
         {
             if (alreadySentRequest3 == false)
@@ -214,6 +215,30 @@ void BuildManager::onFrame()
     }
 }
 
+void BuildManager::onUnitDestroy(BWAPI::Unit unit)
+{
+    if (unit->getPlayer() != BWAPI::Broodwar->self())
+        return;
+
+    BWAPI::UnitType unitType = unit->getType();
+    
+    if (!unitType.isBuilding() || unitType == BWAPI::UnitTypes::Protoss_Pylon ||
+        unitType == BWAPI::UnitTypes::Protoss_Nexus || unitType == BWAPI::UnitTypes::Protoss_Assimilator)
+    {
+        return;
+    }
+
+    for (BWAPI::Unit building : buildings)
+    {
+        if (building->getID() == unit->getID())
+        {
+            buildings.erase(building);
+            break;
+        }
+    }
+
+}
+
 void BuildManager::buildUnitType(BWAPI::UnitType unitToTrain)
 {
     for (BWAPI::Unit unit : buildings)
@@ -266,4 +291,9 @@ void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 void BuildManager::onCreate(BWAPI::Unit unit)
 {
     spenderManager.onUnitCreate(unit);
+}
+
+bool BuildManager::alreadySentRequest(int unitID)
+{
+    return spenderManager.buildingAlreadyMadeRequest(unitID);
 }

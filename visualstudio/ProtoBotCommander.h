@@ -56,10 +56,6 @@ public:
 	void drawDebugInformation();
 	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
 
-	//Get rid of these
-	void sendWorkersToGas();
-	void trainAdditionalWorkers();
-
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
 	*/
@@ -78,7 +74,9 @@ public:
 	bool alreadyBuildingSupply();
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 	void requestBuild(BWAPI::UnitType building);
-
+	bool alreadySentRequest(int unitID);
+	
+	//Scouting
 	void getUnitToScout();
 };
 

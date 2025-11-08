@@ -166,7 +166,7 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
 	informationManager.onUnitDestroy(unit);
-	//buildManager.OnUnitDestroy(unit);
+	buildManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
@@ -322,4 +322,9 @@ std::string ProtoBotCommander::enemyRaceCheck()
 	{
 		return "Zerg_";
 	}
+}
+
+bool ProtoBotCommander::alreadySentRequest(int unitID)
+{
+	return buildManager.alreadySentRequest(unitID);
 }

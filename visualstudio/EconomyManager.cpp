@@ -17,8 +17,8 @@ void EconomyManager::OnFrame()
 
 void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    //End loop early if we found the nexusEconomy that had the destroyed unit
     //[TODO]: Need to deconstruct nexusEconomy if its a nexus.
+    //End loop early if we found the nexusEconomy that had the destroyed unit
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         if (nexusEconomy.OnUnitDestroy(unit) == true) break;
@@ -32,7 +32,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
         case BWAPI::UnitTypes::Protoss_Nexus:
         {
             bool alreadyExists = false;
-            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            for (const NexusEconomy& nexusEconomy : nexusEconomies)
             {
                 if (nexusEconomy.nexus == unit)
                 {
@@ -43,12 +43,14 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
             if (alreadyExists == false)
             {
-                //[TODO]: Current expansion implementation is not working.
+                //[TODO]: Current expansion implementation is not working as intended.
+                // Workers should be assigned to the correct nexus economy and mine ONLY the minerals around their nexus.
+                //Minerals are not being picked up properlly when we expand and workers are not being transfered.
+
                 NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
                 nexusEconomies.push_back(temp);
-
-                //When we create a new nexus ecconomy transfer workers.
-                //[TODO]: Should also get the nexus that is closests when transfering.
+                
+                //[TODO]: Transfer workers from main to the next nexus economy.
                 if (nexusEconomies.size() > 1)
                 {
                     BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(temp.minerals.size());
@@ -62,13 +64,14 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
             }
             else
             {
-                //std::cout << "Nexus Already Exists" << "\n";
+                std::cout << "Nexus Already Exists" << "\n";
             }
                
             break;
         }
         case BWAPI::UnitTypes::Protoss_Assimilator:
         {
+            //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
             for (NexusEconomy& nexusEconomy : nexusEconomies)
             {
                 if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
@@ -110,4 +113,9 @@ BWAPI::Unit EconomyManager::getAvalibleWorker()
 void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 { 
     commanderReference->requestUnitToTrain(worker, nexus);
+}
+
+bool EconomyManager::checkRequestAlreadySent(int unitID)
+{
+    return commanderReference->alreadySentRequest(unitID);
 }
