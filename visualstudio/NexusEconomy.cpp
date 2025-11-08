@@ -280,6 +280,8 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 //[TODO]: make sure we are handing off probe properlly
 BWAPI::Unit NexusEconomy::getWorkerToScout()
 {
+	if (workers.size() == 0) return nullptr;
+
 	BWAPI::Unit unitToReturn = nullptr;
 
 	//Get idle units if possible.
@@ -345,6 +347,8 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 //[TODO]: make sure we are handing off probe properlly
 BWAPI::Unit NexusEconomy::getWorkerToBuild()
 {
+	if (workers.size() == 0) return nullptr;
+
 	std::cout << "Reuqesting Worker!\n";
 
 	BWAPI::Unit unitToReturn = nullptr;
