@@ -261,7 +261,7 @@ Action StrategyManager::onFrame()
 		//Check if we should build a pylon
 		if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon))
 		{
-			if (supplyUsed + 3 >= totalSupply && !commanderReference->alreadyBuildingSupply() && !pylonRequestSent)
+			if (supplyUsed + 2 >= totalSupply && !commanderReference->alreadyBuildingSupply() && !pylonRequestSent)
 			{
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;

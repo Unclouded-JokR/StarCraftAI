@@ -94,7 +94,7 @@ int SpenderManager::availableSupply()
 
     for (BWAPI::UnitType unit : plannedUnits)
     {
-        unusedSupply -= unit.supplyRequired();
+        unusedSupply -= (unit.supplyRequired() / 2);
     }
 
     return unusedSupply;
@@ -131,7 +131,7 @@ bool SpenderManager::isAlreadyBuildingSupply()
         }
     } 
 
-    std::cout << "Pylon not in Queue" << "\n";
+    //std::cout << "Pylon not in Queue" << "\n";
     return false;
 }
 
@@ -184,18 +184,21 @@ void SpenderManager::OnFrame()
             gasPrice = temp.unitType.gasPrice();
 
             //[TODO] Still getting supply blocked, need to make sure this is fixed. Create lock and unlock mechanism for a more sophisticated method.
-            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount) && currentSupply - temp.unitType.supplyProvided() >= 0)
+            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount) && ((currentSupply - (temp.unitType.supplyRequired() / 2)) >= 0))
             {
                 temp.building->train(temp.unitType);
                 plannedUnits.push_back(temp.unitType);
 
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
-                currentSupply -= temp.unitType.supplyProvided();
+                currentSupply -= (temp.unitType.supplyRequired() / 2);
 
                 //Why?
                 it = buildRequests.erase(it);
-                //std::cout << "Training " << temp.unitType << "\n";
+                /*std::cout << "Current Supply: " << BWAPI::Broodwar->self()->supplyTotal() / 2 << "\n";
+                std::cout << "Supply used: " << BWAPI::Broodwar->self()->supplyUsed() / 2 << "\n";*/
+                //std::cout << "Avalible supply (considering planned units): " << currentSupply << "\n";
+                //std::cout << "Training " << temp.unitType << " needs " << temp.unitType.supplyRequired() / 2 << " supply." << "\n";
             }
             else
             {

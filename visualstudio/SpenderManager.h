@@ -48,6 +48,7 @@ public:
 
     //Checks to make sure we can afford the unit and have avalible supply
     bool canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas);
+
     int availableMinerals();
     int availableGas();
     int availableSupply();

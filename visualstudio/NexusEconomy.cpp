@@ -9,7 +9,7 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 
 	for (BWAPI::Unit unit : unitsInRadius)
 	{
-		std::cout << unit->getType() << "\n";
+		//std::cout << unit->getType() << "\n";
 		minerals.insert(unit);
 	}
 
@@ -22,7 +22,7 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 		mineralWorkerCount[mineral] = 0;
 	}
 
-	std::cout << "Created new Nexus Economy" << "\n";
+	std::cout << "Created new Nexus Economy " << id << "\n";
 	std::cout << "Total Minerals: " << minerals.size() << "\n";
 }
 
@@ -34,32 +34,29 @@ NexusEconomy::~NexusEconomy()
 
 void NexusEconomy::OnFrame()
 {
-	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
-	const int supplyTotal = BWAPI::Broodwar->self()->supplyTotal() / 2;
-
-	BWAPI::Broodwar->drawEllipseMap(nexus->getPosition(), 256, 256, BWAPI::Color(255, 0, 0), false);
-
-	int frame = BWAPI::Broodwar->getFrameCount();
+	const int frame = BWAPI::Broodwar->getFrameCount();
 	for (BWAPI::Unit mineral : minerals)
 	{
-		//BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(mineral->getID()).c_str());
+		BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(mineral->getID()).c_str());
 	}
 
 	if (assimilator != nullptr) BWAPI::Broodwar->drawTextMap(assimilator->getPosition(), std::to_string(assimilator->getID()).c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{
-		//BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(255, 0, 0), true);
-		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
+		//If a worker is constructing skip over them until they are done.
+		if (worker->isConstructing())
+		{
+			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
+			continue;
+		}
 
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
-		if ((!worker->isCarryingMinerals() || worker->isIdle()) && !worker->isConstructing())
+		if (!worker->isCarryingMinerals() || worker->isIdle())
 		{
-			//[TODO]: need to assign workers to assimilator incase they die, dont change who is assigned.
 			if (assimilator != nullptr && assimilatorWorkerCount < WORKERS_PER_ASSIMILATOR)
 			{
-				worker->rightClick(assimilator);
-				std::cout << "Assigning Worker to Assimilator" << "\n";
+				worker->gather(assimilator);
 				assimilatorWorkerCount += 1;
 				continue;
 			}
@@ -69,8 +66,10 @@ void NexusEconomy::OnFrame()
 				BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
 				mineralWorkerCount[closestMineral] += 1;
 				assignedResource[worker] = closestMineral;
-				worker->rightClick(closestMineral);
+				worker->gather(closestMineral);
 			}
+
+			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(255, 0, 0), true);
 		}
 		else
 		{
@@ -81,9 +80,9 @@ void NexusEconomy::OnFrame()
 				mineralWorkerCount[assignedMineral] -= 1;
 				worker->rightClick(nexus);
 			}
+
+			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(0, 128, 0), true);
 		}
-
-
 	}
 
 	if (!nexus->isTraining() && workers.size() < maximumWorkers && !requestAlreadyMade)
@@ -96,9 +95,6 @@ void NexusEconomy::OnFrame()
 	{
 		requestAlreadyMade = false;
 	}
-
-	/*if (!nexus->isTraining() && workers.size() < maximumWorkers) nexus->train(BWAPI::UnitTypes::Protoss_Probe);*/
-
 
 	//Debug Print Statements
 	/*if (BWAPI::Broodwar->getFrameCount() % 500 == 0 && BWAPI::Broodwar->getFrameCount() != 0)
@@ -388,6 +384,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 		if (unit->isCarryingMinerals())
 		{
 			unitToReturn = unit;
+			break;
 		}
 	}
 

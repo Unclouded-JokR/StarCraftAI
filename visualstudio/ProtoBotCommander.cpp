@@ -44,22 +44,16 @@ void ProtoBotCommander::onStart()
 	* [TO DO]:
 	* Create code to select opening randomly for avalible openings.
 	* Have functions that can ask building manager how many openings we have.
-	*
 	*/
 	std::string enemyRace = enemyRaceCheck();
-	std::cout << enemyRace << '\n';
+	std::cout << "Enemy Race " << enemyRace << '\n';
 
-	//Need build order structure to be implemented.
+	//[TODO] Need build order structure to be implemented.
 	//vector<BuildOrder> build_orders = buildManager.getBuildOrders(enemyRace);
-
-	/*
-	* [TO DO]:
-	* Initalize ecconomy manager instance.
-	* Assign workers.
-	* 
-	*/
+	
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
+	//Get nexus and create a new instace of a NexusEconomy
 	for (BWAPI::Unit unit : units)
 	{
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
