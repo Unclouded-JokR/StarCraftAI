@@ -173,22 +173,14 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
-	
-	//[TODO] need to filter this to only have buildings and move this to build manager;
-	buildingsBeingMade.insert(unit);
 
 	buildManager.onCreate(unit);
 }
 
 //[TODO] Move this to building manager
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType type)
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
 {
-	for (BWAPI::Unit unit : buildingsBeingMade)
-	{
-		if (unit->getType() == type) return true;
-	}
-
-	return false;
+	return buildManager.checkUnitIsBeingWarpedIn(building);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
@@ -196,7 +188,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
 
-	buildingsBeingMade.erase(unit);
+	buildManager.buildingDoneWarping(unit);
 
 	const BWAPI::UnitType unit_type = unit->getType();
 
@@ -287,9 +279,9 @@ bool ProtoBotCommander::buildOrderCompleted()
 	return buildManager.isBuildOrderCompleted();
 }
 
-bool ProtoBotCommander::alreadyBuildingSupply()
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 {
-	return buildManager.alreadyBuildingSupply();
+	return buildManager.requestedBuilding(building);
 }
 
 void ProtoBotCommander::getUnitToScout()
@@ -327,4 +319,9 @@ std::string ProtoBotCommander::enemyRaceCheck()
 bool ProtoBotCommander::alreadySentRequest(int unitID)
 {
 	return buildManager.alreadySentRequest(unitID);
+}
+
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+	return buildManager.checkUnitIsPlanned(building);
 }

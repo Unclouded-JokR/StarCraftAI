@@ -241,11 +241,11 @@ Action StrategyManager::onFrame()
 	const int seconds = frame / (FRAMES_PER_SECOND);
 
 
-	if ((frame - previousFrameSecond) == 24)
+	/*if ((frame - previousFrameSecond) == 24)
 	{
 		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
-	}
+	}*/
 
 	//currentState->evaluate(*this);
 
@@ -259,23 +259,15 @@ Action StrategyManager::onFrame()
 	if (buildOrderCompleted) 
 	{
 		//Check if we should build a pylon
-		if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon))
+		if (supplyUsed + 2 >= totalSupply && !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Pylon)
+			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Pylon)))
 		{
-			if (supplyUsed + 2 >= totalSupply && !commanderReference->alreadyBuildingSupply() && !pylonRequestSent)
-			{
-				Expand actionToTake;
-				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
+			Expand actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
-				pylonRequestSent = true;
-
-				action.commanderAction = actionToTake;
-				action.type = ActionType::Action_Expand;
-				return action;
-			}
-		}
-		else
-		{
-			pylonRequestSent = false;
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Expand;
+			return action;
 		}
 
 		/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus))

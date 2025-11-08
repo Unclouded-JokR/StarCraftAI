@@ -135,19 +135,20 @@ void BuildManager::onFrame()
             {
                 spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
                 alreadySentRequest1 = true;
+                buildOrderCompleted = true;
             }
             break;
         }
-        case 12:
+        /*case 12:
         {
             if (alreadySentRequest2 == false)
             {
                 spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
                 alreadySentRequest2 = true;
-                buildOrderCompleted = true;
+                
             }
             break;
-        }
+        }*/
         /*case 14:
         {
             if (alreadySentRequest3 == false)
@@ -221,12 +222,21 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
         return;
 
     BWAPI::UnitType unitType = unit->getType();
-    
-    if (!unitType.isBuilding() || unitType == BWAPI::UnitTypes::Protoss_Pylon ||
-        unitType == BWAPI::UnitTypes::Protoss_Nexus || unitType == BWAPI::UnitTypes::Protoss_Assimilator)
+
+    if (!unitType.isBuilding()) return; 
+
+    //Check if a non-completed building has been killed
+    for (BWAPI::Unit warp : buildingWarps)
     {
-        return;
+        if (unit == warp)
+        {
+            buildingWarps.erase(warp);
+            return;
+        }
     }
+    
+    //If the unit is something dealing with economy exit.
+    if (unitType == BWAPI::UnitTypes::Protoss_Pylon ||  unitType == BWAPI::UnitTypes::Protoss_Nexus || unitType == BWAPI::UnitTypes::Protoss_Assimilator) return;
 
     for (BWAPI::Unit building : buildings)
     {
@@ -263,7 +273,7 @@ void BuildManager::buildUpgadeType(BWAPI::UpgradeType upgradeToBuild)
 
 void BuildManager::assignBuilding(BWAPI::Unit unit)
 {
-    std::cout << "Assigning " << unit->getType() << "to BuildManager\n";
+    std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
     buildings.insert(unit);
     std::cout << "Buildings size: " << buildings.size() << "\n";
 }
@@ -273,9 +283,9 @@ bool BuildManager::isBuildOrderCompleted()
     return buildOrderCompleted;
 }
 
-bool BuildManager::alreadyBuildingSupply()
+bool BuildManager::requestedBuilding(BWAPI::UnitType building)
 {
-    return spenderManager.isAlreadyBuildingSupply();
+    return spenderManager.requestedBuilding(building);
 }
 
 void BuildManager::buildBuilding(BWAPI::UnitType building)
@@ -290,10 +300,41 @@ void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 
 void BuildManager::onCreate(BWAPI::Unit unit)
 {
+    buildingWarps.insert(unit);
     spenderManager.onUnitCreate(unit);
 }
 
 bool BuildManager::alreadySentRequest(int unitID)
 {
     return spenderManager.buildingAlreadyMadeRequest(unitID);
+}
+
+bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+{
+    for (BWAPI::Unit warp : buildingWarps)
+    {
+        if (building == warp->getType())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+    return spenderManager.checkUnitIsPlanned(building);
+}
+
+void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
+{
+    for (BWAPI::Unit warp : buildingWarps)
+    {
+        if (unit == warp)
+        {
+            buildingWarps.erase(unit);
+            break;
+        }
+    }
 }

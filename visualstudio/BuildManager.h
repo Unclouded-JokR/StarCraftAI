@@ -27,6 +27,7 @@ public:
 
     bool buildOrderCompleted = false;
     BWAPI::Unitset buildings;
+    BWAPI::Unitset buildingWarps;
 
     BuildManager(ProtoBotCommander* commanderReference);
     void onStart();
@@ -36,8 +37,12 @@ public:
 
     void assignBuilding(BWAPI::Unit unit);
     bool isBuildOrderCompleted();
-    bool alreadyBuildingSupply();
+    bool requestedBuilding(BWAPI::UnitType building);
     bool alreadySentRequest(int unitID);
+    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
+    bool checkUnitIsPlanned(BWAPI::UnitType building);
+    void buildingDoneWarping(BWAPI::Unit unit);
+
 
     void buildBuilding(BWAPI::UnitType building);
     void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);

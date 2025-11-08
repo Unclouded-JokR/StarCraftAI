@@ -35,7 +35,6 @@ public:
 	* Used for Debugging
 	*/
 	std::string buildOrderSelected;
-	BWAPI::Unitset buildingsBeingMade;
 
 	ProtoBotCommander();
 
@@ -55,6 +54,7 @@ public:
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
 	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
+	bool checkUnitIsPlanned(BWAPI::UnitType building);
 
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
@@ -71,7 +71,7 @@ public:
 
 	//Build Manager Methods
 	bool buildOrderCompleted();
-	bool alreadyBuildingSupply();
+	bool requestedBuilding(BWAPI::UnitType building);
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 	void requestBuild(BWAPI::UnitType building);
 	bool alreadySentRequest(int unitID);

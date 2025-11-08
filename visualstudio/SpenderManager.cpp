@@ -114,7 +114,7 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
     return false;
 }
 
-bool SpenderManager::isAlreadyBuildingSupply()
+bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
 {
     if (buildRequests.size() == 0)
     {
@@ -127,15 +127,13 @@ bool SpenderManager::isAlreadyBuildingSupply()
         {
             const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
 
-            if (buildingInQueue.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
+            if (buildingInQueue.buildingType == building)
             {
-                //std::cout << "Pylon in queue" << "\n";
                 return true;
             }
         }
     } 
 
-    //std::cout << "Pylon not in Queue" << "\n";
     return false;
 }
 
@@ -279,4 +277,17 @@ void SpenderManager::removeRequestID(int unitID)
             break;
         }
     }
+}
+
+bool SpenderManager::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+    for (BWAPI::UnitType plannedBuilding : plannedBuildings)
+    {
+        if (building == plannedBuilding)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

@@ -53,9 +53,9 @@ public:
     int availableMinerals();
     int availableGas();
     int availableSupply();
-
-    bool isAlreadyBuildingSupply();
+    bool requestedBuilding(BWAPI::UnitType building);
     bool buildingAlreadyMadeRequest(int unitID);
+    bool checkUnitIsPlanned(BWAPI::UnitType building);
 
     void OnFrame();
     void onUnitCreate(BWAPI::Unit unit);
