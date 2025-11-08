@@ -315,6 +315,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 		if (unit->isCarryingMinerals())
 		{
 			unitToReturn = unit;
+			break;
 		}
 		workers.erase(unit);
 	}
