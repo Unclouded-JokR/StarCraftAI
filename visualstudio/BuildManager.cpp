@@ -162,28 +162,6 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 }
 
-void BuildManager::buildUnitType(BWAPI::UnitType unitToTrain)
-{
-    for (BWAPI::Unit unit : buildings)
-    {
-        if (unit->canBuild(unitToTrain) && !unit->isTraining())
-        {
-            unit->train(unitToTrain);
-        }
-    }
-}
-
-void BuildManager::buildUpgadeType(BWAPI::UpgradeType upgradeToBuild)
-{
-    for (BWAPI::Unit unit : buildings)
-    {
-        if (unit->canBuild(upgradeToBuild) && !unit->isTraining())
-        {
-            unit->upgrade(upgradeToBuild);
-        }
-    }
-}
-
 void BuildManager::assignBuilding(BWAPI::Unit unit)
 {
     std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
