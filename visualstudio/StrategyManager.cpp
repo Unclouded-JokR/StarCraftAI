@@ -255,67 +255,66 @@ Action StrategyManager::onFrame()
 
 	//WorkerSet workerSet = commanderReference.checkWorkerSetNeedsAssimilator();
 
+	if (!buildOrderCompleted) return action;
+
 #pragma region Expand
-	if (buildOrderCompleted)
+	//Check if we should build a pylon
+	if (supplyUsed + 2 == totalSupply && !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Pylon)
+		&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Pylon)))
 	{
-		//Check if we should build a pylon
-		if (supplyUsed + 2 == totalSupply && !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Pylon)
-			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Pylon)))
-		{
-			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
+		Expand actionToTake;
+		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 			
-			action.commanderAction = actionToTake;
-			action.type = ActionType::Action_Expand;
-			return action;
-		}
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Expand;
+		return action;
+	}
 
-		/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus))
-		{
-			if (BWAPI::Broodwar->self()->minerals() > 3000 && !nexusRequestSent)
-			{
-				Expand actionToTake;
-				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-
-				nexusRequestSent = true;
-
-				action.commanderAction = actionToTake;
-				action.type = ActionType::Action_Expand;
-				return action;
-			}
-		}
-		else
-		{
-			nexusRequestSent = false;
-		}*/
-
-		/*else if(workerSet != nullptr)
-		{
-			Exapnd action;
-			action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
-		}*/
-		//If we have a stock pile of minerals
-		/*else if (BWAPI::Broodwar->self()->minerals() > 3000)
+	/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus))
+	{
+		if (BWAPI::Broodwar->self()->minerals() > 3000 && !nexusRequestSent)
 		{
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
 
+			nexusRequestSent = true;
+
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
 		}
-		else if (buildOrderCompleted)
-		{
-			if (minutesPassedIndex < expansionTimes.size() && seconds / 60 > expansionTimes.at(minutesPassedIndex))
-			{
-				minutesPassedIndex++;
-
-				Expand actionToTake;
-				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-				return action;
-			}
-		}*/
 	}
+	else
+	{
+		nexusRequestSent = false;
+	}*/
+
+	/*else if(workerSet != nullptr)
+	{
+		Exapnd action;
+		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
+	}*/
+	//If we have a stock pile of minerals
+	/*else if (BWAPI::Broodwar->self()->minerals() > 3000)
+	{
+		Expand actionToTake;
+		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Expand;
+		return action;
+	}
+	else if (buildOrderCompleted)
+	{
+		if (minutesPassedIndex < expansionTimes.size() && seconds / 60 > expansionTimes.at(minutesPassedIndex))
+		{
+			minutesPassedIndex++;
+
+			Expand actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+			return action;
+		}
+	}*/
 #pragma endregion
 
 	//#pragma region Build Anti-Air
