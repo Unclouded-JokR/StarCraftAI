@@ -32,30 +32,6 @@ void BuildManager::onFrame()
 
     spenderManager.OnFrame();
 
-    //Continually train dragoons with excess minerals
-    /*if (currentMineral > 500) {
-        buildUnitType(BWAPI::UnitTypes::Protoss_Dragoon);
-        buildUpgadeType(BWAPI::UpgradeTypes::Singularity_Charge);
-    }*/
-
-    //if the supply does not follow the build order supply numbers we will skip pylons
-    /*const BuildOrderInstruction instruction = selectedBuildOrder.buildOrderInstructions.at(0);
-
-    if (instruction.supply <= currentSupply)
-    {
-        if (instruction.unitToTrain != BWAPI::UnitTypes::None)
-        {
-            buildUnitType(instruction.unitToTrain);
-        }
-        else if (instruction.buildingToConstruct != BWAPI::UnitTypes::None)
-        {
-            spenderManager.addRequest(instruction.buildingToConstruct);
-        }
-
-        selectedBuildOrder.buildOrderInstructions.erase(selectedBuildOrder.buildOrderInstructions.begin());
-    }*/
-
-
     switch (currentSupply)
     {
         case 8:

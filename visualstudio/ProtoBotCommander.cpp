@@ -107,13 +107,13 @@ void ProtoBotCommander::onFrame()
 		case ActionType::Action_Expand:
 		{
 			const Expand value = get<Expand>(action.commanderAction);
-			buildManager.buildBuilding(value.unitToBuild);
+			requestBuild(value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Build:
 		{
 			const Build value = get<Build>(action.commanderAction);
-			buildManager.buildBuilding(value.unitToBuild);
+			requestBuild(value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Scout:
