@@ -38,7 +38,7 @@ void BuildManager::onFrame()
         {
             if (alreadySentRequest0 == false)
             {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                buildBuilding(BWAPI::UnitTypes::Protoss_Pylon);
                 alreadySentRequest0 = true;
             }
             break;
@@ -47,7 +47,7 @@ void BuildManager::onFrame()
         {
             if (alreadySentRequest1 == false)
             {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
+                buildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
                 alreadySentRequest1 = true;
             }
             break;
@@ -56,7 +56,7 @@ void BuildManager::onFrame()
         {
             if (alreadySentRequest2 == false)
             {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
+                buildBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
                 alreadySentRequest2 = true;
                 buildOrderCompleted = true;
             }
