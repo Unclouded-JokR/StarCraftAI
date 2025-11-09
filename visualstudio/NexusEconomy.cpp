@@ -34,8 +34,6 @@ NexusEconomy::~NexusEconomy()
 
 void NexusEconomy::OnFrame()
 {
-	const int frame = BWAPI::Broodwar->getFrameCount();
-
 	for (BWAPI::Unit mineral : minerals)
 	{
 		BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(mineral->getID()).c_str());
@@ -103,10 +101,10 @@ void NexusEconomy::OnFrame()
 		std::cout << "Frame: " << BWAPI::Broodwar->getFrameCount() << " Minerals Gathered: " << 0 << "\n";
 	}*/
 
-	/*if (frame - lastPrintFrame >= 240)
+	/*if (BWAPI::Broodwar->getFrameCount() % 48 == 0)
 	{
+		std::cout << "===== MineralAssignments =====\n";
 		printMineralWorkerCounts();
-		lastPrintFrame = frame;
 	}*/
 }
 

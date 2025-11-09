@@ -410,12 +410,12 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 	*/
 	if (owner == BWAPI::Broodwar->self() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
-		std::cout << "Our unit died" << std::endl;
+		//std::cout << "Our unit died" << std::endl;
 		StrategyManager::angerMeter += StrategyManager::angerFromUnitDeath;
 	}
 	else if (owner == BWAPI::Broodwar->enemy() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
-		std::cout << "Enemy unit died" << std::endl;
+		//std::cout << "Enemy unit died" << std::endl;
 		StrategyManager::angerMeter += StrategyManager::egoFromEnemyUnitDeath;
 	}
 

@@ -33,9 +33,6 @@ public:
 	bool overtime = false;
 	bool requestAlreadyMade = false;
 
-	//So we dont overflow the terminal.
-	int lastPrintFrame = 0;
-
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();
 	void OnFrame();
