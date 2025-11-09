@@ -13,10 +13,16 @@ void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
+
     alreadySentRequest0 = false;
     alreadySentRequest1 = false;
     alreadySentRequest2 = false;
     alreadySentRequest3 = false;
+    alreadySentRequest4 = false;
+    alreadySentRequest5 = false;
+    alreadySentRequest6 = false;
+    alreadySentRequest7 = false;
+    alreadySentRequest8 = false;
 }
 
 void BuildManager::onFrame()
@@ -67,20 +73,19 @@ void BuildManager::onFrame()
             {
                 spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
                 alreadySentRequest1 = true;
-                buildOrderCompleted = true;
             }
             break;
         }
-        /*case 12:
+        case 12:
         {
             if (alreadySentRequest2 == false)
             {
                 spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
                 alreadySentRequest2 = true;
-
+                buildOrderCompleted = true;
             }
             break;
-        }*/
+        }
         /*case 14:
         {
             if (alreadySentRequest3 == false)

@@ -12,6 +12,7 @@ public:
     ProtoBotCommander* commanderReference;
     SpenderManager spenderManager;
 
+    //This should be removed when build orders are set in place. This is just meant to be able to send one build request.
     bool buildOrderCompleted = false;
     bool alreadySentRequest0 = false;
     bool alreadySentRequest1 = false;
