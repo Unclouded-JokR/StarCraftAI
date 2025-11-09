@@ -4,6 +4,10 @@
 SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
     std::cout << "Spender Manager Made!" << "\n";
+    
+    plannedBuildings.clear();
+    plannedUnits.clear();
+    requestIdentifiers.clear();
 }
 
 void SpenderManager::addRequest(BWAPI::UnitType building)
@@ -14,6 +18,7 @@ void SpenderManager::addRequest(BWAPI::UnitType building)
     temp.buildingType = building;
     requestToAdd.request = temp;
 
+    std::cout << "Adding " << building << " to the queue.\n";
     buildRequests.push_back(requestToAdd);
 }
 
@@ -161,7 +166,23 @@ void SpenderManager::OnFrame()
             {
                 //Need to get unit in on frame not here
                 BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
-                Tools::BuildBuilding(unitAvalible, temp.buildingType);
+
+                if (unitAvalible == nullptr)
+                {
+                    ++it;
+                    continue;
+                }
+
+                std::cout << "Unit " << unitAvalible->getID() << " has been assgined to construct " << temp.buildingType << "\n";
+                bool success = Tools::BuildBuilding(unitAvalible, temp.buildingType);
+                std::cout << "Build Building success? " << success << "\n";
+
+                if (!success)
+                {
+                    ++it;
+                    continue;
+                }
+                
                 plannedBuildings.push_back(temp.buildingType);
 
                 //Need to add units to data structure that keeps track of them until they completed the build.

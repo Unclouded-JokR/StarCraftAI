@@ -375,7 +375,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 
 	if (unitToReturn != nullptr)
 	{
-		std::cout << "Idle Unit " << unitToReturn->getID() << " Avalible!\n";
+		//std::cout << "Idle Unit " << unitToReturn->getID() << " Avalible!\n";
 		return unitToReturn;
 	}
 
@@ -392,13 +392,13 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 
 	if (unitToReturn != nullptr)
 	{
-		std::cout << "Unit Carrying Minerals " << unitToReturn->getID() << " Avalible!\n";
+		//std::cout << "Unit Carrying Minerals " << unitToReturn->getID() << " Avalible!\n";
 		return unitToReturn;
 	}
 
 	//If not unit is avalible that meets prior conditions choose unit randomly for now.
 	const int random = rand() % workers.size();
-	std::cout << "Random Index Choosen: " << random << "\n";
+	//std::cout << "Random Index Choosen: " << random << "\n";
 
 	int index = 0;
 	for (BWAPI::Unit unit : workers)
@@ -415,6 +415,6 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 		index++;
 	}
 
-	std::cout << "Random Unit " << unitToReturn->getID() << " Avalible!\n";
+	//std::cout << "Random Unit " << unitToReturn->getID() << " Avalible!\n";
 	return unitToReturn;
 }

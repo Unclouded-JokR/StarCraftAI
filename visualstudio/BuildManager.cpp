@@ -3,16 +3,6 @@
 #include "../src/starterbot/Tools.h"
 #include "../src/starterbot/MapTools.h"
 
-bool alreadySentRequest0 = false;
-bool alreadySentRequest1 = false;
-bool alreadySentRequest2 = false;
-bool alreadySentRequest3 = false;
-bool alreadySentRequest4 = false;
-bool alreadySentRequest5 = false;
-bool alreadySentRequest6 = false;
-bool alreadySentRequest7 = false;
-bool alreadySentRequest8 = false;
-
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
 {
@@ -23,6 +13,10 @@ void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
+    alreadySentRequest0 = false;
+    alreadySentRequest1 = false;
+    alreadySentRequest2 = false;
+    alreadySentRequest3 = false;
 }
 
 void BuildManager::onFrame()
@@ -58,99 +52,99 @@ void BuildManager::onFrame()
 
     switch (currentSupply)
     {
-    case 8:
-    {
-        if (alreadySentRequest0 == false)
+        case 8:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-            alreadySentRequest0 = true;
+            if (alreadySentRequest0 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest0 = true;
+            }
+            break;
         }
-        break;
-    }
-    case 10:
-    {
-        if (alreadySentRequest1 == false)
+        case 10:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
-            alreadySentRequest1 = true;
-            buildOrderCompleted = true;
+            if (alreadySentRequest1 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
+                alreadySentRequest1 = true;
+                buildOrderCompleted = true;
+            }
+            break;
         }
-        break;
-    }
-    /*case 12:
-    {
-        if (alreadySentRequest2 == false)
+        /*case 12:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
-            alreadySentRequest2 = true;
+            if (alreadySentRequest2 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Assimilator);
+                alreadySentRequest2 = true;
 
-        }
-        break;
-    }*/
-    /*case 14:
-    {
-        if (alreadySentRequest3 == false)
+            }
+            break;
+        }*/
+        /*case 14:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
-            alreadySentRequest3 = true;
+            if (alreadySentRequest3 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
+                alreadySentRequest3 = true;
+            }
+            break;
         }
-        break;
-    }
-    case 15:
-    {
-        if (alreadySentRequest4 == false)
+        case 15:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-            alreadySentRequest4 = true;
+            if (alreadySentRequest4 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest4 = true;
+            }
+            break;
         }
-        break;
-    }
-    case 17:
-    {
-        buildUnitType(BWAPI::UnitTypes::Protoss_Dragoon);
-        break;
-    }
-    case 25:
-    {
-        if (alreadySentRequest5 == false)
+        case 17:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Robotics_Facility);
-            alreadySentRequest5 = true;
+            buildUnitType(BWAPI::UnitTypes::Protoss_Dragoon);
+            break;
         }
-        break;
-    }
-    case 29:
-    {
-        if (alreadySentRequest6 == false)
+        case 25:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
-            alreadySentRequest6 = true;
+            if (alreadySentRequest5 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Robotics_Facility);
+                alreadySentRequest5 = true;
+            }
+            break;
         }
-        break;
-    }
-    case 32:
-    {
-        if (alreadySentRequest7 == false)
+        case 29:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-            alreadySentRequest7 = true;
+            if (alreadySentRequest6 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
+                alreadySentRequest6 = true;
+            }
+            break;
         }
-        break;
-    }
-    case 38:
-    {
-        if (alreadySentRequest8 == false)
+        case 32:
         {
-            spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Observatory);
-            alreadySentRequest8 = true;
-            buildOrderCompleted = true;
+            if (alreadySentRequest7 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest7 = true;
+            }
+            break;
         }
-        break;
-    }
-    default:
-    {
-        break;
-    }*/
+        case 38:
+        {
+            if (alreadySentRequest8 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Observatory);
+                alreadySentRequest8 = true;
+                buildOrderCompleted = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }*/
     }
 }
 

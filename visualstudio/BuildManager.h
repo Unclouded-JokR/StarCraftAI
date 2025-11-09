@@ -13,6 +13,16 @@ public:
     SpenderManager spenderManager;
 
     bool buildOrderCompleted = false;
+    bool alreadySentRequest0 = false;
+    bool alreadySentRequest1 = false;
+    bool alreadySentRequest2 = false;
+    bool alreadySentRequest3 = false;
+    bool alreadySentRequest4 = false;
+    bool alreadySentRequest5 = false;
+    bool alreadySentRequest6 = false;
+    bool alreadySentRequest7 = false;
+    bool alreadySentRequest8 = false;
+
     BWAPI::Unitset buildings;
     BWAPI::Unitset buildingWarps;
 
