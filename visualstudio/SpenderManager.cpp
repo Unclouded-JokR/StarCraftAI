@@ -18,7 +18,6 @@ void SpenderManager::addRequest(BWAPI::UnitType building)
     temp.buildingType = building;
     requestToAdd.request = temp;
 
-    std::cout << "Adding " << building << " to the queue.\n";
     buildRequests.push_back(requestToAdd);
 }
 
@@ -173,9 +172,10 @@ void SpenderManager::OnFrame()
                     continue;
                 }
 
-                std::cout << "Unit " << unitAvalible->getID() << " has been assgined to construct " << temp.buildingType << "\n";
+                //Currently this can cause a loop that can pause the game. Although this should be fixed once the build algorithm is made.
+                //std::cout << "Unit " << unitAvalible->getID() << " has been assgined to construct " << temp.buildingType << "\n";
                 bool success = Tools::BuildBuilding(unitAvalible, temp.buildingType);
-                std::cout << "Build Building success? " << success << "\n";
+                //std::cout << "Build Building success? " << success << "\n";
 
                 if (!success)
                 {
