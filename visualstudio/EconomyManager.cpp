@@ -1,79 +1,121 @@
 #include "EconomyManager.h"
+#include "NexusEconomy.h"
 #include "ProtoBotCommander.h"
 
 EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
-    
+
 }
 
 void EconomyManager::OnFrame()
 {
-    for (const auto& unit : assignedWorkers)
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        if (unit.second->isIdle())
-        {
-            assigned[unit.first] = 0;
-        }
-        
-
-    }
-
-    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-    for (auto& unit : myUnits)
-    {
-        // Check the unit type, if it is an idle worker, then we want to send it somewhere
-        if (unit->getType().isWorker() && unit->isIdle())
-        {
-            // Get the closest mineral to this worker unit
-            BWAPI::Unit closestMineral = GetClosestUnitToWOWorker(unit, BWAPI::Broodwar->getMinerals());
-
-            // If a valid mineral was found, right click it with the unit in order to start harvesting
-            if (closestMineral) 
-            {  
-                unit->rightClick(closestMineral); 
-                assignedWorkers[closestMineral] = unit;
-            }
-        }
+        nexusEconomy.OnFrame();
     }
 }
 
-BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Position p, const BWAPI::Unitset& units)
+void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    BWAPI::Unit closestUnitWOWorker = nullptr;
-
-    for (auto& u : units)
+    //[TODO]: Need to deconstruct nexusEconomy if its a nexus.
+    //End loop early if we found the nexusEconomy that had the destroyed unit
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        if (assigned.count(u) == 0)
-        {
-            assigned[u] = 0;
-        }
+        if (nexusEconomy.OnUnitDestroy(unit) == true) break;
     }
-
-    for (auto& u : units)
-    {
-        if (!closestUnitWOWorker || (u->getDistance(p) < closestUnitWOWorker->getDistance(p) && assigned[u] == 0))
-        {
-            closestUnitWOWorker = u;
-        }
-    }
-
-    assigned[closestUnitWOWorker] = 1;
-    //assignedWorkers[closestUnitWOWorker]
-    return closestUnitWOWorker;
-}
-
-BWAPI::Unit EconomyManager::GetClosestUnitToWOWorker(BWAPI::Unit unit, const BWAPI::Unitset& units)
-{
-    if (!unit) { return nullptr; }
-    return GetClosestUnitToWOWorker(unit->getPosition(), units);
 }
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
-    
+    switch (unit->getType())
+    {
+        case BWAPI::UnitTypes::Protoss_Nexus:
+        {
+            bool alreadyExists = false;
+            for (const NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (nexusEconomy.nexus == unit)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+
+            if (alreadyExists == false)
+            {
+                //[TODO]: Current expansion implementation is not working as intended.
+                // Workers should be assigned to the correct nexus economy and mine ONLY the minerals around their nexus.
+                //Minerals are not being picked up properlly when we expand and workers are not being transfered.
+
+                NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
+                nexusEconomies.push_back(temp);
+
+                //[TODO]: Transfer workers from main to the next nexus economy.
+                if (nexusEconomies.size() > 1)
+                {
+                    BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(temp.minerals.size());
+
+                    for (BWAPI::Unit worker : workersToTransfer)
+                    {
+                        temp.assignWorker(worker);
+                    }
+                    std::cout << "New nexus workers: " << temp.workers.size() << "\n";
+                }
+            }
+            else
+            {
+                std::cout << "Nexus Already Exists" << "\n";
+            }
+
+            break;
+        }
+        case BWAPI::UnitTypes::Protoss_Assimilator:
+        {
+            //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                {
+                    nexusEconomy.assignAssimilator(unit);
+                    //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    break;
+                }
+            }
+            break;
+        }
+        case BWAPI::UnitTypes::Protoss_Probe:
+        {
+            for (NexusEconomy& nexusEconomy : nexusEconomies)
+            {
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                {
+                    //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                    nexusEconomy.assignWorker(unit);
+                    break;
+                }
+            }
+            break;
+        }
+    }
 }
 
+//[TODO]: Get the closest worker to the request we are trying to make.
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
-    return nullptr;
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
+
+        if (unitToReturn != nullptr) return unitToReturn;
+    }
+}
+
+void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
+{
+    commanderReference->requestUnitToTrain(worker, nexus);
+}
+
+bool EconomyManager::checkRequestAlreadySent(int unitID)
+{
+    return commanderReference->alreadySentRequest(unitID);
 }

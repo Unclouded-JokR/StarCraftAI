@@ -3,70 +3,170 @@
 #include "../src/starterbot/Tools.h"
 #include "../src/starterbot/MapTools.h"
 
-// constructor for BuildManager
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
 {
-    
+
 }
 
 void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
+
+    alreadySentRequest0 = false;
+    alreadySentRequest1 = false;
+    alreadySentRequest2 = false;
+    alreadySentRequest3 = false;
+    alreadySentRequest4 = false;
+    alreadySentRequest5 = false;
+    alreadySentRequest6 = false;
+    alreadySentRequest7 = false;
+    alreadySentRequest8 = false;
 }
 
 void BuildManager::onFrame()
 {
-    const BWAPI::UnitType workerType = BWAPI::Broodwar->self()->getRace().getWorker();
-    int currentSupply = BWAPI::Broodwar->self()->supplyUsed();
-    int currentMineral = BWAPI::Broodwar->self()->minerals();
-    if (currentMineral > 500) {} 
-    BWAPI::Unitset myUnits = BWAPI::Broodwar->self()->getUnits();
-    //Continually train zealots with excess minerals
-    if (currentMineral > 500) {
-        for (auto& unit : myUnits)
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+    const int currentMineral = BWAPI::Broodwar->self()->minerals();
+
+    spenderManager.OnFrame();
+
+    switch (currentSupply)
+    {
+        case 8:
         {
-	        if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway) {
-		    unit->train(BWAPI::UnitTypes::Protoss_Zealot);
-	        }
+            if (alreadySentRequest0 == false)
+            {
+                buildBuilding(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest0 = true;
+            }
+            break;
+        }
+        case 10:
+        {
+            if (alreadySentRequest1 == false)
+            {
+                buildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
+                alreadySentRequest1 = true;
+            }
+            break;
+        }
+        case 12:
+        {
+            if (alreadySentRequest2 == false)
+            {
+                buildBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
+                alreadySentRequest2 = true;
+                buildOrderCompleted = true;
+            }
+            break;
+        }
+        /*case 14:
+        {
+            if (alreadySentRequest3 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
+                alreadySentRequest3 = true;
+            }
+            break;
+        }
+        case 15:
+        {
+            if (alreadySentRequest4 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest4 = true;
+            }
+            break;
+        }
+        case 17:
+        {
+            buildUnitType(BWAPI::UnitTypes::Protoss_Dragoon);
+            break;
+        }
+        case 25:
+        {
+            if (alreadySentRequest5 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Robotics_Facility);
+                alreadySentRequest5 = true;
+            }
+            break;
+        }
+        case 29:
+        {
+            if (alreadySentRequest6 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
+                alreadySentRequest6 = true;
+            }
+            break;
+        }
+        case 32:
+        {
+            if (alreadySentRequest7 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
+                alreadySentRequest7 = true;
+            }
+            break;
+        }
+        case 38:
+        {
+            if (alreadySentRequest8 == false)
+            {
+                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Observatory);
+                alreadySentRequest8 = true;
+                buildOrderCompleted = true;
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }*/
+    }
+}
+
+void BuildManager::onUnitDestroy(BWAPI::Unit unit)
+{
+    if (unit->getPlayer() != BWAPI::Broodwar->self())
+        return;
+
+    BWAPI::UnitType unitType = unit->getType();
+
+    if (!unitType.isBuilding()) return;
+
+    //Check if a non-completed building has been killed
+    for (BWAPI::Unit warp : buildingWarps)
+    {
+        if (unit == warp)
+        {
+            buildingWarps.erase(warp);
+            return;
         }
     }
-    switch (currentSupply)
-    //currentSupply value is doubled of what shown ingame
-    //Todo: need workers for vespene
+
+    //If the unit is something dealing with economy exit.
+    if (unitType == BWAPI::UnitTypes::Protoss_Pylon || unitType == BWAPI::UnitTypes::Protoss_Nexus || unitType == BWAPI::UnitTypes::Protoss_Assimilator) return;
+
+    for (BWAPI::Unit building : buildings)
     {
-        case 20:
-    Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
-    break;
-        case 24:
-    Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
-    break;
-        case 28:
-    Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
-    break;
-        case 34:
-    for (auto& unit : myUnits)
-    {
-	if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway) {
-		unit->train(BWAPI::UnitTypes::Protoss_Dragoon);
-	}
+        if (building->getID() == unit->getID())
+        {
+            buildings.erase(building);
+            break;
+        }
     }
-    break;
-         case 50:
-    Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Robotics_Facility);
-    break;
-        case 58:
-    Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
-    break;
-        case 76:
-    Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Observatory);
-    break;
-    }
+
 }
 
 void BuildManager::assignBuilding(BWAPI::Unit unit)
 {
-
+    std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
+    buildings.insert(unit);
+    std::cout << "Buildings size: " << buildings.size() << "\n";
 }
 
 bool BuildManager::isBuildOrderCompleted()
@@ -74,7 +174,58 @@ bool BuildManager::isBuildOrderCompleted()
     return buildOrderCompleted;
 }
 
-void BuildManager::buildBuilding(BWAPI::Unit unit, BWAPI::UnitType building)
+bool BuildManager::requestedBuilding(BWAPI::UnitType building)
 {
+    return spenderManager.requestedBuilding(building);
+}
 
+void BuildManager::buildBuilding(BWAPI::UnitType building)
+{
+    spenderManager.addRequest(building);
+}
+
+void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
+{
+    spenderManager.addRequest(unitToTrain, unit);
+}
+
+void BuildManager::onCreate(BWAPI::Unit unit)
+{
+    buildingWarps.insert(unit);
+    spenderManager.onUnitCreate(unit);
+}
+
+bool BuildManager::alreadySentRequest(int unitID)
+{
+    return spenderManager.buildingAlreadyMadeRequest(unitID);
+}
+
+bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+{
+    for (BWAPI::Unit warp : buildingWarps)
+    {
+        if (building == warp->getType())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+    return spenderManager.checkUnitIsPlanned(building);
+}
+
+void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
+{
+    for (BWAPI::Unit warp : buildingWarps)
+    {
+        if (unit == warp)
+        {
+            buildingWarps.erase(unit);
+            break;
+        }
+    }
 }

@@ -211,12 +211,12 @@ StrategyRageState StrategyManager::rageState("Rage");
 StrategyAngryState StrategyManager::angryState("Angry");
 
 
-StrategyManager::StrategyManager(ProtoBotCommander *commanderReference) : commanderReference(commanderReference)
+StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 	StrategyManager::currentState = &StrategyManager::contentState;
 }
 
-void StrategyManager::onStart()
+std::string StrategyManager::onStart()
 {
 	std::cout << "StrategyManager is a go!" << '\n';
 	currentState->enter(*this);
@@ -226,6 +226,8 @@ void StrategyManager::onStart()
 	const size_t test = myVector.size();
 	const int chooseRandBuildOrder = rand() % test;
 	//return build order chosen
+
+	return "2_Gateway_Observer";
 }
 
 Action StrategyManager::onFrame()
@@ -239,13 +241,13 @@ Action StrategyManager::onFrame()
 	const int seconds = frame / (FRAMES_PER_SECOND);
 
 
-	if ((frame - previousFrameSecond) == 24)
+	/*if ((frame - previousFrameSecond) == 24)
 	{
 		previousFrameSecond = frame;
 		StrategyManager::boredomMeter += boredomPerSecond;
 	}
 
-	currentState->evaluate(*this);
+	currentState->evaluate(*this);*/
 
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
@@ -253,23 +255,47 @@ Action StrategyManager::onFrame()
 
 	//WorkerSet workerSet = commanderReference.checkWorkerSetNeedsAssimilator();
 
+	if (!buildOrderCompleted) return action;
+
 #pragma region Expand
-	if (supplyUsed + 4 >= totalSupply)
+	//Check if we should build a pylon
+	if (supplyUsed + 2 == totalSupply && !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Pylon)
+		&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Pylon)))
 	{
 		Expand actionToTake;
-		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Probe;
-
+		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
+			
 		action.commanderAction = actionToTake;
 		action.type = ActionType::Action_Expand;
 		return action;
 	}
+
+	/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus))
+	{
+		if (BWAPI::Broodwar->self()->minerals() > 3000 && !nexusRequestSent)
+		{
+			Expand actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+			nexusRequestSent = true;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Expand;
+			return action;
+		}
+	}
+	else
+	{
+		nexusRequestSent = false;
+	}*/
+
 	/*else if(workerSet != nullptr)
 	{
 		Exapnd action;
 		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 	}*/
 	//If we have a stock pile of minerals
-	else if (BWAPI::Broodwar->self()->minerals() > 3000)
+	/*else if (BWAPI::Broodwar->self()->minerals() > 3000)
 	{
 		Expand actionToTake;
 		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
@@ -288,7 +314,7 @@ Action StrategyManager::onFrame()
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
 			return action;
 		}
-	}
+	}*/
 #pragma endregion
 
 	//#pragma region Build Anti-Air
@@ -312,50 +338,50 @@ Action StrategyManager::onFrame()
 	//}
 	//#pragma endregion
 
-#pragma region Scout
-	if (buildOrderCompleted && frame - frameSinceLastScout >= 200)
-	{
-		frameSinceLastScout = frame;
-		Scout actionToTake;
+	//#pragma region Scout
+	//	if (buildOrderCompleted && frame - frameSinceLastScout >= 200)
+	//	{
+	//		frameSinceLastScout = frame;
+	//		Scout actionToTake;
+	//
+	//		action.commanderAction = actionToTake;
+	//		action.type = ActionType::Action_Scout;
+	//		return action;
+	//	}
+	//	#pragma endregion
 
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Scout;
-		return action;
-	}
-	#pragma endregion
+		//#pragma region Building
 
-	#pragma region Building
+		////Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
+		//if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
+		//{
+		//	frameSinceLastBuild = frame;
+		//	const int buildingToBuild = rand() % 100;
+		//	Build actionToTake;
+		//	action.type = Action_Build;
 
-	//Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
-	if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
-	{
-		frameSinceLastBuild = frame;
-		const int buildingToBuild = rand() % 100;
-		Build actionToTake;
-		action.type = Action_Build;
+		//	if (buildingToBuild <= 60)
+		//	{
+		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+		//	}
+		//	else if (buildingToBuild <= 80)
+		//	{
+		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
+		//	}
+		//	else
+		//	{
+		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
+		//	}
+		//	action.commanderAction = actionToTake;
 
-		if (buildingToBuild <= 60)
-		{
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
-		}
-		else if (buildingToBuild <= 80)
-		{
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-		}
-		else
-		{
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
-		}
-		action.commanderAction = actionToTake;
+		//	return action;
+		//}
+		//
 
-		return action;
-	}
-	
-
-	#pragma endregion
+		//#pragma endregion
 
 
-	//StrategyManager::printBoredomMeter();
+		//StrategyManager::printBoredomMeter();
 
 	return action;
 }
@@ -378,17 +404,17 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 
 	/*
 	* For both cases we want to consider the priority of units, workers will add the most points to ego and anger.
-	* 
+	*
 	* For now we will add a constant value for all units. Need to create a forumla the considers the unittype and the score of a unit.
 	*/
 	if (owner == BWAPI::Broodwar->self() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
-		std::cout << "Our unit died" << std::endl;
+		//std::cout << "Our unit died" << std::endl;
 		StrategyManager::angerMeter += StrategyManager::angerFromUnitDeath;
 	}
-	else if(owner == BWAPI::Broodwar->enemy() && ((unitType.isWorker() || unitType.isBuilding())))
+	else if (owner == BWAPI::Broodwar->enemy() && ((unitType.isWorker() || unitType.isBuilding())))
 	{
-		std::cout << "Enemy unit died" << std::endl;
+		//std::cout << "Enemy unit died" << std::endl;
 		StrategyManager::angerMeter += StrategyManager::egoFromEnemyUnitDeath;
 	}
 

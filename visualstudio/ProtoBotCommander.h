@@ -5,8 +5,7 @@
 #include "ScoutingManager.h"
 #include "BuildManager.h"
 #include "CombatManager.h"
-#include "UnitManager.h"
-#include "RequestManager.h"
+#include "SpenderManager.h"
 #include "../../src/starterbot/MapTools.h"
 #include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
@@ -27,8 +26,13 @@ public:
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
 	BuildManager buildManager;
-	CombatManager combatManager; 
+	CombatManager combatManager;
 	StrategyManager strategyManager;
+
+	/*
+	* Used for Debugging
+	*/
+	std::string buildOrderSelected;
 
 	ProtoBotCommander();
 
@@ -47,6 +51,8 @@ public:
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
+	bool checkUnitIsPlanned(BWAPI::UnitType building);
 
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
@@ -56,14 +62,19 @@ public:
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild();
 	//BWAPI::Unitset getAllUnitsAssignedToNexus();
-	
+
 	//Information Manager Methods
 	const std::set<BWAPI::Unit>& getKnownEnemyUnits();
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& getKnownEnemyBuildings();
 
 	//Build Manager Methods
 	bool buildOrderCompleted();
+	bool requestedBuilding(BWAPI::UnitType building);
+	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
+	void requestBuild(BWAPI::UnitType building);
+	bool alreadySentRequest(int unitID);
 
+	//Scouting
 	void getUnitToScout();
 };
 
@@ -76,7 +87,7 @@ enum ActionType {
 	Action_None
 };
 
-struct Expand 
+struct Expand
 {
 	BWAPI::UnitType unitToBuild;
 };
