@@ -78,7 +78,7 @@ void ProtoBotCommander::onStart()
 	*/
 	informationManager.onStart();
 	strategyManager.onStart();
-	//scoutingManager.onStart();
+	scoutingManager.onStart();
 	//building manager on start does nothing as of now.
 	//buildManager.onStart();
 }
@@ -109,7 +109,7 @@ void ProtoBotCommander::onFrame()
 	economyManager.OnFrame();
 
 	//Uncomment this once onFrame does not steal a worker.
-	//scoutingManager.onFrame();
+	scoutingManager.onFrame();
 	
 	combatManager.Update();
 }
