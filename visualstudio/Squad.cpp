@@ -16,7 +16,7 @@ void Squad::removeUnit(BWAPI::Unit unit) {
 }
 
 void Squad::move(BWAPI::Position position) {
-	units.move(position);
+	units.attack(position);
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {
@@ -30,6 +30,7 @@ void Squad::addUnit(BWAPI::Unit unit) {
 }
 
 void Squad::attack() {
+	isAttacking = true;
 	// Each unit in squad attacks closest enemy unit for now
 	for (BWAPI::Unit unit : units) {
 		BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
@@ -51,7 +52,9 @@ void Squad::drawDebugInfo() {
 			continue;
 		}
 
+		// Draw lines and shapes to debug commands
 		BWAPI::UnitCommand command = unit->getLastCommand();
+
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 5, squadColor, true);
 		if (command.getTargetPosition() != BWAPI::Positions::None) {
 			BWAPI::Broodwar->drawLineMap(unit->getPosition(), command.getTargetPosition(), squadColor);
@@ -63,7 +66,7 @@ void Squad::drawDebugInfo() {
 			BWAPI::Broodwar->drawLineMap(unit->getPosition(), command.getTarget()->getPosition(), squadColor);
 		}
 
-		// Draw squad ID above unit
+		// Draws squad ID below unit
 		BWAPI::Position textPos(unit->getPosition().x - 20, unit->getPosition().y + 20);
 		BWAPI::Broodwar->drawTextMap(textPos, "Squad %d", squadId);
 	}

@@ -110,6 +110,7 @@ Squad CombatManager::assignUnit(BWAPI::Unit unit)
 	newSquad.addUnit(unit);
 	combatUnits.insert(unit);
 	unitSquadMap[unit->getID()] = newSquad.squadId;
+
 	return newSquad;
 }
 
