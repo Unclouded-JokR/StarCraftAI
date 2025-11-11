@@ -29,14 +29,14 @@ void ProtoBotCommander::onStart()
 	m_mapTools.onStart();
 
 	/*
-	* Use this to query the BuildManager to randomly select a build order based on the enemy race. 
+	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
 	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
-	* 
+	*
 	* 100 for Protoss, 200 for Terran, 300 for Zerg
-	* 
-	* the next two digits would be the id of the build order we would randomly select. 
+	*
+	* the next two digits would be the id of the build order we would randomly select.
 	* 0 - 99 (max would be 99 but there is no way we would need that many)
-	* 
+	*
 	* We could reduce these digits to tens instead to decrease memeory usage.
 	*/
 
@@ -44,30 +44,19 @@ void ProtoBotCommander::onStart()
 	* [TO DO]:
 	* Create code to select opening randomly for avalible openings.
 	* Have functions that can ask building manager how many openings we have.
-	*
 	*/
 	std::string enemyRace = enemyRaceCheck();
-	std::cout << enemyRace << '\n';
+	std::cout << "Enemy Race " << enemyRace << '\n';
 
-	/*
-	* [TO DO]:
-	* Initalize ecconomy manager instance.
-	* Assign workers.
-	* 
-	*/
+	//[TODO] Need build order structure to be implemented.
+	//vector<BuildOrder> build_orders = buildManager.getBuildOrders(enemyRace);
+
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+
+	//Get nexus and create a new instace of a NexusEconomy
 	for (BWAPI::Unit unit : units)
 	{
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
-		{
-			//send ecconmy manager signal to create new instance.
-		}
-	}
-
-	//Assign 4 workers at the start of the game to the ecconomy manager. 
-	for(BWAPI::Unit unit : units)
-	{
-		if (unit->getType().isWorker())
 		{
 			economyManager.assignUnit(unit);
 		}
@@ -77,10 +66,17 @@ void ProtoBotCommander::onStart()
 	* Protobot Modules
 	*/
 	informationManager.onStart();
-	strategyManager.onStart();
-	scoutingManager.onStart();
+
+	//Replace with commented out line when multiple build orders are in place.
+	buildOrderSelected = strategyManager.onStart();
+
+	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
+
+	//Uncomment this when we the scotuing manager does not take a worker immediately.
+	//scoutingManager.onStart();
+
 	//building manager on start does nothing as of now.
-	//buildManager.onStart();
+	buildManager.onStart();
 }
 
 void ProtoBotCommander::onFrame()
@@ -102,16 +98,53 @@ void ProtoBotCommander::onFrame()
 	* Protobot Modules
 	*/
 	informationManager.onFrame();
-	strategyManager.onFrame();
+
+	Action action = strategyManager.onFrame();
+	//std::cout << action.type << "\n";
+
+	switch (action.type)
+	{
+		case ActionType::Action_Expand:
+		{
+			const Expand value = get<Expand>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Build:
+		{
+			const Build value = get<Build>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Scout:
+		{
+			const Scout value = get<Scout>(action.commanderAction);
+			getUnitToScout();
+			break;
+		}
+		case ActionType::Action_Attack:
+		{
+			break;
+		}
+		case ActionType::Action_Defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
 	buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
 	economyManager.OnFrame();
 
 	//Uncomment this once onFrame does not steal a worker.
-	scoutingManager.onFrame();
-	
-	combatManager.Update();
+	//scoutingManager.onFrame();
+
+	combatManager.onFrame();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -119,14 +152,36 @@ void ProtoBotCommander::onEnd(bool isWinner)
 	std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
 }
 
+/*
+* When a unit is destroyed send a broadcast out to all modules.
+*
+* Each module will check if the unit is a assigned to their module. If the unit is, remove the unit. Others drop the message.
+*/
 void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 {
+	//Managers that deal with unit assignments
+	economyManager.onUnitDestroy(unit);
+	combatManager.onUnitDestroy(unit);
+	//scoutingManager.onUnitDestroy(unit);
+
+	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
+	informationManager.onUnitDestroy(unit);
+	buildManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
+	if (unit->getPlayer() != BWAPI::Broodwar->self())
+		return;
 
+	buildManager.onCreate(unit);
+}
+
+//[TODO] Move this to building manager
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+{
+	return buildManager.checkUnitIsBeingWarpedIn(building);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
@@ -134,20 +189,29 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	if (unit->getPlayer() != BWAPI::Broodwar->self())
 		return;
 
-	//Need to add case if the unit is a nexus
-	if (unit->getType().isBuilding())
-	{
-		buildManager.assignBuilding(unit);
-	}
+	buildManager.buildingDoneWarping(unit);
 
-	if (unit->getType() == BWAPI::UnitTypes::Protoss_Probe)
+	const BWAPI::UnitType unit_type = unit->getType();
+
+	//If unit is a pylon we dont care about the unit really for now.
+	if (unit_type == BWAPI::UnitTypes::Protoss_Pylon) return;
+
+	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
+	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator || unit_type == BWAPI::UnitTypes::Protoss_Probe)
 	{
 		economyManager.assignUnit(unit);
+		return;
 	}
-	else
+
+	//Give all buildings to the Building Manager.
+	if (unit_type.isBuilding() && unit_type != BWAPI::UnitTypes::Protoss_Pylon)
 	{
-		combatManager.assignUnit(unit);
+		buildManager.assignBuilding(unit);
+		return;
 	}
+
+	//Gone through all cases assume it is a combat unit 
+	combatManager.assignUnit(unit);
 }
 
 void ProtoBotCommander::onUnitShow(BWAPI::Unit unit)
@@ -181,7 +245,9 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
+	std::string buildOrderSelectedString = "Selected Build Order: " + buildOrderSelected + "\n";
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
+	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 20), buildOrderSelectedString.c_str());
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 }
@@ -192,11 +258,42 @@ BWAPI::Unit ProtoBotCommander::getUnitToBuild()
 	return economyManager.getAvalibleWorker();
 }
 
+void ProtoBotCommander::requestBuild(BWAPI::UnitType building)
+{
+	buildManager.buildBuilding(building);
+}
+
+void ProtoBotCommander::requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building)
+{
+	buildManager.trainUnit(worker, building);
+}
+
+const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
+{
+	return informationManager.getKnownEnemies();
+}
+
+const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemyBuildings()
+{
+	return informationManager.getKnownEnemyBuildings();
+}
+
+bool ProtoBotCommander::buildOrderCompleted()
+{
+	return buildManager.isBuildOrderCompleted();
+}
+
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
+{
+	return buildManager.requestedBuilding(building);
+}
+
 void ProtoBotCommander::getUnitToScout()
 {
 	if (((BWAPI::Broodwar->getFrameCount() / FRAMES_PER_SECOND) / 60) >= 5)
 	{
 		//ask combat manager for a unit to scout.
+		//BWAPI::Unit = combatManager.getAvalibleUnit();
 	}
 	else
 	{
@@ -222,4 +319,14 @@ std::string ProtoBotCommander::enemyRaceCheck()
 	{
 		return "Zerg_";
 	}
+}
+
+bool ProtoBotCommander::alreadySentRequest(int unitID)
+{
+	return buildManager.alreadySentRequest(unitID);
+}
+
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+	return buildManager.checkUnitIsPlanned(building);
 }

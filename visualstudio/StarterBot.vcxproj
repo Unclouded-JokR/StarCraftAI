@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<ItemGroup Label="ProjectConfigurations">
-		<ProjectConfiguration Include="Debug|Win32">
-			<Configuration>Debug</Configuration>
-			<Platform>Win32</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Debug|x64">
-			<Configuration>Debug</Configuration>
-			<Platform>x64</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Release|Win32">
-			<Configuration>Release</Configuration>
-			<Platform>Win32</Platform>
-		</ProjectConfiguration>
-		<ProjectConfiguration Include="Release|x64">
-			<Configuration>Release</Configuration>
-			<Platform>x64</Platform>
-		</ProjectConfiguration>
-	</ItemGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
     <ClInclude Include="..\src\starterbot\MapTools.h" />
@@ -28,29 +28,30 @@
     <ClInclude Include="CombatManager.h" />
     <ClInclude Include="EconomyManager.h" />
     <ClInclude Include="InformationManager.h" />
+    <ClInclude Include="NexusEconomy.h" />
     <ClInclude Include="ProtoBotCommander.h" />
-    <ClInclude Include="RequestManager.h" />
     <ClInclude Include="ScoutingManager.h" />
+    <ClInclude Include="SpenderManager.h" />
     <ClInclude Include="StrategyManager.h" />
-    <ClInclude Include="UnitManager.h" />
-	<ClInclude Include="..\BWEM\EasyBMP_1.06\EasyBMP.h" />
-	<ClInclude Include="..\BWEM\src\area.h" />
-	<ClInclude Include="..\BWEM\src\base.h" />
-	<ClInclude Include="..\BWEM\src\bwapiExt.h" />
-	<ClInclude Include="..\BWEM\src\bwem.h" />
-	<ClInclude Include="..\BWEM\src\cp.h" />
+    <ClInclude Include="Squad.h" />
+    <ClInclude Include="..\BWEM\EasyBMP_1.06\EasyBMP.h" />
+    <ClInclude Include="..\BWEM\src\area.h" />
+    <ClInclude Include="..\BWEM\src\base.h" />
+    <ClInclude Include="..\BWEM\src\bwapiExt.h" />
+    <ClInclude Include="..\BWEM\src\bwem.h" />
+    <ClInclude Include="..\BWEM\src\cp.h" />
     <ClInclude Include="..\BWEM\src\defs.h" />
-	<ClInclude Include="..\BWEM\src\examples.h" />
-	<ClInclude Include="..\BWEM\src\graph.h" />
-	<ClInclude Include="..\BWEM\src\gridMap.h" />
-	<ClInclude Include="..\BWEM\src\map.h" />
-	<ClInclude Include="..\BWEM\src\mapImpl.h" />
+    <ClInclude Include="..\BWEM\src\examples.h" />
+    <ClInclude Include="..\BWEM\src\graph.h" />
+    <ClInclude Include="..\BWEM\src\gridMap.h" />
+    <ClInclude Include="..\BWEM\src\map.h" />
+    <ClInclude Include="..\BWEM\src\mapImpl.h" />
     <ClInclude Include="..\BWEM\src\mapDrawer.h" />
-	<ClInclude Include="..\BWEM\src\mapPrinter.h" />
-	<ClInclude Include="..\BWEM\src\neutral.h" />
-	<ClInclude Include="..\BWEM\src\tiles.h" />
-	<ClInclude Include="..\BWEM\src\utils.h" />
-	<ClInclude Include="..\BWEM\src\winutils.h" />
+    <ClInclude Include="..\BWEM\src\mapPrinter.h" />
+    <ClInclude Include="..\BWEM\src\neutral.h" />
+    <ClInclude Include="..\BWEM\src\tiles.h" />
+    <ClInclude Include="..\BWEM\src\utils.h" />
+    <ClInclude Include="..\BWEM\src\winutils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\starterbot\main.cpp" />
@@ -62,29 +63,30 @@
     <ClCompile Include="CombatManager.cpp" />
     <ClCompile Include="EconomyManager.cpp" />
     <ClCompile Include="InformationManager.cpp" />
+    <ClCompile Include="NexusEconomy.cpp" />
     <ClCompile Include="ProtoBotCommander.cpp" />
-    <ClCompile Include="RequestManager.cpp" />
     <ClCompile Include="ScoutingManager.cpp" />
+    <ClCompile Include="SpenderManager.cpp" />
     <ClCompile Include="StrategyManager.cpp" />
-    <ClCompile Include="UnitManager.cpp" />
-	<CLCompile Include="..\BWEM\EasyBMP_1.06\EasyBMP.cpp" />
-	<ClCompile Include="..\BWEM\src\area.cpp" />
-	<ClCompile Include="..\BWEM\src\base.cpp" />
+    <ClCompile Include="Squad.cpp" />
+    <CLCompile Include="..\BWEM\EasyBMP_1.06\EasyBMP.cpp" />
+    <ClCompile Include="..\BWEM\src\area.cpp" />
+    <ClCompile Include="..\BWEM\src\base.cpp" />
     <ClCompile Include="..\BWEM\src\bwapiExt.cpp" />
-	<ClCompile Include="..\BWEM\src\bwem.cpp" />
-	<ClCompile Include="..\BWEM\src\cp.cpp" />
-	<ClCompile Include="..\BWEM\src\examples.cpp" />
-	<ClCompile Include="..\BWEM\src\exampleWall.cpp" />
-	<ClCompile Include="..\BWEM\src\graph.cpp" />
-	<ClCompile Include="..\BWEM\src\gridMap.cpp" />
-	<ClCompile Include="..\BWEM\src\map.cpp" />
-	<ClCompile Include="..\BWEM\src\mapImpl.cpp" />
-	<ClCompile Include="..\BWEM\src\mapDrawer.cpp" />
+    <ClCompile Include="..\BWEM\src\bwem.cpp" />
+    <ClCompile Include="..\BWEM\src\cp.cpp" />
+    <ClCompile Include="..\BWEM\src\examples.cpp" />
+    <ClCompile Include="..\BWEM\src\exampleWall.cpp" />
+    <ClCompile Include="..\BWEM\src\graph.cpp" />
+    <ClCompile Include="..\BWEM\src\gridMap.cpp" />
+    <ClCompile Include="..\BWEM\src\map.cpp" />
+    <ClCompile Include="..\BWEM\src\mapImpl.cpp" />
+    <ClCompile Include="..\BWEM\src\mapDrawer.cpp" />
     <ClCompile Include="..\BWEM\src\mapPrinter.cpp" />
-	<ClCompile Include="..\BWEM\src\neutral.cpp" />
-	<ClCompile Include="..\BWEM\src\tiles.cpp" />
-	<ClCompile Include="..\BWEM\src\utils.cpp" />
-	<ClCompile Include="..\BWEM\src\winutils.cpp" />
+    <ClCompile Include="..\BWEM\src\neutral.cpp" />
+    <ClCompile Include="..\BWEM\src\tiles.cpp" />
+    <ClCompile Include="..\BWEM\src\utils.cpp" />
+    <ClCompile Include="..\BWEM\src\winutils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>StarterBot</ProjectName>
