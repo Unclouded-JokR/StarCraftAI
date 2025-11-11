@@ -29,16 +29,22 @@ void CombatManager::onFrame() {
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	// Remove unit from its squad
 	if (isAssigned(unit)) {
-		int squadId = unitSquadMap[unit->getID()];
+		int squadId = unitSquadIdMap[unit->getID()];
+
 		for (Squad& squad : Squads) {
 			if (squad.squadId == squadId) {
 				squad.removeUnit(unit);
+
+				// After removing unit, check if squad is empty
+				if (squad.units.empty()) {
+					removeSquad(squad.squadId);
+				}
+
 				break;
 			}
 		}
-		unitSquadMap.erase(unit->getID());
-		// Check if squad is now empty
-		removeEmptySquads();
+
+		unitSquadIdMap.erase(unit->getID());
 	}
 }
 
@@ -64,32 +70,20 @@ Squad& CombatManager::addSquad(){
 	return Squads.back();
 }
 
-void CombatManager::removeSquad(int squadId) {
-	Squads.erase(std::remove_if(Squads.begin(), Squads.end(), [&](const Squad& obj) 
+void CombatManager::removeSquad(int squadId){
+	Squads.erase(std::remove_if(Squads.begin(), Squads.end(), [&](const Squad& obj)
 		{return obj.squadId == squadId; }),
 		Squads.end());
-}
 
-void CombatManager::removeEmptySquads(){
-	int removedSquadId;
-	for (auto& squad : Squads){
-		if (squad.units.empty()) {
-			removedSquadId = squad.squadId;
-			removeSquad(squad.squadId);
-			BWAPI::Broodwar->printf("Removed empty Squad %d", removedSquadId);
-
-			// Also remove from unitSquadMap
-			for (auto it = unitSquadMap.begin(); it != unitSquadMap.end(); ) {
-				if (it->second == removedSquadId) {
-					it = unitSquadMap.erase(it);
-				} else {
-					++it;
-				}
-			}
-
-			break;
+	for (auto it = unitSquadIdMap.begin(); it != unitSquadIdMap.end(); ) {
+		if (it->second == squadId) {
+			it = unitSquadIdMap.erase(it);
+		} else {
+			++it;
 		}
 	}
+
+	BWAPI::Broodwar->printf("Removed empty Squad %d", squadId);
 }
 
 // Function called by ProtoBot commander when unit is sent to combat manager
@@ -100,7 +94,7 @@ Squad CombatManager::assignUnit(BWAPI::Unit unit)
 		if (squad.units.size() < squad.unitSize) {
 			squad.addUnit(unit);
 			combatUnits.insert(unit);
-			unitSquadMap[unit->getID()] = squad.squadId;
+			unitSquadIdMap[unit->getID()] = squad.squadId;
 			return squad;
 		}
 	}
@@ -109,7 +103,8 @@ Squad CombatManager::assignUnit(BWAPI::Unit unit)
 	Squad& newSquad = addSquad();
 	newSquad.addUnit(unit);
 	combatUnits.insert(unit);
-	unitSquadMap[unit->getID()] = newSquad.squadId;
+	unitSquadIdMap[unit->getID()] = newSquad.squadId;
+
 	return newSquad;
 }
 
@@ -120,7 +115,7 @@ void CombatManager::allSquadsMove(BWAPI::Position position) {
 }
 
 bool CombatManager::isAssigned(BWAPI::Unit unit) {
-	return unitSquadMap.find(unit->getID()) != unitSquadMap.end();
+	return unitSquadIdMap.find(unit->getID()) != unitSquadIdMap.end();
 }
 
 void CombatManager::drawDebugInfo() {
