@@ -31,16 +31,39 @@ void Squad::addUnit(BWAPI::Unit unit) {
 
 void Squad::attack() {
 	isAttacking = true;
-	// Each unit in squad attacks closest enemy unit for now
-	for (BWAPI::Unit unit : units) {
-		BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
-		BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(unit, enemyUnits);
 
-		if (!unit->isAttacking() && unit->canAttack()) {
-			if (BWAPI::Broodwar->getFrameCount() % 20 == 0) {
+	BWAPI::Position squadPos = units.getPosition();
+
+	BWAPI::Unitset enemies = BWAPI::Broodwar->enemy()->getUnits();
+	BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(squadPos, enemies);
+	BWAPI::Position enemyPos;
+	if (!closestEnemy || !closestEnemy->exists()) { return;  }
+	enemyPos = closestEnemy->getPosition();
+
+	BWAPI::Position kiteVector = squadPos - enemyPos;
+	// For kiting, attack-move towards enemy, retreat while waiting for cooldowns, then attack-move again
+	for (auto& unit : units) {
+		if (unit->isAttacking() || unit->isStartingAttack()) {
+			continue;
+		}
+
+		closestEnemy = Tools::GetClosestUnitTo(unit, enemies);
+		squadPos = units.getPosition();
+
+		if (!unit->isAttackFrame() && unit->getGroundWeaponCooldown() == 0) {
+			// Wait a few frames between attacks to prevent stutter
+			if (BWAPI::Broodwar->getFrameCount() % 5 == 0) {
 				unit->attack(closestEnemy);
 			}
 		}
+		else {
+			BWAPI::Position kitePosition = squadPos + kiteVector;
+			// Only move if not already moving
+			if (unit->getTargetPosition() != kitePosition && unit->getGroundWeaponCooldown() != 0) {
+				unit->move(kitePosition);
+			}
+		}
+
 	}
 
 	drawDebugInfo();
