@@ -21,5 +21,6 @@ public:
     void allSquadsMove(BWAPI::Position position);
     Squad assignUnit(BWAPI::Unit unit);
     void drawDebugInfo();
+    BWAPI::Unit getAvailableUnit();
     bool isAssigned(BWAPI::Unit unit);
 };

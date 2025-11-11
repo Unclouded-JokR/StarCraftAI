@@ -123,3 +123,21 @@ void CombatManager::drawDebugInfo() {
 		squad.drawDebugInfo();
 	}
 }
+
+BWAPI::Unit CombatManager::getAvailableUnit(){
+	for (auto& squad : Squads) {
+		// If squad is busy, skip
+		if (squad.isAttacking) {
+			continue;
+		}
+
+		for (auto& unit : squad.units) {
+			if (unit && unit->exists()) {
+				squad.removeUnit(unit);
+				return unit;
+			}
+		}
+
+		return nullptr;
+	}
+}
