@@ -22,8 +22,8 @@ void ProtoBotCommander::onStart()
 	Map::Instance().Initialize();
 
 	// Find the bases for the starting locations
-	bool foundBases = Map::Instance().FindBasesForStartingLocations();
-	assert(foundBases);     // make sure we found the bases
+	//bool foundBases = Map::Instance().FindBasesForStartingLocations();
+	//assert(foundBases);     // make sure we found the bases
 
 	// Call MapTools OnStart
 	m_mapTools.onStart();
