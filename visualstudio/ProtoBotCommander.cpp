@@ -291,6 +291,9 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 	return buildManager.requestedBuilding(building);
 }
 
+//[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
+//You can also change the name of this in order to make it clear what "getAvalibleWorker()" is doing.
+//Also get rid of the self get Units, eco should return a unit, not a null ptr.
 BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
 	if (BWAPI::Unit u = economyManager.getAvalibleWorker())

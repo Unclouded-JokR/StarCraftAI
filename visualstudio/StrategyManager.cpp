@@ -240,14 +240,14 @@ Action StrategyManager::onFrame()
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	// const int seconds = frame / FRAMES_PER_SECOND;
 
-	// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
-	}
+	//// ----- emit SCOUT periodically -----
+	//if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+	//	frameSinceLastScout = frame;
+	//	Scout s;
+	//	action.commanderAction = s;
+	//	action.type = ActionType::Action_Scout;
+	//	return action;                 // <-- ensure we actually send the action
+	//}
 
 	// from here on, build logic etc.
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
