@@ -1,207 +1,133 @@
 #include "ScoutingManager.h"
 #include "ProtoBotCommander.h"
-#include <BWAPI.h>
-#include <bwem.h>
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 
 using namespace BWAPI;
 using namespace BWEM;
 
-ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
-    : commanderRef(commander) {
+namespace {
+    inline double deg2rad(double d) { return d * 3.1415926535 / 180.0; }
+    inline Position orbitPoint(const Position& c, int r, int aDeg) {
+        return Position(c.x + int(r * std::cos(deg2rad(aDeg))),
+                        c.y + int(r * std::sin(deg2rad(aDeg))));
+    }
 }
+
+ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
+: commanderRef(commander) {}
 
 void ScoutingManager::onStart() {
     if (!Map::Instance().Initialized()) {
-        Broodwar->printf("ScoutingManager: BWEM not initialized yet.");
+        Broodwar->printf("ScoutingManager: BWEM not initialized.");
         return;
     }
-
-    startTargets.clear();
+    // build list of enemy-start candidates (excluding ours)
     buildStartTargets();
-    nextTarget = 0;
     enemyMainTile.reset();
     enemyMainPos = Positions::Invalid;
-    state = startTargets.empty() ? State::Done : State::Search;
     gasStealDone = false;
     targetGeyser = nullptr;
     nextGasStealRetryFrame = 0;
+    lastMoveIssueFrame = 0;
+    orbitWaypoints.clear();
+    orbitIdx = 0;
+    dwellUntilFrame = 0;
 
+    // We don't auto-steal a worker anymore. We wait until assignScout() is called.
+    state = startTargets.empty() ? State::Done : State::Search;
+}
 
-    scout = nullptr;
-    assignScoutIfNeeded(); // try immediately
+void ScoutingManager::assignScout(BWAPI::Unit unit) {
+    if (!unit || !unit->exists()) return;
+    scout = unit;
+    Broodwar->printf("[Scouting] Assigned scout: %s (id=%d)", scout->getType().c_str(), scout->getID());
+    // Reset state machine when we get a new scout
+    state = startTargets.empty() ? State::Done : State::Search;
+}
+
+void ScoutingManager::onUnitDestroy(BWAPI::Unit unit) {
+    if (unit && scout && unit == scout) {
+        Broodwar->printf("[Scouting] Scout destroyed. Clearing assignment.");
+        scout = nullptr;
+        state = State::Done;
+    }
 }
 
 void ScoutingManager::onFrame() {
-    assignScoutIfNeeded();
-    if (!scout || !scout->exists()) return;
+    if (!scout || !scout->exists() || state == State::Done) return;
 
-    // If we already know enemy main, go to that workflow
-    if (enemyMainTile.has_value() && state != State::Done) {
-        enemyMainPos = BWAPI::Position(*enemyMainTile);
-        state = State::InEnemyBase;
+    // If attacked at any point, immediately go to Orbit
+    if (threatenedNow()) {
+        state = State::Orbit;
     }
 
-    switch (state)
-    {
+    switch (state) {
     case State::Search: {
-        if (nextTarget >= (int)startTargets.size()) { state = State::ReturnHome; break; }
-        state = State::TravelToTarget;
-        break;
-    }
+        // go through start locations until we see a building
+        if (nextTarget >= (int)startTargets.size()) { state = State::Done; break; }
 
-    case State::TravelToTarget: {
-        if (nextTarget >= (int)startTargets.size()) { state = State::ReturnHome; break; }
+        const TilePosition tp = startTargets[nextTarget];
+        const Position goal(tp);
+        issueMoveToward(goal);
 
-        const BWAPI::TilePosition tp = startTargets[nextTarget];
-        const BWAPI::Position goal(tp);
-        if (goal.isValid()) {
-            BWAPI::Broodwar->drawLineMap(scout->getPosition(), goal, BWAPI::Colors::Yellow);
-            issueMoveToward(goal);
-        }
-
-        // arrival check
-        if (scout->getDistance(goal) < closeEnoughToTarget) {
+        if (scout->getDistance(goal) <= kCloseEnoughToTarget) {
             if (seeAnyEnemyBuildingNear(goal, 400)) {
                 enemyMainTile = tp;
-                enemyMainPos = goal;
-                BWAPI::Broodwar->printf("Scouting: Enemy main located at %d,%d", tp.x, tp.y);
-                state = State::InEnemyBase;
+                enemyMainPos  = goal;
+                Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
+                state = State::GasSteal;
                 break;
             }
             ++nextTarget;
-            pickNextTarget();
         }
-
-        if (threatenedByCombat()) { state = State::Retreat; break; }
-        if (chasedByWorkers()) { state = State::Orbit;   break; }
         break;
     }
 
-    case State::InEnemyBase: {
-        if (!enemyMainPos.isValid()) { /* ... */ }
+    case State::GasSteal: {
+        // Try once per few frames; if a refinery already exists → done
+        if (tryGasSteal()) break;
 
-        // Retreat / Orbit decisions FIRST
-        if (scout->getShields() <= lowHPShield || threatenedNow()) {
-            const auto home = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
-            // escape immediately (bypass cooldown; cancel attack)
-            escapeMove(home);                   // or: issueMoveToward(home, 0, /*force=*/true);
-            state = State::ReturnHome;
-            break;
+        // Gas steal considered complete once *any* refinery exists on the target geyser
+        if (gasStealDone) {
+            state = State::Harass;
         }
+        break;
+    }
 
-        // gas steal (consumes the frame if it acts)
-        if (enableGasSteal && BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss) {
-            if (tryGasSteal()) { break; }
-        }
+    case State::Harass: {
+        // After gas-steal, poke workers near enemy main. If no viable target, orbit.
+        if (enemyMainPos.isValid() && tryHarassWorker()) break;
 
-        if (chasedByWorkers()) {
-            // optional: orbit instead of hard retreat
-            ensureOrbitWaypoints();
-            const auto goal = currentOrbitPoint();
-            escapeMove(goal);                   // snap to evasive path now
-            state = State::Orbit;
-            break;
-        }
-
-        
-
-        // harass or orbit
-        if (!tryHarassWorker()) {
-            ensureOrbitWaypoints();
-            const auto goal = currentOrbitPoint();
-            issueMoveToward(goal, /*reissueDist*/64); // normal gated move is fine here
-            advanceOrbitIfArrived();
-        }
+        state = State::Orbit;
         break;
     }
 
     case State::Orbit: {
-        if (scout->getShields() <= lowHPShield || threatenedNow()) {
-            const auto home = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
-            escapeMove(home);
-            state = State::ReturnHome;
-            break;
-        }
-
-        // same early retreat checks here
-        if (scout->getShields() <= lowHPShield || threatenedNow()) {
-            state = State::ReturnHome;
-            break;
-        }
-        if (!chasedByWorkers()) {
-            state = State::InEnemyBase;
-            break;
-        }
-
         ensureOrbitWaypoints();
-        const auto goal = currentOrbitPoint();
-        issueMoveToward(goal, /*reissueDist*/ 64);
+        issueMoveToward(currentOrbitPoint(), /*reissueDist*/64);
         advanceOrbitIfArrived();
         break;
     }
 
-    case State::Retreat:
-    case State::ReturnHome: {
-        const auto home = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
-        // keep forcing the move so attacks never re-grab the order
-        escapeMove(home);
-        if (scout->getDistance(home) < 128) { state = State::Done; }
-        break;
-    }
-
     case State::Done:
-    default: {
-        // release worker to mine
-        if (scout && scout->exists() && scout->getType().isWorker() && scout->isIdle()) {
-            BWAPI::Unit mineral = nullptr;
-            int best = 1e9;
-            for (auto m : BWAPI::Broodwar->getMinerals()) {
-                int d = scout->getDistance(m);
-                if (d < best) { best = d; mineral = m; }
-            }
-            if (mineral) scout->rightClick(mineral);
-        }
+    default:
         break;
-    }
     }
 }
 
 void ScoutingManager::setEnemyMain(const TilePosition& tp) {
     enemyMainTile = tp;
     enemyMainPos = Position(tp);
-    state = State::InEnemyBase;
+    // If manually set, jump straight to gas steal priority
+    state = State::GasSteal;
 }
 
-// ----------------- helpers -----------------
-
-void ScoutingManager::assignScoutIfNeeded() {
-    if (scout && scout->exists()) return;
-
-    // Prefer idle/PlayerGuard worker
-    for (auto& u : Broodwar->self()->getUnits()) {
-        if (u->getType().isWorker() && u->isCompleted() &&
-            (u->getOrder() == Orders::PlayerGuard || u->isIdle())) {
-            scout = u;
-            Broodwar->printf("Scout assigned (idle): %s", scout->getType().c_str());
-            return;
-        }
-    }
-    // Fallback: any worker not carrying
-    for (auto& u : Broodwar->self()->getUnits()) {
-        if (u->getType().isWorker() && u->isCompleted() &&
-            !u->isCarryingMinerals() && !u->isCarryingGas()) {
-            scout = u;
-            Broodwar->printf("Scout assigned (pulled): %s", scout->getType().c_str());
-            return;
-        }
-    }
-}
+/* ---------- helpers ---------- */
 
 void ScoutingManager::buildStartTargets() {
-    TilePosition myStart = Broodwar->self()->getStartLocation();
+    startTargets.clear();
+    const TilePosition myStart = Broodwar->self()->getStartLocation();
     for (const auto& area : Map::Instance().Areas()) {
         for (const auto& base : area.Bases()) {
             if (base.Starting() && base.Location() != myStart) {
@@ -209,103 +135,132 @@ void ScoutingManager::buildStartTargets() {
             }
         }
     }
-    // Sort by ground path length, fallback to air distance
+    // simple sort by air distance from us
     std::sort(startTargets.begin(), startTargets.end(),
         [&](const TilePosition& a, const TilePosition& b) {
-            const auto pa = Map::Instance().GetPath(Position(myStart), Position(a));
-            const auto pb = Map::Instance().GetPath(Position(myStart), Position(b));
-            if (pa.empty() != pb.empty()) return !pa.empty();
-            if (!pa.empty() && !pb.empty()) return pa.size() < pb.size();
             return Position(myStart).getDistance(Position(a)) <
-                Position(myStart).getDistance(Position(b));
+                   Position(myStart).getDistance(Position(b));
         });
-
-    Broodwar->printf("Scouting: %u start targets.", (unsigned)startTargets.size());
+    Broodwar->printf("[Scouting] %u start targets.", unsigned(startTargets.size()));
 }
 
-void ScoutingManager::pickNextTarget() {
-    if (nextTarget < (int)startTargets.size()) {
-        const auto tp = startTargets[nextTarget];
-        Broodwar->printf("Scouting: heading to start pos %d at (%d,%d)", nextTarget, tp.x, tp.y);
-    }
-}
-
-void ScoutingManager::issueMoveToward(const BWAPI::Position& p, int reissueDist) {
-    if (!p.isValid() || !scout || !scout->exists()) return;
-
-    // cool-down gate
-    if (BWAPI::Broodwar->getFrameCount() - lastMoveIssueFrame < moveCooldownFrames) {
-        return;
-    }
+void ScoutingManager::issueMoveToward(const Position& p, int reissueDist) {
+    if (!scout || !scout->exists() || !p.isValid()) return;
+    if (Broodwar->getFrameCount() - lastMoveIssueFrame < kMoveCooldownFrames) return;
 
     if (scout->getDistance(p) > reissueDist || !scout->isMoving()) {
         scout->move(p);
-        lastMoveIssueFrame = BWAPI::Broodwar->getFrameCount();
+        lastMoveIssueFrame = Broodwar->getFrameCount();
     }
-
-    BWAPI::Broodwar->drawLineMap(scout->getPosition(), p, BWAPI::Colors::Yellow);
+    Broodwar->drawLineMap(scout->getPosition(), p, Colors::Yellow);
 }
 
-bool ScoutingManager::tryHarassWorker() {
-    if (!scout || !scout->exists()) return false;
+bool ScoutingManager::seeAnyEnemyBuildingNear(const Position& p, int radius) const {
+    for (auto& u : Broodwar->enemy()->getUnits()) {
+        if (!u || !u->exists()) continue;
+        if (!u->getType().isBuilding()) continue;
+        if (u->getPosition().isValid() && u->getDistance(p) <= radius) return true;
+    }
+    return false;
+}
 
-    // Bail if risky
-    if (scout->getShields() <= lowHPShield) return false;
-    if (threatenedNow()) return false;     
+/* ---------- gas steal ---------- */
+
+bool ScoutingManager::anyRefineryOn(BWAPI::Unit geyser) const {
+    if (!geyser || !geyser->exists()) return false;
+    const TilePosition tp = geyser->getTilePosition();
+    for (auto& u : Broodwar->getAllUnits()) {
+        if (!u || !u->exists()) continue;
+        if (!u->getType().isRefinery()) continue;
+        if (u->getTilePosition() == tp) return true;
+    }
+    return false;
+}
+
+bool ScoutingManager::tryGasSteal() {
+    if (gasStealDone) return false;
+    if (!scout || !scout->exists() || !scout->getType().isWorker()) return false;
+    if (!enemyMainPos.isValid()) return false;
+
+    // cooldown
+    const int now = Broodwar->getFrameCount();
+    if (now < nextGasStealRetryFrame) return false;
+
+    // find nearest geyser at enemy main (or reuse cached)
+    if (!targetGeyser || !targetGeyser->exists()) {
+        BWAPI::Unit best = nullptr; int bestDist = 1e9;
+        for (auto g : Broodwar->getGeysers()) {
+            if (!g || !g->exists()) continue;
+            const int d = enemyMainPos.getDistance(g->getPosition());
+            if (d > 400) continue; // must be "at" the main
+            if (anyRefineryOn(g)) { gasStealDone = true; return false; }
+            if (d < bestDist) { bestDist = d; best = g; }
+        }
+        targetGeyser = best;
+        if (!targetGeyser) { gasStealDone = true; return false; }
+    }
+
+    // If any refinery now exists, we are finished
+    if (anyRefineryOn(targetGeyser)) { gasStealDone = true; return false; }
+
+    // Only Protoss can gas-steal in this simplified flow
+    if (Broodwar->self()->getRace() != Races::Protoss) { gasStealDone = true; return false; }
+
+    // Not enough minerals → retry soon
+    if (Broodwar->self()->minerals() < UnitTypes::Protoss_Assimilator.mineralPrice()) {
+        nextGasStealRetryFrame = now + kGasStealRetryCooldown;
+        return false;
+    }
+
+    // Move into range, then attempt build
+    if (scout->getDistance(targetGeyser) > 96 || !scout->isMoving()) {
+        scout->move(targetGeyser->getPosition());
+        nextGasStealRetryFrame = now + kGasStealRetryCooldown;
+        return true; // consumed this frame
+    }
+
+    // Try to place the Assimilator
+    const TilePosition gtp = targetGeyser->getTilePosition();
+    if (scout->build(UnitTypes::Protoss_Assimilator, gtp)) {
+        Broodwar->printf("[GasSteal] Assimilator started at (%d,%d).", gtp.x, gtp.y);
+        gasStealDone = true;
+        return true; // consumed this frame
+    }
+
+    // Placement blocked: step again & retry soon
+    scout->move(targetGeyser->getPosition());
+    nextGasStealRetryFrame = now + kGasStealRetryCooldown;
+    return true; // consumed
+}
+
+/* ---------- harass / orbit ---------- */
+
+bool ScoutingManager::tryHarassWorker() {
+    if (!scout || !scout->exists() || !enemyMainPos.isValid()) return false;
 
     BWAPI::Unit best = nullptr; int bestDist = 999999;
-    for (auto& e : BWAPI::Broodwar->enemy()->getUnits()) {
-        if (!e || !e->exists() || !e->getType().isWorker()) continue;
-        if (enemyMainPos.isValid() && e->getDistance(enemyMainPos) > 320) continue;
+    for (auto& e : Broodwar->enemy()->getUnits()) {
+        if (!e || !e->exists()) continue;
+        if (!e->getType().isWorker()) continue;
+        if (e->getDistance(enemyMainPos) > kHarassRadiusFromMain) continue;
         int d = e->getDistance(scout);
         if (d < bestDist) { bestDist = d; best = e; }
     }
     if (!best) return false;
 
-    if (bestDist > 96) return false;
-
-    if (BWAPI::Broodwar->getFrameCount() - lastMoveIssueFrame >= moveCooldownFrames) {
+    if (Broodwar->getFrameCount() - lastMoveIssueFrame >= kMoveCooldownFrames) {
         scout->attack(best);
-        lastMoveIssueFrame = BWAPI::Broodwar->getFrameCount();
+        lastMoveIssueFrame = Broodwar->getFrameCount();
     }
-    BWAPI::Broodwar->drawCircleMap(best->getPosition(), 10, BWAPI::Colors::Red, true);
+    Broodwar->drawCircleMap(best->getPosition(), 10, Colors::Red, true);
     return true;
-}
-
-
-bool ScoutingManager::threatenedNow() const {
-    if (!scout || !scout->exists()) return false;
-
-    // If under attack, always count as threatened
-    if (scout->isUnderAttack()) return true;
-
-    // Non-worker combat nearby?
-    if (threatenedByCombat()) return true;
-
-    // Workers actively attacking us nearby
-    for (auto& e : BWAPI::Broodwar->enemy()->getUnits()) {
-        if (!e || !e->exists()) continue;
-        if (!e->getType().isWorker()) continue;
-        if (e->getDistance(scout) > 112) continue;  // ~range + a bit
-        if (e->isAttacking() || e->getOrder() == BWAPI::Orders::AttackUnit) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void ScoutingManager::escapeMove(const BWAPI::Position& p) {
-    if (!scout || !scout->exists() || !p.isValid()) return;
-    scout->stop();                    // cancel any current attack/queued cmd
-    scout->move(p);                   // issue the flee move immediately
-    lastMoveIssueFrame = BWAPI::Broodwar->getFrameCount(); // update so we don't spam
 }
 
 void ScoutingManager::ensureOrbitWaypoints() {
     if (!enemyMainPos.isValid() || !orbitWaypoints.empty()) return;
     orbitWaypoints.reserve(8);
     for (int a = 0; a < 360; a += 45) {
-        orbitWaypoints.push_back(orbitPoint(enemyMainPos, orbitRadius, a));
+        orbitWaypoints.push_back(orbitPoint(enemyMainPos, kOrbitRadius, a));
     }
     orbitIdx = 0;
     dwellUntilFrame = 0;
@@ -319,132 +274,34 @@ BWAPI::Position ScoutingManager::currentOrbitPoint() const {
 void ScoutingManager::advanceOrbitIfArrived() {
     const auto goal = currentOrbitPoint();
     if (!goal.isValid()) return;
-    const int now = BWAPI::Broodwar->getFrameCount();
+    const int now = Broodwar->getFrameCount();
 
-    // only advance when we actually reached it and lingered a bit
     if (scout->getDistance(goal) < 80) {
-        if (dwellUntilFrame == 0) dwellUntilFrame = now + dwellFrames;
+        if (dwellUntilFrame == 0) dwellUntilFrame = now + 12; // linger ~0.5s
         if (now >= dwellUntilFrame) {
             orbitIdx = (orbitIdx + 1) % (int)orbitWaypoints.size();
             dwellUntilFrame = 0;
         }
-    }
-    else {
-        // not there yet — keep moving to the same goal
+    } else {
         dwellUntilFrame = 0;
     }
 }
 
-
-bool ScoutingManager::seeAnyEnemyBuildingNear(const Position& p, int radius) const {
-    for (auto& u : Broodwar->enemy()->getUnits()) {
-        if (!u->exists()) continue;
-        if (!u->getType().isBuilding()) continue;
-        if (u->getPosition().isValid() && u->getDistance(p) <= radius) return true;
-    }
-    return false;
-}
-
-// ----------------- gas steal -----------------
-
-bool ScoutingManager::tryGasSteal() {
-    if (gasStealDone) return false;
-    if (!enemyMainPos.isValid()) return false;
-    if (!scout || !scout->exists() || !scout->getType().isWorker()) return false;
-
-    // cooldown gate
-    if (BWAPI::Broodwar->getFrameCount() < nextGasStealRetryFrame) return false;
-
-    // (re)select target geyser
-    if (!targetGeyser || !targetGeyser->exists()) {
-        BWAPI::Unit best = nullptr; int bestDist = 1e9;
-        for (auto g : BWAPI::Broodwar->getGeysers()) {
-            if (!g || !g->exists()) continue;
-            const int d = enemyMainPos.getDistance(g->getPosition());
-            if (d > 400) continue;
-            Tools::BuildBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
-            static int nextActionFrame = 0;
-            int now = BWAPI::Broodwar->getFrameCount();
-            if (now >= nextActionFrame) {
-                nextActionFrame = now + 48;
-            }
-            if (anyRefineryOn(g)) { gasStealDone = true; return false; }
-            if (d < bestDist) { bestDist = d; best = g; }
-        }
-        targetGeyser = best;
-        if (!targetGeyser) { gasStealDone = true; return false; }
-    }
-
-    if (anyRefineryOn(targetGeyser)) { gasStealDone = true; return false; }
-
-    if (BWAPI::Broodwar->self()->getRace() != BWAPI::Races::Protoss) { gasStealDone = true; return false; }
-
-    if (BWAPI::Broodwar->self()->minerals() < BWAPI::UnitTypes::Protoss_Assimilator.mineralPrice()) {
-        nextGasStealRetryFrame = BWAPI::Broodwar->getFrameCount() + gasStealRetryCooldown;
-        return false;
-    }
-
-    const auto gtp = targetGeyser->getTilePosition();
-
-    // Move closer if not in range; CONSUME this frame so no other orders overwrite it
-    if (scout->getDistance(targetGeyser) > 96 || !scout->isMoving()) {
-        scout->move(targetGeyser->getPosition());
-        nextGasStealRetryFrame = BWAPI::Broodwar->getFrameCount() + gasStealRetryCooldown;
-        return true; // <-- consumed
-    }
-
-    // Try to build
-    if (scout->build(BWAPI::UnitTypes::Protoss_Assimilator, gtp)) {
-        BWAPI::Broodwar->printf("[GasSteal] Starting Assimilator at (%d,%d).", gtp.x, gtp.y);
-        gasStealDone = true;
-        return true; // consumed
-    }
-    else {
-        // Could be blocked; step closer and retry soon
-        scout->move(targetGeyser->getPosition());
-        nextGasStealRetryFrame = BWAPI::Broodwar->getFrameCount() + gasStealRetryCooldown;
-        return true; // consumed
-    }
-}
-
-bool ScoutingManager::anyRefineryOn(const BWAPI::Unit geyser) const {
-    if (!geyser || !geyser->exists()) return false;
-    const BWAPI::TilePosition tp = geyser->getTilePosition();
-    for (auto& u : BWAPI::Broodwar->getAllUnits()) {
-        if (!u || !u->exists()) continue;
-        if (!u->getType().isRefinery()) continue;
-        if (u->getTilePosition() == tp) return true;
-    }
-    return false;
-}
-
-
-
-// ----------------- micro -----------------
-
-BWAPI::Position ScoutingManager::orbitPoint(const Position& center, int radius, int angleDeg) {
-    const double rad = angleDeg * 3.1415926535 / 180.0;
-    int ox = center.x + int(radius * std::cos(rad));
-    int oy = center.y + int(radius * std::sin(rad));
-    return Position(ox, oy);
-}
-
-bool ScoutingManager::chasedByWorkers() const {
+bool ScoutingManager::threatenedNow() const {
     if (!scout || !scout->exists()) return false;
-    for (auto& e : Broodwar->enemy()->getUnits()) {
-        if (!e->exists()) continue;
-        if (!e->getType().isWorker()) continue;
-        if (e->getDistance(scout) < 96) return true;
-    }
-    return false;
-}
+    if (scout->isUnderAttack()) return true;
 
-bool ScoutingManager::threatenedByCombat() const {
-    if (!scout || !scout->exists()) return false;
+    // nearby non-worker combat unit
     for (auto& e : Broodwar->enemy()->getUnits()) {
-        if (!e->exists()) continue;
-        if (e->getType().isWorker()) continue;
-        if (e->getType().canAttack() && e->getDistance(scout) < 224) return true;
+        if (!e || !e->exists()) continue;
+        if (!e->getType().isWorker() && e->getType().canAttack() &&
+            e->getDistance(scout) < 224) return true;
+    }
+    // aggressive workers in melee
+    for (auto& e : Broodwar->enemy()->getUnits()) {
+        if (!e || !e->exists() || !e->getType().isWorker()) continue;
+        if (e->getDistance(scout) <= 112 &&
+           (e->isAttacking() || e->getOrder() == Orders::AttackUnit)) return true;
     }
     return false;
 }

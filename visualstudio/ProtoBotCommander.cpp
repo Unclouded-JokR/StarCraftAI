@@ -73,7 +73,7 @@ void ProtoBotCommander::onStart()
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
 	//Uncomment this when we the scotuing manager does not take a worker immediately.
-	//scoutingManager.onStart();
+	scoutingManager.onStart();
 
 	//building manager on start does nothing as of now.
 	buildManager.onStart();
@@ -118,8 +118,11 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Scout:
 		{
-			const Scout value = get<Scout>(action.commanderAction);
-			getUnitToScout();
+			if (!scoutingManager.hasScout()) {
+				if (BWAPI::Unit u = getUnitToScout()) {
+					scoutingManager.assignScout(u);
+				}
+			}
 			break;
 		}
 		case ActionType::Action_Attack:
@@ -142,7 +145,7 @@ void ProtoBotCommander::onFrame()
 	economyManager.OnFrame();
 
 	//Uncomment this once onFrame does not steal a worker.
-	//scoutingManager.onFrame();
+	scoutingManager.onFrame();
 
 	combatManager.onFrame();
 }
@@ -162,7 +165,7 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	//Managers that deal with unit assignments
 	economyManager.onUnitDestroy(unit);
 	combatManager.onUnitDestroy(unit);
-	//scoutingManager.onUnitDestroy(unit);
+	scoutingManager.onUnitDestroy(unit);
 
 	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
@@ -288,19 +291,20 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 	return buildManager.requestedBuilding(building);
 }
 
-void ProtoBotCommander::getUnitToScout()
+BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
-	if (((BWAPI::Broodwar->getFrameCount() / FRAMES_PER_SECOND) / 60) >= 5)
-	{
-		//ask combat manager for a unit to scout.
-		//BWAPI::Unit = combatManager.getAvalibleUnit();
-	}
-	else
-	{
-		BWAPI::Unit unit = economyManager.getAvalibleWorker();
-	}
+	if (BWAPI::Unit u = economyManager.getAvalibleWorker())
+		return u;
 
-	//scoutingManager.assignScout();
+	// Fallback: find any completed, non-carrying worker
+	for (auto& u : BWAPI::Broodwar->self()->getUnits()) {
+		if (!u->exists()) continue;
+		if (u->getType().isWorker() && u->isCompleted() &&
+			!u->isCarryingMinerals() && !u->isCarryingGas()) {
+			return u;
+		}
+	}
+	return nullptr;
 }
 
 std::string ProtoBotCommander::enemyRaceCheck()
