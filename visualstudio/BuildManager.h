@@ -4,6 +4,8 @@
 #include "SpenderManager.h"
 #include "../src/starterbot/Tools.h"
 
+
+
 class ProtoBotCommander;
 
 class BuildManager
@@ -46,4 +48,39 @@ public:
     void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
     void buildUnitType(BWAPI::UnitType unit);
     void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
+
+    void trainAdditionalWorkers();
+    void queueSupply();
+    void preBuildOrder();
+    void getBuildOrder();
+    void updateBuild();
+    void opener();
+    void generic();
+
+    void PvP();
+    void PvT();
+    void PvZ();
+    void default_build();
+    void PvT_2Gate();
+    void PvP_1Gate();
+    void PvZ_1Gate();
+    void runBuildQueue();
+
+    std::map<BWAPI::UnitType, int>& getBuildQueue();
 };
+
+namespace All {
+    inline bool inBookSupply = false;
+    inline std::map <BWAPI::UnitType, int> buildQueue;
+    inline std::map <BWAPI::TechType, int> techQueue;
+
+    inline int currentSupply = 0;
+    inline int currentMineral = 0;
+    inline std::string currentBuild = "";
+    inline std::string currentOpener = "";
+    inline std::string currentTransition = "";
+    inline bool inOpening = true;
+    inline bool inTransition = false;
+    inline bool transitionReady = false;
+
+}

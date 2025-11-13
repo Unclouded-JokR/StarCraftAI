@@ -1,8 +1,14 @@
 #include "BuildManager.h"
 #include "ProtoBotCommander.h"
+#include <fstream>
 #include "../src/starterbot/Tools.h"
 #include "../src/starterbot/MapTools.h"
 
+using namespace BWAPI;
+using namespace Tools;
+using namespace All;
+using namespace UnitTypes;
+using namespace std;
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
 {
@@ -24,7 +30,7 @@ void BuildManager::onStart()
     alreadySentRequest7 = false;
     alreadySentRequest8 = false;
 }
-
+/*
 void BuildManager::onFrame()
 {
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
@@ -125,10 +131,10 @@ void BuildManager::onFrame()
         default:
         {
             break;
-        }*/
+        }
     }
 }
-
+*/
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
     if (unit->getPlayer() != BWAPI::Broodwar->self())
@@ -171,7 +177,8 @@ void BuildManager::assignBuilding(BWAPI::Unit unit)
 
 bool BuildManager::isBuildOrderCompleted()
 {
-    return buildOrderCompleted;
+    if (transitionReady) //when opener is completed
+        return buildOrderCompleted;
 }
 
 bool BuildManager::requestedBuilding(BWAPI::UnitType building)
@@ -229,3 +236,120 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
         }
     }
 }
+
+void BuildManager::onFrame() {
+    spenderManager.OnFrame();
+    updateBuild();
+    runBuildQueue();
+}
+
+void BuildManager::queueSupply()
+{
+    if (!inBookSupply) {
+        int count = min(22, currentSupply / 14) - (vis(Protoss_Nexus) - 1);
+        buildQueue[Protoss_Pylon] = count;
+    }
+}
+
+void BuildManager::updateBuild() {
+    buildQueue.clear();
+    currentSupply = BWAPI::Broodwar->self()->supplyUsed();
+    currentMineral = BWAPI::Broodwar->self()->minerals();
+    opener();
+    //generic();
+
+}
+
+void BuildManager::opener() {
+    BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
+
+    if (enemyRace == BWAPI::Races::Protoss)
+    {
+        PvP();
+    }
+    if (enemyRace == BWAPI::Races::Terran)
+    {
+        PvP();
+    }
+    if (enemyRace == BWAPI::Races::Zerg)
+    {
+        PvP();
+    }
+    else
+        PvP(); //for now
+
+}
+void BuildManager::generic() {
+    queueSupply();
+}
+
+void BuildManager::PvT() {
+    default_build();
+    PvT_2Gate();
+}
+
+void BuildManager::PvP() {
+    default_build();
+    PvP_1Gate();
+}
+
+void BuildManager::PvZ() {
+    default_build();
+    PvZ_1Gate();
+}
+
+
+void BuildManager::default_build() {
+    inOpening = true;
+    inBookSupply = vis(Protoss_Pylon) < 2;
+}
+
+void BuildManager::PvT_2Gate() {
+    currentBuild = "PvT_2Gate";
+    transitionReady = com(Protoss_Robotics_Facility) > 0;
+    inOpening = currentSupply < 60;
+    buildQueue[Protoss_Nexus] = 1 + (currentSupply >= 74);
+    buildQueue[Protoss_Gateway] = (currentSupply >= 20) + (currentSupply >= 60) + (currentSupply >= 62);
+    buildQueue[Protoss_Robotics_Facility] = currentSupply >= 52;
+    buildQueue[Protoss_Observatory] = com(Protoss_Robotics_Facility) > 0;
+}
+
+void BuildManager::PvP_1Gate() {
+    // https://liquipedia.net/starcraft/1_Gate_Core_(vs._Protoss)
+    currentBuild = "PvP_1GateCore";
+    transitionReady = vis(Protoss_Cybernetics_Core) > 0;
+    inOpening = currentSupply < 60;
+    buildQueue[Protoss_Nexus] = 1;
+    buildQueue[Protoss_Pylon] = (currentSupply >= 16) + (currentSupply >= 32);
+    buildQueue[Protoss_Gateway] = currentSupply >= 20;
+    buildQueue[Protoss_Assimilator] = currentSupply >= 24;
+    buildQueue[Protoss_Cybernetics_Core] = currentSupply >= 34;
+}
+
+void BuildManager::PvZ_1Gate() {
+    currentBuild = "PvZ_1Gate";
+    transitionReady = vis(Protoss_Cybernetics_Core) > 0;
+    inOpening = currentSupply < 60;
+    buildQueue[Protoss_Nexus] = 1;
+    buildQueue[Protoss_Pylon] = (currentSupply >= 16) + (currentSupply >= 32);
+    buildQueue[Protoss_Gateway] = currentSupply >= 20;
+    buildQueue[Protoss_Assimilator] = currentSupply >= 24;
+    buildQueue[Protoss_Cybernetics_Core] = currentSupply >= 34;
+}
+
+std::map<UnitType, int>& BuildManager::getBuildQueue() { return buildQueue; }
+
+void BuildManager::runBuildQueue() {
+    for (auto& [building, count] : getBuildQueue()) {
+        int queuedCount = 0;
+        if (!building.isBuilding())
+            continue;
+        while (count > queuedCount + vis(building)) {
+            queuedCount++;
+            spenderManager.addRequest(building);
+            //Broodwar->drawEllipseMap(building->getPosition(), 2, 2, BWAPI::Color(0, 128, 0), true);
+        }
+    }
+}
+
+//void BuildManager::PvP_Transition(){}

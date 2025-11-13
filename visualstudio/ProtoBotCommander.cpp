@@ -138,7 +138,7 @@ void ProtoBotCommander::onFrame()
 			break;
 		}
 	}
-
+	Tools::updateCount();
 	buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.

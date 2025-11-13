@@ -227,7 +227,7 @@ std::string StrategyManager::onStart()
 	const int chooseRandBuildOrder = rand() % test;
 	//return build order chosen
 
-	return "2_Gateway_Observer";
+	return "1_Gate_Core";
 }
 
 Action StrategyManager::onFrame()
