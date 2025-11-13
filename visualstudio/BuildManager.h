@@ -25,6 +25,8 @@ public:
     bool alreadySentRequest6 = false;
     bool alreadySentRequest7 = false;
     bool alreadySentRequest8 = false;
+    bool alreadySentRequest9 = false;
+    bool alreadySentRequest10 = false;
 
     BWAPI::Unitset buildings;
     BWAPI::Unitset buildingWarps;
@@ -50,7 +52,7 @@ public:
     void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
 
     void trainAdditionalWorkers();
-    void queueSupply();
+    //void queueSupply();
     void preBuildOrder();
     void getBuildOrder();
     void updateBuild();
@@ -61,10 +63,12 @@ public:
     void PvT();
     void PvZ();
     void default_build();
-    void PvT_2Gate();
-    void PvP_1Gate();
-    void PvZ_1Gate();
+    void PvT_2Gateway_Observer();
+    void PvP_10_12_Gateway();
+    void PvZ_10_12_Gateway();
     void runBuildQueue();
+    void pumpUnit();
+    void buildAdditionalSupply();
 
     std::map<BWAPI::UnitType, int>& getBuildQueue();
 };
@@ -74,8 +78,6 @@ namespace All {
     inline std::map <BWAPI::UnitType, int> buildQueue;
     inline std::map <BWAPI::TechType, int> techQueue;
 
-    inline int currentSupply = 0;
-    inline int currentMineral = 0;
     inline std::string currentBuild = "";
     inline std::string currentOpener = "";
     inline std::string currentTransition = "";

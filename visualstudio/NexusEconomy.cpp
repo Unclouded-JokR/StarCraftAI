@@ -15,7 +15,8 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 
 	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
 	maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
-	maximumWorkers = optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
+	maximumWorkers = 40; //optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
+	// Set to 40 for now for build order
 
 	for (BWAPI::Unit mineral : minerals)
 	{
