@@ -247,8 +247,7 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-
-	if(All::transitionReady)
+	if(buildManager.isBuildOrderCompleted())
 		All::currentBuild = "Completed";
 	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
 	

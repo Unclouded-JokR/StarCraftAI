@@ -16,19 +16,6 @@ public:
 
     bool buildOrderCompleted = false;
 
-    //This should be removed when build orders are set in place. This is just meant to be able to send one build request.
-    bool alreadySentRequest0 = false;
-    bool alreadySentRequest1 = false;
-    bool alreadySentRequest2 = false;
-    bool alreadySentRequest3 = false;
-    bool alreadySentRequest4 = false;
-    bool alreadySentRequest5 = false;
-    bool alreadySentRequest6 = false;
-    bool alreadySentRequest7 = false;
-    bool alreadySentRequest8 = false;
-    bool alreadySentRequest9 = false;
-    bool alreadySentRequest10 = false;
-
     BWAPI::Unitset buildings;
     BWAPI::Unitset buildingWarps;
 
@@ -52,9 +39,6 @@ public:
     void buildUnitType(BWAPI::UnitType unit);
     void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
 
-    void trainAdditionalWorkers();
-    //void queueSupply();
-    void preBuildOrder();
     void getBuildOrder();
     void updateBuild();
 
@@ -71,15 +55,11 @@ public:
 };
 
 namespace All {
-    inline bool inBookSupply = false;
     inline std::map <BWAPI::UnitType, int> buildQueue;
     inline std::map <BWAPI::TechType, int> techQueue;
 
     inline std::string currentBuild = "";
     inline std::string currentOpener = "";
     inline std::string currentTransition = "";
-    inline bool inOpening = true;
-    inline bool inTransition = false;
-    inline bool transitionReady = false;
 
 }

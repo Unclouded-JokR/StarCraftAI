@@ -19,16 +19,6 @@ void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
-
-    alreadySentRequest0 = false;
-    alreadySentRequest1 = false;
-    alreadySentRequest2 = false;
-    alreadySentRequest3 = false;
-    alreadySentRequest4 = false;
-    alreadySentRequest5 = false;
-    alreadySentRequest6 = false;
-    alreadySentRequest7 = false;
-    alreadySentRequest8 = false;
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
@@ -134,9 +124,10 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 
 void BuildManager::onFrame() {
     spenderManager.OnFrame();
+    buildQueue.clear();
     updateBuild();
+    runBuildQueue();
     pumpUnit();
-
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
     //for (BWAPI::Unit building : buildingWarps)
     //{
@@ -191,12 +182,6 @@ void BuildManager::pumpUnit(){
 	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 500 && !alreadySentRequest(unit->getID())) {
             trainUnit(Protoss_Zealot, unit);
 	    }
-
-        //Train Zealots and Dragoons on a 2:1 ratio
-        if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentGas > 300 && vis(Protoss_Dragoon)<=vis(Protoss_Zealot)/2 && !alreadySentRequest(unit->getID())) {
-            trainUnit(Protoss_Dragoon, unit);
-	    }
-
     }
 }
 
@@ -204,289 +189,36 @@ void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    switch (currentSupply)
-    {
-        case 8:
-        {
-            if (alreadySentRequest0 == false && vis(Protoss_Pylon) == 0)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest0 = true;
-            }
-            break;
-        }
-        case 10:
-        {
-            if (alreadySentRequest1 == false && vis(Protoss_Gateway) == 0)
-            {
-                buildBuilding(Protoss_Gateway);
-                alreadySentRequest1 = true;
-            }
-            break;
-        }
-        case 12:
-        {
-            if (alreadySentRequest2 == false && vis(Protoss_Assimilator) == 0)
-            {
-                buildBuilding(Protoss_Assimilator);
-                alreadySentRequest2 = true;
-            }
-            break;
-        }
-        case 14:
-        {
-            if (alreadySentRequest3 == false && vis(Protoss_Cybernetics_Core) == 0)
-            {
-                buildBuilding(Protoss_Cybernetics_Core);
-                alreadySentRequest3 = true;
-            }
-            break;
-        }
-        case 15:
-        {
-            if (alreadySentRequest4 == false)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest4 = true;
-            }
-            break;
-        }
-        //This is fine since the timming for this to happen is thin, we can improve closest worker to build next semester.
-        case 17: case 18:
-        {
-            if (alreadySentRequest5 = false)
-            {
-                for (auto& unit : buildings)
-                {
-                    if (unit->getType() == Protoss_Gateway && !alreadySentRequest(unit->getID()))
-                    {
-                        trainUnit(Protoss_Dragoon, unit);
-                    }
-                }
-                alreadySentRequest5 = true;
-            }
-            break;
-        }
-        case 22:
-        {
-            if (alreadySentRequest6 == false && vis(Protoss_Pylon) == 2)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest6 = true;
-            }
-            break;
-        }
-        case 25:
-        {
-            if (alreadySentRequest7 == false && vis(Protoss_Robotics_Facility) == 0)
-            {
-                buildBuilding(Protoss_Robotics_Facility);
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest7 = true;
-            }
-            break;
-        }
-        case 29:
-        {
-            if (alreadySentRequest8 == false && vis(Protoss_Gateway) == 1)
-            {
-                buildBuilding(Protoss_Gateway);
-                alreadySentRequest8 = true;
-            }
-            break;
-        }
-        case 31:
-        {
-            if (alreadySentRequest9 == false && vis(Protoss_Pylon) == 3)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest9 = true;
-            }
-            break;
-        }
-        case 38:
-        {
-            if (alreadySentRequest10 == false && vis(Protoss_Observatory) == 0)
-            {
-                buildBuilding(Protoss_Observatory);
-                alreadySentRequest10 = true;
-                std::cout << "Build Order Completed\n";
-            }
-            break;
-        }
-        default:
-            break;
-    }
+
+    buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
+    buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
+    buildQueue[Protoss_Assimilator] = (currentSupply >= 12);
+    buildQueue[Protoss_Cybernetics_Core] = (currentSupply >= 14);
+    buildQueue[Protoss_Robotics_Facility] = (currentSupply >= 25);
+    buildQueue[Protoss_Observatory] = (currentSupply >= 38);
+    if (vis(Protoss_Observatory) > 0)
+        buildOrderCompleted = true;
 }
 
 void BuildManager::PvP_10_12_Gateway() {
     currentBuild = "PvP_10/12_Gateway";
-    transitionReady = vis(Protoss_Pylon) > 2;
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
-    switch (currentSupply)
-    {
-        case 8:
-        {
-            if (alreadySentRequest0 == false && vis(Protoss_Pylon) == 0)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest0 = true;
-            }
-            break;
-        }
-        case 10:
-        {
-            if (alreadySentRequest1 == false && vis(Protoss_Gateway) == 0)
-            {
-                buildBuilding(Protoss_Gateway);
-                alreadySentRequest1 = true;
-
-            }
-            break;
-        }
-        case 12:
-        {
-            if (alreadySentRequest2 == false && vis(Protoss_Gateway) == 1)
-            {
-                buildBuilding(Protoss_Gateway);
-                alreadySentRequest2 = true;
-
-            }
-            break;
-        }
-        case 13:
-        {
-            if (vis(Protoss_Zealot) == 0)
-            {
-                for (auto& unit : buildings)
-                {
-                    if (unit->getType() == Protoss_Gateway)
-                    {
-                        trainUnit(Protoss_Zealot, unit);
-                    }
-                }
-            }
-            break;
-        }
-        case 16:
-        {
-            if (alreadySentRequest4 == false && vis(Protoss_Pylon) == 1)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest4 = true;
-            }
-            break;
-        }
-        
-        default:
-            break;
-    }
+    buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 16);
+    buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
+    if (vis(Protoss_Pylon) > 1)
+        buildOrderCompleted = true;
 }
 
 void BuildManager::PvZ_10_12_Gateway() {
     currentBuild = "PvZ_10/12_Gateway";
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
-    switch (currentSupply)
-    {
-        case 8:
-        {
-            if (alreadySentRequest0 == false && vis(Protoss_Pylon) == 0)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest0 = true;
-            }
-            break;
-        }
-        case 10:
-        {
-            if (alreadySentRequest1 == false && vis(Protoss_Gateway) == 0)
-            {
-                buildBuilding(Protoss_Gateway);
-                alreadySentRequest1 = true;
-
-            }
-            break;
-        }
-        case 12:
-        {
-            if (alreadySentRequest2 == false && vis(Protoss_Gateway) == 1)
-            {
-                buildBuilding(Protoss_Gateway);
-                alreadySentRequest2 = true;
-
-            }
-            break;
-        }
-        case 13:
-        {
-            if (vis(Protoss_Zealot) == 0)
-            {
-                for (auto& unit : buildings)
-                {
-	                if (unit->getType() == Protoss_Gateway) {
-                    unit -> train(Protoss_Zealot);
-	                }
-                }
-            }
-            break;
-        }
-        case 15:
-        {
-            if (alreadySentRequest4 == false && vis(Protoss_Pylon) == 1)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest4 = true;
-            }
-            break;
-        }
-        
-        case 17:
-        {
-            if (vis(Protoss_Zealot) == 1)
-            {
-                
-                for (auto& unit : buildings)
-                {
-	                if (unit->getType() == Protoss_Gateway) {
-                    unit -> train(Protoss_Zealot);
-	                }
-                }
-                
-            }
-            break;
-        }
-        
-        case 19:
-        {
-            if (vis(Protoss_Zealot) == 2)
-            {
-                
-                for (auto& unit : buildings)
-                {
-	                if (unit->getType() == Protoss_Gateway) {
-                    unit -> train(Protoss_Zealot);
-	                }
-                }
-                
-            }
-            break;
-        }
-        case 21:
-        {
-            if (alreadySentRequest7 == false && vis(Protoss_Pylon) == 3)
-            {
-                buildBuilding(Protoss_Pylon);
-                alreadySentRequest7 = true;
-            }
-            break;
-        }
-        
-        default:
-            break;
-    }
+    buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 21);
+    buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
+    if (vis(Protoss_Pylon) > 2)
+        buildOrderCompleted = true;
 }
 
 std::map<UnitType, int>& BuildManager::getBuildQueue() { return buildQueue; }
@@ -494,10 +226,9 @@ std::map<UnitType, int>& BuildManager::getBuildQueue() { return buildQueue; }
 void BuildManager::runBuildQueue() {
     for (auto& [building, count] : getBuildQueue()) {
         int queuedCount = 0;
-        while (count > queuedCount + vis(building)) {
+        while (count > (queuedCount + vis(building)) && !requestedBuilding(building) && !checkUnitIsPlanned(building)) {
             queuedCount++;
             buildBuilding(building);
-            //Broodwar->drawEllipseMap(building->getPosition(), 2, 2, BWAPI::Color(0, 128, 0), true);
+            }
         }
-    }
 }
