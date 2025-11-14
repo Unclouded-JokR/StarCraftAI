@@ -72,10 +72,8 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
-	//Uncomment this when we the scotuing manager does not take a worker immediately.
-	//scoutingManager.onStart();
+	scoutingManager.onStart();
 
-	//building manager on start does nothing as of now.
 	buildManager.onStart();
 }
 
@@ -118,8 +116,11 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Scout:
 		{
-			const Scout value = get<Scout>(action.commanderAction);
-			getUnitToScout();
+			if (!scoutingManager.hasScout()) {
+				if (BWAPI::Unit u = getUnitToScout()) {
+					scoutingManager.assignScout(u);
+				}
+			}
 			break;
 		}
 		case ActionType::Action_Attack:
@@ -135,6 +136,7 @@ void ProtoBotCommander::onFrame()
 			break;
 		}
 	}
+	Tools::updateCount();
 
 	buildManager.onFrame();
 
@@ -142,7 +144,7 @@ void ProtoBotCommander::onFrame()
 	economyManager.OnFrame();
 
 	//Uncomment this once onFrame does not steal a worker.
-	//scoutingManager.onFrame();
+	scoutingManager.onFrame();
 
 	combatManager.onFrame();
 }
@@ -162,7 +164,7 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	//Managers that deal with unit assignments
 	economyManager.onUnitDestroy(unit);
 	combatManager.onUnitDestroy(unit);
-	//scoutingManager.onUnitDestroy(unit);
+	scoutingManager.onUnitDestroy(unit);
 
 	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
@@ -245,7 +247,10 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	std::string buildOrderSelectedString = "Selected Build Order: " + buildOrderSelected + "\n";
+	if(buildManager.isBuildOrderCompleted())
+		All::currentBuild = "Completed";
+	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
+	
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 20), buildOrderSelectedString.c_str());
 	Tools::DrawUnitCommands();
@@ -288,19 +293,23 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 	return buildManager.requestedBuilding(building);
 }
 
-void ProtoBotCommander::getUnitToScout()
+//[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
+//You can also change the name of this in order to make it clear what "getAvalibleWorker()" is doing.
+//Also get rid of the self get Units, eco should return a unit, not a null ptr.
+BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
-	if (((BWAPI::Broodwar->getFrameCount() / FRAMES_PER_SECOND) / 60) >= 5)
-	{
-		//ask combat manager for a unit to scout.
-		//BWAPI::Unit = combatManager.getAvalibleUnit();
-	}
-	else
-	{
-		BWAPI::Unit unit = economyManager.getAvalibleWorker();
-	}
+	if (BWAPI::Unit u = economyManager.getAvalibleWorker())
+		return u;
 
-	//scoutingManager.assignScout();
+	// Fallback: find any completed, non-carrying worker
+	for (auto& u : BWAPI::Broodwar->self()->getUnits()) {
+		if (!u->exists()) continue;
+		if (u->getType().isWorker() && u->isCompleted() &&
+			!u->isCarryingMinerals() && !u->isCarryingGas()) {
+			return u;
+		}
+	}
+	return nullptr;
 }
 
 std::string ProtoBotCommander::enemyRaceCheck()

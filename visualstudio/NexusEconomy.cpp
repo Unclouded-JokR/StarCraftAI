@@ -41,6 +41,9 @@ void NexusEconomy::OnFrame()
 
 	if (assimilator != nullptr) BWAPI::Broodwar->drawTextMap(assimilator->getPosition(), std::to_string(assimilator->getID()).c_str());
 
+	std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size());
+	BWAPI::Broodwar->drawTextMap(nexus->getPosition(), temp.c_str());
+
 	for (BWAPI::Unit worker : workers)
 	{
 		//If a worker is constructing skip over them until they are done.

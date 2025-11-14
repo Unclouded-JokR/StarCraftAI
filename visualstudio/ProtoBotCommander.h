@@ -75,7 +75,7 @@ public:
 	bool alreadySentRequest(int unitID);
 
 	//Scouting
-	void getUnitToScout();
+	BWAPI::Unit getUnitToScout();
 };
 
 enum ActionType {
