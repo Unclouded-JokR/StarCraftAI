@@ -218,6 +218,7 @@ void BuildManager::pumpUnit(){
 	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 500) {
             unit -> train(Protoss_Zealot);
 	    }
+        //Train Zealots and Dragoons on a 2:1 ratio
         if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentGas > 300 && vis(Protoss_Dragoon)<=vis(Protoss_Zealot)/2) {
             unit -> train(Protoss_Dragoon);
 	    }
@@ -282,24 +283,7 @@ void BuildManager::PvT_2Gateway_Observer() {
             break;
         }
         
-        case 34:
-        {
-            if (vis(Protoss_Dragoon) == 0)
-            {
-                
-                for (auto& unit : buildings)
-                {
-	                if (unit->getType() == Protoss_Gateway) {
-                    unit -> train(Protoss_Dragoon);
-                    // calling trainUnit sometimes makes the game hiccup and break the worker queue, using train() for now
-	                }
-                }
-                
-            }
-            break;
-        }
-
-        case 36:
+        case 34: case 36: //in case of worker bugging out
         {
             if (vis(Protoss_Dragoon) == 0)
             {
@@ -550,5 +534,3 @@ void BuildManager::runBuildQueue() {
         }
     }
 }
-
-//void BuildManager::PvP_Transition(){}
