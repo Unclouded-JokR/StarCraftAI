@@ -140,6 +140,17 @@ void BuildManager::onFrame() {
     //runBuildQueue();
     buildAdditionalSupply();
     pumpUnit();
+
+    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
+    //for (BWAPI::Unit building : buildingWarps)
+    //{
+    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
+    //}
+
+    for (BWAPI::Unit building : buildings)
+    {
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), "Assigned Building");
+    }
 }
 
 void BuildManager::updateBuild() {
