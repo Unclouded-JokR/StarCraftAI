@@ -138,7 +138,7 @@ void ProtoBotCommander::onFrame()
 			break;
 		}
 	}
-
+	Tools::updateCount();
 	buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
@@ -248,7 +248,10 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	std::string buildOrderSelectedString = "Selected Build Order: " + buildOrderSelected + "\n";
+	if(All::transitionReady)
+		All::currentBuild = "Completed";
+	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
+	
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 20), buildOrderSelectedString.c_str());
 	Tools::DrawUnitCommands();

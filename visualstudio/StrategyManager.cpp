@@ -226,8 +226,9 @@ std::string StrategyManager::onStart()
 	const size_t test = myVector.size();
 	const int chooseRandBuildOrder = rand() % test;
 	//return build order chosen
-
-	return "2_Gateway_Observer";
+	if(All::transitionReady)
+		return "1_Gate_Core_Transition";
+	return "1_Gate_Core";
 }
 
 Action StrategyManager::onFrame()

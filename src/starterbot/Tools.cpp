@@ -1,4 +1,7 @@
 #include "Tools.h"
+using namespace BWAPI;
+using namespace std;
+using namespace UnitTypes;
 
 BWAPI::Unit Tools::GetClosestUnitTo(BWAPI::Position p, const BWAPI::Unitset& units)
 {
@@ -96,7 +99,7 @@ void Tools::DrawUnitCommands()
 {
     for (auto& unit : BWAPI::Broodwar->self()->getUnits())
     {
-        const BWAPI::UnitCommand & command = unit->getLastCommand();
+        const BWAPI::UnitCommand& command = unit->getLastCommand();
 
         // If the previous command had a ground position target, draw it in red
         // Example: move to location on the map
@@ -142,7 +145,7 @@ void Tools::SmartRightClick(BWAPI::Unit unit, BWAPI::Unit target)
     // If we are issuing the same type of command with the same arguments, we can ignore it
     // Issuing multiple identical commands on successive frames can lead to bugs
     if (unit->getLastCommand().getTarget() == target) { return; }
-    
+
     // If there's nothing left to stop us, right click!
     unit->rightClick(target);
 }
@@ -210,7 +213,7 @@ void Tools::DrawUnitHealthBars()
             if (hpRatio < 0.66) hpColor = BWAPI::Colors::Orange;
             if (hpRatio < 0.33) hpColor = BWAPI::Colors::Red;
             DrawHealthBar(unit, hpRatio, hpColor, 0);
-            
+
             // if it has shields, draw those too
             if (unit->getType().maxShields() > 0)
             {
@@ -244,5 +247,73 @@ void Tools::DrawHealthBar(BWAPI::Unit unit, double ratio, BWAPI::Color color, in
     for (int i(left); i < right - 1; i += ticWidth)
     {
         BWAPI::Broodwar->drawLineMap(BWAPI::Position(i, hpTop), BWAPI::Position(i, hpBottom), BWAPI::Colors::Black);
+    }
+}
+
+
+Tools::PlayerState getPlayerState(Unit unit) {
+    auto state = Tools::PlayerState::None;
+    if (unit->getPlayer() == Broodwar->self())
+        state = Tools::PlayerState::Self;
+    else if (unit->getPlayer()->isEnemy(Broodwar->self()))
+        state = Tools::PlayerState::Enemy;
+    else
+        state = Tools::PlayerState::Neutral;
+    return state;
+}
+
+map<UnitType, int> allVisibleTypeCounts;
+map<UnitType, int> allCompleteTypeCounts;
+map<UnitType, int> allTotalTypeCounts;
+
+int Tools::getCompleteCount(UnitType type)
+{
+    // Finds how many of a UnitType we currently have completed
+    auto& list = allCompleteTypeCounts;
+    auto itr = list.find(type);
+    if (itr != list.end())
+        return itr->second;
+    return 0;
+}
+
+int Tools::getVisibleCount(UnitType type)
+{
+    // Finds how many of a UnitType we currently have visible
+    auto& list = allVisibleTypeCounts;
+    auto itr = list.find(type);
+    if (itr != list.end())
+        return itr->second;
+    return 0;
+}
+
+int Tools::getTotalCount(UnitType type)
+{
+    // Finds how many of a UnitType we have ever had in total
+    auto& list = allTotalTypeCounts;
+    auto itr = list.find(type);
+    if (itr != list.end())
+        return itr->second;
+    return 0;
+}
+
+int Tools::getDeadCount(UnitType type)
+{
+    // Finds how many of a UnitType we have lost
+    return Tools::getTotalCount(type) - Tools::getVisibleCount(type);
+}
+
+
+void Tools::updateCount() {
+    allVisibleTypeCounts.clear();
+    allCompleteTypeCounts.clear();
+    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
+    for (auto u : myUnits) {
+        auto& unit = *u;
+        auto type = unit.getType();
+        if (type != UnitTypes::None && type.isValid()) {
+            allVisibleTypeCounts[type] += 1;
+            if (unit.isCompleted())
+                allCompleteTypeCounts[type] += 1;
+        }
     }
 }
