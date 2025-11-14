@@ -182,11 +182,9 @@ void BuildManager::pumpUnit(){
 
     for (auto& unit : buildings)
     {
-        //This logic doesnt work
 	    if (unit->getType() == Protoss_Gateway && zealotUnitPump && !unit->isTraining() && !alreadySentRequest(unit->getID())) {
             trainUnit(Protoss_Zealot, unit);
 	    }
-        
     }
 }
 
@@ -217,6 +215,7 @@ void BuildManager::PvP_10_12_Gateway() {
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 16);
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
+    zealotUnitPump = com(Protoss_Gateway) > 0;
     if (vis(Protoss_Pylon) > 1)
         buildOrderCompleted = true;
 }
@@ -227,6 +226,7 @@ void BuildManager::PvZ_10_12_Gateway() {
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 21);
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
+    zealotUnitPump = com(Protoss_Gateway) > 0;
     if (vis(Protoss_Pylon) > 2)
         buildOrderCompleted = true;
 }
