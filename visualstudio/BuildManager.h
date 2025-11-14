@@ -52,6 +52,7 @@ public:
     void runUnitQueue();
     void pumpUnit();
 
+    bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
     std::map<BWAPI::UnitType, int>& getUnitQueue();
 };

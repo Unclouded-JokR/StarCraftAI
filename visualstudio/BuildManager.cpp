@@ -19,6 +19,8 @@ void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
+
+
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
@@ -176,11 +178,12 @@ void BuildManager::PvZ() {
 void BuildManager::pumpUnit(){
     const int currentMineral = BWAPI::Broodwar->self()->minerals();
     const int currentGas = BWAPI::Broodwar->self()->gas();
+    int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
     for (auto& unit : buildings)
     {
         //This logic doesnt work
-	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 300 && !alreadySentRequest(unit->getID())) {
+	    if (unit->getType() == Protoss_Gateway && zealotUnitPump && !unit->isTraining() && !alreadySentRequest(unit->getID())) {
             trainUnit(Protoss_Zealot, unit);
 	    }
         
@@ -201,6 +204,8 @@ void BuildManager::PvT_2Gateway_Observer() {
 
     unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
     unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
+    //Start pumping Zealots once 1st Dragoon built, can be changed
+    zealotUnitPump = vis(Protoss_Dragoon) > 0;
     if (vis(Protoss_Observatory) > 0)
         buildOrderCompleted = true;
 }
