@@ -72,10 +72,8 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
-	//Uncomment this when we the scotuing manager does not take a worker immediately.
 	scoutingManager.onStart();
 
-	//building manager on start does nothing as of now.
 	buildManager.onStart();
 }
 
@@ -139,6 +137,7 @@ void ProtoBotCommander::onFrame()
 		}
 	}
 	Tools::updateCount();
+
 	buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
@@ -248,6 +247,7 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
+
 	if(All::transitionReady)
 		All::currentBuild = "Completed";
 	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";

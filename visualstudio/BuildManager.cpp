@@ -73,9 +73,7 @@ void BuildManager::assignBuilding(BWAPI::Unit unit)
 
 bool BuildManager::isBuildOrderCompleted()
 {
-    if(transitionReady)
-        return true;
-    return false;
+    return buildOrderCompleted;
 }
 
 bool BuildManager::requestedBuilding(BWAPI::UnitType building)
@@ -137,8 +135,6 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 void BuildManager::onFrame() {
     spenderManager.OnFrame();
     updateBuild();
-    //runBuildQueue();
-    buildAdditionalSupply();
     pumpUnit();
 
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
@@ -149,16 +145,11 @@ void BuildManager::onFrame() {
 
     for (BWAPI::Unit building : buildings)
     {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), "Assigned Building");
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
     }
 }
 
 void BuildManager::updateBuild() {
-    //buildQueue.clear();
-
-
-    //opener();
-
     BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
 
     if (enemyRace == BWAPI::Races::Protoss)
@@ -178,75 +169,53 @@ void BuildManager::updateBuild() {
 
 }
 
-void BuildManager::opener() {
-}
-void BuildManager::generic() {
-}
-
 void BuildManager::PvT() {
-    default_build();
     PvT_2Gateway_Observer();
 }
 
 void BuildManager::PvP() {
-    
-    default_build();
     PvP_10_12_Gateway();
 }
 
 void BuildManager::PvZ() {
-    default_build();
     PvZ_10_12_Gateway();
 }
 
-
-void BuildManager::default_build() {
-    
-}
-void BuildManager::buildAdditionalSupply()
-{
-    const int unusedSupply = GetTotalSupply(true) - Broodwar->self()->supplyUsed();
-    if (unusedSupply >= 3) { return; }
-    const UnitType supplyProviderType = Broodwar->self()->getRace().getSupplyProvider();
-    const bool startedBuilding = BuildBuilding(supplyProviderType);
-}
 void BuildManager::pumpUnit(){
     const int currentMineral = BWAPI::Broodwar->self()->minerals();
     const int currentGas = BWAPI::Broodwar->self()->gas();
+
     for (auto& unit : buildings)
     {
-	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 500) {
-            unit -> train(Protoss_Zealot);
+        //This logic doesnt work
+	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 500 && !alreadySentRequest(unit->getID())) {
+            trainUnit(Protoss_Zealot, unit);
 	    }
+
         //Train Zealots and Dragoons on a 2:1 ratio
-        if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentGas > 300 && vis(Protoss_Dragoon)<=vis(Protoss_Zealot)/2) {
-            unit -> train(Protoss_Dragoon);
+        if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentGas > 300 && vis(Protoss_Dragoon)<=vis(Protoss_Zealot)/2 && !alreadySentRequest(unit->getID())) {
+            trainUnit(Protoss_Dragoon, unit);
 	    }
 
     }
 }
 
-
-
 void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
-    transitionReady = vis(Protoss_Observatory) > 0;
 
-    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed();
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
     switch (currentSupply)
     {
-        case 16:
+        case 8:
         {
             if (alreadySentRequest0 == false && vis(Protoss_Pylon) == 0)
             {
                 buildBuilding(Protoss_Pylon);
                 alreadySentRequest0 = true;
-                cout << "0" << endl;
             }
             break;
         }
-        case 20:
+        case 10:
         {
             if (alreadySentRequest1 == false && vis(Protoss_Gateway) == 0)
             {
@@ -255,7 +224,7 @@ void BuildManager::PvT_2Gateway_Observer() {
             }
             break;
         }
-        case 24:
+        case 12:
         {
             if (alreadySentRequest2 == false && vis(Protoss_Assimilator) == 0)
             {
@@ -264,7 +233,7 @@ void BuildManager::PvT_2Gateway_Observer() {
             }
             break;
         }
-        case 28:
+        case 14:
         {
             if (alreadySentRequest3 == false && vis(Protoss_Cybernetics_Core) == 0)
             {
@@ -273,34 +242,32 @@ void BuildManager::PvT_2Gateway_Observer() {
             }
             break;
         }
-        case 30:
+        case 15:
         {
-            if (alreadySentRequest4 == false && vis(Protoss_Pylon) == 1)
+            if (alreadySentRequest4 == false)
             {
                 buildBuilding(Protoss_Pylon);
                 alreadySentRequest4 = true;
             }
             break;
         }
-        
-        case 34: case 36: //in case of worker bugging out
+        //This is fine since the timming for this to happen is thin, we can improve closest worker to build next semester.
+        case 17: case 18:
         {
-            if (vis(Protoss_Dragoon) == 0)
+            if (alreadySentRequest5 = false)
             {
-                
                 for (auto& unit : buildings)
                 {
-	                if (unit->getType() == Protoss_Gateway) {
-                    unit -> train(Protoss_Dragoon);
-                    // calling trainUnit sometimes makes the game hiccup and break the worker queue, using train() for now
-	                }
+                    if (unit->getType() == Protoss_Gateway && !alreadySentRequest(unit->getID()))
+                    {
+                        trainUnit(Protoss_Dragoon, unit);
+                    }
                 }
-                
+                alreadySentRequest5 = true;
             }
             break;
         }
-        
-        case 44:
+        case 22:
         {
             if (alreadySentRequest6 == false && vis(Protoss_Pylon) == 2)
             {
@@ -309,16 +276,17 @@ void BuildManager::PvT_2Gateway_Observer() {
             }
             break;
         }
-        case 50:
+        case 25:
         {
             if (alreadySentRequest7 == false && vis(Protoss_Robotics_Facility) == 0)
             {
                 buildBuilding(Protoss_Robotics_Facility);
+                buildBuilding(Protoss_Pylon);
                 alreadySentRequest7 = true;
             }
             break;
         }
-        case 58:
+        case 29:
         {
             if (alreadySentRequest8 == false && vis(Protoss_Gateway) == 1)
             {
@@ -327,7 +295,7 @@ void BuildManager::PvT_2Gateway_Observer() {
             }
             break;
         }
-        case 62:
+        case 31:
         {
             if (alreadySentRequest9 == false && vis(Protoss_Pylon) == 3)
             {
@@ -336,13 +304,13 @@ void BuildManager::PvT_2Gateway_Observer() {
             }
             break;
         }
-        case 76:
+        case 38:
         {
             if (alreadySentRequest10 == false && vis(Protoss_Observatory) == 0)
             {
                 buildBuilding(Protoss_Observatory);
                 alreadySentRequest10 = true;
-                transitionReady = true;
+                std::cout << "Build Order Completed\n";
             }
             break;
         }
@@ -355,11 +323,11 @@ void BuildManager::PvP_10_12_Gateway() {
     currentBuild = "PvP_10/12_Gateway";
     transitionReady = vis(Protoss_Pylon) > 2;
 
-    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed();
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
     switch (currentSupply)
     {
-        case 16:
+        case 8:
         {
             if (alreadySentRequest0 == false && vis(Protoss_Pylon) == 0)
             {
@@ -368,7 +336,7 @@ void BuildManager::PvP_10_12_Gateway() {
             }
             break;
         }
-        case 20:
+        case 10:
         {
             if (alreadySentRequest1 == false && vis(Protoss_Gateway) == 0)
             {
@@ -378,7 +346,7 @@ void BuildManager::PvP_10_12_Gateway() {
             }
             break;
         }
-        case 24:
+        case 12:
         {
             if (alreadySentRequest2 == false && vis(Protoss_Gateway) == 1)
             {
@@ -388,20 +356,21 @@ void BuildManager::PvP_10_12_Gateway() {
             }
             break;
         }
-        case 26:
+        case 13:
         {
             if (vis(Protoss_Zealot) == 0)
             {
                 for (auto& unit : buildings)
                 {
-	                if (unit->getType() == Protoss_Gateway) {
-                    unit -> train(Protoss_Zealot);
-	                }
+                    if (unit->getType() == Protoss_Gateway)
+                    {
+                        trainUnit(Protoss_Zealot, unit);
+                    }
                 }
             }
             break;
         }
-        case 32:
+        case 16:
         {
             if (alreadySentRequest4 == false && vis(Protoss_Pylon) == 1)
             {
@@ -418,13 +387,11 @@ void BuildManager::PvP_10_12_Gateway() {
 
 void BuildManager::PvZ_10_12_Gateway() {
     currentBuild = "PvZ_10/12_Gateway";
-    transitionReady = vis(Protoss_Pylon) > 2;
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
-    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed();
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
     switch (currentSupply)
     {
-        case 16:
+        case 8:
         {
             if (alreadySentRequest0 == false && vis(Protoss_Pylon) == 0)
             {
@@ -433,7 +400,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             }
             break;
         }
-        case 20:
+        case 10:
         {
             if (alreadySentRequest1 == false && vis(Protoss_Gateway) == 0)
             {
@@ -443,7 +410,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             }
             break;
         }
-        case 24:
+        case 12:
         {
             if (alreadySentRequest2 == false && vis(Protoss_Gateway) == 1)
             {
@@ -453,7 +420,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             }
             break;
         }
-        case 26:
+        case 13:
         {
             if (vis(Protoss_Zealot) == 0)
             {
@@ -466,7 +433,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             }
             break;
         }
-        case 30:
+        case 15:
         {
             if (alreadySentRequest4 == false && vis(Protoss_Pylon) == 1)
             {
@@ -476,7 +443,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             break;
         }
         
-        case 34:
+        case 17:
         {
             if (vis(Protoss_Zealot) == 1)
             {
@@ -492,7 +459,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             break;
         }
         
-        case 38:
+        case 19:
         {
             if (vis(Protoss_Zealot) == 2)
             {
@@ -507,7 +474,7 @@ void BuildManager::PvZ_10_12_Gateway() {
             }
             break;
         }
-        case 42:
+        case 21:
         {
             if (alreadySentRequest7 == false && vis(Protoss_Pylon) == 3)
             {

@@ -14,8 +14,9 @@ public:
     ProtoBotCommander* commanderReference;
     SpenderManager spenderManager;
 
-    //This should be removed when build orders are set in place. This is just meant to be able to send one build request.
     bool buildOrderCompleted = false;
+
+    //This should be removed when build orders are set in place. This is just meant to be able to send one build request.
     bool alreadySentRequest0 = false;
     bool alreadySentRequest1 = false;
     bool alreadySentRequest2 = false;
@@ -56,19 +57,15 @@ public:
     void preBuildOrder();
     void getBuildOrder();
     void updateBuild();
-    void opener();
-    void generic();
 
     void PvP();
     void PvT();
     void PvZ();
-    void default_build();
     void PvT_2Gateway_Observer();
     void PvP_10_12_Gateway();
     void PvZ_10_12_Gateway();
     void runBuildQueue();
     void pumpUnit();
-    void buildAdditionalSupply();
 
     std::map<BWAPI::UnitType, int>& getBuildQueue();
 };

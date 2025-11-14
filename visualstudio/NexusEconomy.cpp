@@ -15,8 +15,7 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 
 	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
 	maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
-	maximumWorkers = 40; //optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
-	// Set to 40 for now for build order
+	maximumWorkers = optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
 
 	for (BWAPI::Unit mineral : minerals)
 	{
@@ -41,6 +40,9 @@ void NexusEconomy::OnFrame()
 	}
 
 	if (assimilator != nullptr) BWAPI::Broodwar->drawTextMap(assimilator->getPosition(), std::to_string(assimilator->getID()).c_str());
+
+	std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size());
+	BWAPI::Broodwar->drawTextMap(nexus->getPosition(), temp.c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{

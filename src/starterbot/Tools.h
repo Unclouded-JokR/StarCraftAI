@@ -10,7 +10,6 @@ namespace Tools
     BWAPI::Unit GetClosestUnitTo(BWAPI::Position p, const BWAPI::Unitset& units);
     BWAPI::Unit GetClosestUnitTo(BWAPI::Unit unit, const BWAPI::Unitset& units);
 
-
     int CountUnitsOfType(BWAPI::UnitType type, const BWAPI::Unitset& units);
     int getVisibleCount(BWAPI::UnitType type, const BWAPI::Unitset& units);
     BWAPI::Unit GetUnitOfType(BWAPI::UnitType type);
@@ -34,6 +33,7 @@ namespace Tools
     int getDeadCount(BWAPI::UnitType);
 
     void updateCount();
+
     /// Returns the self owned total unit count of this UnitType
     static int vis(BWAPI::UnitType t) {
         return Tools::getVisibleCount(t);
