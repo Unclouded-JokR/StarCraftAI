@@ -49,13 +49,16 @@ public:
     void PvP_10_12_Gateway();
     void PvZ_10_12_Gateway();
     void runBuildQueue();
+    void runUnitQueue();
     void pumpUnit();
 
     std::map<BWAPI::UnitType, int>& getBuildQueue();
+    std::map<BWAPI::UnitType, int>& getUnitQueue();
 };
 
 namespace All {
     inline std::map <BWAPI::UnitType, int> buildQueue;
+    inline std::map <BWAPI::UnitType, int> unitQueue;
     inline std::map <BWAPI::TechType, int> techQueue;
 
     inline std::string currentBuild = "";

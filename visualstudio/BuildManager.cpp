@@ -127,6 +127,7 @@ void BuildManager::onFrame() {
     buildQueue.clear();
     updateBuild();
     runBuildQueue();
+    runUnitQueue();
     pumpUnit();
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
     //for (BWAPI::Unit building : buildingWarps)
@@ -179,9 +180,10 @@ void BuildManager::pumpUnit(){
     for (auto& unit : buildings)
     {
         //This logic doesnt work
-	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 500 && !alreadySentRequest(unit->getID())) {
+	    if (unit->getType() == Protoss_Gateway && !unit->isTraining() && currentMineral > 300 && !alreadySentRequest(unit->getID())) {
             trainUnit(Protoss_Zealot, unit);
 	    }
+        
     }
 }
 
@@ -196,6 +198,9 @@ void BuildManager::PvT_2Gateway_Observer() {
     buildQueue[Protoss_Cybernetics_Core] = (currentSupply >= 14);
     buildQueue[Protoss_Robotics_Facility] = (currentSupply >= 25);
     buildQueue[Protoss_Observatory] = (currentSupply >= 38);
+
+    unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
+    unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
     if (vis(Protoss_Observatory) > 0)
         buildOrderCompleted = true;
 }
@@ -222,6 +227,7 @@ void BuildManager::PvZ_10_12_Gateway() {
 }
 
 std::map<UnitType, int>& BuildManager::getBuildQueue() { return buildQueue; }
+std::map<UnitType, int>& BuildManager::getUnitQueue() { return unitQueue; }
 
 void BuildManager::runBuildQueue() {
     for (auto& [building, count] : getBuildQueue()) {
@@ -231,4 +237,21 @@ void BuildManager::runBuildQueue() {
             buildBuilding(building);
             }
         }
+}
+
+void BuildManager::runUnitQueue() {
+    for (auto& build : buildings)
+    {
+        for (auto& [unit, count] : getUnitQueue()) {
+            int queuedCount = 0;
+            while (count > (queuedCount + vis(unit)) && !requestedBuilding(unit) && !checkUnitIsPlanned(unit)) {
+                queuedCount++;
+               
+                if (build->getType() == Protoss_Gateway && !alreadySentRequest(build->getID()) && !build->isTraining())
+                    trainUnit(unit, build);
+                if (build->getType() == Protoss_Robotics_Facility && !alreadySentRequest(build->getID()) && !build->isTraining())
+                    trainUnit(unit, build);
+            }
+        }
+    }
 }
