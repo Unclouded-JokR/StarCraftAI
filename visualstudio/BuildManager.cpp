@@ -1,8 +1,14 @@
 #include "BuildManager.h"
 #include "ProtoBotCommander.h"
+#include <fstream>
 #include "../src/starterbot/Tools.h"
 #include "../src/starterbot/MapTools.h"
 
+using namespace BWAPI;
+using namespace Tools;
+using namespace All;
+using namespace UnitTypes;
+using namespace std;
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
 {
@@ -14,119 +20,7 @@ void BuildManager::onStart()
     //Make false at the start of a game.
     buildOrderCompleted = false;
 
-    alreadySentRequest0 = false;
-    alreadySentRequest1 = false;
-    alreadySentRequest2 = false;
-    alreadySentRequest3 = false;
-    alreadySentRequest4 = false;
-    alreadySentRequest5 = false;
-    alreadySentRequest6 = false;
-    alreadySentRequest7 = false;
-    alreadySentRequest8 = false;
-}
 
-void BuildManager::onFrame()
-{
-    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
-
-    spenderManager.OnFrame();
-
-    switch (currentSupply)
-    {
-        case 8:
-        {
-            if (alreadySentRequest0 == false)
-            {
-                buildBuilding(BWAPI::UnitTypes::Protoss_Pylon);
-                alreadySentRequest0 = true;
-            }
-            break;
-        }
-        case 10:
-        {
-            if (alreadySentRequest1 == false)
-            {
-                buildBuilding(BWAPI::UnitTypes::Protoss_Gateway);
-                alreadySentRequest1 = true;
-            }
-            break;
-        }
-        case 12:
-        {
-            if (alreadySentRequest2 == false)
-            {
-                buildBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
-                alreadySentRequest2 = true;
-                buildOrderCompleted = true;
-            }
-            break;
-        }
-        /*case 14:
-        {
-            if (alreadySentRequest3 == false)
-            {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
-                alreadySentRequest3 = true;
-            }
-            break;
-        }
-        case 15:
-        {
-            if (alreadySentRequest4 == false)
-            {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-                alreadySentRequest4 = true;
-            }
-            break;
-        }
-        case 17:
-        {
-            buildUnitType(BWAPI::UnitTypes::Protoss_Dragoon);
-            break;
-        }
-        case 25:
-        {
-            if (alreadySentRequest5 == false)
-            {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Robotics_Facility);
-                alreadySentRequest5 = true;
-            }
-            break;
-        }
-        case 29:
-        {
-            if (alreadySentRequest6 == false)
-            {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Gateway);
-                alreadySentRequest6 = true;
-            }
-            break;
-        }
-        case 32:
-        {
-            if (alreadySentRequest7 == false)
-            {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Pylon);
-                alreadySentRequest7 = true;
-            }
-            break;
-        }
-        case 38:
-        {
-            if (alreadySentRequest8 == false)
-            {
-                spenderManager.addRequest(BWAPI::UnitTypes::Protoss_Observatory);
-                alreadySentRequest8 = true;
-                buildOrderCompleted = true;
-            }
-            break;
-        }
-        default:
-        {
-            break;
-        }*/
-    }
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
@@ -226,6 +120,143 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
         {
             buildingWarps.erase(unit);
             break;
+        }
+    }
+}
+
+void BuildManager::onFrame() {
+    spenderManager.OnFrame();
+    buildQueue.clear();
+    updateBuild();
+    runBuildQueue();
+    runUnitQueue();
+    pumpUnit();
+    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
+    //for (BWAPI::Unit building : buildingWarps)
+    //{
+    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
+    //}
+
+    for (BWAPI::Unit building : buildings)
+    {
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
+    }
+}
+
+void BuildManager::updateBuild() {
+    BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
+
+    if (enemyRace == BWAPI::Races::Protoss)
+    {
+        PvP_10_12_Gateway();
+    }
+    if (enemyRace == BWAPI::Races::Terran)
+    {
+        PvT_2Gateway_Observer();
+    }
+    if (enemyRace == BWAPI::Races::Zerg)
+    {
+        PvZ_10_12_Gateway();
+    }
+    else
+        PvT_2Gateway_Observer(); 
+
+}
+
+void BuildManager::PvT() {
+    PvT_2Gateway_Observer();
+}
+
+void BuildManager::PvP() {
+    PvP_10_12_Gateway();
+}
+
+void BuildManager::PvZ() {
+    PvZ_10_12_Gateway();
+}
+
+void BuildManager::pumpUnit(){
+    const int currentMineral = BWAPI::Broodwar->self()->minerals();
+    const int currentGas = BWAPI::Broodwar->self()->gas();
+    int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+    for (auto& unit : buildings)
+    {
+	    if (unit->getType() == Protoss_Gateway && zealotUnitPump && !unit->isTraining() && !alreadySentRequest(unit->getID())) {
+            trainUnit(Protoss_Zealot, unit);
+	    }
+    }
+}
+
+void BuildManager::PvT_2Gateway_Observer() {
+    currentBuild = "PvT_2Gateway_Observer";
+
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+    buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
+    buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
+    buildQueue[Protoss_Assimilator] = (currentSupply >= 12);
+    buildQueue[Protoss_Cybernetics_Core] = (currentSupply >= 14);
+    buildQueue[Protoss_Robotics_Facility] = (currentSupply >= 25);
+    buildQueue[Protoss_Observatory] = (currentSupply >= 38);
+
+    unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
+    unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
+    //Start pumping Zealots once 1st Dragoon built, can be changed
+    zealotUnitPump = vis(Protoss_Dragoon) > 0;
+    if (vis(Protoss_Observatory) > 0)
+        buildOrderCompleted = true;
+}
+
+void BuildManager::PvP_10_12_Gateway() {
+    currentBuild = "PvP_10/12_Gateway";
+
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+    buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 16);
+    buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
+    zealotUnitPump = com(Protoss_Gateway) > 0;
+    if (vis(Protoss_Pylon) > 1)
+        buildOrderCompleted = true;
+}
+
+void BuildManager::PvZ_10_12_Gateway() {
+    currentBuild = "PvZ_10/12_Gateway";
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+    buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 21);
+    buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
+    zealotUnitPump = com(Protoss_Gateway) > 0;
+    if (vis(Protoss_Pylon) > 2)
+        buildOrderCompleted = true;
+}
+
+std::map<UnitType, int>& BuildManager::getBuildQueue() { return buildQueue; }
+std::map<UnitType, int>& BuildManager::getUnitQueue() { return unitQueue; }
+
+void BuildManager::runBuildQueue() {
+    for (auto& [building, count] : getBuildQueue()) {
+        int queuedCount = 0;
+        while (count > (queuedCount + vis(building)) && !requestedBuilding(building) && !checkUnitIsPlanned(building)) {
+            queuedCount++;
+            buildBuilding(building);
+            }
+        }
+}
+
+void BuildManager::runUnitQueue() {
+    for (auto& build : buildings)
+    {
+        for (auto& [unit, count] : getUnitQueue()) {
+            int queuedCount = 0;
+            while (count > (queuedCount + vis(unit)) && !requestedBuilding(unit) && !checkUnitIsPlanned(unit)) {
+                queuedCount++;
+               
+                if (build->getType() == Protoss_Gateway && !alreadySentRequest(build->getID()) && !build->isTraining())
+                    trainUnit(unit, build);
+                if (build->getType() == Protoss_Robotics_Facility && !alreadySentRequest(build->getID()) && !build->isTraining())
+                    trainUnit(unit, build);
+            }
         }
     }
 }

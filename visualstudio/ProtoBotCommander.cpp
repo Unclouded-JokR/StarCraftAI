@@ -72,10 +72,8 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
-	//Uncomment this when we the scotuing manager does not take a worker immediately.
 	scoutingManager.onStart();
 
-	//building manager on start does nothing as of now.
 	buildManager.onStart();
 }
 
@@ -138,6 +136,7 @@ void ProtoBotCommander::onFrame()
 			break;
 		}
 	}
+	Tools::updateCount();
 
 	buildManager.onFrame();
 
@@ -248,7 +247,10 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	std::string buildOrderSelectedString = "Selected Build Order: " + buildOrderSelected + "\n";
+	if(buildManager.isBuildOrderCompleted())
+		All::currentBuild = "Completed";
+	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
+	
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
 	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 20), buildOrderSelectedString.c_str());
 	Tools::DrawUnitCommands();
@@ -291,6 +293,9 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 	return buildManager.requestedBuilding(building);
 }
 
+//[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
+//You can also change the name of this in order to make it clear what "getAvalibleWorker()" is doing.
+//Also get rid of the self get Units, eco should return a unit, not a null ptr.
 BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
 	if (BWAPI::Unit u = economyManager.getAvalibleWorker())
