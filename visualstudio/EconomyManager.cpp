@@ -102,6 +102,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 bool EconomyManager::checkAssimilator()
 {
     //This will probably need to be improved so we can tell where to build this assimlator instead of true of false.
+    //Make the nexus economy call the build manager instead.
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         if (nexusEconomy.assimilator != nullptr)
