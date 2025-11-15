@@ -57,7 +57,28 @@ void Squad::attack(BWAPI::Position initialAttackPos) {
 void Squad::attackMove(BWAPI::Unit unit, BWAPI::Position position) {
 
 	// If unit or position is invalid, return
-	if (!unit || !position.isValid()) {
+	if (!unit) {
+		return;
+	}
+
+	// If position invalid, check for valid position around it
+	if (!position.isValid()) {
+		BWAPI::Position newPos;
+		int searches = 0;
+		int min = -50;
+		int max = 50;
+
+		// Limit searches to 25 attempts
+		while (searches < 25) {
+			newPos = position + BWAPI::Position(min + rand() % (max - min + 1), min + rand() % (max - min + 1));
+			if (newPos.isValid()) {
+				position = newPos;
+				break;
+			}
+			searches += 1;
+		}
+
+		// If no valid position found, return (do nothing)
 		return;
 	}
 
@@ -87,10 +108,18 @@ void Squad::attackUnit(BWAPI::Unit unit, BWAPI::Unit target) {
 		return;
 	}
 
-	// If the target is cloaked, RUN!!!
+	// If the target is cloaked, RUN TOWARDS BASE!!!
 	if (target->isCloaked()) {
-		BWAPI::Position kiteVector = unit->getPosition() - target->getPosition();
-		BWAPI::Position kitePosition = unit->getPosition() + kiteVector;
+		BWAPI::Unitset selfUnits = BWAPI::Broodwar->self()->getUnits();
+		BWAPI::Position kitePosition;
+
+		// If cloaked enemy detected and can't attack it, run towards Nexus
+		for (auto& unit : selfUnits) {
+			if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus) {
+				kitePosition = unit->getPosition();
+				break;
+			}
+		}
 		unit->move(kitePosition);
 		return;
 	}
@@ -115,10 +144,18 @@ void Squad::attackKite(BWAPI::Unit unit, BWAPI::Unit target) {
 		return;
 	}
 
-	// If the target is cloaked, RUN
+	// If the target is cloaked, RUN TOWARDS BASE!!!
 	if (target->isCloaked()) {
-		BWAPI::Position kiteVector = unit->getPosition() - target->getPosition();
-		BWAPI::Position kitePosition = unit->getPosition() + kiteVector;
+		BWAPI::Unitset selfUnits = BWAPI::Broodwar->self()->getUnits();
+		BWAPI::Position kitePosition;
+
+		// If cloaked enemy detected and can't attack it, run towards Nexus
+		for (auto& unit : selfUnits) {
+			if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus) {
+				kitePosition = unit->getPosition();
+				break;
+			}
+		}
 		unit->move(kitePosition);
 		return;
 	}
