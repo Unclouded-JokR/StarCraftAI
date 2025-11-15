@@ -3,6 +3,7 @@
 #include <bwem.h>
 #include <vector>
 #include <optional>
+#include <cstddef>
 
 class ProtoBotCommander;
 
@@ -34,7 +35,7 @@ private:
     BWAPI::Position enemyMainPos = BWAPI::Positions::Invalid;
 
     std::vector<BWAPI::TilePosition> startTargets;
-    int nextTarget = 0;
+    std::size_t nextTarget = 0;
     State state = State::Done;
 
     // Gas steal bookkeeping
@@ -48,13 +49,13 @@ private:
     // ---- tunables (kept small/simple) ----
     static constexpr int kCloseEnoughToTarget   = 96;
     static constexpr int kMoveCooldownFrames    = 8;
-    static constexpr int kOrbitRadius           = 192;
+    static constexpr int kOrbitRadius           = 350;
     static constexpr int kGasStealRetryCooldown = 24; // ~1s
     static constexpr int kHarassRadiusFromMain  = 320;
 
     // ---- helpers ----
     void buildStartTargets();
-    void issueMoveToward(const BWAPI::Position& p, int reissueDist = 32);
+    void issueMoveToward(const BWAPI::Position& p, int reissueDist = 32, bool force = false);
 
     bool seeAnyEnemyBuildingNear(const BWAPI::Position& p, int radius) const;
     bool anyRefineryOn(BWAPI::Unit geyser) const;
@@ -66,9 +67,25 @@ private:
     BWAPI::Position currentOrbitPoint() const;
     void advanceOrbitIfArrived();
     bool threatenedNow() const;
+    BWAPI::Position getAvgPosition();
+    bool planTerrainPathTo(const BWAPI::Position& goal);
+    bool hasPlannedPath() const { return !plannedPath.empty(); }
+    BWAPI::Position currentPlannedWaypoint() const;
+    static inline BWAPI::Position clampToMapPx(const BWAPI::Position& p, int marginPx = 32);
+    static BWAPI::Position snapToNearestWalkable(BWAPI::Position p, int maxRadiusPx = 128);
+
+    BWAPI::Position computeOrbitCenter() const;                 // enemy main if known, else scout pos
+    static int normDeg(int d) { d %= 360; return d < 0 ? d + 360 : d; }
+    static int angleDeg(const BWAPI::Position& from, const BWAPI::Position& to);
 
     // orbit data
     std::vector<BWAPI::Position> orbitWaypoints;
-    int orbitIdx = 0;
+    std::vector<BWAPI::Position> plannedPath;
+    std::size_t orbitIdx = 0;
     int dwellUntilFrame = 0;
+
+    // ---- ScoutingManager members ----
+    int lastHP = -1, lastShields = -1;
+    int lastThreatFrame = -999999;
+    static constexpr int kThreatRearmFrames = 8;
 };
