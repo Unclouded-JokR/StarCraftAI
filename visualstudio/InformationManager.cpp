@@ -234,7 +234,6 @@ double InformationManager::evaluateGameState() const
             {
                 auto t = u->getType();
                 if (!t.isValid() || !t.isBuilding()) continue;
-                if (t.isSpellcaster()) score += 10;
                 if (t.gasPrice() > 0) score += 5;
             }
         }
@@ -244,7 +243,6 @@ double InformationManager::evaluateGameState() const
             {
                 auto t = b.type;
                 if (!t.isValid()) continue;
-                if (t.isSpellcaster()) score += 10;
                 if (t.gasPrice() > 0) score += 5;
             }
         }
