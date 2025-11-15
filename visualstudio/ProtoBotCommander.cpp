@@ -117,7 +117,9 @@ void ProtoBotCommander::onFrame()
 		case ActionType::Action_Scout:
 		{
 			if (!scoutingManager.hasScout()) {
-				if (BWAPI::Unit u = getUnitToScout()) {
+				std::cout << "Reuqesting scouts!\n";
+				//Scouts are not being requested
+				if (BWAPI::Unit u = economyManager.getUnitScout()) {
 					scoutingManager.assignScout(u);
 				}
 			}

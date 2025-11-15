@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\src",
+    "\\src\\starterbot",
+    "\\visualstudio"
   ],
-  "SelectedNode": "\\STARTcraft.sln",
+  "SelectedNode": "\\visualstudio\\ProtoBotCommander.cpp",
   "PreviewInSolutionExplorer": false
 }

@@ -301,26 +301,38 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 			{
 				unitToReturn = unit;
 			}
-			workers.erase(unit);
+			//workers.erase(unit);
 			break;
 		}
 	}
 
-	if (unitToReturn != nullptr) return unitToReturn;
+	if (unitToReturn != nullptr)
+	{
+		workers.erase(unitToReturn);
+		std::cout << "Reuqesting Worker scouts!\n";
+		return unitToReturn;
+	}
+		
 
 	//Choose random unit if we did not find unit.
 
 	for (BWAPI::Unit unit : workers)
 	{
+
 		if (unit->isCarryingMinerals())
 		{
 			unitToReturn = unit;
 			break;
 		}
-		workers.erase(unit);
+		//workers.erase(unit);
 	}
 
-	if (unitToReturn != nullptr) return unitToReturn;
+	if (unitToReturn != nullptr)
+	{
+		workers.erase(unitToReturn);
+		std::cout << "Reuqesting Worker scouts!\n";
+		return unitToReturn;
+	}
 
 	//If not unit is avalible that meets prior conditions choose unit randomly for now.
 	const int random = rand() % workers.size();
@@ -335,13 +347,15 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 			mineralWorkerCount[assignedMineral] -= 1;
 			unitToReturn = unit;
 			assignedResource.erase(unit);
-			workers.erase(unit);
+			//workers.erase(unit);
 			break;
 		}
 
 		index++;
 	}
 
+	workers.erase(unitToReturn);
+	std::cout << "Reuqesting Worker scouts!\n";
 	return unitToReturn;
 }
 

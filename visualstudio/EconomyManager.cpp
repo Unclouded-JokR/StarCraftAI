@@ -99,12 +99,35 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
     }
 }
 
+bool EconomyManager::checkAssimilator()
+{
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        if (nexusEconomy.maximumWorkerAmount/2 == nexusEconomy.assimilatorWorkerCount)
+        {
+            return true;
+        }
+    }
+}
+
 //[TODO]: Get the closest worker to the request we are trying to make.
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
+        //BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToScout();
+
+        if (unitToReturn != nullptr) return unitToReturn;
+    }
+}
+
+BWAPI::Unit EconomyManager::getUnitScout()
+{
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        //BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
+        BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToScout();
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
