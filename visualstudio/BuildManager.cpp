@@ -127,9 +127,14 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 void BuildManager::onFrame() {
     spenderManager.OnFrame();
     buildQueue.clear();
-    updateBuild();
-    runBuildQueue();
-    runUnitQueue();
+
+    if (!buildOrderCompleted)
+    {
+        updateBuild();
+        runBuildQueue();
+        runUnitQueue();
+    }
+
     pumpUnit();
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
     //for (BWAPI::Unit building : buildingWarps)
@@ -184,15 +189,10 @@ void BuildManager::pumpUnit() {
     {
         if (unit->getType() == Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            const int temp = rand() % 3;
-
-            if (!unit->canTrain(Protoss_Dragoon))
+            if (unit->canTrain(Protoss_Dragoon))
             {
-                if (unit->canTrain(Protoss_Dragoon))
-                {
-                    trainUnit(Protoss_Dragoon, unit);
-                    cout << "Training Dragoon\n";
-                }
+                trainUnit(Protoss_Dragoon, unit);
+                cout << "Training Dragoon\n";
             }
         }
         else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))

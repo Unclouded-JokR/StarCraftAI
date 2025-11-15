@@ -34,6 +34,7 @@
     <ClCompile Include="Squad.cpp" />
     <ClCompile Include="SpenderManager.cpp" />
     <ClCompile Include="NexusEconomy.cpp" />
+    <ClCompile Include="InfluenceMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -69,5 +70,6 @@
     <ClInclude Include="Squad.h" />
     <ClInclude Include="SpenderManager.h" />
     <ClInclude Include="NexusEconomy.h" />
+    <ClInclude Include="InfluenceMap.h" />
   </ItemGroup>
 </Project>

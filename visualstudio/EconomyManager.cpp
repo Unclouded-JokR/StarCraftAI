@@ -116,7 +116,6 @@ BWAPI::Unit EconomyManager::getAvalibleWorker()
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
-        //BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToScout();
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
@@ -126,7 +125,6 @@ BWAPI::Unit EconomyManager::getUnitScout()
 {
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        //BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToScout();
 
         if (unitToReturn != nullptr) return unitToReturn;

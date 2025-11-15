@@ -46,6 +46,8 @@ void NexusEconomy::OnFrame()
 
 	for (BWAPI::Unit worker : workers)
 	{
+		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
+
 		//If a worker is constructing skip over them until they are done.
 		if (worker->isConstructing())
 		{

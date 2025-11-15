@@ -116,11 +116,12 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Scout:
 		{
-			if (!scoutingManager.hasScout()) {
-				std::cout << "Reuqesting scouts!\n";
-				//Scouts are not being requested
-				if (BWAPI::Unit u = economyManager.getUnitScout()) {
+			std::cout << "Reuqesting scout!\n";
+			if (!scoutingManager.hasScout()) 
+			{
+				if (BWAPI::Unit u = getUnitToScout()) {
 					scoutingManager.assignScout(u);
+					std::cout << "Got unit to scout!\n";
 				}
 			}
 			break;
@@ -300,18 +301,21 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 //Also get rid of the self get Units, eco should return a unit, not a null ptr.
 BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
-	if (BWAPI::Unit u = economyManager.getAvalibleWorker())
+	if (BWAPI::Unit u = economyManager.getUnitScout())
+	{
+		std::cout << "Got unit " << u->getID() << " to scout" << "\n";
 		return u;
-
-	// Fallback: find any completed, non-carrying worker
-	for (auto& u : BWAPI::Broodwar->self()->getUnits()) {
-		if (!u->exists()) continue;
-		if (u->getType().isWorker() && u->isCompleted() &&
-			!u->isCarryingMinerals() && !u->isCarryingGas()) {
-			return u;
-		}
 	}
-	return nullptr;
+
+	//// Fallback: find any completed, non-carrying worker
+	//for (auto& u : BWAPI::Broodwar->self()->getUnits()) {
+	//	if (!u->exists()) continue;
+	//	if (u->getType().isWorker() && u->isCompleted() &&
+	//		!u->isCarryingMinerals() && !u->isCarryingGas()) {
+	//		return u;
+	//	}
+	//}
+	//return nullptr;
 }
 
 std::string ProtoBotCommander::enemyRaceCheck()

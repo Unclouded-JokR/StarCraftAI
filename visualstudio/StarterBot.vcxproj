@@ -27,6 +27,7 @@
     <ClInclude Include="BuildManager.h" />
     <ClInclude Include="CombatManager.h" />
     <ClInclude Include="EconomyManager.h" />
+    <ClInclude Include="InfluenceMap.h" />
     <ClInclude Include="InformationManager.h" />
     <ClInclude Include="NexusEconomy.h" />
     <ClInclude Include="ProtoBotCommander.h" />
@@ -62,6 +63,7 @@
     <ClCompile Include="BuildManager.cpp" />
     <ClCompile Include="CombatManager.cpp" />
     <ClCompile Include="EconomyManager.cpp" />
+    <ClCompile Include="InfluenceMap.cpp" />
     <ClCompile Include="InformationManager.cpp" />
     <ClCompile Include="NexusEconomy.cpp" />
     <ClCompile Include="ProtoBotCommander.cpp" />
