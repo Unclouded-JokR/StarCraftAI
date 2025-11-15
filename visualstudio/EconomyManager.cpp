@@ -101,9 +101,10 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
 bool EconomyManager::checkAssimilator()
 {
+    //This will probably need to be improved so we can tell where to build this assimlator instead of true of false.
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        if (nexusEconomy.maximumWorkerAmount/2 == nexusEconomy.assimilatorWorkerCount)
+        if (nexusEconomy.assimilator != nullptr)
         {
             return true;
         }

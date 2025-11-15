@@ -290,6 +290,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	//Get idle units if possible.
 	for (BWAPI::Unit unit : workers)
 	{
+
 		if (unit->isIdle())
 		{
 			if (assignedResource.find(unit) != assignedResource.end())
@@ -320,7 +321,6 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 
 	for (BWAPI::Unit unit : workers)
 	{
-
 		if (unit->isCarryingMinerals())
 		{
 			unitToReturn = unit;
