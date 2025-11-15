@@ -12,7 +12,7 @@ void CombatManager::onStart(){
 }
 
 void CombatManager::onFrame() {
-	// For now, any combat units already owned are assigned to a squad
+	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
 		if (unit->getType().isWorker() || unit->getType().isBuilding()) {
 			continue;
@@ -23,7 +23,10 @@ void CombatManager::onFrame() {
 		}
 	}
 
-	attack();
+	for (auto& squad : Squads) {
+		squad.attack(squad.units.getPosition());
+	}
+	drawDebugInfo();
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
@@ -48,9 +51,9 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	}
 }
 
-void CombatManager::attack() {
+void CombatManager::attack(BWAPI::Position position) {
 	for (auto& squad : Squads) {
-		squad.attack();
+		squad.attack(position);
 	}
 }
 
@@ -108,7 +111,7 @@ Squad CombatManager::assignUnit(BWAPI::Unit unit)
 	return newSquad;
 }
 
-void CombatManager::allSquadsMove(BWAPI::Position position) {
+void CombatManager::move(BWAPI::Position position) {
 	for (auto& squad : Squads) {
 		squad.move(position);
 	}

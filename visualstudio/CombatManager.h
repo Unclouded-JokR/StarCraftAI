@@ -15,10 +15,10 @@ public:
     void onStart();
     void onFrame();
     void onUnitDestroy(BWAPI::Unit unit);
-    void attack();
+    void attack(BWAPI::Position position);
     Squad& addSquad();
     void removeSquad(int squadId);
-    void allSquadsMove(BWAPI::Position position);
+    void move(BWAPI::Position position);
     Squad assignUnit(BWAPI::Unit unit);
     void drawDebugInfo();
     BWAPI::Unit getAvailableUnit();
