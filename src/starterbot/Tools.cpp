@@ -95,6 +95,8 @@ bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
     return unit->build(type, buildPos);
 }
 
+
+
 void Tools::DrawUnitCommands()
 {
     for (auto& unit : BWAPI::Broodwar->self()->getUnits())

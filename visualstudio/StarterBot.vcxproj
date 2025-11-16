@@ -25,6 +25,12 @@
     <ClInclude Include="..\src\starterbot\StarterBot.h" />
     <ClInclude Include="..\src\starterbot\Tools.h" />
     <ClInclude Include="BuildManager.h" />
+    <ClInclude Include="BWEB\Source\Block.h" />
+    <ClInclude Include="BWEB\Source\BWEB.h" />
+    <ClInclude Include="BWEB\Source\JPS.h" />
+    <ClInclude Include="BWEB\Source\PathFind.h" />
+    <ClInclude Include="BWEB\Source\Station.h" />
+    <ClInclude Include="BWEB\Source\Wall.h" />
     <ClInclude Include="CombatManager.h" />
     <ClInclude Include="EconomyManager.h" />
     <ClInclude Include="InfluenceMap.h" />
@@ -61,6 +67,11 @@
     <ClCompile Include="..\src\starterbot\StarterBot.cpp" />
     <ClCompile Include="..\src\starterbot\Tools.cpp" />
     <ClCompile Include="BuildManager.cpp" />
+    <ClCompile Include="BWEB\Source\Block.cpp" />
+    <ClCompile Include="BWEB\Source\BWEB.cpp" />
+    <ClCompile Include="BWEB\Source\PathFind.cpp" />
+    <ClCompile Include="BWEB\Source\Station.cpp" />
+    <ClCompile Include="BWEB\Source\Wall.cpp" />
     <ClCompile Include="CombatManager.cpp" />
     <ClCompile Include="EconomyManager.cpp" />
     <ClCompile Include="InfluenceMap.cpp" />
