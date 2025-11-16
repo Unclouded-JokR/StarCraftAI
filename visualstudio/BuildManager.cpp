@@ -308,7 +308,8 @@ bool BuildManager::ExpansionBuild(BWAPI::UnitType type)
 }
 
 void BuildManager::expansionBuilding(){
-    if(!buildOrderCompleted || vis(Protoss_Nexus > 1) || requestsent)
+    const int currentMineral = BWAPI::Broodwar->self()->minerals();
+    if(currentMineral < 500 || vis(Protoss_Nexus > 1) || requestsent)
         return;
     const bool startedbuilding = BuildManager::ExpansionBuild(Protoss_Nexus);
     requestsent = true;
