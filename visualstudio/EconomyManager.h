@@ -17,7 +17,9 @@ public:
 	void OnFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
+	bool checkAssimilator();
 	BWAPI::Unit getAvalibleWorker();
+	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	bool checkRequestAlreadySent(int unitID);
 };

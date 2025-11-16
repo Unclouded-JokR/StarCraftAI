@@ -4,6 +4,8 @@
 #include <set>
 #include <map>
 #include <iostream>
+#include "InfluenceMap.h"
+
 
 class ProtoBotCommander;
 
@@ -19,6 +21,8 @@ class InformationManager
 private:
     std::set<BWAPI::Unit> _knownEnemies;
     std::map<BWAPI::Unit, EnemyBuildingInfo> _knownEnemyBuildings;
+    InfluenceMap influenceMap;
+    double gameState;
 
 public:
     ProtoBotCommander* commanderReference;
@@ -27,6 +31,7 @@ public:
     void onStart();
     void onFrame();
     void onUnitDestroy(BWAPI::Unit unit);
+    double evaluateGameState() const;
 
     // Utility / debug
     const std::set<BWAPI::Unit>& getKnownEnemies() const { return _knownEnemies; }

@@ -46,6 +46,8 @@ void NexusEconomy::OnFrame()
 
 	for (BWAPI::Unit worker : workers)
 	{
+		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
+
 		//If a worker is constructing skip over them until they are done.
 		if (worker->isConstructing())
 		{
@@ -288,6 +290,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	//Get idle units if possible.
 	for (BWAPI::Unit unit : workers)
 	{
+
 		if (unit->isIdle())
 		{
 			if (assignedResource.find(unit) != assignedResource.end())
@@ -301,12 +304,18 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 			{
 				unitToReturn = unit;
 			}
-			workers.erase(unit);
+			//workers.erase(unit);
 			break;
 		}
 	}
 
-	if (unitToReturn != nullptr) return unitToReturn;
+	if (unitToReturn != nullptr)
+	{
+		workers.erase(unitToReturn);
+		std::cout << "Reuqesting Worker scouts!\n";
+		return unitToReturn;
+	}
+		
 
 	//Choose random unit if we did not find unit.
 
@@ -317,10 +326,15 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 			unitToReturn = unit;
 			break;
 		}
-		workers.erase(unit);
+		//workers.erase(unit);
 	}
 
-	if (unitToReturn != nullptr) return unitToReturn;
+	if (unitToReturn != nullptr)
+	{
+		workers.erase(unitToReturn);
+		std::cout << "Reuqesting Worker scouts!\n";
+		return unitToReturn;
+	}
 
 	//If not unit is avalible that meets prior conditions choose unit randomly for now.
 	const int random = rand() % workers.size();
@@ -335,13 +349,15 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 			mineralWorkerCount[assignedMineral] -= 1;
 			unitToReturn = unit;
 			assignedResource.erase(unit);
-			workers.erase(unit);
+			//workers.erase(unit);
 			break;
 		}
 
 		index++;
 	}
 
+	workers.erase(unitToReturn);
+	std::cout << "Reuqesting Worker scouts!\n";
 	return unitToReturn;
 }
 

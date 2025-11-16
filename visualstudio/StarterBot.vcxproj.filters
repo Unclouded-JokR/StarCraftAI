@@ -39,6 +39,7 @@
     <ClCompile Include="BWEB\Source\PathFind.cpp" />
     <ClCompile Include="BWEB\Source\Station.cpp" />
     <ClCompile Include="BWEB\Source\Wall.cpp" />
+    <ClCompile Include="InfluenceMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -80,5 +81,6 @@
     <ClInclude Include="BWEB\Source\PathFind.h" />
     <ClInclude Include="BWEB\Source\Station.h" />
     <ClInclude Include="BWEB\Source\Wall.h" />
+    <ClInclude Include="InfluenceMap.h" />
   </ItemGroup>
 </Project>

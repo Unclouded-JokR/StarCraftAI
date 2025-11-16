@@ -99,12 +99,36 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
     }
 }
 
+bool EconomyManager::checkAssimilator()
+{
+    //This will probably need to be improved so we can tell where to build this assimlator instead of true of false.
+    //Make the nexus economy call the build manager instead. Should make this super easy then
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        if (nexusEconomy.assimilator != nullptr)
+        {
+            //Break our of loop if a nexus economy already requested
+            return true;
+        }
+    }
+}
+
 //[TODO]: Get the closest worker to the request we are trying to make.
 BWAPI::Unit EconomyManager::getAvalibleWorker()
 {
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
+
+        if (unitToReturn != nullptr) return unitToReturn;
+    }
+}
+
+BWAPI::Unit EconomyManager::getUnitScout()
+{
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToScout();
 
         if (unitToReturn != nullptr) return unitToReturn;
     }

@@ -12,7 +12,7 @@ void CombatManager::onStart(){
 }
 
 void CombatManager::onFrame() {
-	// For now, any combat units already owned are assigned to a squad
+	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
 		if (unit->getType().isWorker() || unit->getType().isBuilding()) {
 			continue;
@@ -23,7 +23,10 @@ void CombatManager::onFrame() {
 		}
 	}
 
-	attack();
+	for (auto& squad : Squads) {
+		squad.attack(squad.units.getPosition());
+	}
+	drawDebugInfo();
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
@@ -48,9 +51,9 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	}
 }
 
-void CombatManager::attack() {
+void CombatManager::attack(BWAPI::Position position) {
 	for (auto& squad : Squads) {
-		squad.attack();
+		squad.attack(position);
 	}
 }
 
@@ -63,7 +66,7 @@ Squad& CombatManager::addSquad(){
 	BWAPI::Color randomColor(r, g, b);
 
 	int id = Squads.size() + 1;
-	int unitSize = 2;
+	int unitSize = 8;
 
 	Squad newSquad(0, id, randomColor, unitSize);
 	Squads.push_back(newSquad);
@@ -108,7 +111,7 @@ Squad CombatManager::assignUnit(BWAPI::Unit unit)
 	return newSquad;
 }
 
-void CombatManager::allSquadsMove(BWAPI::Position position) {
+void CombatManager::move(BWAPI::Position position) {
 	for (auto& squad : Squads) {
 		squad.move(position);
 	}
@@ -121,5 +124,23 @@ bool CombatManager::isAssigned(BWAPI::Unit unit) {
 void CombatManager::drawDebugInfo() {
 	for (Squad squad : Squads) {
 		squad.drawDebugInfo();
+	}
+}
+
+BWAPI::Unit CombatManager::getAvailableUnit(){
+	for (auto& squad : Squads) {
+		// If squad is busy, skip
+		if (squad.isAttacking) {
+			continue;
+		}
+
+		for (auto& unit : squad.units) {
+			if (unit && unit->exists()) {
+				squad.removeUnit(unit);
+				return unit;
+			}
+		}
+
+		return nullptr;
 	}
 }

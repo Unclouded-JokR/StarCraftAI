@@ -14,7 +14,10 @@ public:
 
 	void removeUnit(BWAPI::Unit unit);
 	void move(BWAPI::Position position);
-	void attack();
+	void attack(BWAPI::Position initialAttackPos);
+	void attackMove(BWAPI::Unit unit, BWAPI::Position position);
+	void attackUnit(BWAPI::Unit unit, BWAPI::Unit target);
+	void attackKite(BWAPI::Unit unit, BWAPI::Unit target);
 	void addUnit(BWAPI::Unit unit);
 	void drawDebugInfo();
 };

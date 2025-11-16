@@ -130,9 +130,14 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 void BuildManager::onFrame() {
     spenderManager.OnFrame();
     buildQueue.clear();
-    updateBuild();
-    runBuildQueue();
-    runUnitQueue();
+
+    if (!buildOrderCompleted)
+    {
+        updateBuild();
+        runBuildQueue();
+        runUnitQueue();
+    }
+
     pumpUnit();
     expansionBuilding();
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
@@ -163,7 +168,7 @@ void BuildManager::updateBuild() {
         PvZ_10_12_Gateway();
     }
     else
-        PvT_2Gateway_Observer(); 
+        PvT_2Gateway_Observer();
 
 }
 
@@ -179,16 +184,32 @@ void BuildManager::PvZ() {
     PvZ_10_12_Gateway();
 }
 
-void BuildManager::pumpUnit(){
+void BuildManager::pumpUnit() {
     const int currentMineral = BWAPI::Broodwar->self()->minerals();
     const int currentGas = BWAPI::Broodwar->self()->gas();
     int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
     for (auto& unit : buildings)
     {
-	    if (unit->getType() == Protoss_Gateway && zealotUnitPump && !unit->isTraining() && !alreadySentRequest(unit->getID())) {
-            trainUnit(Protoss_Zealot, unit);
-	    }
+        if (unit->getType() == Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
+        {
+            if (unit->canTrain(Protoss_Dragoon))
+            {
+                trainUnit(Protoss_Dragoon, unit);
+                cout << "Training Dragoon\n";
+            }
+        }
+        else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
+        {
+            //20 percent chance to create a 
+            const int temp = rand() % 5;
+
+            if (temp == 0)
+            {
+                trainUnit(Protoss_Observer, unit);
+                cout << "Training Observer\n";
+            }
+        }
     }
 }
 
@@ -207,9 +228,10 @@ void BuildManager::PvT_2Gateway_Observer() {
 
     unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
     unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
-    //Start pumping Zealots once 1st Dragoon built, can be changed
-    zealotUnitPump = vis(Protoss_Dragoon) > 0;
-    if (vis(Protoss_Observatory) > 0)
+
+    ////Start pumping Zealots once 1st Dragoon built, can be changed
+    //zealotUnitPump = vis(Protoss_Dragoon) > 0;
+    if (currentSupply >= 38)
         buildOrderCompleted = true;
 }
 
@@ -247,8 +269,8 @@ void BuildManager::runBuildQueue() {
             if (building.isResourceDepot())
                 ExpansionBuild(building);
             buildBuilding(building);
-            }
         }
+    }
 }
 
 void BuildManager::runUnitQueue() {
@@ -258,7 +280,7 @@ void BuildManager::runUnitQueue() {
             int queuedCount = 0;
             while (count > (queuedCount + vis(unit)) && !requestedBuilding(unit) && !checkUnitIsPlanned(unit)) {
                 queuedCount++;
-               
+
                 if (build->getType() == Protoss_Gateway && !alreadySentRequest(build->getID()) && !build->isTraining())
                     trainUnit(unit, build);
                 if (build->getType() == Protoss_Robotics_Facility && !alreadySentRequest(build->getID()) && !build->isTraining())
