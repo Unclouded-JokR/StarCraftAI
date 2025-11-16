@@ -20,6 +20,9 @@ void BuildManager::onStart()
     //Make false at the start of a game.
     buildOrderCompleted = false;
 
+    BWEB::Map::onStart();
+	BWEB::Blocks::findBlocks();
+	BWEB::Stations::findStations();
 
 }
 
@@ -260,3 +263,8 @@ void BuildManager::runUnitQueue() {
         }
     }
 }
+
+const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingNatural(); }
+BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
+BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getStartingNatural()->getBase()->Location(); }
+const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }

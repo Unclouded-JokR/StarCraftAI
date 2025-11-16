@@ -3,6 +3,7 @@
 #include <variant>
 #include "SpenderManager.h"
 #include "../src/starterbot/Tools.h"
+#include "../visualstudio/BWEB/Source/BWEB.h"
 
 
 
@@ -55,6 +56,8 @@ public:
     bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
     std::map<BWAPI::UnitType, int>& getUnitQueue();
+
+    const BWEB::Station * const getMyNatural();
 };
 
 namespace All {

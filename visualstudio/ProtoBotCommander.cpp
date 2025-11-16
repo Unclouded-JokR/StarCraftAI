@@ -21,6 +21,9 @@ void ProtoBotCommander::onStart()
 	// Initialize BWEM with BWAPI's game pointer
 	Map::Instance().Initialize();
 
+	// Initialize BWEB
+
+
 	// Find the bases for the starting locations
 	bool foundBases = Map::Instance().FindBasesForStartingLocations();
 	assert(foundBases);     // make sure we found the bases

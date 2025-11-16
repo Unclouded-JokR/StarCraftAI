@@ -34,6 +34,11 @@
     <ClCompile Include="Squad.cpp" />
     <ClCompile Include="SpenderManager.cpp" />
     <ClCompile Include="NexusEconomy.cpp" />
+    <ClCompile Include="BWEB\Source\Block.cpp" />
+    <ClCompile Include="BWEB\Source\BWEB.cpp" />
+    <ClCompile Include="BWEB\Source\PathFind.cpp" />
+    <ClCompile Include="BWEB\Source\Station.cpp" />
+    <ClCompile Include="BWEB\Source\Wall.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -69,5 +74,11 @@
     <ClInclude Include="Squad.h" />
     <ClInclude Include="SpenderManager.h" />
     <ClInclude Include="NexusEconomy.h" />
+    <ClInclude Include="BWEB\Source\Block.h" />
+    <ClInclude Include="BWEB\Source\BWEB.h" />
+    <ClInclude Include="BWEB\Source\JPS.h" />
+    <ClInclude Include="BWEB\Source\PathFind.h" />
+    <ClInclude Include="BWEB\Source\Station.h" />
+    <ClInclude Include="BWEB\Source\Wall.h" />
   </ItemGroup>
 </Project>
