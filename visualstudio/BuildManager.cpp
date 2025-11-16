@@ -134,6 +134,7 @@ void BuildManager::onFrame() {
     runBuildQueue();
     runUnitQueue();
     pumpUnit();
+    expansionBuilding();
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
     //for (BWAPI::Unit building : buildingWarps)
     //{
@@ -202,6 +203,7 @@ void BuildManager::PvT_2Gateway_Observer() {
     buildQueue[Protoss_Cybernetics_Core] = (currentSupply >= 14);
     buildQueue[Protoss_Robotics_Facility] = (currentSupply >= 25);
     buildQueue[Protoss_Observatory] = (currentSupply >= 38);
+    //buildQueue[Protoss_Nexus] = (currentSupply >= 20);
 
     unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
     unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
@@ -242,6 +244,8 @@ void BuildManager::runBuildQueue() {
         int queuedCount = 0;
         while (count > (queuedCount + vis(building)) && !requestedBuilding(building) && !checkUnitIsPlanned(building)) {
             queuedCount++;
+            if (building.isResourceDepot())
+                ExpansionBuild(building);
             buildBuilding(building);
             }
         }
@@ -268,3 +272,22 @@ const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingN
 BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
 BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getStartingNatural()->getBase()->Location(); }
 const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }
+
+bool BuildManager::ExpansionBuild(BWAPI::UnitType type)
+{
+    BWAPI::UnitType builderType = type.whatBuilds().first;
+    BWAPI::Unit builder = Tools::GetUnitOfType(builderType);
+    if (!builder) { return false; }
+    BWAPI::TilePosition desiredPos = getNaturalTile();
+    int maxBuildRange = 64;
+    bool buildingOnCreep = type.requiresCreep();
+    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
+    return builder->build(type, buildPos);
+}
+
+void BuildManager::expansionBuilding(){
+    if(!buildOrderCompleted || vis(Protoss_Nexus > 1) || requestsent)
+        return;
+    const bool startedbuilding = BuildManager::ExpansionBuild(Protoss_Nexus);
+    requestsent = true;
+}

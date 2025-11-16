@@ -52,12 +52,15 @@ public:
     void runBuildQueue();
     void runUnitQueue();
     void pumpUnit();
+    void expansionBuilding();
 
     bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
     std::map<BWAPI::UnitType, int>& getUnitQueue();
 
     const BWEB::Station * const getMyNatural();
+    bool ExpansionBuild(BWAPI::UnitType type);
+    bool requestsent = false;
 };
 
 namespace All {

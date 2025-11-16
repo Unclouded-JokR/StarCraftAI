@@ -6,6 +6,8 @@ using namespace BWAPI;
 namespace BWEB {
 
     namespace {
+        const Station * startMainStation = nullptr;
+        const Station * startNatStation = nullptr;
         vector<Station> stations;
         vector<const BWEM::Base *> mainBases;
         vector<const BWEM::Base *> natBases;
@@ -670,6 +672,9 @@ namespace BWEB::Stations {
                 stations.push_back(newStation);
             }
         }
+        startMainStation = Stations::getClosestMainStation(Broodwar->self()->getStartLocation());
+        if (startMainStation)
+            startNatStation = Stations::getClosestNaturalStation(startMainStation->getChokepoint() ? TilePosition(startMainStation->getChokepoint()->Center()) : TilePosition(startMainStation->getBase()->Center()));
     }
 
     void draw()
@@ -678,6 +683,8 @@ namespace BWEB::Stations {
             station.draw();
     }
 
+    const Station * getStartingMain() { return startMainStation; }
+    const Station * getStartingNatural() { return startNatStation; }
     Station * getClosestStation(TilePosition here)
     {
         auto distBest = DBL_MAX;

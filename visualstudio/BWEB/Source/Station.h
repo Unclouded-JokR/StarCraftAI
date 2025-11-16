@@ -60,10 +60,10 @@ namespace BWEB {
         BWAPI::TilePosition getSmallPosition() { return smallPosition; }
 
         /// <summary> Returns the BWEM Base associated with this Station. </summary>
-        const BWEM::Base * getBase() { return base; }
+        const BWEM::Base * getBase() const { return base; }
 
         /// <summary> Returns the BWEM Choke that should be used for generating a Wall at. </summmary>
-        const BWEM::ChokePoint * getChokepoint() { return choke; }
+        const BWEM::ChokePoint * getChokepoint() const { return choke; }
 
         /// <summary> Returns true if the Station is a main Station. </summary>
         bool isMain() { return main; }
@@ -104,5 +104,11 @@ namespace BWEB {
 
         /// <summary> Calls the draw function for each Station that exists. </summary>
         void draw();
+
+        /// <summary> Returns the BWEB::Station of the starting main. </summary>
+        const Station * getStartingMain();
+
+        /// <summary> Returns the BWEB::Station of the starting natural. </summary>
+        const Station * getStartingNatural();
     }
 }

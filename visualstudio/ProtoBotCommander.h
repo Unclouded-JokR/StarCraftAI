@@ -13,7 +13,6 @@
 #include <cstdlib>
 #include <variant>
 #include "../../BWEM/src/bwem.h"
-#include "../visualstudio/BWEB/Source/BWEB.h"
 
 #define FRAMES_PER_SECOND 24
 
