@@ -60,6 +60,29 @@ void InformationManager::onFrame()
         ++it;
     }
 
+    for (auto enemy : BWAPI::Broodwar->enemy()->getUnits())
+    {
+        int id = enemy->getID();
+
+        TrackedEnemy& e = knownEnemies[id];
+        e.id = id;
+        e.type = enemy->getType();
+        e.lastSeenPos = enemy->getPosition();
+        e.isBuilding = enemy->getType().isBuilding();
+        e.destroyed = false;
+    }
+
+    void InformationManager::onUnitDestroy(BWAPI::Unit unit)
+    {
+        if (unit->getPlayer() == BWAPI::Broodwar->enemy()) {
+            int id = unit->getID();
+            auto it = knownEnemies.find(id);
+            if (it != knownEnemies.end()) {
+                it->second.destroyed = true;
+            }
+        }
+    }
+
     // Update influence map with known enemy units
     //for (auto& enemy : _knownEnemies)
     //{

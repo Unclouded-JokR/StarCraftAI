@@ -16,11 +16,20 @@ struct EnemyBuildingInfo
     bool destroyed = false;
 };
 
+struct TrackedEnemy {
+    BWAPI::UnitType type;
+    BWAPI::Position lastSeenPos;
+    int id;                 // Unit ID
+    bool isBuilding;
+    bool destroyed = false;
+};
+
 class InformationManager
 {
 private:
     std::set<BWAPI::Unit> _knownEnemies;
     std::map<BWAPI::Unit, EnemyBuildingInfo> _knownEnemyBuildings;
+    std::unordered_map<int, TrackedEnemy> knownEnemies;
     InfluenceMap influenceMap;
     double gameState;
 
