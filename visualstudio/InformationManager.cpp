@@ -17,11 +17,22 @@ void InformationManager::onStart()
 void InformationManager::onFrame()
 {
     // Track visible enemies
-    for (auto& enemy : BWAPI::Broodwar->enemy()->getUnits())
+    for (auto enemy : BWAPI::Broodwar->enemy()->getUnits())
     {
+        if (!enemy || !enemy->exists()) continue;
+
+        int id = enemy->getID();
+
+        TrackedEnemy& entry = trackedEnemies[id];
+        entry.id = id;
+        entry.type = enemy->getType();
+        entry.lastSeenPos = enemy->getPosition();
+        entry.isBuilding = enemy->getType().isBuilding();
+        entry.destroyed = false;  // ensure it's active
+
+        // Also keep your existing containers updated
         _knownEnemies.insert(enemy);
 
-        // Remember buildings
         if (enemy->getType().isBuilding())
         {
             EnemyBuildingInfo& info = _knownEnemyBuildings[enemy];
@@ -30,6 +41,7 @@ void InformationManager::onFrame()
             info.destroyed = false;
         }
     }
+
 
     // Remove destroyed units
     std::set<BWAPI::Unit> toRemove;
@@ -40,6 +52,24 @@ void InformationManager::onFrame()
     }
     for (auto& unit : toRemove)
         _knownEnemies.erase(unit);
+
+    // Update trackedEnemies for non-visible units
+    for (auto& pair : trackedEnemies)
+    {
+        int id = pair.first;
+        TrackedEnemy& entry = pair.second;
+
+        BWAPI::Unit u = BWAPI::Broodwar->getUnit(id);
+
+        bool visible = (u && u->exists() && u->isVisible());
+
+        if (visible)
+        {
+            // Update last seen position
+            entry.lastSeenPos = u->getPosition();
+        }
+    }
+
 
     // Update building info in fog of war
     for (auto it = _knownEnemyBuildings.begin(); it != _knownEnemyBuildings.end();)
@@ -64,7 +94,7 @@ void InformationManager::onFrame()
     {
         int id = enemy->getID();
 
-        TrackedEnemy& e = knownEnemies[id];
+        TrackedEnemy& e = trackedEnemies[id];
         e.id = id;
         e.type = enemy->getType();
         e.lastSeenPos = enemy->getPosition();
@@ -72,18 +102,7 @@ void InformationManager::onFrame()
         e.destroyed = false;
     }
 
-    /*void InformationManager::onUnitDestroy(BWAPI::Unit unit)
-    {
-        if (unit->getPlayer() == BWAPI::Broodwar->enemy()) {
-            int id = unit->getID();
-            auto it = knownEnemies.find(id);
-            if (it != knownEnemies.end()) {
-                it->second.destroyed = true;
-            }
-        }
-    }*/
-
-    // Update influence map with known enemy units
+    //// Update influence map with known enemy units
     //for (auto& enemy : _knownEnemies)
     //{
     //    if (enemy && enemy->exists())
@@ -118,27 +137,37 @@ void InformationManager::onFrame()
     }*/
 
     // Comment this out if you don't want the terminal output to be flooded
-    /*if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
-    {
-        std::cout << "Tracking " << _knownEnemies.size() << " enemy units, "
-            << _knownEnemyBuildings.size() << " enemy buildings.\n";
-        printKnownEnemies();
-        printKnownEnemyBuildings();
-    }
+    //if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
+    //{
+    //    std::cout << "Tracking " << _knownEnemies.size() << " enemy units, "
+    //        << _knownEnemyBuildings.size() << " enemy buildings.\n";
+    //    printKnownEnemies();
+    //    printKnownEnemyBuildings();
+    //    printTrackedEnemies();
+    //}
 
-    if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
-    {
-        std::cout << influenceMap.toStringSummary();
-    }
+    //if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
+    //{
+    //    std::cout << influenceMap.toStringSummary();
+    //}
 
-    if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
-    {
-        std::cout << "Game state is: " << gameState << std::endl;
-    }*/
+    //if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
+    //{
+    //    std::cout << "Game state is: " << gameState << std::endl;
+    //}
 }
 
 void InformationManager::onUnitDestroy(BWAPI::Unit unit)
 {
+    if (!unit) return;
+
+    int id = unit->getID();
+
+    // Mark in trackedEnemies
+    auto it = trackedEnemies.find(id);
+    if (it != trackedEnemies.end())
+        it->second.destroyed = true;
+
     if (unit->getPlayer() == BWAPI::Broodwar->enemy())
     {
         // Mark destroyed building
@@ -149,9 +178,11 @@ void InformationManager::onUnitDestroy(BWAPI::Unit unit)
                 it->second.destroyed = true;
         }
 
+        // Remove from knownEnemies
         _knownEnemies.erase(unit);
     }
 }
+
 
 void InformationManager::printKnownEnemies() const
 {
@@ -173,6 +204,23 @@ void InformationManager::printKnownEnemyBuildings() const
             << (info.destroyed ? " [destroyed]" : "") << "\n";
     }
 }
+
+void InformationManager::printTrackedEnemies() const
+{
+    std::cout << "Tracked enemies (" << trackedEnemies.size() << "):\n";
+
+    for (const auto& [id, e] : trackedEnemies)
+    {
+        std::cout << " - ID: " << id
+            << " | Type: " << e.type.c_str()
+            << " | Last seen at: ("
+            << e.lastSeenPos.x << ", " << e.lastSeenPos.y << ")"
+            << " | Building: " << (e.isBuilding ? "yes" : "no")
+            << " | Destroyed: " << (e.destroyed ? "yes" : "no")
+            << "\n";
+    }
+}
+
 
 double InformationManager::evaluateGameState() const
 {

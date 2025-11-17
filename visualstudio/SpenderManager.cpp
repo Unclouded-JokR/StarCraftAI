@@ -53,19 +53,19 @@ void SpenderManager::printQueue()
     int index = 1;
     for (BuildRequest buildRequest : buildRequests)
     {
-        if (holds_alternative<BuildStructureRequest>(buildRequest.request))
+        if (std::holds_alternative<BuildStructureRequest>(buildRequest.request))
         {
-            const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
+            const BuildStructureRequest buildingInQueue = std::get<BuildStructureRequest>(buildRequest.request);
             std::cout << "Index: " << index << " " << buildingInQueue.buildingType << "\n";
         }
-        else if (holds_alternative<TrainUnitRequest>(buildRequest.request))
+        else if (std::holds_alternative<TrainUnitRequest>(buildRequest.request))
         {
-            const TrainUnitRequest unitInQueue = get<TrainUnitRequest>(buildRequest.request);
+            const TrainUnitRequest unitInQueue = std::get<TrainUnitRequest>(buildRequest.request);
             std::cout << "Index: " << index << " " << unitInQueue.unitType << "\n";
         }
-        else if (holds_alternative<ResearchUpgradeRequest>(buildRequest.request))
+        else if (std::holds_alternative<ResearchUpgradeRequest>(buildRequest.request))
         {
-            const ResearchUpgradeRequest upgradeInQueue = get<ResearchUpgradeRequest>(buildRequest.request);
+            const ResearchUpgradeRequest upgradeInQueue = std::get<ResearchUpgradeRequest>(buildRequest.request);
             std::cout << "Index: " << index << " " << upgradeInQueue.upgradeType << "\n";
         }
         index++;
@@ -127,9 +127,9 @@ bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
 
     for (BuildRequest& buildRequest : buildRequests)
     {
-        if (holds_alternative<BuildStructureRequest>(buildRequest.request))
+        if (std::holds_alternative<BuildStructureRequest>(buildRequest.request))
         {
-            const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
+            const BuildStructureRequest buildingInQueue = std::get<BuildStructureRequest>(buildRequest.request);
 
             if (buildingInQueue.buildingType == building)
             {
@@ -154,9 +154,9 @@ void SpenderManager::OnFrame()
 
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
     {
-        if (holds_alternative<BuildStructureRequest>(it->request))
+        if (std::holds_alternative<BuildStructureRequest>(it->request))
         {
-            const BuildStructureRequest temp = get<BuildStructureRequest>(it->request);
+            const BuildStructureRequest temp = std::get<BuildStructureRequest>(it->request);
 
             mineralPrice = temp.buildingType.mineralPrice();
             gasPrice = temp.buildingType.gasPrice();
@@ -208,9 +208,9 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
-        else if (holds_alternative<TrainUnitRequest>(it->request))
+        else if (std::holds_alternative<TrainUnitRequest>(it->request))
         {
-            const TrainUnitRequest temp = get<TrainUnitRequest>(it->request);
+            const TrainUnitRequest temp = std::get<TrainUnitRequest>(it->request);
 
             mineralPrice = temp.unitType.mineralPrice();
             gasPrice = temp.unitType.gasPrice();
@@ -239,9 +239,9 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
-        else if (holds_alternative<ResearchUpgradeRequest>(it->request))
+        else if (std::holds_alternative<ResearchUpgradeRequest>(it->request))
         {
-            ResearchUpgradeRequest temp = get<ResearchUpgradeRequest>(it->request);
+            ResearchUpgradeRequest temp = std::get<ResearchUpgradeRequest>(it->request);
 
             mineralPrice = temp.upgradeType.mineralPrice();
             gasPrice = temp.upgradeType.gasPrice();

@@ -1,6 +1,6 @@
 bin/./visualstudio/CombatManager.cpp.o: visualstudio/CombatManager.cpp \
- visualstudio/CombatManager.h visualstudio/../src/starterbot/Tools.h \
- src/bwapi/include/BWAPI.h src/bwapi/include/BWAPI/InterfaceEvent.h \
+ visualstudio/CombatManager.h src/bwapi/include/BWAPI.h \
+ src/bwapi/include/BWAPI/InterfaceEvent.h \
  src/bwapi/include/BWAPI/Interface.h src/bwapi/include/BWAPI/AIModule.h \
  src/bwapi/include/BWAPI/Position.h \
  src/bwapi/include/BWAPI/TournamentAction.h \
@@ -27,9 +27,25 @@ bin/./visualstudio/CombatManager.cpp.o: visualstudio/CombatManager.cpp \
  src/bwapi/include/BWAPI/Regionset.h src/bwapi/include/BWAPI/Streams.h \
  src/bwapi/include/BWAPI/TechType.h src/bwapi/include/BWAPI/UnitCommand.h \
  src/bwapi/include/BWAPI/UnitCommandType.h \
- src/bwapi/include/BWAPI/Unitset.h
+ src/bwapi/include/BWAPI/Unitset.h visualstudio/Squad.h \
+ visualstudio/ProtoBotCommander.h visualstudio/StrategyManager.h \
+ visualstudio/EconomyManager.h visualstudio/../src/starterbot/Tools.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h \
+ BWEM/src/bwem.h BWEM/src/map.h BWEM/src/tiles.h BWEM/src/area.h \
+ BWEM/src/bwapiExt.h BWEM/src/utils.h BWEM/src/defs.h BWEM/src/cp.h \
+ BWEM/src/base.h BWEM/src/neutral.h BWEM/src/gridMap.h \
+ BWEM/src/examples.h BWEM/src/exampleWall.h BWEM/src/mapPrinter.h \
+ BWEM/src/mapDrawer.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Block.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/PathFind.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Station.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h \
+ visualstudio/NexusEconomy.h visualstudio/InformationManager.h \
+ visualstudio/InfluenceMap.h visualstudio/ScoutingManager.h \
+ visualstudio/BuildManager.h visualstudio/SpenderManager.h \
+ src/bwapi/../../src/starterbot/MapTools.h \
+ src/bwapi/../../src/starterbot/Grid.hpp src/bwapi/../../BWEM/src/bwem.h
 visualstudio/CombatManager.h:
-visualstudio/../src/starterbot/Tools.h:
 src/bwapi/include/BWAPI.h:
 src/bwapi/include/BWAPI/InterfaceEvent.h:
 src/bwapi/include/BWAPI/Interface.h:
@@ -77,3 +93,37 @@ src/bwapi/include/BWAPI/TechType.h:
 src/bwapi/include/BWAPI/UnitCommand.h:
 src/bwapi/include/BWAPI/UnitCommandType.h:
 src/bwapi/include/BWAPI/Unitset.h:
+visualstudio/Squad.h:
+visualstudio/ProtoBotCommander.h:
+visualstudio/StrategyManager.h:
+visualstudio/EconomyManager.h:
+visualstudio/../src/starterbot/Tools.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h:
+BWEM/src/bwem.h:
+BWEM/src/map.h:
+BWEM/src/tiles.h:
+BWEM/src/area.h:
+BWEM/src/bwapiExt.h:
+BWEM/src/utils.h:
+BWEM/src/defs.h:
+BWEM/src/cp.h:
+BWEM/src/base.h:
+BWEM/src/neutral.h:
+BWEM/src/gridMap.h:
+BWEM/src/examples.h:
+BWEM/src/exampleWall.h:
+BWEM/src/mapPrinter.h:
+BWEM/src/mapDrawer.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Block.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/PathFind.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Station.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h:
+visualstudio/NexusEconomy.h:
+visualstudio/InformationManager.h:
+visualstudio/InfluenceMap.h:
+visualstudio/ScoutingManager.h:
+visualstudio/BuildManager.h:
+visualstudio/SpenderManager.h:
+src/bwapi/../../src/starterbot/MapTools.h:
+src/bwapi/../../src/starterbot/Grid.hpp:
+src/bwapi/../../BWEM/src/bwem.h:

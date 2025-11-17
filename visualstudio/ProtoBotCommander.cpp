@@ -112,19 +112,19 @@ void ProtoBotCommander::onFrame()
 	{
 		case ActionType::Action_Expand:
 		{
-			const Expand value = get<Expand>(action.commanderAction);
+			const Expand value = std::get<Expand>(action.commanderAction);
 			requestBuild(value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Build:
 		{
-			const Build value = get<Build>(action.commanderAction);
+			const Build value = std::get<Build>(action.commanderAction);
 			requestBuild(value.unitToBuild);
 			break;
 		}
 		case ActionType::Action_Scout:
 		{
-			std::cout << "Reuqesting scout!\n";
+			std::cout << "Requesting scout!\n";
 			if (!scoutingManager.hasScout()) 
 			{
 				if (BWAPI::Unit u = getUnitToScout()) {

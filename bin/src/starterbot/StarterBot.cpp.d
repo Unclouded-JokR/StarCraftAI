@@ -33,16 +33,16 @@ bin/./src/starterbot/StarterBot.cpp.o: src/starterbot/StarterBot.cpp \
  src/starterbot/../../visualstudio/BuildManager.h \
  src/starterbot/../../visualstudio/SpenderManager.h \
  src/starterbot/../../visualstudio/../src/starterbot/Tools.h \
- src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/BWEB.h \
+ src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h \
  BWEM/src/bwem.h BWEM/src/map.h BWEM/src/tiles.h BWEM/src/area.h \
  BWEM/src/bwapiExt.h BWEM/src/utils.h BWEM/src/defs.h BWEM/src/cp.h \
  BWEM/src/base.h BWEM/src/neutral.h BWEM/src/gridMap.h \
  BWEM/src/examples.h BWEM/src/exampleWall.h BWEM/src/mapPrinter.h \
  BWEM/src/mapDrawer.h \
- src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/Block.h \
- src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/PathFind.h \
- src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/Station.h \
- src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/Wall.h \
+ src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Block.h \
+ src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/PathFind.h \
+ src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Station.h \
+ src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h \
  src/starterbot/../../visualstudio/CombatManager.h \
  src/starterbot/../../visualstudio/Squad.h \
  src/starterbot/../../visualstudio/InformationManager.h \
@@ -104,7 +104,7 @@ src/starterbot/../../visualstudio/StrategyManager.h:
 src/starterbot/../../visualstudio/BuildManager.h:
 src/starterbot/../../visualstudio/SpenderManager.h:
 src/starterbot/../../visualstudio/../src/starterbot/Tools.h:
-src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/BWEB.h:
+src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h:
 BWEM/src/bwem.h:
 BWEM/src/map.h:
 BWEM/src/tiles.h:
@@ -120,10 +120,10 @@ BWEM/src/examples.h:
 BWEM/src/exampleWall.h:
 BWEM/src/mapPrinter.h:
 BWEM/src/mapDrawer.h:
-src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/Block.h:
-src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/PathFind.h:
-src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/Station.h:
-src/starterbot/../../visualstudio/../visualstudio/BWEB/Source/Wall.h:
+src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Block.h:
+src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/PathFind.h:
+src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Station.h:
+src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h:
 src/starterbot/../../visualstudio/CombatManager.h:
 src/starterbot/../../visualstudio/Squad.h:
 src/starterbot/../../visualstudio/InformationManager.h:
