@@ -266,8 +266,8 @@ void BuildManager::runBuildQueue() {
         int queuedCount = 0;
         while (count > (queuedCount + vis(building)) && !requestedBuilding(building) && !checkUnitIsPlanned(building)) {
             queuedCount++;
-            if (building.isResourceDepot())
-                ExpansionBuild(building);
+            //if (building.isResourceDepot())
+            //    ExpansionBuild(building);
             buildBuilding(building);
         }
     }
@@ -290,27 +290,23 @@ void BuildManager::runUnitQueue() {
     }
 }
 
-const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingNatural(); }
-BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
-BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getStartingNatural()->getBase()->Location(); }
-const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }
-
-bool BuildManager::ExpansionBuild(BWAPI::UnitType type)
-{
-    BWAPI::UnitType builderType = type.whatBuilds().first;
-    BWAPI::Unit builder = Tools::GetUnitOfType(builderType);
-    if (!builder) { return false; }
-    BWAPI::TilePosition desiredPos = getNaturalTile();
-    int maxBuildRange = 64;
-    bool buildingOnCreep = type.requiresCreep();
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
-    return builder->build(type, buildPos);
+// Test function to build a nexus, will be replaced with an addRequest from spenderManager
+void BuildManager::expansionBuilding(){
+    if(!buildOrderCompleted || vis(Protoss_Nexus > 1) || requestsent)
+        return;
+    const bool startedbuilding = Tools::ExpansionBuild(Tools::GetUnitOfType(Protoss_Probe));
+    requestsent = true;
 }
 
-void BuildManager::expansionBuilding(){
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
-    if(currentMineral < 500 || vis(Protoss_Nexus > 1) || requestsent)
-        return;
-    const bool startedbuilding = BuildManager::ExpansionBuild(Protoss_Nexus);
-    requestsent = true;
+vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race){
+    vector<BuildList> builds;
+    if (race == BWAPI::Races::Terran)
+        builds.push_back(&BuildManager::PvT_2Gateway_Observer);
+    if (race == BWAPI::Races::Protoss)
+        builds.push_back(&BuildManager::PvP_10_12_Gateway);    
+    if (race == BWAPI::Races::Zerg)
+        builds.push_back(&BuildManager::PvZ_10_12_Gateway);
+    else
+        builds.push_back(&BuildManager::PvT_2Gateway_Observer);
+    return builds;
 }
