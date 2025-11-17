@@ -319,3 +319,23 @@ void Tools::updateCount() {
         }
     }
 }
+
+const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingNatural(); }
+BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
+BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getStartingNatural()->getBase()->Location(); }
+const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }
+
+bool Tools::ExpansionBuild(BWAPI::Unit unit)
+{
+    int maxBuildRange = 64;
+    BWAPI:TilePosition desiredPos = getNaturalTile();
+    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(Protoss_Nexus, desiredPos, maxBuildRange);
+    return unit->build(Protoss_Nexus, buildPos);
+}
+
+bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type, BWAPI::TilePosition tile)
+{
+    int maxBuildRange = 128;
+    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, tile, maxBuildRange);
+    return unit->build(type, buildPos);
+}

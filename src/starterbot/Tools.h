@@ -1,6 +1,7 @@
 #pragma once
 
 #include <BWAPI.h>
+#include "../../visualstudio/BWEB/Source/BWEB.h"
 
 namespace Tools
 {
@@ -17,6 +18,7 @@ namespace Tools
 
     bool BuildBuilding(BWAPI::UnitType type);
     bool BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type);
+    bool BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type, BWAPI::TilePosition tile);
 
     void DrawUnitBoundingBoxes();
     void DrawUnitCommands();
@@ -31,6 +33,8 @@ namespace Tools
     int getCompleteCount(BWAPI::UnitType);
     int getTotalCount(BWAPI::UnitType);
     int getDeadCount(BWAPI::UnitType);
+    bool ExpansionBuild(BWAPI::Unit unit);
+    const BWEB::Station * const getMyNatural();
 
     void updateCount();
 

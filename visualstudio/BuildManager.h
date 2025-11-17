@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include <string>
 #include <BWAPI.h>
 #include <variant>
 #include "SpenderManager.h"
@@ -57,9 +59,10 @@ public:
     bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
     std::map<BWAPI::UnitType, int>& getUnitQueue();
+    using BuildList = void (BuildManager::*)();
+    std::vector<BuildList> getBuildOrders(BWAPI::Race race);
 
-    const BWEB::Station * const getMyNatural();
-    bool ExpansionBuild(BWAPI::UnitType type);
+    
     bool requestsent = false;
 };
 
