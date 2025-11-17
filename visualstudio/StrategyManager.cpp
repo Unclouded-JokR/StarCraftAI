@@ -269,9 +269,17 @@ Action StrategyManager::onFrame()
 		return action;
 	}
 
+	//Check for assimilators on nexus economies here.
+	/*else if(workerSet != nullptr)
+	{
+		Exapnd action;
+		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
+	}*/
+
 	if (!commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Nexus))
 	{
-		if (BWAPI::Broodwar->self()->minerals() > 1000 
+		//Have ridiculous amount of minerals
+		if (BWAPI::Broodwar->self()->minerals() > 3000 
 			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Nexus)))
 		{
 			Expand actionToTake;
@@ -281,6 +289,8 @@ Action StrategyManager::onFrame()
 			action.type = ActionType::Action_Expand;
 			return action;
 		}
+
+		//Add expansion times here
 	}
 
 	/*else if(workerSet != nullptr)
