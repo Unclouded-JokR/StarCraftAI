@@ -290,9 +290,8 @@ void BuildManager::runUnitQueue() {
     }
 }
 
-
+// Test function to build a nexus, will be replaced with an addRequest from spenderManager
 void BuildManager::expansionBuilding(){
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
     if(!buildOrderCompleted || vis(Protoss_Nexus > 1) || requestsent)
         return;
     const bool startedbuilding = Tools::ExpansionBuild(Tools::GetUnitOfType(Protoss_Probe));
