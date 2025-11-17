@@ -1,5 +1,7 @@
 #include "ProtoBotCommander.h"
 
+namespace { auto& theMap = BWEM::Map::Instance(); }
+
 ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(this), economyManager(this), scoutingManager(this), combatManager(this), informationManager(this)
 {
 
@@ -18,16 +20,16 @@ void ProtoBotCommander::onStart()
 	// Enable the flag that tells BWAPI to let users enter input while bot plays
 	BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
-	// Initialize BWEM with BWAPI's game pointer
-	Map::Instance().Initialize();
-
-
-	// Find the bases for the starting locations
-	bool foundBases = Map::Instance().FindBasesForStartingLocations();
-	assert(foundBases);     // make sure we found the bases
+	std::cout << "Map initialization...\n";
+	theMap.Initialize();
+	theMap.EnableAutomaticPathAnalysis();
+	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
+	assert(startingLocationsOK);
 
 	// Call MapTools OnStart
 	m_mapTools.onStart();
+
+
 
 	/*
 	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
@@ -76,6 +78,8 @@ void ProtoBotCommander::onStart()
 	scoutingManager.onStart();
 
 	buildManager.onStart();
+
+	std::cout << "gg\n";
 }
 
 void ProtoBotCommander::onFrame()
@@ -92,6 +96,9 @@ void ProtoBotCommander::onFrame()
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
+	
+	//BWEM::utils::gridMapExample(theMap);
+	//BWEM::utils::drawMap(theMap);
 
 	/*
 	* Protobot Modules
@@ -255,8 +262,13 @@ void ProtoBotCommander::drawDebugInformation()
 		All::currentBuild = "Completed";
 	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
 	
-	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 10), currentState.c_str());
-	BWAPI::Broodwar->drawTextScreen(BWAPI::Position(10, 20), buildOrderSelectedString.c_str());
+	BWAPI::Broodwar->drawTextScreen(0, 0, currentState.c_str());
+	BWAPI::Broodwar->drawTextScreen(0, 10 , buildOrderSelectedString.c_str());
+
+	// Display the game frame rate as text in the upper left area of the screen
+	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
+	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
+
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 }

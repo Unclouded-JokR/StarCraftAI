@@ -130,6 +130,7 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 void BuildManager::onFrame() {
     spenderManager.OnFrame();
     buildQueue.clear();
+    BWEB::Map::draw();
 
     if (!buildOrderCompleted)
     {

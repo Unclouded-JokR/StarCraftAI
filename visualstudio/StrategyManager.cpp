@@ -269,24 +269,19 @@ Action StrategyManager::onFrame()
 		return action;
 	}
 
-	/*if (!commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus))
+	if (!commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Nexus))
 	{
-		if (BWAPI::Broodwar->self()->minerals() > 3000 && !nexusRequestSent)
+		if (BWAPI::Broodwar->self()->minerals() > 1000 
+			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Nexus)))
 		{
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-
-			nexusRequestSent = true;
 
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
 		}
 	}
-	else
-	{
-		nexusRequestSent = false;
-	}*/
 
 	/*else if(workerSet != nullptr)
 	{

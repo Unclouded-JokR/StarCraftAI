@@ -335,7 +335,7 @@ bool Tools::ExpansionBuild(BWAPI::Unit unit)
 
 bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type, BWAPI::TilePosition tile)
 {
-    int maxBuildRange = 128;
+    int maxBuildRange = 256;
     BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, tile, maxBuildRange);
     return unit->build(type, buildPos);
 }

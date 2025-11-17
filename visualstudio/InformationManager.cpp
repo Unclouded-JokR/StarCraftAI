@@ -72,7 +72,7 @@ void InformationManager::onFrame()
         e.destroyed = false;
     }
 
-    void InformationManager::onUnitDestroy(BWAPI::Unit unit)
+    /*void InformationManager::onUnitDestroy(BWAPI::Unit unit)
     {
         if (unit->getPlayer() == BWAPI::Broodwar->enemy()) {
             int id = unit->getID();
@@ -81,7 +81,7 @@ void InformationManager::onFrame()
                 it->second.destroyed = true;
             }
         }
-    }
+    }*/
 
     // Update influence map with known enemy units
     //for (auto& enemy : _knownEnemies)
