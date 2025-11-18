@@ -110,7 +110,9 @@ bool EconomyManager::checkAssimilator()
             //Break our of loop if a nexus economy already requested
             return true;
         }
+
     }
+    return false;
 }
 
 //[TODO]: Get the closest worker to the request we are trying to make.
@@ -122,6 +124,7 @@ BWAPI::Unit EconomyManager::getAvalibleWorker()
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
+    return nullptr;
 }
 
 BWAPI::Unit EconomyManager::getUnitScout()
@@ -132,6 +135,7 @@ BWAPI::Unit EconomyManager::getUnitScout()
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
+    return nullptr;
 }
 
 void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
