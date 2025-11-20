@@ -19,10 +19,16 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
     //[TODO]: Need to deconstruct nexusEconomy if its a nexus.
     //End loop early if we found the nexusEconomy that had the destroyed unit
+    //NexusEconomy ToBeRemoved = NexusEconomy(unit, nexusEconomies.size() + 1, this);
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
+
         if (nexusEconomy.OnUnitDestroy(unit) == true) break;
     }
+    //nexusEconomies.erase(*ToBeRemoved);
+    //nexusEconomies.erase(std::remove(nexusEconomies.begin(), nexusEconomies.end(), ToBeRemoved), nexusEconomies.end());
+    //delete ToBeRemoved;
+
 }
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)
@@ -129,6 +135,8 @@ BWAPI::Unit EconomyManager::getUnitScout()
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToScout();
+        //std::cout << "New nexus workers: " << nexusEconomy.workers.size() << "\n";
+
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
@@ -142,4 +150,12 @@ void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 bool EconomyManager::checkRequestAlreadySent(int unitID)
 {
     return commanderReference->alreadySentRequest(unitID);
+}
+
+void EconomyManager::destroyedNexus(BWAPI::Unit worker)
+{
+    if (nexusEconomies.size() > 1)
+    {
+        nexusEconomies.at(0).assignWorker(worker);
+    }
 }
