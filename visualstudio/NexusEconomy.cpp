@@ -270,11 +270,11 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 		{
 			workers.erase(unit);
 		}
-
+/*
 		for (BWAPI::Unit unit : workers)
 		{
 			std::cout << "worker " << unit->getID() << "\n";
-		}
+		}*/
 
 
 		return unitsToReturn;
@@ -303,13 +303,13 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 		{
 			workers.erase(unit);
 		}
-
+		/*
 		for (BWAPI::Unit unit : workers)
 		{
 			std::cout << "worker " << unit->getID() << "\n";
 		}
 
-
+		*/
 		return unitsToReturn;
 	}
 
@@ -332,12 +332,12 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 		workers.erase(unit);
 	}
 
-
+	/*
 	for (BWAPI::Unit unit : workers)
 	{
 		std::cout << "worker " << unit->getID() << "\n";
 	}
-
+	*/
 
 	return unitsToReturn;
 }
