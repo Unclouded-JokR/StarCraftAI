@@ -210,6 +210,7 @@ StrategyDenialState StrategyManager::denialState("Denial");
 StrategyRageState StrategyManager::rageState("Rage");
 StrategyAngryState StrategyManager::angryState("Angry");
 
+int mineralsToExpand = 500;
 
 StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -228,6 +229,13 @@ std::string StrategyManager::onStart()
 
 	//return empty string
 	return "";
+}
+
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
+{
+	return (!commanderReference->requestedBuilding(type)
+		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
+			|| commanderReference->checkUnitIsPlanned(type)));
 }
 
 Action StrategyManager::onFrame()
@@ -258,8 +266,7 @@ Action StrategyManager::onFrame()
 
 #pragma region Expand
 	//Check if we should build a pylon
-	if (supplyUsed + 2 == totalSupply && !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Pylon)
-		&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Pylon)))
+	if (supplyUsed + 2 == totalSupply && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 	{
 		Expand actionToTake;
 		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
@@ -270,30 +277,38 @@ Action StrategyManager::onFrame()
 	}
 
 	//Check for assimilators on nexus economies here.
-	/*else if(workerSet != nullptr)
+	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+	for (const NexusEconomy& nexusEconomy : nexusEconomies)
 	{
-		Exapnd action;
-		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
-	}*/
-
-	if (!commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Nexus))
-	{
-		//Have ridiculous amount of minerals
-		if (BWAPI::Broodwar->self()->minerals() > 500 
-			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Nexus)))
+		if (nexusEconomy.vespeneGyser != nullptr
+			&& nexusEconomy.assimilator == nullptr
+			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size()
+			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 		{
-			std::cout << "Requesting to expand\n";
-
 			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
 		}
+	}
+
+	if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand
+		&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
+	{
+		mineralsToExpand *= 10;
+		std::cout << "Requesting to expand\n";
+
+		Expand actionToTake;
+		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Expand;
+		return action;
+	}
 
 	//	//Add expansion times here
-	}
 
 	/*else if(workerSet != nullptr)
 	{
