@@ -17,6 +17,7 @@
 #define FRAMES_PER_SECOND 24
 
 using namespace BWEM;
+namespace { auto& theMap = BWEM::Map::Instance(); }
 
 class ProtoBotCommander
 {
@@ -61,6 +62,7 @@ public:
 
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild();
+	std::vector<NexusEconomy> getNexusEconomies();
 	//BWAPI::Unitset getAllUnitsAssignedToNexus();
 
 	//Information Manager Methods

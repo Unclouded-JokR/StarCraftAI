@@ -279,9 +279,11 @@ Action StrategyManager::onFrame()
 	if (!commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Nexus))
 	{
 		//Have ridiculous amount of minerals
-		if (BWAPI::Broodwar->self()->minerals() > 3000 
+		if (BWAPI::Broodwar->self()->minerals() > 500 
 			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Nexus)))
 		{
+			std::cout << "Requesting to expand\n";
+
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
 
@@ -290,7 +292,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		//Add expansion times here
+	//	//Add expansion times here
 	}
 
 	/*else if(workerSet != nullptr)

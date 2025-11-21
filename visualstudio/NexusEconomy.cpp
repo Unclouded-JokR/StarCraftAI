@@ -5,12 +5,26 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 {
 	maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL;
 
-	BWAPI::Unitset unitsInRadius = nexus->getUnitsInRadius(320, BWAPI::Filter::IsMineralField);
+	/*const int left = nexus->getPosition().x - 300;
+	const int top = nexus->getPosition().y - 300;
+	const int right = nexus->getPosition().x + 300;
+	const int bottom = nexus->getPosition().y + 300;
 
-	for (BWAPI::Unit unit : unitsInRadius)
+	BWAPI::Unitset resourcesInRectangle = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(left, top), BWAPI::Position(right, bottom));
+
+	//Should be better way to do this but this works for now.
+	for (const BWAPI::Unit unit : resourcesInRectangle)
 	{
-		//std::cout << unit->getType() << "\n";
-		minerals.insert(unit);
+		if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
+		{
+			vespeneGyser = unit;
+		}
+		else if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field 
+			|| unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field_Type_2
+			|| unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field_Type_3)
+		{
+			minerals.insert(unit);
+		}
 	}
 
 	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
@@ -20,10 +34,9 @@ NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyRef
 	for (BWAPI::Unit mineral : minerals)
 	{
 		mineralWorkerCount[mineral] = 0;
-	}
+	}*/
 
 	std::cout << "Created new Nexus Economy " << id << "\n";
-	std::cout << "Total Minerals: " << minerals.size() << "\n";
 }
 
 //[TODO] need to need to deconstruct if a nexus dies and send back all the workers.
@@ -32,24 +45,96 @@ NexusEconomy::~NexusEconomy()
 
 }
 
-void NexusEconomy::OnFrame()
+void NexusEconomy::addMissedResources()
 {
-	for (BWAPI::Unit mineral : minerals)
+	maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL;
+
+	const int left = nexus->getPosition().x - 300;
+	const int top = nexus->getPosition().y - 300;
+	const int right = nexus->getPosition().x + 300;
+	const int bottom = nexus->getPosition().y + 300;
+
+	BWAPI::Unitset resourcesInRectangle = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(left, top), BWAPI::Position(right, bottom));
+	BWAPI::Unitset newMinerals;
+
+	//Should be better way to do this but this works for now.
+	for (const BWAPI::Unit unit : resourcesInRectangle)
 	{
-		BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(mineral->getID()).c_str());
+		if (vespeneGyser == nullptr && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
+		{
+			vespeneGyser = unit;
+		}
+		else if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field
+			|| unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field_Type_2
+			|| unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field_Type_3)
+		{
+			bool alreadyInserted = false;
+			if (minerals.size() != 0)
+			{
+				for (BWAPI::Unit mineral : minerals)
+				{
+					if (mineral->getID() == unit->getID())
+						alreadyInserted = true;
+				}
+
+				if (alreadyInserted == false)
+				{
+					newMinerals.insert(unit);
+				}
+			}
+			else
+			{
+				newMinerals.insert(unit);
+			}
+		}
 	}
 
-	if (assimilator != nullptr) BWAPI::Broodwar->drawTextMap(assimilator->getPosition(), std::to_string(assimilator->getID()).c_str());
+	if (newMinerals.size() == 0) return;
+
+	for (BWAPI::Unit mineral : newMinerals)
+	{
+		minerals.insert(mineral);
+		mineralWorkerCount[mineral] = 0;
+	}
+
+	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
+	maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
+	maximumWorkers = optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
+
+	//std::cout << "Total Minerals: " << minerals.size() << "\n";
+}
+
+void NexusEconomy::OnFrame()
+{
+	//make this solution better.
+	addMissedResources();
+
+	const int left = nexus->getPosition().x - 300;
+	const int top = nexus->getPosition().y - 300;
+	const int right = nexus->getPosition().x + 300;
+	const int bottom = nexus->getPosition().y + 300;
+	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));
+
+	for (BWAPI::Unit mineral : minerals)
+	{
+		BWAPI::Broodwar->drawLineMap(nexus->getPosition(), mineral->getPosition(), BWAPI::Color(0, 0, 255));
+	}
+
+	if (assimilator != nullptr) BWAPI::Broodwar->drawLineMap(nexus->getPosition(), assimilator->getPosition(), BWAPI::Color(255, 255, 0));
+
+	if (vespeneGyser != nullptr) BWAPI::Broodwar->drawLineMap(nexus->getPosition(), vespeneGyser->getPosition(), BWAPI::Color(144, 238, 144));
 
 	std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size());
-	BWAPI::Broodwar->drawTextMap(nexus->getPosition(), temp.c_str());
+	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{
 		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
+		if (minerals.size() == 0) continue;
 
 		//If a worker is constructing skip over them until they are done.
-		if (worker->isConstructing())
+		//Add method to check if a worker is being used to place a building if isConstructing is not working.
+		if (worker->getOrder() == BWAPI::Orders::Move || worker->isConstructing())
 		{
 			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
 			continue;
@@ -89,11 +174,15 @@ void NexusEconomy::OnFrame()
 		}
 	}
 
-	//if (frame % 48 == 0) std::cout << "Nexus already sent request == " << !economyReference->checkRequestAlreadySent(nexus->getID()) << "\n";
-
 	if (!nexus->isTraining() && workers.size() < maximumWorkers && !economyReference->checkRequestAlreadySent(nexus->getID()))
 	{
 		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
+	}
+
+	//Nexus Economy should build its own assimialtor
+	if (assimilator == nullptr && vespeneGyser != nullptr && (workers.size() >= minerals.size()))
+	{
+		//economyReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator, vespeneGyser->getTilePosition());
 	}
 
 	//Debug Print Statements
@@ -366,7 +455,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 {
 	if (workers.size() == 0) return nullptr;
 
-	std::cout << "Reuqesting Worker!\n";
+	std::cout << "Requesting Worker!\n";
 
 	BWAPI::Unit unitToReturn = nullptr;
 

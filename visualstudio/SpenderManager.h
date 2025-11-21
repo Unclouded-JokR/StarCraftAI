@@ -1,6 +1,7 @@
 #pragma once
 #include <BWAPI.h>
 #include <variant>
+#include <limits.h>
 #include "../src/starterbot/Tools.h"
 
 class ProtoBotCommander;
@@ -27,6 +28,14 @@ struct BuildRequest
     std::variant<TrainUnitRequest, BuildStructureRequest, ResearchUpgradeRequest> request;
 };
 
+//Keep track of units that have been requested to build.
+struct Builder
+{
+    BWAPI::Unit probe;
+    BWAPI::UnitType building;
+    BWAPI::Position positionToBuild;
+};
+
 class SpenderManager
 {
 public:
@@ -35,6 +44,7 @@ public:
     std::vector<BWAPI::UnitType> plannedBuildings;
     std::vector<BWAPI::UnitType> plannedUnits;
     std::vector<int> requestIdentifiers; //list of the buildings that have already sent train commands, can also do this for upgrades.
+    std::vector<Builder> builders;
 
     SpenderManager(ProtoBotCommander* commanderReference);
 
@@ -56,6 +66,7 @@ public:
     bool requestedBuilding(BWAPI::UnitType building);
     bool buildingAlreadyMadeRequest(int unitID);
     bool checkUnitIsPlanned(BWAPI::UnitType building);
+    BWAPI::Position getPositionToBuild(BWAPI::UnitType type);
 
     void OnFrame();
     void onUnitCreate(BWAPI::Unit unit);

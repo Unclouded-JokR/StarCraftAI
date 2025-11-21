@@ -83,17 +83,17 @@ bool Tools::BuildBuilding(BWAPI::UnitType type)
 }
 
 
-bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
-{
-    // Get a location that we want to build the building next to
-    BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
-
-    // Ask BWAPI for a building location near the desired position for the type
-    int maxBuildRange = 128;
-    bool buildingOnCreep = type.requiresCreep();
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
-    return unit->build(type, buildPos);
-}
+//bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
+//{
+//    // Get a location that we want to build the building next to
+//    BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
+//
+//    // Ask BWAPI for a building location near the desired position for the type
+//    int maxBuildRange = 128;
+//    bool buildingOnCreep = type.requiresCreep();
+//    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
+//    return unit->build(type, buildPos);
+//}
 
 
 
@@ -252,18 +252,6 @@ void Tools::DrawHealthBar(BWAPI::Unit unit, double ratio, BWAPI::Color color, in
     }
 }
 
-
-Tools::PlayerState getPlayerState(Unit unit) {
-    auto state = Tools::PlayerState::None;
-    if (unit->getPlayer() == Broodwar->self())
-        state = Tools::PlayerState::Self;
-    else if (unit->getPlayer()->isEnemy(Broodwar->self()))
-        state = Tools::PlayerState::Enemy;
-    else
-        state = Tools::PlayerState::Neutral;
-    return state;
-}
-
 map<UnitType, int> allVisibleTypeCounts;
 map<UnitType, int> allCompleteTypeCounts;
 map<UnitType, int> allTotalTypeCounts;
@@ -322,7 +310,7 @@ void Tools::updateCount() {
 
 const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingNatural(); }
 BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
-BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getStartingNatural()->getBase()->Location(); }
+BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getClosestNaturalStation(BWAPI::Broodwar->self()->getStartLocation())->getBase()->Location(); }
 const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }
 
 bool Tools::ExpansionBuild(BWAPI::Unit unit)
@@ -333,9 +321,54 @@ bool Tools::ExpansionBuild(BWAPI::Unit unit)
     return unit->build(Protoss_Nexus, buildPos);
 }
 
-bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type, BWAPI::TilePosition tile)
+bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
 {
-    int maxBuildRange = 256;
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, tile, maxBuildRange);
-    return unit->build(type, buildPos);
+    std::cout << "Requesting to build: " << type << "\n";
+    
+    if (type == BWAPI::UnitTypes::Protoss_Nexus)
+    {
+        
+    }
+    else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
+    {
+        /*std::vector<BWEB::Station> stations = BWEB::Stations::getStations();
+        std::cout << "Number of Stations = " << stations.size() << "\n";
+
+        for (BWEB::Station station : stations)
+        {
+            std::set<BWAPI::TilePosition> placements = station.getPlacements(type);
+
+            for (BWAPI::TilePosition placement : placements)
+            {
+                if (unit->build(type, placement)) return true;
+            }
+        }
+
+        return false;*/
+        // Get a location that we want to build the building next to
+        BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
+
+        // Ask BWAPI for a building location near the desired position for the type
+        int maxBuildRange = 64;
+        bool buildingOnCreep = type.requiresCreep();
+        BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
+        return unit->build(type, buildPos);
+    }
+    else
+    {
+        std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+        std::cout << "Number of Blocks = " << blocks.size() << "\n";
+
+        for (BWEB::Block block : blocks)
+        {
+            std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
+
+            for (BWAPI::TilePosition placement : placements)
+            {
+                if (unit->build(type, placement)) return true;
+            }
+        }
+
+        return false;
+    }
 }

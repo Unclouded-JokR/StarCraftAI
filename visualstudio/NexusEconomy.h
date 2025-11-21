@@ -18,6 +18,7 @@ public:
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
 	BWAPI::Unitset minerals;
+	BWAPI::Unit vespeneGyser = nullptr;
 	BWAPI::Unit assimilator = nullptr;
 	std::unordered_map<BWAPI::Unit, int> mineralWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
@@ -35,6 +36,7 @@ public:
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();
+	void addMissedResources();
 	void OnFrame();
 	void printMineralWorkerCounts();
 
@@ -42,7 +44,6 @@ public:
 	BWAPI::Unit GetClosestMineralToWorker(BWAPI::Unit worker);
 	void assignWorker(BWAPI::Unit unit);
 	void assignAssimilator(BWAPI::Unit assimilator);
-
 	void workOverTime();
 	void breakTime();
 

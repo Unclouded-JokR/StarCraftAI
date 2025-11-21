@@ -22,8 +22,6 @@ void BuildManager::onStart()
 
     BWEB::Map::onStart();
 	BWEB::Blocks::findBlocks();
-	BWEB::Stations::findStations();
-
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
@@ -140,7 +138,7 @@ void BuildManager::onFrame() {
     }
 
     pumpUnit();
-    expansionBuilding();
+
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
     //for (BWAPI::Unit building : buildingWarps)
     //{
@@ -289,14 +287,6 @@ void BuildManager::runUnitQueue() {
             }
         }
     }
-}
-
-// Test function to build a nexus, will be replaced with an addRequest from spenderManager
-void BuildManager::expansionBuilding(){
-    if(!buildOrderCompleted || vis(Protoss_Nexus > 1) || requestsent)
-        return;
-    const bool startedbuilding = Tools::ExpansionBuild(Tools::GetUnitOfType(Protoss_Probe));
-    requestsent = true;
 }
 
 vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race){

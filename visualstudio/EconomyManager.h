@@ -17,7 +17,7 @@ public:
 	void OnFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
-	bool checkAssimilator();
+	std::vector<NexusEconomy> getNexusEconomies();
 	BWAPI::Unit getAvalibleWorker();
 	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);

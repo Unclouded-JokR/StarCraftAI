@@ -118,6 +118,64 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
     return false;
 }
 
+BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
+{
+    if (type == BWAPI::UnitTypes::Protoss_Nexus)
+    {
+        int distance = INT_MAX;
+        BWAPI::TilePosition closestDistance;
+
+        for (const BWEM::Area& area : theMap.Areas())
+        {
+            for (const BWEM::Base& base : area.Bases())
+            {
+                if (BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location()) < distance
+                    && base.Location() != BWAPI::Broodwar->self()->getStartLocation() 
+                    && BWAPI::Broodwar->canBuildHere(base.Location(), type))
+                {
+                    distance = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
+                    closestDistance = base.Location();
+                }
+            }
+        }
+
+        std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        return BWAPI::Position(closestDistance);
+    }
+    else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
+    {
+        std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+        std::cout << "Number of NexusEconomies = " << nexusEconomies.size() << "\n";
+
+        for (const NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator == nullptr)
+            {
+                std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
+                std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
+
+                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 50, nexusEconomy.vespeneGyser->getPosition().y - 20);
+                return position;
+            }
+        }
+    }
+    else
+    {
+        std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+        std::cout << "Number of Blocks = " << blocks.size() << "\n";
+
+        for (BWEB::Block block : blocks)
+        {
+            std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
+
+            for (const BWAPI::TilePosition placement : placements)
+            {
+                if (BWAPI::Broodwar->canBuildHere(placement, type)) return BWAPI::Position(placement);
+            }
+        }
+    }
+}
+
 bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
 {
     if (buildRequests.size() == 0)
@@ -163,6 +221,7 @@ void SpenderManager::OnFrame()
 
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
+
                 //Need to get unit in on frame not here
                 BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
 
@@ -171,37 +230,28 @@ void SpenderManager::OnFrame()
                     ++it;
                     continue;
                 }
+                std::cout << "Adding " << temp.buildingType << " to the queue\n";
 
-                //Currently this can cause a loop that can pause the game. Although this should be fixed once the build algorithm is made.
-                //std::cout << "Unit " << unitAvalible->getID() << " has been assgined to construct " << temp.buildingType << "\n";
-                bool success = false;
+                //Find position to place building using BWEB and BWEM
+                const BWAPI::Position positionToBuild = getPositionToBuild(temp.buildingType);
 
-                if (temp.buildingType != BWAPI::UnitTypes::Protoss_Nexus)
-                {
-                    success = Tools::BuildBuilding(unitAvalible, temp.buildingType);
-                }
-                else
-                {
-                    success = Tools::BuildBuilding(unitAvalible, temp.buildingType);
-                }
-
-                //std::cout << "Build Building success? " << success << "\n";
-                if (!success)
-                {
-                    ++it;
-                    continue;
-                }
+                //Create new builder to keep track of.
+                Builder builder;
+                builder.probe = unitAvalible;
+                builder.building = temp.buildingType;
+                builder.positionToBuild = positionToBuild;
+                builders.push_back(builder);
                 
+                //Plan the building and consider the amount of minerals it will take.
                 plannedBuildings.push_back(temp.buildingType);
-
-                //Need to add units to data structure that keeps track of them until they completed the build.
-
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
 
-                //Why?
+                //Tell worker to move.
+                std::cout << unitAvalible->move(positionToBuild) << "\n";
+
+                //Remove request from the building requests.
                 it = buildRequests.erase(it);
-                //std::cout << "Building " << temp.buildingType << "\n";
             }
             else
             {
@@ -263,6 +313,32 @@ void SpenderManager::OnFrame()
             }
         }
 
+    }
+
+
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    {
+        BWAPI::Broodwar->drawEllipseMap(it->probe->getTargetPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
+
+        if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
+        {
+            std::cout << "In position to build " << it->building << "\n";
+            const bool temp = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
+
+            std::cout << "Able to construct building? " << ((temp == 1) ? "true\n" : "false\n");
+            if (temp != true)
+            {
+                it++;
+            }
+            else
+            {
+                it = builders.erase(it);
+            }
+        }
+        else
+        {
+            it++;
+        }
     }
 }
 

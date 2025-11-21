@@ -1,7 +1,5 @@
 #include "ProtoBotCommander.h"
 
-namespace { auto& theMap = BWEM::Map::Instance(); }
-
 ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(this), economyManager(this), scoutingManager(this), combatManager(this), informationManager(this)
 {
 
@@ -96,6 +94,28 @@ void ProtoBotCommander::onFrame()
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
+
+	for (const Area& area : theMap.Areas())
+	{
+		for (const Base& base : area.Bases())
+		{
+			if (BWEM::utils::MapDrawer::showBases && BWAPI::Broodwar->canBuildHere(base.Location(), BWAPI::UnitTypes::Protoss_Nexus))
+			{
+				BWAPI::Broodwar->drawBoxMap(BWAPI::Position(base.Location()),
+					BWAPI::Position(base.Location() + BWAPI::UnitType(BWAPI::UnitTypes::Protoss_Nexus).tileSize()),
+					BWEM::utils::MapDrawer::Color::bases);
+			}
+
+			/*if (BWEM::utils::MapDrawer::showAssignedRessources)
+			{
+				vector<Ressource*> AssignedRessources(base.Minerals().begin(), base.Minerals().end());
+				AssignedRessources.insert(AssignedRessources.end(), base.Geysers().begin(), base.Geysers().end());
+
+				for (const Ressource* r : AssignedRessources)
+					Broodwar->drawLineMap(base.Center(), r->Pos(), MapDrawer::Color::assignedRessources);
+			}*/
+		}
+	}
 	
 	//BWEM::utils::gridMapExample(theMap);
 	//BWEM::utils::drawMap(theMap);
@@ -357,4 +377,9 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 {
 	return buildManager.checkUnitIsPlanned(building);
+}
+
+std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()
+{
+	return economyManager.getNexusEconomies();
 }

@@ -39,7 +39,6 @@ public:
 
     void buildBuilding(BWAPI::UnitType building);
     void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
-    void buildUnitType(BWAPI::UnitType unit);
     void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
 
     void getBuildOrder();
@@ -54,16 +53,12 @@ public:
     void runBuildQueue();
     void runUnitQueue();
     void pumpUnit();
-    void expansionBuilding();
 
     bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
     std::map<BWAPI::UnitType, int>& getUnitQueue();
     using BuildList = void (BuildManager::*)();
     std::vector<BuildList> getBuildOrders(BWAPI::Race race);
-
-    
-    bool requestsent = false;
 };
 
 namespace All {
