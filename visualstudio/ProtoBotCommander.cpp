@@ -219,9 +219,10 @@ bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-	if (unit->getPlayer() != BWAPI::Broodwar->self())
-		return;
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
+	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
+	buildManager.onCreate(unit);
 	buildManager.buildingDoneWarping(unit);
 
 	const BWAPI::UnitType unit_type = unit->getType();
@@ -293,10 +294,10 @@ void ProtoBotCommander::drawDebugInformation()
 	Tools::DrawUnitBoundingBoxes();
 }
 
-BWAPI::Unit ProtoBotCommander::getUnitToBuild()
+BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)
 {
 	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
-	return economyManager.getAvalibleWorker();
+	return economyManager.getAvalibleWorker(buildLocation);
 }
 
 void ProtoBotCommander::requestBuild(BWAPI::UnitType building)

@@ -86,8 +86,8 @@ void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 
 void BuildManager::onCreate(BWAPI::Unit unit)
 {
-    buildingWarps.insert(unit);
     spenderManager.onUnitCreate(unit);
+    buildingWarps.insert(unit);
 }
 
 bool BuildManager::alreadySentRequest(int unitID)
@@ -123,6 +123,7 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
             break;
         }
     }
+
 }
 
 void BuildManager::onFrame() {

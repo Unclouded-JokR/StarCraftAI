@@ -285,6 +285,7 @@ Action StrategyManager::onFrame()
 			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size()
 			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 		{
+			std::cout << "Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 

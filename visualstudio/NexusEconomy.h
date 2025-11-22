@@ -49,5 +49,5 @@ public:
 
 	BWAPI::Unitset getWorkersToTransfer(int numberOfWorkersForTransfer);
 	BWAPI::Unit getWorkerToScout();
-	BWAPI::Unit getWorkerToBuild();
+	BWAPI::Unit getWorkerToBuild(BWAPI::Position locationToBuild);
 };

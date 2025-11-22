@@ -74,7 +74,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
             //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
             for (NexusEconomy& nexusEconomy : nexusEconomies)
             {
-                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 300)
                 {
                     nexusEconomy.assignAssimilator(unit);
                     //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
@@ -87,7 +87,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
         {
             for (NexusEconomy& nexusEconomy : nexusEconomies)
             {
-                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 500)
+                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 300)
                 {
                     //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
                     nexusEconomy.assignWorker(unit);
@@ -105,11 +105,14 @@ std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
 }
 
 //[TODO]: Get the closest worker to the request we are trying to make.
-BWAPI::Unit EconomyManager::getAvalibleWorker()
+BWAPI::Unit EconomyManager::getAvalibleWorker(BWAPI::Position buildLocation)
 {
+    BWAPI::Unit closestWorker = nullptr;
+    int distance = INT_MAX;
+
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild();
+        BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild(buildLocation);
 
         if (unitToReturn != nullptr) return unitToReturn;
     }

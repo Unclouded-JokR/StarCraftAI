@@ -61,7 +61,7 @@ public:
 	std::string enemyRaceCheck();
 
 	//Ecconomy Manager Methods
-	BWAPI::Unit getUnitToBuild();
+	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
 	std::vector<NexusEconomy> getNexusEconomies();
 	//BWAPI::Unitset getAllUnitsAssignedToNexus();
 

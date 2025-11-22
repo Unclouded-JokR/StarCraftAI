@@ -139,20 +139,20 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
             }
         }
 
-        std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
         return BWAPI::Position(closestDistance);
     }
     else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
     {
         std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-        std::cout << "Number of NexusEconomies = " << nexusEconomies.size() << "\n";
+        //std::cout << "Number of NexusEconomies = " << nexusEconomies.size() << "\n";
 
         for (const NexusEconomy& nexusEconomy : nexusEconomies)
         {
             if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator == nullptr)
             {
-                std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
-                std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
+                //std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
+                //std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
 
                 BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 50, nexusEconomy.vespeneGyser->getPosition().y - 20);
                 return position;
@@ -162,7 +162,7 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
     else
     {
         std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
-        std::cout << "Number of Blocks = " << blocks.size() << "\n";
+        //std::cout << "Number of Blocks = " << blocks.size() << "\n";
 
         for (BWEB::Block block : blocks)
         {
@@ -208,7 +208,15 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    //if (BWAPI::Broodwar->getFrameCount() % 48 == 0) printQueue();
+    if (BWAPI::Broodwar->getFrameCount() % 48 == 0)
+    {
+        //printQueue();
+
+        for (const BWAPI::UnitType building : plannedBuildings)
+        {
+            std::cout << "Planning to build: " << building << "\n";
+        }
+    }
 
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
     {
@@ -221,9 +229,10 @@ void SpenderManager::OnFrame()
 
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
+                //Find position to place building using BWEB and BWEM
+                const BWAPI::Position positionToBuild = getPositionToBuild(temp.buildingType);
 
-                //Need to get unit in on frame not here
-                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
+                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
 
                 if (unitAvalible == nullptr)
                 {
@@ -231,9 +240,6 @@ void SpenderManager::OnFrame()
                     continue;
                 }
                 std::cout << "Adding " << temp.buildingType << " to the queue\n";
-
-                //Find position to place building using BWEB and BWEM
-                const BWAPI::Position positionToBuild = getPositionToBuild(temp.buildingType);
 
                 //Create new builder to keep track of.
                 Builder builder;
@@ -322,18 +328,12 @@ void SpenderManager::OnFrame()
 
         if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
         {
-            std::cout << "In position to build " << it->building << "\n";
+            //std::cout << "In position to build " << it->building << "\n";
             const bool temp = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
 
-            std::cout << "Able to construct building? " << ((temp == 1) ? "true\n" : "false\n");
-            if (temp != true)
-            {
-                it++;
-            }
-            else
-            {
-                it = builders.erase(it);
-            }
+            //std::cout << "Able to construct building? " << ((temp == 1) ? "true\n" : "false\n");
+            it = builders.erase(it);
+           
         }
         else
         {
@@ -344,10 +344,13 @@ void SpenderManager::OnFrame()
 
 void SpenderManager::onUnitCreate(BWAPI::Unit unit)
 {
+    std::cout << unit->getType() << " created\n";
+
     for (std::vector<BWAPI::UnitType>::iterator it = plannedBuildings.begin(); it != plannedBuildings.end(); ++it)
     {
         if (unit->getType() == *it)
         {
+            std::cout << "removing " << unit->getType() << " from plannedBuildings\n";
             it = plannedBuildings.erase(it);
             break;
         }
@@ -357,6 +360,7 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
     {
         if (unit->getType() == *it)
         {
+            std::cout << "removing " << unit->getType() << " from plannedUnits\n";
             it = plannedUnits.erase(it);
             break;
         }
