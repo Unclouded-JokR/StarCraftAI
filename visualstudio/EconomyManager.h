@@ -22,6 +22,6 @@ public:
 	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	bool checkRequestAlreadySent(int unitID);
-	void destroyedNexus(BWAPI::Unit worker);
+	void destroyedNexus(BWAPI::Unitset worker);
 };
 

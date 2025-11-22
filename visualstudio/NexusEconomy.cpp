@@ -49,9 +49,12 @@ void NexusEconomy::OnFrame()
 	}
 
 	if (assimilator != nullptr) BWAPI::Broodwar->drawTextMap(assimilator->getPosition(), std::to_string(assimilator->getID()).c_str());
-
-	std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size());
-	BWAPI::Broodwar->drawTextMap(nexus->getPosition(), temp.c_str());
+	
+	if (nexus != nullptr) 
+	{
+		std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size());
+		BWAPI::Broodwar->drawTextMap(nexus->getPosition(), temp.c_str());
+	}
 
 	for (BWAPI::Unit worker : workers)
 	{
@@ -99,10 +102,12 @@ void NexusEconomy::OnFrame()
 	}
 
 	//if (frame % 48 == 0) std::cout << "Nexus already sent request == " << !economyReference->checkRequestAlreadySent(nexus->getID()) << "\n";
-
-	if (!nexus->isTraining() && workers.size() < maximumWorkers && !economyReference->checkRequestAlreadySent(nexus->getID()))
+	if (nexus != nullptr)
 	{
-		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
+		if (!nexus->isTraining() && workers.size() < maximumWorkers && !economyReference->checkRequestAlreadySent(nexus->getID()))
+		{
+			economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
+		}
 	}
 
 	//Debug Print Statements
@@ -165,11 +170,21 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	}
 	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
 	{
+		nexus = nullptr;
+		BWAPI::Unitset allWorkers;
 		for (BWAPI::Unit unit1 : workers)
 		{
-			economyReference->destroyedNexus(unit1);
+			allWorkers.insert(unit1);
 		}
-		//nexus = nullptr;
+
+		for (BWAPI::Unit unit2 : allWorkers)
+		{
+			workers.erase(unit2);
+		}
+
+		economyReference->destroyedNexus(allWorkers);
+
+		return true;
 	}
 }
 
