@@ -25,6 +25,18 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
     }
 }
 
+void EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomy)
+{
+    BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(numberOfWorkers);
+
+    for (BWAPI::Unit worker : workersToTransfer)
+    {
+        nexusEconomy.assignWorker(worker);
+    }
+
+    std::cout << "New nexus workers: " << nexusEconomy.workers.size() << "\n";
+}
+
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
     switch (unit->getType())
@@ -49,18 +61,6 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
                 NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
                 nexusEconomies.push_back(temp);
-
-                //[TODO]: Transfer workers from main to the next nexus economy.
-                if (nexusEconomies.size() > 1)
-                {
-                    BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(temp.minerals.size());
-
-                    for (BWAPI::Unit worker : workersToTransfer)
-                    {
-                        temp.assignWorker(worker);
-                    }
-                    std::cout << "New nexus workers: " << temp.workers.size() << "\n";
-                }
             }
             else
             {
@@ -114,8 +114,18 @@ BWAPI::Unit EconomyManager::getAvalibleWorker(BWAPI::Position buildLocation)
     {
         BWAPI::Unit unitToReturn = nexusEconomy.getWorkerToBuild(buildLocation);
 
-        if (unitToReturn != nullptr) return unitToReturn;
+        if (unitToReturn == nullptr) continue;
+
+        const int approxDis = buildLocation.getApproxDistance(unitToReturn->getPosition());
+
+        if (approxDis < distance)
+        {
+            closestWorker = unitToReturn;
+            distance = approxDis;
+        }
     }
+
+    return closestWorker;
 }
 
 BWAPI::Unit EconomyManager::getUnitScout()

@@ -145,7 +145,6 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
     else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
     {
         std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-        //std::cout << "Number of NexusEconomies = " << nexusEconomies.size() << "\n";
 
         for (const NexusEconomy& nexusEconomy : nexusEconomies)
         {
@@ -212,10 +211,10 @@ void SpenderManager::OnFrame()
     {
         //printQueue();
 
-        for (const BWAPI::UnitType building : plannedBuildings)
+        /*for (const BWAPI::UnitType building : plannedBuildings)
         {
             std::cout << "Planning to build: " << building << "\n";
-        }
+        }*/
     }
 
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
@@ -239,7 +238,7 @@ void SpenderManager::OnFrame()
                     ++it;
                     continue;
                 }
-                std::cout << "Adding " << temp.buildingType << " to the queue\n";
+                //std::cout << "Adding " << temp.buildingType << " to the queue\n";
 
                 //Create new builder to keep track of.
                 Builder builder;
@@ -324,7 +323,7 @@ void SpenderManager::OnFrame()
 
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
-        BWAPI::Broodwar->drawEllipseMap(it->probe->getTargetPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
+        //BWAPI::Broodwar->drawEllipseMap(it->probe->getTargetPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
 
         if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
         {
@@ -344,13 +343,13 @@ void SpenderManager::OnFrame()
 
 void SpenderManager::onUnitCreate(BWAPI::Unit unit)
 {
-    std::cout << unit->getType() << " created\n";
+    //std::cout << unit->getType() << " created\n";
 
     for (std::vector<BWAPI::UnitType>::iterator it = plannedBuildings.begin(); it != plannedBuildings.end(); ++it)
     {
         if (unit->getType() == *it)
         {
-            std::cout << "removing " << unit->getType() << " from plannedBuildings\n";
+            //std::cout << "removing " << unit->getType() << " from plannedBuildings\n";
             it = plannedBuildings.erase(it);
             break;
         }
@@ -360,7 +359,7 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
     {
         if (unit->getType() == *it)
         {
-            std::cout << "removing " << unit->getType() << " from plannedUnits\n";
+            //std::cout << "removing " << unit->getType() << " from plannedUnits\n";
             it = plannedUnits.erase(it);
             break;
         }

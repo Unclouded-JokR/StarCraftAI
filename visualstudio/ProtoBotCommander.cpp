@@ -335,21 +335,13 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 //Also get rid of the self get Units, eco should return a unit, not a null ptr.
 BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
+	const int frame = BWAPI::Broodwar->getFrameCount();
+
 	if (BWAPI::Unit u = economyManager.getUnitScout())
 	{
 		std::cout << "Got unit " << u->getID() << " to scout" << "\n";
 		return u;
 	}
-
-	//// Fallback: find any completed, non-carrying worker
-	//for (auto& u : BWAPI::Broodwar->self()->getUnits()) {
-	//	if (!u->exists()) continue;
-	//	if (u->getType().isWorker() && u->isCompleted() &&
-	//		!u->isCarryingMinerals() && !u->isCarryingGas()) {
-	//		return u;
-	//	}
-	//}
-	//return nullptr;
 }
 
 std::string ProtoBotCommander::enemyRaceCheck()

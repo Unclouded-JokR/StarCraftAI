@@ -69,11 +69,15 @@ void NexusEconomy::addMissedResources()
 	maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
 	maximumWorkers = optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
 
+	if (nexusID > 1) economyReference->getWorkersToTransfer(newMinerals.size(), *this);
 	//std::cout << "Total Minerals: " << minerals.size() << "\n";
 }
 
 void NexusEconomy::OnFrame()
 {
+	lifetime += 1;
+	if (lifetime >= 500) lifetime = 500;
+
 	//make this solution better.
 	addMissedResources();
 
@@ -305,12 +309,12 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 				BWAPI::Unit assignedMineral = assignedResource[unit];
 				mineralWorkerCount[assignedMineral] -= 1;
 				assignedResource.erase(unit);
-				workers.erase(unit);
+				//workers.erase(unit);
 				unitsToReturn.insert(unit);
 			}
 			else
 			{
-				workers.erase(unit);
+				//workers.erase(unit);
 				unitsToReturn.insert(unit);
 			}
 		}
@@ -318,7 +322,22 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 		if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
 	}
 
-	if (unitsToReturn.size() == numberOfWorkersForTransfer) return unitsToReturn;
+	if (unitsToReturn.size() == numberOfWorkersForTransfer)
+	{
+		for (BWAPI::Unit unit : unitsToReturn)
+		{
+			workers.erase(unit);
+		}
+
+		/*
+		for (BWAPI::Unit unit : workers)
+		{
+			std::cout << "worker " << unit->getID() << "\n";
+		}*/
+
+		return unitsToReturn;
+
+	}
 
 	//Choose random unit if we did not find unit.
 
@@ -329,28 +348,58 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 			/*BWAPI::Unit assignedMineral = assignedResource[unit];
 			mineralWorkerCount[assignedMineral] -= 1;
 			assignedResource.erase(unit);*/
-			workers.erase(unit);
+			//workers.erase(unit);
 			unitsToReturn.insert(unit);
 		}
 
 		if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
 	}
 
-	if (unitsToReturn.size() == numberOfWorkersForTransfer) return unitsToReturn;
+	if (unitsToReturn.size() == numberOfWorkersForTransfer)
+	{
+		for (BWAPI::Unit unit : unitsToReturn)
+		{
+			workers.erase(unit);
+		}
+
+		/*
+		for (BWAPI::Unit unit : workers)
+		{
+			std::cout << "worker " << unit->getID() << "\n";
+		}
+		*/
+		return unitsToReturn;
+	}
 
 	//If not enough units we found, get units until we meet the number of workers needs
 	for (BWAPI::Unit unit : workers)
 	{
 		BWAPI::Unit assignedMineral = assignedResource[unit];
-		mineralWorkerCount[assignedMineral] -= 1;
-		assignedResource.erase(unit);
-		workers.erase(unit);
-		unitsToReturn.insert(unit);
+
+		if (assignedMineral != vespeneGyser)
+		{
+			mineralWorkerCount[assignedMineral] -= 1;
+			assignedResource.erase(unit);
+			//workers.erase(unit);
+			unitsToReturn.insert(unit);
+		}
 
 		if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
 	}
 
 	std::cout << "Got " << unitsToReturn.size() << " Workers\n";
+
+	for (BWAPI::Unit unit : unitsToReturn)
+	{
+		workers.erase(unit);
+	}
+
+	/*
+	for (BWAPI::Unit unit : workers)
+	{
+		std::cout << "worker " << unit->getID() << "\n";
+	}
+	*/
 
 	return unitsToReturn;
 }
@@ -441,16 +490,20 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 {
 	if (workers.size() == 0) return nullptr;
 
-	//std::cout << "Reuqesting Worker!\n";
-
 	BWAPI::Unit unitToReturn = nullptr;
+	int minDistance = INT_MAX;
 
-	//Get idle units if possible.
+	//Get closest idle units if possible.
 	for (const BWAPI::Unit unit : workers)
 	{
-		if (unit->isIdle())
+		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+
+		if (unit->isIdle() && distance < minDistance)
 		{
-			if (assignedResource.find(unit) != assignedResource.end())
+			minDistance = distance;
+
+			//Only take workers that are mining mineral patches. Workers assigned to gysers are never deassgined, unless destoryed.
+			if (assignedResource.find(unit) != assignedResource.end() && assignedResource[unit] != vespeneGyser)
 			{
 				BWAPI::Unit assignedMineral = assignedResource[unit];
 				mineralWorkerCount[assignedMineral] -= 1;
@@ -461,7 +514,6 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 			{
 				unitToReturn = unit;
 			}
-			break;
 		}
 	}
 
@@ -471,13 +523,15 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 		return unitToReturn;
 	}
 
-
+	minDistance = INT_MAX;
 	for (const BWAPI::Unit unit : workers)
 	{
-		if (unit->isCarryingMinerals())
+		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		
+		if (unit->isCarryingMinerals() && distance < minDistance)
 		{
+			minDistance = distance;
 			unitToReturn = unit;
-			break;
 		}
 	}
 
@@ -487,25 +541,19 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 		return unitToReturn;
 	}
 
-	//If not unit is avalible that meets prior conditions choose unit randomly for now.
-	const int random = rand() % workers.size();
-	//std::cout << "Random Index Choosen: " << random << "\n";
-
-	int index = 0;
-	for (BWAPI::Unit unit : workers)
+	
+	minDistance = INT_MAX;
+	for (const BWAPI::Unit unit : workers)
 	{
-		if (index == random)
+		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+
+		if (distance < minDistance)
 		{
 			BWAPI::Unit assignedMineral = assignedResource[unit];
 			mineralWorkerCount[assignedMineral] -= 1;
 			assignedResource.erase(unit);
 			unitToReturn = unit;
-			break;
 		}
-
-		index++;
 	}
-
-	//std::cout << "Random Unit " << unitToReturn->getID() << " Avalible!\n";
 	return unitToReturn;
 }

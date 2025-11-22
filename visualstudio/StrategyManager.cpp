@@ -2,8 +2,7 @@
 #include "ProtoBotCommander.h"
 #include <BWAPI.h>
 
-int previousFrameSecond = 0;
-std::vector<int> expansionTimes = { 5, 10, 20, 30, 40 , 50 };
+int expansionTimes[8] = { 2, 3, 5, 8, 13, 21, 34, 55};
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
 int frameSinceLastBuild = 0;
@@ -227,6 +226,12 @@ std::string StrategyManager::onStart()
 	const size_t test = myVector.size();
 	const int chooseRandBuildOrder = rand() % test;
 
+	//Reset Static Variables
+	minutesPassedIndex = 0;
+	frameSinceLastScout = 0;
+	frameSinceLastBuild = 0;
+
+
 	//return empty string
 	return "";
 }
@@ -246,131 +251,97 @@ Action StrategyManager::onFrame()
 
 	// time bookkeeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	// const int seconds = frame / FRAMES_PER_SECOND;
-
-	//// ----- emit SCOUT periodically -----
-	//if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-	//	frameSinceLastScout = frame;
-	//	Scout s;
-	//	action.commanderAction = s;
-	//	action.type = ActionType::Action_Scout;
-	//	return action;                 // <-- ensure we actually send the action
-	//}
+	const int seconds = frame / FRAMES_PER_SECOND;
 
 	// from here on, build logic etc.
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
 
-	if (!buildOrderCompleted) return action;
-
-#pragma region Expand
-	//Check if we should build a pylon
-	if (supplyUsed + 2 == totalSupply && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
+	#pragma region Expand
+	if (buildOrderCompleted)
 	{
-		Expand actionToTake;
-		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
-			
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Expand;
-		return action;
-	}
-
-	//Check for assimilators on nexus economies here.
-	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-	for (const NexusEconomy& nexusEconomy : nexusEconomies)
-	{
-		if (nexusEconomy.vespeneGyser != nullptr
-			&& nexusEconomy.assimilator == nullptr
-			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size()
-			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
+		//Check if we should build a pylon
+		if (supplyUsed + 2 >= totalSupply && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 		{
-			std::cout << "Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
 			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
 		}
-	}
 
-	if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand
-		&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
-	{
-		mineralsToExpand *= 10;
-		std::cout << "Requesting to expand\n";
-
-		Expand actionToTake;
-		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Expand;
-		return action;
-	}
-
-	//	//Add expansion times here
-
-	/*else if(workerSet != nullptr)
-	{
-		Exapnd action;
-		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
-	}*/
-	//If we have a stock pile of minerals
-	/*else if (BWAPI::Broodwar->self()->minerals() > 3000)
-	{
-		Expand actionToTake;
-		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Expand;
-		return action;
-	}
-	else if (buildOrderCompleted)
-	{
-		if (minutesPassedIndex < expansionTimes.size() && seconds / 60 > expansionTimes.at(minutesPassedIndex))
+		//Check for assimilators on nexus economies here.
+		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+		for (const NexusEconomy& nexusEconomy : nexusEconomies)
 		{
-			minutesPassedIndex++;
+			if (nexusEconomy.vespeneGyser != nullptr
+				&& nexusEconomy.assimilator == nullptr
+				&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3 
+				&& nexusEconomy.lifetime >= 500
+				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
+			{
+				std::cout << "Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 
-			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-			return action;
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
 		}
-	}*/
-#pragma endregion
 
-	//#pragma region Build Anti-Air
-	//const std::set<BWAPI::Unit>& knownEnemyUnits = commanderReference->getKnownEnemyUnits();
-	//const std::map<BWAPI::Unit, EnemyBuildingInfo>& knownEnemyBuildings = commanderReference->getKnownEnemyBuildings();
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
+		{
+			//std::cout << (expansionTimes[minutesPassedIndex]) << " >= " << (seconds / 60) << "\n";
 
-	//for (const BWAPI::Unit unit : knownEnemyUnits)
-	//{
-	//	if (unit->isFlying())
-	//	{
-	//		//Build anti air around base
-	//	}
-	//}
+			if (BWAPI::Broodwar->self()->minerals() > 3000)
+			{
+				std::cout << "Requesting to expand (mineral surplus)\n";
 
-	//for (const auto building : knownEnemyBuildings)
-	//{
-	//	if (building.first->isFlying())
-	//	{
-	//		//Build anti air around base
-	//	}
-	//}
-	//#pragma endregion
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
 
-	//#pragma region Scout
-	//	if (buildOrderCompleted && frame - frameSinceLastScout >= 200)
-	//	{
-	//		frameSinceLastScout = frame;
-	//		Scout actionToTake;
-	//
-	//		action.commanderAction = actionToTake;
-	//		action.type = ActionType::Action_Scout;
-	//		return action;
-	//	}
-	//	#pragma endregion
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
+			else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
+				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
+			{
+				std::cout << "Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
+
+				minutesPassedIndex++;
+
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
+		}
+	}
+	#pragma endregion
+
+	#pragma region Build
+
+
+	#pragma endregion
+
+	#pragma region Scout
+	if (buildOrderCompleted)
+	{
+		if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+		frameSinceLastScout = frame;
+		Scout s;
+		action.commanderAction = s;
+		action.type = ActionType::Action_Scout;
+		return action;                 // <-- ensure we actually send the action
+		}
+	}
+	#pragma endregion
 
 		//#pragma region Building
 

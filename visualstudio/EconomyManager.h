@@ -18,6 +18,7 @@ public:
 	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
 	std::vector<NexusEconomy> getNexusEconomies();
+	void getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomy);
 	BWAPI::Unit getAvalibleWorker(BWAPI::Position buildLocation);
 	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
