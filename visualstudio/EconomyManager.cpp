@@ -17,11 +17,17 @@ void EconomyManager::OnFrame()
 
 void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    //[TODO]: Need to deconstruct nexusEconomy if its a nexus.
-    //End loop early if we found the nexusEconomy that had the destroyed unit
-    for (NexusEconomy& nexusEconomy : nexusEconomies)
-    {
-        if (nexusEconomy.OnUnitDestroy(unit) == true) break;
+    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+    for (std::vector<NexusEconomy>::iterator it = nexusEconomies.begin(); it != nexusEconomies.end(); ++it) {
+        //[TODO] fix handling nexus being destroyed. 
+        //if (unit->getID() == it->nexus->getID())
+        //{
+        //    //it = nexusEconomies.erase(it);
+        //    break;
+        //}
+
+        if (it->OnUnitDestroy(unit) == true) break;
     }
 }
 
@@ -55,10 +61,6 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 
             if (alreadyExists == false)
             {
-                //[TODO]: Current expansion implementation is not working as intended.
-                // Workers should be assigned to the correct nexus economy and mine ONLY the minerals around their nexus.
-                //Minerals are not being picked up properlly when we expand and workers are not being transfered.
-
                 NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
                 nexusEconomies.push_back(temp);
             }

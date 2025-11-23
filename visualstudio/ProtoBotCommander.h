@@ -17,6 +17,7 @@
 #define FRAMES_PER_SECOND 24
 
 using namespace BWEM;
+
 namespace { auto& theMap = BWEM::Map::Instance(); }
 
 class ProtoBotCommander
@@ -44,6 +45,7 @@ public:
 	void onFrame();
 	void onEnd(bool isWinner);
 	void onUnitDestroy(BWAPI::Unit unit);
+	void onUnitDiscover(BWAPI::Unit unit);
 	void onUnitMorph(BWAPI::Unit unit);
 	void onSendText(std::string text);
 	void onUnitCreate(BWAPI::Unit unit);

@@ -18,15 +18,21 @@ void ProtoBotCommander::onStart()
 	// Enable the flag that tells BWAPI to let users enter input while bot plays
 	BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
+	static bool mapInitialized = false;
+
 	std::cout << "Map initialization...\n";
-	theMap.Initialize();
+
+	//theMap = BWEM::Map::Instance();
+	theMap.Initialize();                    
 	theMap.EnableAutomaticPathAnalysis();
 	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
 	assert(startingLocationsOK);
 
-	// Call MapTools OnStart
-	m_mapTools.onStart();
+	BWEB::Map::onStart();
+	BWEB::Blocks::findBlocks();
+	BWEB::Stations::findStations();
 
+	m_mapTools.onStart();
 
 
 	/*
@@ -105,20 +111,8 @@ void ProtoBotCommander::onFrame()
 					BWAPI::Position(base.Location() + BWAPI::UnitType(BWAPI::UnitTypes::Protoss_Nexus).tileSize()),
 					BWEM::utils::MapDrawer::Color::bases);
 			}
-
-			/*if (BWEM::utils::MapDrawer::showAssignedRessources)
-			{
-				vector<Ressource*> AssignedRessources(base.Minerals().begin(), base.Minerals().end());
-				AssignedRessources.insert(AssignedRessources.end(), base.Geysers().begin(), base.Geysers().end());
-
-				for (const Ressource* r : AssignedRessources)
-					Broodwar->drawLineMap(base.Center(), r->Pos(), MapDrawer::Color::assignedRessources);
-			}*/
 		}
 	}
-	
-	//BWEM::utils::gridMapExample(theMap);
-	//BWEM::utils::drawMap(theMap);
 
 	/*
 	* Protobot Modules
@@ -203,12 +197,14 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	buildManager.onUnitDestroy(unit);
 }
 
+void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
+{
+	buildManager.onUnitDiscover(unit);
+}
+
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
-	if (unit->getPlayer() != BWAPI::Broodwar->self())
-		return;
-
-	buildManager.onCreate(unit);
+	buildManager.onUnitCreate(unit);
 }
 
 //[TODO] Move this to building manager
@@ -219,10 +215,11 @@ bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
+	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
+	buildManager.onUnitCreate(unit);
+
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
-	buildManager.onCreate(unit);
 	buildManager.buildingDoneWarping(unit);
 
 	const BWAPI::UnitType unit_type = unit->getType();
@@ -273,7 +270,7 @@ void ProtoBotCommander::onSendText(std::string text)
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
-
+	buildManager.onUnitMorph(unit);
 }
 
 void ProtoBotCommander::drawDebugInformation()
@@ -289,6 +286,9 @@ void ProtoBotCommander::drawDebugInformation()
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
+
+	BWAPI::Broodwar->drawTextScreen(0, 40, "Time: %02d", BWAPI::Broodwar->elapsedTime() / 60);
+	BWAPI::Broodwar->drawTextScreen(41, 40, ":%02d", BWAPI::Broodwar->elapsedTime() % 60);
 
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
@@ -330,16 +330,38 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 	return buildManager.requestedBuilding(building);
 }
 
-//[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
-//You can also change the name of this in order to make it clear what "getAvalibleWorker()" is doing.
-//Also get rid of the self get Units, eco should return a unit, not a null ptr.
 BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
 	const int frame = BWAPI::Broodwar->getFrameCount();
 
+	//After 2:15 start sending combate units to scout
+	//if (frame >= 3240)
+	//{
+
+	//	if (BWAPI::Unit unit = combatManager.getAvailableUnit())
+	//	{
+	//		std::cout << "Got " << unit->getType() << ": " << unit->getID() << " ,to scout" << "\n";
+	//		return unit;
+	//	}
+
+	//	if (BWAPI::Unit u = economyManager.getUnitScout())
+	//	{
+	//		//std::cout << "No combat units avalible...got " << u->getType() << ": " << u->getID() << " to scout" << "\n";
+	//		return u;
+	//	}
+	//}
+	//else
+	//{
+	//	if (BWAPI::Unit u = economyManager.getUnitScout())
+	//	{
+	//		std::cout << "Got " << u->getType() << ": " << u->getID() << " to scout" << "\n";
+	//		return u;
+	//	}
+	//}
+
 	if (BWAPI::Unit u = economyManager.getUnitScout())
 	{
-		std::cout << "Got unit " << u->getID() << " to scout" << "\n";
+		std::cout << "Got " << u->getType() << ": " << u->getID() << " to scout" << "\n";
 		return u;
 	}
 }

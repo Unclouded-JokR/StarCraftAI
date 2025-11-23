@@ -325,10 +325,20 @@ void SpenderManager::OnFrame()
     {
         //BWAPI::Broodwar->drawEllipseMap(it->probe->getTargetPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
 
+        //Need to check if we are able to build. Units on tiles can cause buildings NOT to warp in
         if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
         {
             //std::cout << "In position to build " << it->building << "\n";
-            const bool temp = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
+            const bool buildSuccess = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
+
+            if (!buildSuccess)
+            {
+                it++;
+                continue;
+            }
+
+            //Need to utilize BWEB's reserving tile system to improve building placement even further.
+            //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
 
             //std::cout << "Able to construct building? " << ((temp == 1) ? "true\n" : "false\n");
             it = builders.erase(it);
@@ -364,6 +374,37 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
             break;
         }
     }
+}
+
+void SpenderManager::onUnitDestroy(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitDestroy(unit);
+
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    {
+        if (it->probe->getID() == unit->getID())
+        {
+            const BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(it->positionToBuild);
+            it->probe = unitAvalible;
+            break;
+        }
+        else
+        {
+            it++;
+        }
+    }
+
+    //check warping buildings
+}
+
+void SpenderManager::onUnitMorph(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitMorph(unit);
+}
+
+void SpenderManager::onUnitDiscover(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitDiscover(unit);
 }
 
 bool SpenderManager::buildingAlreadyMadeRequest(int unitID)

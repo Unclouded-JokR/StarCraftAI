@@ -2,7 +2,8 @@
 #include "ProtoBotCommander.h"
 #include <BWAPI.h>
 
-int expansionTimes[8] = { 2, 3, 5, 8, 13, 21, 34, 55};
+int expansionTimes[9] = { 1, 2, 3, 5, 8, 13, 21, 34, 55};
+int mineralsToExpand = 500;
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
 int frameSinceLastBuild = 0;
@@ -209,8 +210,6 @@ StrategyDenialState StrategyManager::denialState("Denial");
 StrategyRageState StrategyManager::rageState("Rage");
 StrategyAngryState StrategyManager::angryState("Angry");
 
-int mineralsToExpand = 500;
-
 StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 	StrategyManager::currentState = &StrategyManager::contentState;
@@ -230,6 +229,7 @@ std::string StrategyManager::onStart()
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
 	frameSinceLastBuild = 0;
+	mineralsToExpand = 500;
 
 
 	//return empty string
@@ -294,10 +294,9 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
-			//std::cout << (expansionTimes[minutesPassedIndex]) << " >= " << (seconds / 60) << "\n";
-
-			if (BWAPI::Broodwar->self()->minerals() > 3000)
+			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
 			{
+				mineralsToExpand * 2.5;
 				std::cout << "Requesting to expand (mineral surplus)\n";
 
 				Expand actionToTake;
@@ -307,7 +306,7 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
-			else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
+			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
 				std::cout << "Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
@@ -320,61 +319,111 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}
+			}*/
 		}
 	}
 	#pragma endregion
 
 	#pragma region Build
+	if (buildOrderCompleted)
+	{
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
+		{
+			BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+			std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+			int completedNexusEconomy = 0;
+			int gatewayCount = 0;
 
+			for (const BWAPI::Unit unit : units)
+			{
+				if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway && unit->isCompleted()) gatewayCount++;
+			}
+
+			for (NexusEconomy nexusEconomy : nexusEconomies)
+			{
+				/*
+				* Nexus Economy considered complete if
+				*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
+				*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
+				*/
+				if ((nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size())
+					|| (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator != nullptr))
+				{
+					completedNexusEconomy++;
+				}
+			}
+
+			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
+
+			if (gatewayCount < completedNexusEconomy * 2)
+			{
+				std::cout << "Requesting to warp Gateway\n";
+				Build actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Build;
+				return action;
+			}
+			else if(gatewayCount >= completedNexusEconomy && completedNexusEconomy != 0)
+			{
+				std::cout << "Building Gateway anyway\n";
+				Build actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Build;
+				return action;
+			}
+		}
+	}
 
 	#pragma endregion
 
 	#pragma region Scout
-	if (buildOrderCompleted)
-	{
-		if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
-		}
-	}
+	//Make this better
+	//if (frame - frameSinceLastScout >= 24 * 20) // every ~20s;
+	//{ 
+	//	frameSinceLastScout = frame;
+	//	Scout s;
+	//	action.commanderAction = s;
+	//	action.type = ActionType::Action_Scout;
+	//	return action;                 // <-- ensure we actually send the action
+	//}
 	#pragma endregion
 
-		//#pragma region Building
+	//#pragma region Building
 
-		////Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
-		//if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
-		//{
-		//	frameSinceLastBuild = frame;
-		//	const int buildingToBuild = rand() % 100;
-		//	Build actionToTake;
-		//	action.type = Action_Build;
+	////Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
+	//if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
+	//{
+	//	frameSinceLastBuild = frame;
+	//	const int buildingToBuild = rand() % 100;
+	//	Build actionToTake;
+	//	action.type = Action_Build;
 
-		//	if (buildingToBuild <= 60)
-		//	{
-		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
-		//	}
-		//	else if (buildingToBuild <= 80)
-		//	{
-		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-		//	}
-		//	else
-		//	{
-		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
-		//	}
-		//	action.commanderAction = actionToTake;
+	//	if (buildingToBuild <= 60)
+	//	{
+	//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+	//	}
+	//	else if (buildingToBuild <= 80)
+	//	{
+	//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
+	//	}
+	//	else
+	//	{
+	//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
+	//	}
+	//	action.commanderAction = actionToTake;
 
-		//	return action;
-		//}
-		//
+	//	return action;
+	//}
+	//
 
-		//#pragma endregion
+	//#pragma endregion
 
 
-		//StrategyManager::printBoredomMeter();
+	//StrategyManager::printBoredomMeter();
 
 	return action;
 }

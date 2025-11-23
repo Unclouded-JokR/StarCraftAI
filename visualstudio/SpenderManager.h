@@ -67,9 +67,15 @@ public:
     bool buildingAlreadyMadeRequest(int unitID);
     bool checkUnitIsPlanned(BWAPI::UnitType building);
     BWAPI::Position getPositionToBuild(BWAPI::UnitType type);
-
-    void OnFrame();
-    void onUnitCreate(BWAPI::Unit unit);
     void printQueue();
     void removeRequestID(int unitID);
+
+    /*
+    * BWAPI Events
+    */
+    void OnFrame();
+    void onUnitCreate(BWAPI::Unit);
+    void onUnitDestroy(BWAPI::Unit);
+    void onUnitMorph(BWAPI::Unit);
+    void onUnitDiscover(BWAPI::Unit);
 };

@@ -19,13 +19,12 @@ void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
-
-    BWEB::Map::onStart();
-	BWEB::Blocks::findBlocks();
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
+    spenderManager.onUnitDestroy(unit);
+
     if (unit->getPlayer() != BWAPI::Broodwar->self())
         return;
 
@@ -57,6 +56,48 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 }
 
+void BuildManager::onUnitCreate(BWAPI::Unit unit)
+{
+    spenderManager.onUnitCreate(unit);
+    buildingWarps.insert(unit);
+}
+
+void BuildManager::onUnitMorph(BWAPI::Unit unit)
+{
+    spenderManager.onUnitMorph(unit);
+}
+
+void BuildManager::onUnitDiscover(BWAPI::Unit unit)
+{
+    spenderManager.onUnitDiscover(unit);
+}
+
+void BuildManager::onFrame() {
+    spenderManager.OnFrame();
+    buildQueue.clear();
+    BWEB::Map::draw();
+
+    if (!buildOrderCompleted)
+    {
+        updateBuild();
+        runBuildQueue();
+        runUnitQueue();
+    }
+
+    pumpUnit();
+
+    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
+    //for (BWAPI::Unit building : buildingWarps)
+    //{
+    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
+    //}
+
+    for (BWAPI::Unit building : buildings)
+    {
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
+    }
+}
+
 void BuildManager::assignBuilding(BWAPI::Unit unit)
 {
     std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
@@ -82,12 +123,6 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
     spenderManager.addRequest(unitToTrain, unit);
-}
-
-void BuildManager::onCreate(BWAPI::Unit unit)
-{
-    spenderManager.onUnitCreate(unit);
-    buildingWarps.insert(unit);
 }
 
 bool BuildManager::alreadySentRequest(int unitID)
@@ -126,32 +161,6 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 
 }
 
-void BuildManager::onFrame() {
-    spenderManager.OnFrame();
-    buildQueue.clear();
-    BWEB::Map::draw();
-
-    if (!buildOrderCompleted)
-    {
-        updateBuild();
-        runBuildQueue();
-        runUnitQueue();
-    }
-
-    pumpUnit();
-
-    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
-    //for (BWAPI::Unit building : buildingWarps)
-    //{
-    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
-    //}
-
-    for (BWAPI::Unit building : buildings)
-    {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }
-}
-
 void BuildManager::updateBuild() {
     BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
 
@@ -184,11 +193,8 @@ void BuildManager::PvZ() {
     PvZ_10_12_Gateway();
 }
 
-void BuildManager::pumpUnit() {
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
-    const int currentGas = BWAPI::Broodwar->self()->gas();
-    int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-
+void BuildManager::pumpUnit() 
+{
     for (auto& unit : buildings)
     {
         if (unit->getType() == Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
@@ -197,6 +203,10 @@ void BuildManager::pumpUnit() {
             {
                 trainUnit(Protoss_Dragoon, unit);
                 cout << "Training Dragoon\n";
+            }
+            else
+            {
+                trainUnit(Protoss_Zealot, unit);
             }
         }
         else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
@@ -228,8 +238,8 @@ void BuildManager::PvT_2Gateway_Observer() {
     buildQueue[Protoss_Observatory] = (currentSupply >= 38);
     //buildQueue[Protoss_Nexus] = (currentSupply >= 20);
 
-    unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
-    unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
+    /*unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
+    unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;*/
 
     ////Start pumping Zealots once 1st Dragoon built, can be changed
     //zealotUnitPump = vis(Protoss_Dragoon) > 0;

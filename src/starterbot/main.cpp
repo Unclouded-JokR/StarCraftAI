@@ -72,6 +72,7 @@ void PlayGame()
                 case BWAPI::EventType::UnitCreate:   { bot.onUnitCreate(e.getUnit());       break; }
                 case BWAPI::EventType::UnitMorph:    { bot.onUnitMorph(e.getUnit());        break; }
                 case BWAPI::EventType::UnitDestroy:  { bot.onUnitDestroy(e.getUnit());      break; }
+                case BWAPI::EventType::UnitDiscover: { bot.onUnitDiscover(e.getUnit());     break; }
                 case BWAPI::EventType::UnitRenegade: { bot.onUnitRenegade(e.getUnit());     break; }
                 case BWAPI::EventType::UnitComplete: { bot.onUnitComplete(e.getUnit());     break; }
                 case BWAPI::EventType::SendText:     { bot.onSendText(e.getText());         break; }

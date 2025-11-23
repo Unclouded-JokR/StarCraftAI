@@ -82,21 +82,6 @@ bool Tools::BuildBuilding(BWAPI::UnitType type)
     return builder->build(type, buildPos);
 }
 
-
-//bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
-//{
-//    // Get a location that we want to build the building next to
-//    BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
-//
-//    // Ask BWAPI for a building location near the desired position for the type
-//    int maxBuildRange = 128;
-//    bool buildingOnCreep = type.requiresCreep();
-//    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
-//    return unit->build(type, buildPos);
-//}
-
-
-
 void Tools::DrawUnitCommands()
 {
     for (auto& unit : BWAPI::Broodwar->self()->getUnits())
@@ -305,70 +290,5 @@ void Tools::updateCount() {
             if (unit.isCompleted())
                 allCompleteTypeCounts[type] += 1;
         }
-    }
-}
-
-const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingNatural(); }
-BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
-BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getClosestNaturalStation(BWAPI::Broodwar->self()->getStartLocation())->getBase()->Location(); }
-const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }
-
-bool Tools::ExpansionBuild(BWAPI::Unit unit)
-{
-    int maxBuildRange = 64;
-    BWAPI:TilePosition desiredPos = getNaturalTile();
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(Protoss_Nexus, desiredPos, maxBuildRange);
-    return unit->build(Protoss_Nexus, buildPos);
-}
-
-bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
-{
-    std::cout << "Requesting to build: " << type << "\n";
-    
-    if (type == BWAPI::UnitTypes::Protoss_Nexus)
-    {
-        
-    }
-    else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
-    {
-        /*std::vector<BWEB::Station> stations = BWEB::Stations::getStations();
-        std::cout << "Number of Stations = " << stations.size() << "\n";
-
-        for (BWEB::Station station : stations)
-        {
-            std::set<BWAPI::TilePosition> placements = station.getPlacements(type);
-
-            for (BWAPI::TilePosition placement : placements)
-            {
-                if (unit->build(type, placement)) return true;
-            }
-        }
-
-        return false;*/
-        // Get a location that we want to build the building next to
-        BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
-
-        // Ask BWAPI for a building location near the desired position for the type
-        int maxBuildRange = 64;
-        bool buildingOnCreep = type.requiresCreep();
-        BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
-        return unit->build(type, buildPos);
-    }
-    else
-    {
-        std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
-        std::cout << "Number of Blocks = " << blocks.size() << "\n";
-
-        for (BWEB::Block block : blocks)
-        {
-            std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
-
-            for (BWAPI::TilePosition placement : placements)
-            {
-                if (unit->build(type, placement)) return true;
-            }
-        }
-
-        return false;
     }
 }

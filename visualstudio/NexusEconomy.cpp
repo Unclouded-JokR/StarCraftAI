@@ -201,7 +201,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	{
 		BWAPI::Unit resource = assignedResource[unit];
 
-		//Check if worker is assigned to mineral or gas
+		//Check if worker is assigned to mineral or gas, MAKE THIS BETTER
 		if (resource == vespeneGyser)
 		{
 			assimilatorWorkerCount -= 1;
@@ -496,6 +496,8 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	//Get closest idle units if possible.
 	for (const BWAPI::Unit unit : workers)
 	{
+		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
+
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 
 		if (unit->isIdle() && distance < minDistance)
@@ -526,6 +528,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	minDistance = INT_MAX;
 	for (const BWAPI::Unit unit : workers)
 	{
+		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 		
 		if (unit->isCarryingMinerals() && distance < minDistance)
@@ -545,6 +548,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	minDistance = INT_MAX;
 	for (const BWAPI::Unit unit : workers)
 	{
+		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 
 		if (distance < minDistance)
