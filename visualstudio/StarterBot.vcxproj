@@ -31,7 +31,8 @@
     <ClInclude Include="BWEB\Source\PathFind.h" />
     <ClInclude Include="BWEB\Source\Station.h" />
     <ClInclude Include="BWEB\Source\Wall.h" />
-    <ClInclude Include="CombatManager.h" />
+	<ClCompile Include="A-StarPathfinding.h" />
+	<ClInclude Include="CombatManager.h" />
     <ClInclude Include="EconomyManager.h" />
     <ClInclude Include="InfluenceMap.h" />
     <ClInclude Include="InformationManager.h" />
@@ -72,6 +73,7 @@
     <ClCompile Include="BWEB\Source\PathFind.cpp" />
     <ClCompile Include="BWEB\Source\Station.cpp" />
     <ClCompile Include="BWEB\Source\Wall.cpp" />
+	<ClCompile Include="A-StarPathfinding.cpp" />
     <ClCompile Include="CombatManager.cpp" />
     <ClCompile Include="EconomyManager.cpp" />
     <ClCompile Include="InfluenceMap.cpp" />

@@ -21,13 +21,13 @@ void ProtoBotCommander::onStart()
 	BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
 	std::cout << "Map initialization...\n";
-	theMap.Initialize();
-	theMap.EnableAutomaticPathAnalysis();
-	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
-	assert(startingLocationsOK);
+	/*theMap.Initialize();
+	theMap.EnableAutomaticPathAnalysis();*/
+	//bool startingLocationsOK = theMap.FindBasesForStartingLocations();
+	//assert(startingLocationsOK);
 
 	// Call MapTools OnStart
-	m_mapTools.onStart();
+	//m_mapTools.onStart();
 
 
 
@@ -75,9 +75,11 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
+	combatManager.onStart();
+
 	scoutingManager.onStart();
 
-	buildManager.onStart();
+	//buildManager.onStart();
 
 	std::cout << "gg\n";
 }
@@ -149,7 +151,7 @@ void ProtoBotCommander::onFrame()
 	}
 	Tools::updateCount();
 
-	buildManager.onFrame();
+	//buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
 	economyManager.OnFrame();

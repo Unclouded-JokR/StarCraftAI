@@ -1,6 +1,7 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
 #include "../src/starterbot/Tools.h"
+#include "A-StarPathfinding.h"
 #include "Squad.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
@@ -9,9 +10,7 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 
 void CombatManager::onStart(){
 	std::map<int, int> unitSquadMap;
-}
 
-void CombatManager::onFrame() {
 	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
 		if (unit->getType().isWorker() || unit->getType().isBuilding()) {
@@ -21,7 +20,18 @@ void CombatManager::onFrame() {
 		if (isAssigned(unit) == false) {
 			assignUnit(unit);
 		}
+
+		BWAPI::Position pos = unit->getPosition();
+		Path AStarPath(unit, BWAPI::Position(pos.x, pos.y + 100));
+		AStarPath.generateAStarPath();
+		cout << AStarPath.tiles.size() << endl;
+		for (const auto& tile : AStarPath.tiles) {
+			BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.x * 32, tile.y * 32), BWAPI::Position(tile.x * 32 + 32, tile.y * 32 + 32), BWAPI::Colors::Purple);
+		}
 	}
+}
+
+void CombatManager::onFrame() {
 
 	for (auto& squad : Squads) {
 		squad.attack(squad.units.getPosition());
