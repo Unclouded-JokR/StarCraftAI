@@ -209,17 +209,17 @@ void BuildManager::pumpUnit()
                 trainUnit(Protoss_Zealot, unit);
             }
         }
-        else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
-        {
-            //20 percent chance to create a 
-            const int temp = rand() % 5;
+        //else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
+        //{
+        //    //20 percent chance to create a 
+        //    const int temp = rand() % 5;
 
-            if (temp == 0)
-            {
-                trainUnit(Protoss_Observer, unit);
-                cout << "Training Observer\n";
-            }
-        }
+        //    if (temp == 0)
+        //    {
+        //        trainUnit(Protoss_Observer, unit);
+        //        cout << "Training Observer\n";
+        //    }
+        //}
     }
 }
 
