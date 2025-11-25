@@ -22,12 +22,10 @@ void CombatManager::onStart(){
 		}
 
 		BWAPI::Position pos = unit->getPosition();
-		Path AStarPath(unit, BWAPI::Position(pos.x, pos.y + 100));
+		Path AStarPath(unit, BWAPI::Position(pos.x + 500, pos.y + 500));
 		AStarPath.generateAStarPath();
 		cout << AStarPath.tiles.size() << endl;
-		for (const auto& tile : AStarPath.tiles) {
-			BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.x * 32, tile.y * 32), BWAPI::Position(tile.x * 32 + 32, tile.y * 32 + 32), BWAPI::Colors::Purple);
-		}
+		AStarPath.WalkPath();
 	}
 }
 
