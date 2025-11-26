@@ -43,6 +43,7 @@ vector<Node> Path::getNeighbours(const Node& node) {
 void Path::generateAStarPath() {
 	tiles.clear();
 	reachable = false;
+	currentUnitPathIndex[unit] = 0;
 
 	// Checks if either the starting or ending tile positions are invalid
 	// If so, returns early with no tiles added to the path
@@ -65,12 +66,12 @@ void Path::generateAStarPath() {
 
 	// Store parents in an unordered_map for reconstructing path later
 	unordered_map<int, BWAPI::TilePosition> parent;
-	
+
 	// Very first node to be added is the starting tile position
 	openSet.push(Node(start, start, 0, 0, 0, BWAPI::Broodwar->getFrameCount()));
 	gCostMap[TileToIndex(start)] = 0;
 
-	while (openSet.size() > 0) {	
+	while (openSet.size() > 0) {
 		Node currentNode = openSet.top();
 		openSet.pop();
 		closedSet[TileToIndex(currentNode.tile)] = true;
@@ -124,7 +125,28 @@ void Path::WalkPath() {
 		return;
 	}
 
-	for (const auto& tile : tiles) {
-		unit->move(BWAPI::Position(tile), true);
+	// Gets current index for this unit's path
+	// Initially, path index is set to 0 in the Path constructor
+	int& currentIndex = currentUnitPathIndex[unit];
+
+	// Checks if path is complete
+	if (currentIndex >= (int)tiles.size()) {
+		return;
+	}
+
+	// Get center of tile position since TilePosition is 32 x 32 pixels and unit moves to pixel positions
+	BWAPI::Position target(tiles[currentIndex].x * 32 + 16, tiles[currentIndex].y * 32 + 16);
+	if (unit->getDistance(target) <= 50){
+		currentIndex++; // Close enough to target tile, start moving to next tile
+		if (currentIndex >= (int)tiles.size()) {
+			return; // Path complete
+		}
+		target = BWAPI::Position(tiles[currentIndex].x * 32 + 16, tiles[currentIndex].y * 32 + 16);
+	}
+
+	// Check if last command frame was more than 2 frames ago or if the distance between a unit and its next movement target is far enough
+	if (unit->getLastCommand().getTargetPosition() != target) {
+		BWAPI::Broodwar->printf("MOVING");
+		unit->move(target);
 	}
 }

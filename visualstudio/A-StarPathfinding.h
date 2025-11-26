@@ -36,6 +36,7 @@ class Path {
 	BWAPI::Unit unit;
 	BWAPI::TilePosition start;
 	BWAPI::TilePosition	end;
+	unordered_map<BWAPI::Unit, int> currentUnitPathIndex;
 
 	public:
 		vector<BWAPI::TilePosition> tiles;
