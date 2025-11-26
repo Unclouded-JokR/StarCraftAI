@@ -3,6 +3,7 @@
 #include <BWAPI.h>
 #include <vector>
 #include <unordered_map>
+#include <random>
 
 #define WORKERS_PER_ASSIMILATOR 3
 #define OPTIMAL_WORKERS_PER_MINERAL 2
@@ -22,6 +23,9 @@ public:
 	std::unordered_map<BWAPI::Unit, int> mineralWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
 	int assimilatorWorkerCount = 0;
+	int red;
+	int blue;
+	int green;
 
 	//Calculated maximums based on number of miners.
 	int maximumWorkerAmount;
