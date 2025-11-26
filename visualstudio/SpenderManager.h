@@ -74,6 +74,7 @@ public:
     /*
     * BWAPI Events
     */
+    void onStart();
     void OnFrame();
     void onUnitCreate(BWAPI::Unit);
     void onUnitDestroy(BWAPI::Unit);

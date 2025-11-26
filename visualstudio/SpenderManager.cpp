@@ -4,7 +4,12 @@
 SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
     std::cout << "Spender Manager Made!" << "\n";
-    
+}
+
+void SpenderManager::onStart()
+{
+    builders.clear();
+    buildRequests.clear();
     plannedBuildings.clear();
     plannedUnits.clear();
     requestIdentifiers.clear();
@@ -193,7 +198,7 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
             }
         }
 
-        std::cout << distance << "\n";
+        //std::cout << distance << "\n";
         return BWAPI::Position(closestDistance);
     }
 }
@@ -232,7 +237,7 @@ void SpenderManager::OnFrame()
 
     if (BWAPI::Broodwar->getFrameCount() % 48 == 0)
     {
-        //printQueue();
+        printQueue();
 
         /*for (const BWAPI::UnitType building : plannedBuildings)
         {
@@ -255,13 +260,18 @@ void SpenderManager::OnFrame()
                 //Find position to place building using BWEB and BWEM
                 const BWAPI::Position positionToBuild = getPositionToBuild(temp.buildingType);
 
-                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
+                //BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
+                BWAPI::Unit unitAvalible = commanderReference->getUnitToScout();
 
                 if (unitAvalible == nullptr)
                 {
+                    std::cout << "Did not find worker\n";
                     ++it;
                     continue;
                 }
+                std::cout << "Found worker\n";
+                //Sometimes worker is not being told to move for whatever reason?
+
                 //std::cout << "Adding " << temp.buildingType << " to the queue\n";
 
                 //Create new builder to keep track of.
@@ -275,9 +285,6 @@ void SpenderManager::OnFrame()
                 plannedBuildings.push_back(temp.buildingType);
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
-
-                //Tell worker to move.
-                std::cout << unitAvalible->move(positionToBuild) << "\n";
 
                 //Remove request from the building requests.
                 it = buildRequests.erase(it);
@@ -363,13 +370,23 @@ void SpenderManager::OnFrame()
         if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
         {
             //std::cout << "In position to build " << it->building << "\n";
-            const bool buildSuccess = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
-
-            if (!buildSuccess)
+            if (!it->probe->canBuild(it->building))
             {
                 it++;
                 continue;
             }
+
+            const bool buildSuccess = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
+
+            //Get new position to build if we cannot build at this place.
+            if (!buildSuccess)
+            {
+                //std::cout << "BUILD UNSUCCESSFUL, trying another spot\n";
+                it->positionToBuild = getPositionToBuild(it->building);
+                it++;
+                continue;
+            }
+            std::cout << "Built " << it->building << ", successfully\n";
 
             //Need to utilize BWEB's reserving tile system to improve building placement even further.
             BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
@@ -380,6 +397,13 @@ void SpenderManager::OnFrame()
         }
         else
         {
+            //Testing this cause the move command has a small chance to fail
+            if (it->probe->getOrder() != BWAPI::Orders::Move)
+            {
+                //std::cout << "Move command failed, trying again\n";
+                it->probe->move(it->positionToBuild);
+            }
+
             it++;
         }
     }

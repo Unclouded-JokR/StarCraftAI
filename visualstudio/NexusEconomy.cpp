@@ -95,6 +95,7 @@ void NexusEconomy::OnFrame()
 	for (BWAPI::Unit mineral : minerals)
 	{
 		BWAPI::Broodwar->drawLineMap(nexus->getPosition(), mineral->getPosition(), BWAPI::Color(0, 0, 255));
+		BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(mineralWorkerCount[mineral]).c_str());
 	}
 
 	if (assimilator != nullptr) BWAPI::Broodwar->drawLineMap(nexus->getPosition(), assimilator->getPosition(), BWAPI::Color(255, 255, 0));
@@ -128,13 +129,20 @@ void NexusEconomy::OnFrame()
 	for (BWAPI::Unit worker : workers)
 	{
 		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
+
 		if (minerals.size() == 0) continue;
 
+		/*if (assignedResource.find(worker) != assignedResource.end())
+		{
+			BWAPI::Unit assignedMineral = assignedResource[worker];
+			BWAPI::Broodwar->drawLineMap(worker->getPosition(), assignedMineral->getPosition(), BWAPI::Color(255, 0, 0));
+		}*/
+
+
 		//If a worker is constructing skip over them until they are done.
-		//Add method to check if a worker is being used to place a building if isConstructing is not working.
 		if (worker->getOrder() == BWAPI::Orders::Move || worker->isConstructing())
 		{
-			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
+			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
 			continue;
 		}
 
@@ -146,10 +154,9 @@ void NexusEconomy::OnFrame()
 				worker->gather(assimilator);
 				assignedResource[worker] = vespeneGyser;
 				assimilatorWorkerCount += 1;
-				continue;
+				//continue;
 			}
-
-			if (assignedResource.find(worker) == assignedResource.end())
+			else if (assignedResource.find(worker) == assignedResource.end())
 			{
 				BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
 				mineralWorkerCount[closestMineral] += 1;
@@ -157,7 +164,8 @@ void NexusEconomy::OnFrame()
 				worker->gather(closestMineral);
 			}
 
-			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(255, 0, 0), true);
+			
+			//BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(255, 0, 0), true);
 		}
 		else
 		{
@@ -169,7 +177,7 @@ void NexusEconomy::OnFrame()
 				worker->rightClick(nexus);
 			}
 
-			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 2, 2, BWAPI::Color(0, 128, 0), true);
+			//BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 128, 0), true);
 		}
 	}
 
@@ -217,18 +225,19 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	}
 	else if (unit->getType().isResourceContainer())
 	{
-		if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
+		/*if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
 		{
 			assimilator = nullptr;
 			assimilatorWorkerCount = 0;
-		}
-		else if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field && minerals.find(unit) != minerals.end())
+		}*/
+		
+		if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field && minerals.find(unit) != minerals.end())
 		{
 			mineralWorkerCount[unit] = 0;
 			minerals.erase(unit);
 		}
 	}
-	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && (unit != assimilator || assimilator == nullptr))
+	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit == assimilator)
 	{
 		assimilator = nullptr;
 		assimilatorWorkerCount = 0;
@@ -507,13 +516,6 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 			//Only take workers that are mining mineral patches. Workers assigned to gysers are never deassgined, unless destoryed.
 			if (assignedResource.find(unit) != assignedResource.end() && assignedResource[unit] != vespeneGyser)
 			{
-				BWAPI::Unit assignedMineral = assignedResource[unit];
-				mineralWorkerCount[assignedMineral] -= 1;
-				assignedResource.erase(unit);
-				unitToReturn = unit;
-			}
-			else
-			{
 				unitToReturn = unit;
 			}
 		}
@@ -522,6 +524,13 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	//If idle unit is avalible return, otherwise search for the second best option
 	if (unitToReturn != nullptr)
 	{
+		if (assignedResource.find(unitToReturn) != assignedResource.end())
+		{
+			BWAPI::Unit assignedMineral = assignedResource[unitToReturn];
+			mineralWorkerCount[assignedMineral] -= 1;
+			assignedResource.erase(unitToReturn);
+		}
+
 		return unitToReturn;
 	}
 
@@ -529,6 +538,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	for (const BWAPI::Unit unit : workers)
 	{
 		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
+
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 		
 		if (unit->isCarryingMinerals() && distance < minDistance)
@@ -549,15 +559,20 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	for (const BWAPI::Unit unit : workers)
 	{
 		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
+
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 
-		if (distance < minDistance)
+		if (distance < minDistance && assignedResource.find(unitToReturn) != assignedResource.end() && assignedResource[unit] != vespeneGyser)
 		{
-			BWAPI::Unit assignedMineral = assignedResource[unit];
-			mineralWorkerCount[assignedMineral] -= 1;
-			assignedResource.erase(unit);
 			unitToReturn = unit;
 		}
+	}
+
+	if (assignedResource.find(unitToReturn) != assignedResource.end())
+	{
+		BWAPI::Unit assignedMineral = assignedResource[unitToReturn];
+		mineralWorkerCount[assignedMineral] -= 1;
+		assignedResource.erase(unitToReturn);
 	}
 	return unitToReturn;
 }

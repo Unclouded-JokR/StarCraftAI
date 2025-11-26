@@ -19,6 +19,7 @@ void BuildManager::onStart()
 {
     //Make false at the start of a game.
     buildOrderCompleted = false;
+    spenderManager.onStart();
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
@@ -208,7 +209,7 @@ void BuildManager::pumpUnit()
             if (unit->canTrain(Protoss_Dragoon))
             {
                 trainUnit(Protoss_Dragoon, unit);
-                cout << "Training Dragoon\n";
+                //cout << "Training Dragoon\n";
             }
             else
             {
@@ -227,7 +228,7 @@ void BuildManager::pumpUnit()
         //    }
         //}
 
-        if (type == Protoss_Cybernetics_Core && !unit->isUpgrading())
+        /*if (type == Protoss_Cybernetics_Core && !unit->isUpgrading())
         {
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge))
             {
@@ -262,7 +263,7 @@ void BuildManager::pumpUnit()
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
                 continue;
             }
-        }
+        }*/
         else if (type == Protoss_Templar_Archives && !unit->isUpgrading())
         {
             /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor))
@@ -290,8 +291,8 @@ void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    buildOrderCompleted = true;
-    return;
+    //buildOrderCompleted = true;
+    //return;
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
