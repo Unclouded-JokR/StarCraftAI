@@ -1,5 +1,6 @@
 #include "ScoutingProbe.h"
 #include "ProtoBotCommander.h"
+#include "ScoutingManager.h"
 #include <algorithm>
 #include <cmath>
 #include <climits>
@@ -15,10 +16,6 @@ namespace {
     }
     static inline int mapWpx() { return BWAPI::Broodwar->mapWidth() * 32; }
     static inline int mapHpx() { return BWAPI::Broodwar->mapHeight() * 32; }
-}
-
-ScoutingProbe::ScoutingProbe(ProtoBotCommander* commander)
-    : commanderRef(commander) {
 }
 
 void ScoutingProbe::onStart() {
@@ -290,7 +287,7 @@ void ScoutingProbe::ensureOrbitWaypoints() {
     if (!orbitWaypoints.empty()) return;
     orbitWaypoints.clear();
     orbitWaypoints.reserve(8);
-
+    BWAPI::Broodwar->printf("Orbit");
     const Position center = clampToMapPx(computeOrbitCenter(), 64);
     const int radius = kOrbitRadius;
 
@@ -372,7 +369,11 @@ int ScoutingProbe::angleDeg(const Position& from, const Position& to) {
 }
 
 BWAPI::Position ScoutingProbe::computeOrbitCenter() const {
-    if (enemyMainPos.isValid()) return enemyMainPos;
+    if (enemyMainPos.isValid()) 
+    {
+        if (manager) manager->setEnemyMain(BWAPI::TilePosition(enemyMainPos));
+        return enemyMainPos;
+    } 
     if (scout && scout->exists()) return scout->getPosition();
     return Position(0, 0);
 }

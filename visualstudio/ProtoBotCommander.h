@@ -18,6 +18,13 @@
 
 using namespace BWEM;
 
+struct EnemyLocations {
+	std::optional<BWAPI::TilePosition> main;
+	std::optional<BWAPI::TilePosition> natural;
+	int frameLastUpdateMain = -1;
+	int frameLastUpdateNat = -1;
+};
+
 class ProtoBotCommander
 {
 public:
@@ -66,6 +73,10 @@ public:
 	//Information Manager Methods
 	const std::set<BWAPI::Unit>& getKnownEnemyUnits();
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& getKnownEnemyBuildings();
+	const EnemyLocations& enemy() const { return enemy_; }
+	EnemyLocations& enemy() { return enemy_; }
+	void onEnemyMainFound(const BWAPI::TilePosition& tp);
+	void onEnemyNaturalFound(const BWAPI::TilePosition& tp);
 
 	//Build Manager Methods
 	bool buildOrderCompleted();
@@ -76,6 +87,9 @@ public:
 
 	//Scouting
 	BWAPI::Unit getUnitToScout();
+
+private:
+	EnemyLocations enemy_;
 };
 
 enum ActionType {

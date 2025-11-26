@@ -42,6 +42,7 @@
     <ClInclude Include="ScoutingObserver.h" />
     <ClInclude Include="ScoutingProbe.h" />
     <ClInclude Include="ScoutingZealot.h" />
+    <ClInclude Include="ScoutPolicy.h" />
     <ClInclude Include="SpenderManager.h" />
     <ClInclude Include="StrategyManager.h" />
     <ClInclude Include="Squad.h" />

@@ -90,5 +90,6 @@
     <ClInclude Include="ScoutingDragoon.h" />
     <ClInclude Include="ScoutingObserver.h" />
     <ClInclude Include="ScoutingProbe.h" />
+    <ClInclude Include="ScoutPolicy.h" />
   </ItemGroup>
 </Project>

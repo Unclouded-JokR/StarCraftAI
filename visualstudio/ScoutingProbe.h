@@ -5,11 +5,13 @@
 #include <optional>
 
 class ProtoBotCommander;
+class ScoutingManager;
 
 // Concrete behavior for a Probe scout (your current logic moved here)
 class ScoutingProbe {
 public:
-    explicit ScoutingProbe(ProtoBotCommander* commander);
+    explicit ScoutingProbe(ProtoBotCommander* commander, ScoutingManager* manager)
+        : commanderRef(commander), manager(manager) {}
 
     void onStart();
     void onFrame();
@@ -24,6 +26,7 @@ private:
 
     // core refs
     ProtoBotCommander* commanderRef = nullptr;
+    ScoutingManager* manager = nullptr;
     BWAPI::Unit scout = nullptr;
 
     // enemy info
