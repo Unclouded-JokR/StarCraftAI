@@ -7,20 +7,20 @@ namespace BWEB::Map
 {
     namespace {
 
-        Station * mainStation = nullptr;
-        Station * natStation = nullptr;
+        Station* mainStation = nullptr;
+        Station* natStation = nullptr;
         bool drawReserveOverlap, drawUsed, drawWalk, drawArea;
 
         map<BWAPI::Key, bool> lastKeyState;
-        map<const BWEM::ChokePoint *, set<TilePosition>> chokeTiles;
-        map<const BWEM::ChokePoint *, pair<Position, Position>> chokeLines;
+        map<const BWEM::ChokePoint*, set<TilePosition>> chokeTiles;
+        map<const BWEM::ChokePoint*, pair<Position, Position>> chokeLines;
 
-        int reserveGrid[256][256] ={};
-        UnitType usedGrid[256][256] ={};
-        bool walkGridLarge[256][256] ={};
-        bool walkGridMedium[256][256] ={};
-        bool walkGridSmall[256][256] ={};
-        bool walkGridFull[256][256] ={};
+        int reserveGrid[256][256] = {};
+        UnitType usedGrid[256][256] = {};
+        bool walkGridLarge[256][256] = {};
+        bool walkGridMedium[256][256] = {};
+        bool walkGridSmall[256][256] = {};
+        bool walkGridFull[256][256] = {};
         bool logInfo = true;
 
         void findMain()
@@ -149,7 +149,7 @@ namespace BWEB::Map
         }
 
         // Check for at least 3 columns to left and right of tile for walkability
-        const auto isLargeWalkable = [&](auto &t) {
+        const auto isLargeWalkable = [&](auto& t) {
             WalkPosition w(t);
 
             auto offset1 = Broodwar->isWalkable(w + WalkPosition(-2, 0)) && Broodwar->isWalkable(w + WalkPosition(-2, 1)) && Broodwar->isWalkable(w + WalkPosition(-2, 2)) && Broodwar->isWalkable(w + WalkPosition(-2, 3));
@@ -161,10 +161,10 @@ namespace BWEB::Map
 
             return (offset1 && offset2 && cornersWalkable) ||
                 (cornersWalkable && offset3 && offset4);
-        };
+            };
 
         // Check for at least 2 columns to left and right of tile for walkability
-        const auto isMediumWalkable = [&](auto &t) {
+        const auto isMediumWalkable = [&](auto& t) {
             WalkPosition w(t);
 
             auto offset1 = Broodwar->isWalkable(w + WalkPosition(-2, 0)) && Broodwar->isWalkable(w + WalkPosition(-2, 1)) && Broodwar->isWalkable(w + WalkPosition(-2, 2)) && Broodwar->isWalkable(w + WalkPosition(-2, 3));
@@ -175,12 +175,12 @@ namespace BWEB::Map
             return (offset1 && offset2) ||
                 (offset2 && offset3) ||
                 (offset3 && offset4);
-        };
+            };
 
         // As long as Tile is walkable
-        const auto isSmallWalkable = [&](auto &t) {
+        const auto isSmallWalkable = [&](auto& t) {
             return true;
-        };
+            };
 
 
         // Initialize walk grids for each rough unit size
@@ -199,9 +199,9 @@ namespace BWEB::Map
         }
 
         // Create chokepoint geometry cache in TilePositions
-        for (auto &area : mapBWEM.Areas()) {
-            for (auto &choke : area.ChokePoints()) {
-                for (auto &geo : choke->Geometry())
+        for (auto& area : mapBWEM.Areas()) {
+            for (auto& choke : area.ChokePoints()) {
+                for (auto& geo : choke->Geometry())
                     chokeTiles[choke].insert(TilePosition(geo));
             }
         }
@@ -262,7 +262,7 @@ namespace BWEB::Map
         }
 
         // Update BWEM
-        if (unit->getPlayer()->isNeutral() && find_if(Map::mapBWEM.StaticBuildings().begin(), Map::mapBWEM.StaticBuildings().end(), [&](auto &n) { return n.get()->Unit() == unit; }) != Map::mapBWEM.StaticBuildings().end())
+        if (unit->getPlayer()->isNeutral() && find_if(Map::mapBWEM.StaticBuildings().begin(), Map::mapBWEM.StaticBuildings().end(), [&](auto& n) { return n.get()->Unit() == unit; }) != Map::mapBWEM.StaticBuildings().end())
             Map::mapBWEM.OnStaticBuildingDestroyed(unit);
     }
 
@@ -396,7 +396,7 @@ namespace BWEB::Map
                 }
             }
             return posBest;
-        };
+            };
 
         // Return DBL_MAX if not valid path points or not walkable path points
         if (!start.isValid() || !end.isValid())
@@ -417,11 +417,11 @@ namespace BWEB::Map
             return DBL_MAX;
 
         // Find the closest chokepoint node
-        const auto accurateClosestNode = [&](const BWEM::ChokePoint * cp) {
+        const auto accurateClosestNode = [&](const BWEM::ChokePoint* cp) {
             return getClosestChokeTile(cp, start);
-        };
+            };
 
-        const auto fastClosestNode = [&](const BWEM::ChokePoint * cp) {
+        const auto fastClosestNode = [&](const BWEM::ChokePoint* cp) {
             auto bestPosition = cp->Center();
             auto bestDist = DBL_MAX;
 
@@ -434,11 +434,11 @@ namespace BWEB::Map
             const auto d3 = n3.getDistance(last);
 
             return d1 < d2 ? (d1 < d3 ? n1 : n3) : (d2 < d3 ? n2 : n3);
-        };
+            };
 
         // For each chokepoint, add the distance to the closest chokepoint node
         auto first = true;
-        for (auto &cpp : mapBWEM.GetPath(start, end)) {
+        for (auto& cpp : mapBWEM.GetPath(start, end)) {
 
             auto large = cpp->Pos(cpp->end1).getDistance(cpp->Pos(cpp->end2)) > 40;
 
@@ -451,11 +451,11 @@ namespace BWEB::Map
         return dist + last.getDistance(end);
     }
 
-    Position getClosestChokeTile(const BWEM::ChokePoint * choke, Position here)
+    Position getClosestChokeTile(const BWEM::ChokePoint* choke, Position here)
     {
         auto best = DBL_MAX;
         auto posBest = Positions::Invalid;
-        for (auto &tile : chokeTiles[choke]) {
+        for (auto& tile : chokeTiles[choke]) {
             const auto p = Position(tile) + Position(16, 16);
             const auto dist = p.getDistance(here);
             if (dist < best) {
@@ -480,10 +480,10 @@ namespace BWEB::Map
         return make_pair(direction1, direction2);
     }
 
-    const BWEM::Area * getNaturalArea() { return natStation->getBase()->GetArea(); }
-    const BWEM::Area * getMainArea() { return mainStation->getBase()->GetArea(); }
-    const BWEM::ChokePoint * getNaturalChoke() { return natStation->getChokepoint(); }
-    const BWEM::ChokePoint * getMainChoke() { return mainStation->getChokepoint(); }
+    const BWEM::Area* getNaturalArea() { return natStation->getBase()->GetArea(); }
+    const BWEM::Area* getMainArea() { return mainStation->getBase()->GetArea(); }
+    const BWEM::ChokePoint* getNaturalChoke() { return natStation->getChokepoint(); }
+    const BWEM::ChokePoint* getMainChoke() { return mainStation->getChokepoint(); }
     TilePosition getNaturalTile() { return natStation->getBase()->Location(); }
     Position getNaturalPosition() { return natStation->getBase()->Center(); }
     TilePosition getMainTile() { return mainStation->getBase()->Location(); }

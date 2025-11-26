@@ -38,10 +38,9 @@ public:
     bool checkUnitIsPlanned(BWAPI::UnitType building);
     void buildingDoneWarping(BWAPI::Unit unit);
 
-
     void buildBuilding(BWAPI::UnitType building);
     void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
-    void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
+    void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
 
     void getBuildOrder();
     void updateBuild();

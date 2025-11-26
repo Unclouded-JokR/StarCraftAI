@@ -21,11 +21,12 @@ void SpenderManager::addRequest(BWAPI::UnitType building)
     buildRequests.push_back(requestToAdd);
 }
 
-void SpenderManager::addRequest(BWAPI::UpgradeType upgradeToResearch)
+void SpenderManager::addRequest(BWAPI::Unit unit, BWAPI::UpgradeType upgradeToResearch)
 {
     BuildRequest requestToAdd;
     ResearchUpgradeRequest temp;
     temp.upgradeType = upgradeToResearch;
+    temp.building = unit;
     requestToAdd.request = temp;
 
     buildRequests.push_back(requestToAdd);
@@ -118,6 +119,16 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
     return false;
 }
 
+bool SpenderManager::alreadyUsingTiles(BWAPI::TilePosition positon)
+{
+    for (const Builder& builder : builders)
+    {
+        if (builder.positionToBuild == BWAPI::Position(positon)) return true;
+    }
+
+    return false;
+}
+
 BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
 {
     if (type == BWAPI::UnitTypes::Protoss_Nexus)
@@ -160,8 +171,9 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
     }
     else
     {
+        int distance = INT_MAX;
+        BWAPI::TilePosition closestDistance;
         std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
-        //std::cout << "Number of Blocks = " << blocks.size() << "\n";
 
         for (BWEB::Block block : blocks)
         {
@@ -169,9 +181,20 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
 
             for (const BWAPI::TilePosition placement : placements)
             {
-                if (BWAPI::Broodwar->canBuildHere(placement, type)) return BWAPI::Position(placement);
+                const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
+
+                if (BWAPI::Broodwar->canBuildHere(placement, type)
+                    && distanceToPlacement < distance
+                    && !alreadyUsingTiles(placement))
+                {
+                    distance = distanceToPlacement;
+                    closestDistance = placement;
+                }
             }
         }
+
+        std::cout << distance << "\n";
+        return BWAPI::Position(closestDistance);
     }
 }
 
@@ -217,9 +240,10 @@ void SpenderManager::OnFrame()
         }*/
     }
 
+    //prioritize buildings and units first.
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
     {
-        if (holds_alternative<BuildStructureRequest>(it->request))
+        if (std::holds_alternative<BuildStructureRequest>(it->request))
         {
             const BuildStructureRequest temp = get<BuildStructureRequest>(it->request);
 
@@ -263,7 +287,7 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
-        else if (holds_alternative<TrainUnitRequest>(it->request))
+        else if (std::holds_alternative<TrainUnitRequest>(it->request))
         {
             const TrainUnitRequest temp = get<TrainUnitRequest>(it->request);
 
@@ -294,7 +318,16 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
-        else if (holds_alternative<ResearchUpgradeRequest>(it->request))
+        else
+        {
+            it++;
+        }
+    }
+
+    //Check if we can build upgrades
+    for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
+    {
+        if (std::holds_alternative<ResearchUpgradeRequest>(it->request))
         {
             ResearchUpgradeRequest temp = get<ResearchUpgradeRequest>(it->request);
 
@@ -317,14 +350,15 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
+        else
+        {
+            it++;
+        }
 
     }
 
-
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
-        //BWAPI::Broodwar->drawEllipseMap(it->probe->getTargetPosition(), 2, 2, BWAPI::Color(0, 0, 255), true);
-
         //Need to check if we are able to build. Units on tiles can cause buildings NOT to warp in
         if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
         {
@@ -338,7 +372,7 @@ void SpenderManager::OnFrame()
             }
 
             //Need to utilize BWEB's reserving tile system to improve building placement even further.
-            //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
+            BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
 
             //std::cout << "Able to construct building? " << ((temp == 1) ? "true\n" : "false\n");
             it = builders.erase(it);

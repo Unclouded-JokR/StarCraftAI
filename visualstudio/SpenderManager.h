@@ -52,7 +52,7 @@ public:
     void addRequest(BWAPI::UnitType unitType);
 
     //Request to research upgrade
-    void addRequest(BWAPI::UpgradeType upgradeToResearch);
+    void addRequest(BWAPI::Unit unit, BWAPI::UpgradeType upgradeToResearch);
 
     //Request to train unit
     void addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting);
@@ -69,6 +69,7 @@ public:
     BWAPI::Position getPositionToBuild(BWAPI::UnitType type);
     void printQueue();
     void removeRequestID(int unitID);
+    bool alreadyUsingTiles(BWAPI::TilePosition);
 
     /*
     * BWAPI Events

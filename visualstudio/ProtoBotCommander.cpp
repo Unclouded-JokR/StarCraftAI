@@ -30,7 +30,7 @@ void ProtoBotCommander::onStart()
 
 	BWEB::Map::onStart();
 	BWEB::Blocks::findBlocks();
-	BWEB::Stations::findStations();
+	//BWEB::Stations::findStations();
 
 	m_mapTools.onStart();
 
@@ -286,9 +286,6 @@ void ProtoBotCommander::drawDebugInformation()
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
-
-	BWAPI::Broodwar->drawTextScreen(0, 40, "Time: %02d", BWAPI::Broodwar->elapsedTime() / 60);
-	BWAPI::Broodwar->drawTextScreen(41, 40, ":%02d", BWAPI::Broodwar->elapsedTime() % 60);
 
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();

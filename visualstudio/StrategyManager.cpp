@@ -264,6 +264,7 @@ Action StrategyManager::onFrame()
 		//Check if we should build a pylon
 		if (supplyUsed + 2 >= totalSupply && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 		{
+			std::cout << "Requesting to build Pylon\n";
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
@@ -294,7 +295,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
-			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
+			/*if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
 			{
 				mineralsToExpand * 2.5;
 				std::cout << "Requesting to expand (mineral surplus)\n";
@@ -305,7 +306,7 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}
+			}*/
 			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
@@ -327,32 +328,48 @@ Action StrategyManager::onFrame()
 	#pragma region Build
 	if (buildOrderCompleted)
 	{
+		const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+		int gatewayCount = 0;
+		int templarArchivesCount = 0;
+		int citadelCount = 0;
+		int forgeCount = 0;
+		int cyberneticsCount = 0;
+
+		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+		int completedNexusEconomy = 0;
+
+		for (NexusEconomy nexusEconomy : nexusEconomies)
+		{
+			/*
+			* Nexus Economy considered complete if
+			*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
+			*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
+			*/
+			if ((nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size())
+				|| (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator != nullptr))
+			{
+				completedNexusEconomy++;
+			}
+		}
+
+		for (const BWAPI::Unit unit : units)
+		{
+			const BWAPI::UnitType temp = unit->getType();
+
+			if (temp == BWAPI::UnitTypes::Protoss_Gateway && unit->isCompleted()) gatewayCount++;
+
+			if (temp == BWAPI::UnitTypes::Protoss_Templar_Archives && unit->isCompleted()) templarArchivesCount++;
+
+			if (temp == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && unit->isCompleted()) citadelCount++;
+
+			if (temp == BWAPI::UnitTypes::Protoss_Forge && unit->isCompleted()) forgeCount++;
+
+			if (temp == BWAPI::UnitTypes::Protoss_Cybernetics_Core && unit->isCompleted()) cyberneticsCount++;
+		}
+
+
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
 		{
-			BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
-			std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-			int completedNexusEconomy = 0;
-			int gatewayCount = 0;
-
-			for (const BWAPI::Unit unit : units)
-			{
-				if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway && unit->isCompleted()) gatewayCount++;
-			}
-
-			for (NexusEconomy nexusEconomy : nexusEconomies)
-			{
-				/*
-				* Nexus Economy considered complete if
-				*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
-				*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
-				*/
-				if ((nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size())
-					|| (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator != nullptr))
-				{
-					completedNexusEconomy++;
-				}
-			}
-
 			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
 			if (gatewayCount < completedNexusEconomy * 2)
@@ -365,16 +382,54 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Build;
 				return action;
 			}
-			else if(gatewayCount >= completedNexusEconomy && completedNexusEconomy != 0)
-			{
-				std::cout << "Building Gateway anyway\n";
-				Build actionToTake;
-				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+		}
 
-				action.commanderAction = actionToTake;
-				action.type = ActionType::Action_Build;
-				return action;
-			}
+		if (gatewayCount < 1) return action;
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && forgeCount <= 3 && forgeCount != completedNexusEconomy)
+		{
+			std::cout << "Requesting to warp Forge\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Forge;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
+
+		if (gatewayCount < 2) return action;
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && cyberneticsCount <= 3 && cyberneticsCount != completedNexusEconomy)
+		{
+			std::cout << "Requesting to warp Forge\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && citadelCount <= 3 && cyberneticsCount == 1 && citadelCount != completedNexusEconomy)
+		{
+			std::cout << "Requesting to warp Citadel\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && templarArchivesCount <= 3 && citadelCount == 1 && templarArchivesCount != completedNexusEconomy)
+		{
+			std::cout << "Requesting to warp Archives\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Templar_Archives;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
 		}
 	}
 
