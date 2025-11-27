@@ -7,6 +7,9 @@ ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(thi
 
 void ProtoBotCommander::onStart()
 {
+	std::cout << "============================\n";
+	std::cout << "Initializing Modules\n";
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -83,7 +86,8 @@ void ProtoBotCommander::onStart()
 
 	buildManager.onStart();
 
-	std::cout << "gg\n";
+	std::cout << "============================\n";
+	std::cout << "Agent Start\n";
 }
 
 void ProtoBotCommander::onFrame()

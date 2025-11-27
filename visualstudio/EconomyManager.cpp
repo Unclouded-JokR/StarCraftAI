@@ -66,7 +66,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
             }
             else
             {
-                std::cout << "Nexus Already Exists" << "\n";
+                //std::cout << "Nexus Already Exists" << "\n";
             }
 
             break;

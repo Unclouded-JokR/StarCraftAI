@@ -4,7 +4,7 @@
 NexusEconomy::NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference) : nexus(nexus), nexusID(id), economyReference(economyReference)
 {
 	maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL;
-	std::cout << "Created new Nexus Economy " << id << "\n";
+	//std::cout << "Created new Nexus Economy " << id << "\n";
 }
 
 //[TODO] need to need to deconstruct if a nexus dies and send back all the workers.
@@ -396,7 +396,7 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 		if (unitsToReturn.size() == numberOfWorkersForTransfer) break;
 	}
 
-	std::cout << "Got " << unitsToReturn.size() << " Workers\n";
+	//std::cout << "Got " << unitsToReturn.size() << " Workers\n";
 
 	for (BWAPI::Unit unit : unitsToReturn)
 	{

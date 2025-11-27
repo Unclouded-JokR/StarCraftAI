@@ -3,7 +3,7 @@
 
 SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
-    std::cout << "Spender Manager Made!" << "\n";
+    std::cout << "Spender Manager Initialized" << "\n";
 }
 
 void SpenderManager::onStart()
@@ -273,11 +273,11 @@ void SpenderManager::OnFrame()
 
                 if (unitAvalible == nullptr)
                 {
-                    std::cout << "Did not find worker\n";
+                    //std::cout << "Did not find worker\n";
                     ++it;
                     continue;
                 }
-                std::cout << "Found worker\n";
+                //std::cout << "Found worker\n";
                 //Sometimes worker is not being told to move for whatever reason?
 
                 //std::cout << "Adding " << temp.buildingType << " to the queue\n";
@@ -401,10 +401,9 @@ void SpenderManager::OnFrame()
                 it++;
                 continue;
             }
-            std::cout << (it->probe->getOrder() != BWAPI::Orders::PlaceBuilding) << "\n";
-            std::cout << (it->probe->isConstructing()) << "\n";
+            //std::cout << (it->probe->isConstructing()) << "\n";
+            //std::cout << "Build command returned true, constructing...\n";
             
-            std::cout << "Build command returned true, constructing...\n";
             //Need to utilize BWEB's reserving tile system to improve building placement even further.
             //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
 

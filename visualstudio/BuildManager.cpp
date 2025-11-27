@@ -18,6 +18,7 @@ BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderRef
 void BuildManager::onStart()
 {
     //Make false at the start of a game.
+    std::cout << "Builder Manager Initialized" << "\n";
     buildOrderCompleted = false;
     spenderManager.onStart();
 }
@@ -101,9 +102,9 @@ void BuildManager::onFrame() {
 
 void BuildManager::assignBuilding(BWAPI::Unit unit)
 {
-    std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
+    //std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
     buildings.insert(unit);
-    std::cout << "Buildings size: " << buildings.size() << "\n";
+    //std::cout << "Buildings size: " << buildings.size() << "\n";
 }
 
 bool BuildManager::isBuildOrderCompleted()
@@ -211,7 +212,7 @@ void BuildManager::PvZ() {
 
 void BuildManager::pumpUnit() 
 {
-    BWAPI::Unit firstTemplar = nullptr;
+    /*BWAPI::Unit firstTemplar = nullptr;
 
     for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
     {
@@ -226,7 +227,7 @@ void BuildManager::pumpUnit()
 
             firstTemplar = nullptr;
         }
-    }
+    }*/
 
     for (auto& unit : buildings)
     {
@@ -329,8 +330,6 @@ void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    buildOrderCompleted = true;
-    return;
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
