@@ -140,7 +140,7 @@ void NexusEconomy::OnFrame()
 
 
 		//If a worker is constructing skip over them until they are done.
-		if (worker->getOrder() == BWAPI::Orders::Move || worker->isConstructing())
+		if (economyReference->workerIsConstructing(worker))
 		{
 			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
 			continue;
@@ -505,7 +505,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	//Get closest idle units if possible.
 	for (const BWAPI::Unit unit : workers)
 	{
-		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
+		if (economyReference->workerIsConstructing(unit)) continue;
 
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 
@@ -537,7 +537,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	minDistance = INT_MAX;
 	for (const BWAPI::Unit unit : workers)
 	{
-		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
+		if (economyReference->workerIsConstructing(unit)) continue;
 
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 		
@@ -558,7 +558,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	minDistance = INT_MAX;
 	for (const BWAPI::Unit unit : workers)
 	{
-		if (unit->getOrder() == BWAPI::Orders::Move || unit->isConstructing()) continue;
+		if (economyReference->workerIsConstructing(unit)) continue;
 
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 

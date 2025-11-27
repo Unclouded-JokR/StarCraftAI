@@ -262,7 +262,7 @@ Action StrategyManager::onFrame()
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon
-		if (supplyUsed + 2 >= totalSupply && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
+		if (commanderReference->checkAvailableSupply() <= 2 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 		{
 			std::cout << "Requesting to build Pylon\n";
 			Expand actionToTake;
@@ -295,7 +295,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
-			/*if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
+			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
 			{
 				mineralsToExpand * 2.5;
 				std::cout << "Requesting to expand (mineral surplus)\n";
@@ -306,7 +306,7 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}*/
+			}
 			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
@@ -334,6 +334,7 @@ Action StrategyManager::onFrame()
 		int citadelCount = 0;
 		int forgeCount = 0;
 		int cyberneticsCount = 0;
+		int stargateCount = 0;
 
 		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
 		int completedNexusEconomy = 0;
@@ -356,15 +357,29 @@ Action StrategyManager::onFrame()
 		{
 			const BWAPI::UnitType temp = unit->getType();
 
-			if (temp == BWAPI::UnitTypes::Protoss_Gateway && unit->isCompleted()) gatewayCount++;
+			if (!unit->isCompleted()) continue;
 
-			if (temp == BWAPI::UnitTypes::Protoss_Templar_Archives && unit->isCompleted()) templarArchivesCount++;
-
-			if (temp == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && unit->isCompleted()) citadelCount++;
-
-			if (temp == BWAPI::UnitTypes::Protoss_Forge && unit->isCompleted()) forgeCount++;
-
-			if (temp == BWAPI::UnitTypes::Protoss_Cybernetics_Core && unit->isCompleted()) cyberneticsCount++;
+			switch(temp)
+			{
+				case BWAPI::UnitTypes::Protoss_Gateway:
+					gatewayCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Templar_Archives:
+					templarArchivesCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+					citadelCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Forge:
+					forgeCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+					cyberneticsCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Stargate:
+					stargateCount++;
+					break;
+			}
 		}
 
 
@@ -372,7 +387,7 @@ Action StrategyManager::onFrame()
 		{
 			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
-			if (gatewayCount < completedNexusEconomy * 2)
+			if (gatewayCount < completedNexusEconomy * 4)
 			{
 				std::cout << "Requesting to warp Gateway\n";
 				Build actionToTake;
@@ -398,6 +413,17 @@ Action StrategyManager::onFrame()
 		}
 
 		if (gatewayCount < 2) return action;
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Stargate) && cyberneticsCount == 1 && stargateCount != (gatewayCount / 2))
+		{
+			std::cout << "Requesting to Stargate\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && cyberneticsCount <= 3 && cyberneticsCount != completedNexusEconomy)
 		{
@@ -446,36 +472,6 @@ Action StrategyManager::onFrame()
 	//	return action;                 // <-- ensure we actually send the action
 	//}
 	#pragma endregion
-
-	//#pragma region Building
-
-	////Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
-	//if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
-	//{
-	//	frameSinceLastBuild = frame;
-	//	const int buildingToBuild = rand() % 100;
-	//	Build actionToTake;
-	//	action.type = Action_Build;
-
-	//	if (buildingToBuild <= 60)
-	//	{
-	//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
-	//	}
-	//	else if (buildingToBuild <= 80)
-	//	{
-	//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-	//	}
-	//	else
-	//	{
-	//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
-	//	}
-	//	action.commanderAction = actionToTake;
-
-	//	return action;
-	//}
-	//
-
-	//#pragma endregion
 
 
 	//StrategyManager::printBoredomMeter();

@@ -23,5 +23,6 @@ public:
 	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	bool checkRequestAlreadySent(int unitID);
+	bool workerIsConstructing(BWAPI::Unit);
 };
 

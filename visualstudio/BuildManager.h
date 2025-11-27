@@ -34,8 +34,11 @@ public:
     bool isBuildOrderCompleted();
     bool requestedBuilding(BWAPI::UnitType building);
     bool alreadySentRequest(int unitID);
+    bool upgradeAlreadyRequested(BWAPI::Unit);
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
     bool checkUnitIsPlanned(BWAPI::UnitType building);
+    bool checkWorkerIsConstructing(BWAPI::Unit);
+    int checkAvailableSupply();
     void buildingDoneWarping(BWAPI::Unit unit);
 
     void buildBuilding(BWAPI::UnitType building);

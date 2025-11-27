@@ -77,6 +77,8 @@ public:
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 	void requestBuild(BWAPI::UnitType building);
 	bool alreadySentRequest(int unitID);
+	bool checkWorkerIsConstructing(BWAPI::Unit);
+	int checkAvailableSupply();
 
 	//Scouting
 	BWAPI::Unit getUnitToScout();

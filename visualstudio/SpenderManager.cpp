@@ -201,6 +201,8 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
         //std::cout << distance << "\n";
         return BWAPI::Position(closestDistance);
     }
+
+    return BWAPI::Position(0, 0);
 }
 
 bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
@@ -237,7 +239,7 @@ void SpenderManager::OnFrame()
 
     if (BWAPI::Broodwar->getFrameCount() % 48 == 0)
     {
-        printQueue();
+        //printQueue();
 
         /*for (const BWAPI::UnitType building : plannedBuildings)
         {
@@ -260,8 +262,14 @@ void SpenderManager::OnFrame()
                 //Find position to place building using BWEB and BWEM
                 const BWAPI::Position positionToBuild = getPositionToBuild(temp.buildingType);
 
-                //BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
-                BWAPI::Unit unitAvalible = commanderReference->getUnitToScout();
+                if (positionToBuild == BWAPI::Position(0, 0))
+                {
+                    ++it;
+                    continue;
+                }
+
+                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
+                //BWAPI::Unit unitAvalible = commanderReference->getUnitToScout();
 
                 if (unitAvalible == nullptr)
                 {
@@ -366,6 +374,13 @@ void SpenderManager::OnFrame()
 
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
+        if (it->probe->isConstructing())
+        {
+            it++;
+            continue;
+        }
+           
+
         //Need to check if we are able to build. Units on tiles can cause buildings NOT to warp in
         if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
         {
@@ -386,14 +401,21 @@ void SpenderManager::OnFrame()
                 it++;
                 continue;
             }
-            std::cout << "Built " << it->building << ", successfully\n";
-
+            std::cout << (it->probe->getOrder() != BWAPI::Orders::PlaceBuilding) << "\n";
+            std::cout << (it->probe->isConstructing()) << "\n";
+            
+            std::cout << "Build command returned true, constructing...\n";
             //Need to utilize BWEB's reserving tile system to improve building placement even further.
-            BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
+            //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
 
-            //std::cout << "Able to construct building? " << ((temp == 1) ? "true\n" : "false\n");
-            it = builders.erase(it);
-           
+            if (it->building == BWAPI::UnitTypes::Protoss_Assimilator)
+            {
+                it = builders.erase(it);
+            }
+            else
+            {
+                it++;
+            }
         }
         else
         {
@@ -419,6 +441,16 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
         {
             //std::cout << "removing " << unit->getType() << " from plannedBuildings\n";
             it = plannedBuildings.erase(it);
+            break;
+        }
+    }
+
+    //Remove worker once a building is being warped in.
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
+    {
+        if (unit->getType() == it->building)
+        {
+            it = builders.erase(it);
             break;
         }
     }
@@ -494,6 +526,31 @@ bool SpenderManager::checkUnitIsPlanned(BWAPI::UnitType building)
         if (building == plannedBuilding)
         {
             return true;
+        }
+    }
+
+    return false;
+}
+
+bool SpenderManager::checkWorkerIsConstructing(BWAPI::Unit unit)
+{
+    for (const Builder& builder : builders)
+    {
+        if (builder.probe->getID() == unit->getID()) return true;
+    }
+
+    return false;
+}
+
+bool SpenderManager::upgradeAlreadyRequested(BWAPI::Unit building)
+{
+    for (const BuildRequest buildRequest: buildRequests)
+    {
+        if (std::holds_alternative<ResearchUpgradeRequest>(buildRequest.request))
+        {
+            const ResearchUpgradeRequest temp = get<ResearchUpgradeRequest>(buildRequest.request);
+
+            if (temp.building->getID() == building->getID()) return true;
         }
     }
 

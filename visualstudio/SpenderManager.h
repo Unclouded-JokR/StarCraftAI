@@ -66,6 +66,8 @@ public:
     bool requestedBuilding(BWAPI::UnitType building);
     bool buildingAlreadyMadeRequest(int unitID);
     bool checkUnitIsPlanned(BWAPI::UnitType building);
+    bool checkWorkerIsConstructing(BWAPI::Unit);
+    bool upgradeAlreadyRequested(BWAPI::Unit);
     BWAPI::Position getPositionToBuild(BWAPI::UnitType type);
     void printQueue();
     void removeRequestID(int unitID);

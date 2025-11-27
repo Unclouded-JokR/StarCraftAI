@@ -12,7 +12,7 @@ void ProtoBotCommander::onStart()
 	*/
 
 	// Set our BWAPI options here    
-	BWAPI::Broodwar->setLocalSpeed(15);
+	BWAPI::Broodwar->setLocalSpeed(10);
 	BWAPI::Broodwar->setFrameSkip(0);
 
 	// Enable the flag that tells BWAPI to let users enter input while bot plays
@@ -394,4 +394,14 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()
 {
 	return economyManager.getNexusEconomies();
+}
+
+bool ProtoBotCommander::checkWorkerIsConstructing(BWAPI::Unit unit)
+{
+	return buildManager.checkWorkerIsConstructing(unit);
+}
+
+int ProtoBotCommander::checkAvailableSupply()
+{
+	return buildManager.checkAvailableSupply();
 }

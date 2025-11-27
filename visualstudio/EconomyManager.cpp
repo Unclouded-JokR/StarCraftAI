@@ -149,3 +149,8 @@ bool EconomyManager::checkRequestAlreadySent(int unitID)
 {
     return commanderReference->alreadySentRequest(unitID);
 }
+
+bool EconomyManager::workerIsConstructing(BWAPI::Unit unit)
+{
+    return commanderReference->checkWorkerIsConstructing(unit);
+}
