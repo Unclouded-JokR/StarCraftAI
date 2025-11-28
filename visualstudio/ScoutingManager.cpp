@@ -2,30 +2,67 @@
 #include "ProtoBotCommander.h"
 
 ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
-    : commanderRef(commander) {
+    : commanderRef(commander) 
+{
 }
 
 void ScoutingManager::onStart() 
 {
-    std::visit([&](auto& b) {
+    drawScoutTags();
+}
+
+static void visit_start(BehaviorVariant& sb) 
+{
+    std::visit([](auto& b) 
+        {
         using T = std::decay_t<decltype(b)>;
         if constexpr (!std::is_same_v<T, std::monostate>) b.onStart();
-        }, behavior);
+        }, sb);
+}
 
-    drawScoutTags();
+static void visit_frame(BehaviorVariant& sb)
+{
+    std::visit([](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.onFrame();
+        }, sb);
+}
+
+static void visit_assign(BehaviorVariant& sb, BWAPI::Unit u)
+{
+    std::visit([&](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.assign(u);
+        }, sb);
+}
+
+static void visit_setEnemyMain(BehaviorVariant& sb, const BWAPI::TilePosition& tp)
+{
+    std::visit([&](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.setEnemyMain(tp);
+        }, sb);
+}
+
+static void visit_onUnitDestroy(BehaviorVariant& sb, BWAPI::Unit u)
+{
+    std::visit([&](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.onUnitDestroy(u);
+        }, sb);
 }
 
 void ScoutingManager::onFrame() 
 {
-    std::visit([&](auto& b) 
+    // iterate all active behaviors; each owns its own state
+    for (auto& [id, sb] : behaviors_) 
     {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (!std::is_same_v<T, std::monostate>) 
-        {
-            b.onFrame();
-        }
-
-    }, behavior);
+        visit_frame(sb);
+    }
 
     drawScoutTags();
 }
@@ -33,38 +70,34 @@ void ScoutingManager::onFrame()
 void ScoutingManager::assignScout(BWAPI::Unit unit) 
 {
     if (!unit || !unit->exists()) return;
-    constructBehaviorFor(unit);
+
+    // build a behavior instance for THIS unit and store by id
+    BehaviorVariant sb = constructBehaviorFor(unit);
+    visit_start(sb);
+    visit_assign(sb, unit);
+
+    // cache into the map (overwrite if re-assigning the same id)
+    behaviors_[unit->getID()] = std::move(sb);
+
+    // bookkeeping
     markScout(unit);
-    std::visit([&](auto& b) 
-        {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (!std::is_same_v<T, std::monostate>) 
-        {
-            b.onStart();
-            b.assign(unit);
-        }
-        }, behavior);
 }
 
 bool ScoutingManager::hasScout() const 
 {
-    return std::visit([&](auto const& b)->bool 
-        {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (std::is_same_v<T, std::monostate>) return false;
-        else return b.hasScout();
-        }, behavior);
+    // You can keep your semantics (true if we have any worker or combat scouts)
+    if (workerScout_ && workerScout_->exists()) return true;
+    for (auto u : combatScouts_) if (u && u->exists()) return true;
+    return false;
 }
 
 void ScoutingManager::setEnemyMain(const BWAPI::TilePosition& tp) 
 {
     enemyMainCache_ = tp;
     if (commanderRef) commanderRef->onEnemyMainFound(tp);
-    std::visit([&](auto& b) 
-        {   
-            using T = std::decay_t<decltype(b)>;
-            if constexpr (!std::is_same_v<T, std::monostate>) b.setEnemyMain(tp);
-        }, behavior);
+
+    // broadcast to all current behaviors
+    for (auto& [id, sb] : behaviors_) visit_setEnemyMain(sb, tp);
 }
 
 void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp) 
@@ -76,49 +109,53 @@ void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp)
 void ScoutingManager::onUnitDestroy(BWAPI::Unit unit) 
 {
     unmarkScout(unit);
-    std::visit([&](auto& b) 
+    const int id = unit ? unit->getID() : -1;
+    if (id != -1) 
+    {
+        auto it = behaviors_.find(id);
+        if (it != behaviors_.end()) 
         {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (!std::is_same_v<T, std::monostate>) b.onUnitDestroy(unit);
-        }, behavior);
+            visit_onUnitDestroy(it->second, unit);
+            behaviors_.erase(it);
+        }
+    }
+
+    for (auto& [_, sb] : behaviors_) visit_onUnitDestroy(sb, unit);
 }
 
-void ScoutingManager::constructBehaviorFor(BWAPI::Unit unit) 
+BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
 {
-    const BWAPI::UnitType t = unit->getType();
+    const auto t = unit->getType();
 
-    if (t == BWAPI::UnitTypes::Protoss_Probe)
+    if (t == BWAPI::UnitTypes::Protoss_Probe) 
     {
-        behavior.emplace<ScoutingProbe>(commanderRef, this);
-        BWAPI::Broodwar->printf("[SM] behavior = Probe");
-    }
-    else if (t == BWAPI::UnitTypes::Protoss_Zealot || t == BWAPI::UnitTypes::Protoss_Dragoon)
-    {
-        behavior.emplace<ScoutingZealot>(commanderRef, this);
-        BWAPI::Broodwar->printf("[SM] behavior = Zealot");
-    }
-   /* else if (t == BWAPI::UnitTypes::Protoss_Dragoon)
-    {
-        //behavior.emplace<ScoutingDragoon>(commanderRef, this);
-    }
-    else if (t == BWAPI::UnitTypes::Protoss_Observer)
-    {
-        //behavior.emplace<ScoutingObserver>(commanderRef, this);
-    }*/
-    else 
-    {
-        // default to Probe behavior for now
-        behavior.emplace<ScoutingProbe>(commanderRef, this);
-        BWAPI::Broodwar->printf("[SM] behavior = Fallback->Probe");
+        ScoutingProbe probe(commanderRef, this);
+        // pass cache if we already know main
+        if (enemyMainCache_) probe.setEnemyMain(*enemyMainCache_);
+        BWAPI::Broodwar->printf("[SM] behavior = Probe for id=%d", unit->getID());
+        return probe;
     }
 
-    if (enemyMainCache_) {
-        std::visit([&](auto& b) {
-            using T = std::decay_t<decltype(b)>;
-            if constexpr (!std::is_same_v<T, std::monostate>)
-                b.setEnemyMain(*enemyMainCache_);
-            }, behavior);
+    if (t == BWAPI::UnitTypes::Protoss_Zealot || t == BWAPI::UnitTypes::Protoss_Dragoon) 
+    {
+        ScoutingZealot z(commanderRef, this);
+        if (enemyMainCache_) z.setEnemyMain(*enemyMainCache_);
+        BWAPI::Broodwar->printf("[SM] behavior = Zealot for id=%d", unit->getID());
+        return z;
     }
+
+    // fallback
+    ScoutingProbe fallback(commanderRef, this);
+    if (enemyMainCache_) fallback.setEnemyMain(*enemyMainCache_);
+    BWAPI::Broodwar->printf("[SM] behavior = Fallback->Probe for id=%d", unit->getID());
+    return fallback;
+}
+
+BWAPI::Unit ScoutingManager::findUnitById(int id) 
+{
+    for (auto u : BWAPI::Broodwar->self()->getUnits())
+        if (u && u->exists() && u->getID() == id) return u;
+    return nullptr;
 }
 
 void ScoutingManager::markScout(BWAPI::Unit u) 

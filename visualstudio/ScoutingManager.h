@@ -2,17 +2,31 @@
 #include <memory>
 #include <variant>
 #include <optional>
+#include <type_traits>
 #include <BWAPI.h>
 #include <bwem.h>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
+
 class ProtoBotCommander;
+class ScoutingProbe;
+class ScoutingZealot;
 
 // include concrete behaviors
 #include "ScoutingProbe.h"
 #include "ScoutingZealot.h"
 // #include "ScoutingDragoon.h"
 // #include "ScoutingObserver.h"
+
+using BehaviorVariant = std::variant<
+    std::monostate,
+    ScoutingProbe,
+    ScoutingZealot
+    /*Once added ->,
+    ScoutingDragoon,
+    ScoutingObserver*/
+>;
 
 class ScoutingManager {
 public:
@@ -46,24 +60,16 @@ public:
     int  maxCombatScouts() const { return maxCombatScouts_; }
 
     bool canAcceptWorkerScout() const { return !combatScoutingStarted_ && !workerScout_; }
-    bool canAcceptCombatScout() const { return numCombatScouts() < maxCombatScouts_; }
+    bool canAcceptCombatScout() const { return int(combatScouts_.size()) < maxCombatScouts_; }
 
 private:
     ProtoBotCommander* commanderRef = nullptr;
 
-
-    using BehaviorVariant = std::variant<
-        std::monostate, 
-        ScoutingProbe,
-        ScoutingZealot
-        /*Once added ->, 
-        ScoutingDragoon, 
-        ScoutingObserver*/
-        >;
-    BehaviorVariant behavior;
+    std::unordered_map<int, BehaviorVariant> behaviors_;
 
     // helpers
-    void constructBehaviorFor(BWAPI::Unit unit);
+    BehaviorVariant constructBehaviorFor(BWAPI::Unit unit);
+    static BWAPI::Unit findUnitById(int id);
 
     std::vector<BWAPI::Unit> scouts_;
     BWAPI::Unit workerScout_{ nullptr };
@@ -72,4 +78,6 @@ private:
     int  maxCombatScouts_{ 3 }; // default, adjustable
     std::optional<BWAPI::TilePosition> enemyMainCache_;
     std::optional<BWAPI::TilePosition> enemyNaturalCache_;
+
+
 };
