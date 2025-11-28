@@ -26,6 +26,7 @@ public:
 	int red;
 	int blue;
 	int green;
+	int scannerCheck = 1;
 
 	//Calculated maximums based on number of miners.
 	int maximumWorkerAmount;
@@ -53,4 +54,6 @@ public:
 	BWAPI::Unitset getWorkersToTransfer(int numberOfWorkersForTransfer);
 	BWAPI::Unit getWorkerToScout();
 	BWAPI::Unit getWorkerToBuild();
+	BWAPI::Unitset onNexusDestroy();
+
 };

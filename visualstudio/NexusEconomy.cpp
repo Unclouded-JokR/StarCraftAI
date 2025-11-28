@@ -1,3 +1,4 @@
+
 #include "NexusEconomy.h"
 #include "EconomyManager.h"
 
@@ -48,9 +49,51 @@ void NexusEconomy::OnFrame()
 
 	}
 
+	if (scannerCheck >= 1000 && scannerCheck != 0)
+	{
+		std::cout << "scanner check complete" << "\n";
+		BWAPI::Unitset unitsInRadius = nexus->getUnitsInRadius(320, BWAPI::Filter::IsMineralField);
+		BWAPI::Unitset toBeR;
+
+		for (BWAPI::Unit unit2 : unitsInRadius)
+		{
+			for (BWAPI::Unit unit11 : minerals)
+			{
+				if (unit11 == unit2)
+				{
+					toBeR.insert(unit2);
+				}
+			}
+		}
+
+		for (BWAPI::Unit unit3 : toBeR)
+		{
+			unitsInRadius.erase(unit3);
+		}
+
+		for (BWAPI::Unit unit4 : unitsInRadius)
+		{
+			minerals.insert(unit4);
+		}
+
+		BWAPI::Unitset extraWorkers = economyReference->getMoreWorkers(unitsInRadius.size());
+
+		for (BWAPI::Unit extraWork : extraWorkers)
+		{
+			assignWorker(extraWork);
+		}
+
+		scannerCheck = 0;
+
+	}
+	else if (scannerCheck < 1000 && scannerCheck != 0)
+	{
+		scannerCheck += 1;
+	}
+
 	if (assimilator != nullptr) BWAPI::Broodwar->drawTextMap(assimilator->getPosition(), std::to_string(assimilator->getID()).c_str());
-	
-	if (nexus != nullptr) 
+
+	if (nexus != nullptr)
 	{
 		std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size());
 		BWAPI::Broodwar->drawTextMap(nexus->getPosition(), temp.c_str());
@@ -170,21 +213,17 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	}
 	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
 	{
-		nexus = nullptr;
-		BWAPI::Unitset allWorkers;
-		for (BWAPI::Unit unit1 : workers)
+		if (unit->getID() == nexus->getID())
 		{
-			allWorkers.insert(unit1);
-		}
+			nexus = nullptr;
+			std::cout << nexusID << " is now null" << "\n";
 
-		for (BWAPI::Unit unit2 : allWorkers)
+			return true;
+		}
+		else
 		{
-			workers.erase(unit2);
+			return false;
 		}
-
-		economyReference->destroyedNexus(allWorkers);
-
-		return true;
 	}
 }
 
@@ -227,7 +266,7 @@ void NexusEconomy::assignWorker(BWAPI::Unit unit)
 {
 	workers.insert(unit);
 	std::cout << "added worker " << unit->getID() << " to " << std::to_string(nexus->getID()) << "\n";
-	std::cout << "worker size of  " + std::to_string(nexus->getID()) + " is " + std::to_string(workers.size()) + "\n";
+	std::cout << "worker size of  " << nexusID << " is " << std::to_string(workers.size()) + "\n";
 
 }
 
@@ -285,11 +324,11 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 		{
 			workers.erase(unit);
 		}
-/*
-		for (BWAPI::Unit unit : workers)
-		{
-			std::cout << "worker " << unit->getID() << "\n";
-		}*/
+		/*
+				for (BWAPI::Unit unit : workers)
+				{
+					std::cout << "worker " << unit->getID() << "\n";
+				}*/
 
 
 		return unitsToReturn;
@@ -392,7 +431,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 		std::cout << "Reuqesting Worker scouts!\n";
 		return unitToReturn;
 	}
-		
+
 
 	//Choose random unit if we did not find unit.
 
@@ -512,4 +551,20 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild()
 
 	//std::cout << "Random Unit " << unitToReturn->getID() << " Avalible!\n";
 	return unitToReturn;
+}
+
+BWAPI::Unitset NexusEconomy::onNexusDestroy()
+{
+	BWAPI::Unitset allWorkers;
+	for (BWAPI::Unit unit1 : workers)
+	{
+		allWorkers.insert(unit1);
+	}
+
+	for (BWAPI::Unit unit2 : allWorkers)
+	{
+		workers.erase(unit2);
+	}
+
+	return allWorkers;
 }
