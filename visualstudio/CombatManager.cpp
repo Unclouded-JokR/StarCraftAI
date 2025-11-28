@@ -14,7 +14,8 @@ void CombatManager::onStart(){
 void CombatManager::onFrame() {
 	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
-		if (unit->getType().isWorker() || unit->getType().isBuilding()) {
+		if (unit->getType().isWorker() || unit->getType().isBuilding()
+			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
 			continue;
 		}
 		if (commanderReference->scoutingManager.isScout(unit)) {

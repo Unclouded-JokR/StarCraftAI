@@ -83,8 +83,6 @@ void ProtoBotCommander::onStart()
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
 	scoutingManager.onStart();
-	// Adjust the number based on what we need
-	scoutingManager.setMaxCombatScouts(3);
 
 	buildManager.onStart();
 
@@ -231,6 +229,14 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		buildManager.assignBuilding(unit);
 		return;
 	}
+	if (unit_type == BWAPI::UnitTypes::Protoss_Observer) 
+	{                
+		if (scoutingManager.canAcceptObserverScout()) 
+		{
+			scoutingManager.assignScout(unit);
+			BWAPI::Broodwar->printf("[Commander] Assigned Observer %d to Scouting", unit->getID());
+		}
+	}
 	getUnitToScout();
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
@@ -347,15 +353,42 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 
 	// 2) After combat-scouting starts: never request worker scouts again.
 	// Fill up to max combat scouts using combat units.
-	while (scoutingManager.canAcceptCombatScout()) {
-		// temporary: only zealots (band-aid)
+	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Zealot)) 
+	{
 		BWAPI::Unit u = combatManager.getAvailableUnit(
-			[](BWAPI::Unit x) { return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Zealot; }
+			[](BWAPI::Unit x) {
+				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Zealot;
+			}
 		);
 		if (!isValidUnit(u)) break;
-
 		scoutingManager.assignScout(u);
 		std::cout << "Assigned combat scout (Zealot) " << u->getID() << "\n";
+	}
+
+	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Dragoon)) 
+	{
+		BWAPI::Unit u = combatManager.getAvailableUnit(
+			[](BWAPI::Unit x) {
+				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Dragoon;
+			}
+		);
+		if (!isValidUnit(u)) break;
+		scoutingManager.assignScout(u);
+		std::cout << "Assigned combat scout (Dragoon) " << u->getID() << "\n";
+	}
+
+	while (scoutingManager.canAcceptObserverScout()) 
+	{
+		BWAPI::Unit u = combatManager.getAvailableUnit
+		(
+			[](BWAPI::Unit x) 
+			{
+				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Observer;
+			}
+		);
+		if (!u) break;
+		scoutingManager.assignScout(u);
+		std::cout << "Assigned observer scout " << u->getID() << "\n";
 	}
 
 	return nullptr;
