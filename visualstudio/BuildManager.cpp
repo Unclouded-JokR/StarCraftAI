@@ -231,20 +231,20 @@ void BuildManager::pumpUnit()
     for (auto& unit : buildings)
     {
         BWAPI::UnitType type = unit->getType();
-        if (type == Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
+        if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
             if (unit->canTrain(Protoss_High_Templar))
             {
-                trainUnit(Protoss_High_Templar, unit);
+                trainUnit(BWAPI::UnitTypes::Protoss_High_Templar, unit);
             }
             else if (unit->canTrain(Protoss_Dragoon))
             {
-                trainUnit(Protoss_Dragoon, unit);
+                trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
                 //cout << "Training Dragoon\n";
             }
             else
             {
-                trainUnit(Protoss_Zealot, unit);
+                trainUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
             }
         }   
         /*else if (type == Protoss_Stargate && !unit->isTraining() && !alreadySentRequest(unit->getID()))
@@ -254,55 +254,50 @@ void BuildManager::pumpUnit()
                 trainUnit(Protoss_Corsair, unit);
             }
         }*/
-        //else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
-        //{
-        //    //20 percent chance to create a 
-        //    const int temp = rand() % 5;
+        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
+        { 
+            int observerCount = 0;
+            for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
+            {
+                if (unit->getType() == BWAPI::UnitTypes::Protoss_Observer) observerCount++;
+            }
 
-        //    if (temp == 0)
-        //    {
-        //        trainUnit(Protoss_Observer, unit);
-        //        cout << "Training Observer\n";
-        //    }
-        //}
-
-        if (type == Protoss_Cybernetics_Core && !unit->isUpgrading())
+            if (observerCount < 4)
+            {
+                trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
         {
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Singularity_Charge);
             }
         }
-        else if (type == Protoss_Citadel_of_Adun && !unit->isUpgrading())
+        else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
         {
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
-                continue;
             }
                 
         }
-        else if (type == Protoss_Forge && !unit->isUpgrading())
+        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
         {
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
-                continue;
             }
-            
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !upgradeAlreadyRequested(unit))
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
-                continue;
             }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !upgradeAlreadyRequested(unit))
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
-                continue;
             }
         }
-        else if (type == Protoss_Templar_Archives && !unit->isUpgrading())
+        else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
         {
             /*if (unit->canUpgrade(BWAPI::TechTypes::Psionic_Storm))
             {
@@ -321,6 +316,17 @@ void BuildManager::pumpUnit()
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
                 continue;
             }*/
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Observatory)
+        {
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
+            }
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
+            }
         }
     }
 }
