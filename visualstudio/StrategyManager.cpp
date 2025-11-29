@@ -396,7 +396,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
 		{
-			std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
+			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
 			if (gatewayCount < completedNexusEconomy * 4)
 			{

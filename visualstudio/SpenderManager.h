@@ -63,6 +63,7 @@ public:
     int availableMinerals();
     int availableGas();
     int availableSupply();
+    int plannedSupply();
     bool requestedBuilding(BWAPI::UnitType building);
     bool buildingAlreadyMadeRequest(int unitID);
     bool checkUnitIsPlanned(BWAPI::UnitType building);

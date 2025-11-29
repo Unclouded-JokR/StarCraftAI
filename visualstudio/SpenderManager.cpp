@@ -114,6 +114,43 @@ int SpenderManager::availableSupply()
     return unusedSupply;
 }
 
+//Working on better way to build pylons in advance
+int SpenderManager::plannedSupply()
+{
+    int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2;
+
+    int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+    for (BWAPI::UnitType unit : plannedUnits)
+    {
+        usedSupply += (unit.supplyRequired() / 2);
+    }
+
+    for (BuildRequest buildRequest : buildRequests)
+    {
+        if (std::holds_alternative<BuildStructureRequest>(buildRequest.request))
+        {
+            const BuildStructureRequest buildStrctureRequest = get<BuildStructureRequest>(buildRequest.request);
+
+            if (buildStrctureRequest.buildingType == BWAPI::UnitTypes::Protoss_Pylon
+                || buildStrctureRequest.buildingType == BWAPI::UnitTypes::Protoss_Nexus)
+            {
+                totalSupply += buildStrctureRequest.buildingType.supplyProvided();
+            }
+        }
+    }
+
+    for (BWAPI::UnitType building : plannedBuildings)
+    {
+        if (building == BWAPI::UnitTypes::Protoss_Pylon || building == BWAPI::UnitTypes::Protoss_Nexus) totalSupply += building.supplyProvided();
+    }
+
+    std::cout << "Total supply (with planned building considerations) = " << totalSupply << "\n";
+    std::cout << "Used supply (with planned unit considerations) = " << usedSupply << "\n";
+    std::cout << "Supply avalible = " << (totalSupply - usedSupply) << "\n";
+    return (totalSupply - usedSupply);
+}
+
 bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas)
 {
     if (((currentMinerals - mineralPrice) >= 0) && ((currentGas - gasPrice) >= 0))
