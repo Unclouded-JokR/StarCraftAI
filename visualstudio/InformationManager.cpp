@@ -11,7 +11,7 @@ void InformationManager::onStart()
     _knownEnemies.clear();
     _knownEnemyBuildings.clear();
     influenceMap.onStart();
-    std::cout << "Information Manager started successfully.\n";
+    std::cout << "Information Manager Initialized\n";
 }
 
 void InformationManager::onFrame()

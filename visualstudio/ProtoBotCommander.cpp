@@ -109,7 +109,7 @@ void ProtoBotCommander::onFrame()
 
 	BWEB::Map::draw();
 
-	for (const Area& area : theMap.Areas())
+	/*for (const Area& area : theMap.Areas())
 	{
 		for (const Base& base : area.Bases())
 		{
@@ -120,7 +120,7 @@ void ProtoBotCommander::onFrame()
 					BWEM::utils::MapDrawer::Color::bases);
 			}
 		}
-	}
+	}*/
 
 	/*
 	* Protobot Modules
