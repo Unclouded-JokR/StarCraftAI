@@ -21,8 +21,9 @@ public:
     Squad& addSquad();
     void removeSquad(int squadId);
     void move(BWAPI::Position position);
-    Squad assignUnit(BWAPI::Unit unit);
+    bool assignUnit(BWAPI::Unit unit);
     void drawDebugInfo();
     BWAPI::Unit getAvailableUnit();
+    BWAPI::Unit getAvailableUnit(std::function<bool(BWAPI::Unit)> filter);
     bool isAssigned(BWAPI::Unit unit);
 };

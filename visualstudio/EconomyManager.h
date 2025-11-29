@@ -17,10 +17,13 @@ public:
 	void OnFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
-	bool checkAssimilator();
-	BWAPI::Unit getAvalibleWorker();
+	std::vector<NexusEconomy> getNexusEconomies();
+	void getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomy);
+	void resourcesDepletedTranfer(BWAPI::Unitset workers, NexusEconomy& nexusEconomy);
+	BWAPI::Unit getAvalibleWorker(BWAPI::Position buildLocation);
 	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	bool checkRequestAlreadySent(int unitID);
+	bool workerIsConstructing(BWAPI::Unit);
 };
 

@@ -14,10 +14,12 @@ class NexusEconomy
 {
 public:
 	EconomyManager* economyReference;
-	const int nexusID;
+	int nexusID;
+	int lifetime = 0; //Used to delay assimilator build for now.
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
 	BWAPI::Unitset minerals;
+	BWAPI::Unit vespeneGyser = nullptr;
 	BWAPI::Unit assimilator = nullptr;
 	std::unordered_map<BWAPI::Unit, int> mineralWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
@@ -35,6 +37,7 @@ public:
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();
+	void addMissedResources();
 	void OnFrame();
 	void printMineralWorkerCounts();
 
@@ -42,11 +45,10 @@ public:
 	BWAPI::Unit GetClosestMineralToWorker(BWAPI::Unit worker);
 	void assignWorker(BWAPI::Unit unit);
 	void assignAssimilator(BWAPI::Unit assimilator);
-
 	void workOverTime();
 	void breakTime();
 
 	BWAPI::Unitset getWorkersToTransfer(int numberOfWorkersForTransfer);
 	BWAPI::Unit getWorkerToScout();
-	BWAPI::Unit getWorkerToBuild();
+	BWAPI::Unit getWorkerToBuild(BWAPI::Position locationToBuild);
 };

@@ -3,8 +3,13 @@
 
 SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
-    std::cout << "Spender Manager Made!" << "\n";
-    
+}
+
+void SpenderManager::onStart()
+{
+    std::cout << "Spender Manager Initialized" << "\n";
+    builders.clear();
+    buildRequests.clear();
     plannedBuildings.clear();
     plannedUnits.clear();
     requestIdentifiers.clear();
@@ -21,11 +26,12 @@ void SpenderManager::addRequest(BWAPI::UnitType building)
     buildRequests.push_back(requestToAdd);
 }
 
-void SpenderManager::addRequest(BWAPI::UpgradeType upgradeToResearch)
+void SpenderManager::addRequest(BWAPI::Unit unit, BWAPI::UpgradeType upgradeToResearch)
 {
     BuildRequest requestToAdd;
     ResearchUpgradeRequest temp;
     temp.upgradeType = upgradeToResearch;
+    temp.building = unit;
     requestToAdd.request = temp;
 
     buildRequests.push_back(requestToAdd);
@@ -118,6 +124,87 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
     return false;
 }
 
+bool SpenderManager::alreadyUsingTiles(BWAPI::TilePosition positon)
+{
+    for (const Builder& builder : builders)
+    {
+        if (builder.positionToBuild == BWAPI::Position(positon)) return true;
+    }
+
+    return false;
+}
+
+BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
+{
+    if (type == BWAPI::UnitTypes::Protoss_Nexus)
+    {
+        int distance = INT_MAX;
+        BWAPI::TilePosition closestDistance;
+
+        for (const BWEM::Area& area : theMap.Areas())
+        {
+            for (const BWEM::Base& base : area.Bases())
+            {
+                if (BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location()) < distance
+                    && base.Location() != BWAPI::Broodwar->self()->getStartLocation()
+                    && BWAPI::Broodwar->canBuildHere(base.Location(), type))
+                {
+                    distance = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
+                    closestDistance = base.Location();
+                }
+            }
+        }
+
+        //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        return BWAPI::Position(closestDistance);
+    }
+    else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
+    {
+        std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+        for (const NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator == nullptr)
+            {
+                //std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
+                //std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
+
+                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 55, nexusEconomy.vespeneGyser->getPosition().y - 25);
+                return position;
+            }
+        }
+    }
+    else
+    {
+        int distance = INT_MAX;
+        BWAPI::TilePosition closestDistance;
+        std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+
+        for (BWEB::Block block : blocks)
+        {
+            std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
+
+            for (const BWAPI::TilePosition placement : placements)
+            {
+                const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
+
+                if (BWAPI::Broodwar->canBuildHere(placement, type)
+                    && distanceToPlacement < distance
+                    && !alreadyUsingTiles(placement))
+                {
+                    distance = distanceToPlacement;
+                    closestDistance = placement;
+                }
+            }
+        }
+
+        //std::cout << distance << "\n";
+        return BWAPI::Position(closestDistance);
+    }
+
+    return BWAPI::Position(0, 0);
+}
+
 bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
 {
     if (buildRequests.size() == 0)
@@ -150,11 +237,20 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    //if (BWAPI::Broodwar->getFrameCount() % 48 == 0) printQueue();
+    if (BWAPI::Broodwar->getFrameCount() % 48 == 0)
+    {
+        //printQueue();
 
+        /*for (const BWAPI::UnitType building : plannedBuildings)
+        {
+            std::cout << "Planning to build: " << building << "\n";
+        }*/
+    }
+
+    //prioritize buildings and units first.
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
     {
-        if (holds_alternative<BuildStructureRequest>(it->request))
+        if (std::holds_alternative<BuildStructureRequest>(it->request))
         {
             const BuildStructureRequest temp = get<BuildStructureRequest>(it->request);
 
@@ -163,52 +259,58 @@ void SpenderManager::OnFrame()
 
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
-                //Need to get unit in on frame not here
-                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild();
+                //Find position to place building using BWEB and BWEM
+                const BWAPI::Position positionToBuild = getPositionToBuild(temp.buildingType);
+
+                if (positionToBuild == BWAPI::Position(0, 0))
+                {
+                    ++it;
+                    continue;
+                }
+
+                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
+                //BWAPI::Unit unitAvalible = commanderReference->getUnitToScout();
 
                 if (unitAvalible == nullptr)
                 {
+                    //std::cout << "Did not find worker\n";
                     ++it;
                     continue;
                 }
+                //std::cout << "Found worker\n";
+                //Sometimes worker is not being told to move for whatever reason?
 
-                //Currently this can cause a loop that can pause the game. Although this should be fixed once the build algorithm is made.
-                //std::cout << "Unit " << unitAvalible->getID() << " has been assgined to construct " << temp.buildingType << "\n";
-                bool success = false;
+                //std::cout << "Adding " << temp.buildingType << " to the queue\n";
 
-                if (temp.buildingType != BWAPI::UnitTypes::Protoss_Nexus)
-                {
-                    success = Tools::BuildBuilding(unitAvalible, temp.buildingType);
-                }
-                else
-                {
-                    success = Tools::BuildBuilding(unitAvalible, temp.buildingType);
-                }
+                //Create new builder to keep track of.
+                Builder builder;
+                builder.probe = unitAvalible;
+                builder.building = temp.buildingType;
+                builder.positionToBuild = positionToBuild;
+                builders.push_back(builder);
 
-                //std::cout << "Build Building success? " << success << "\n";
-                if (!success)
-                {
-                    ++it;
-                    continue;
-                }
-                
+                //Plan the building and consider the amount of minerals it will take.
                 plannedBuildings.push_back(temp.buildingType);
-
-                //Need to add units to data structure that keeps track of them until they completed the build.
-
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
 
-                //Why?
+                //Remove request from the building requests.
                 it = buildRequests.erase(it);
-                //std::cout << "Building " << temp.buildingType << "\n";
             }
             else
             {
-                it++;
+                //Prioritize exapnsions and pylons 
+                if (temp.buildingType == BWAPI::UnitTypes::Protoss_Nexus || temp.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
+                {
+                    break;
+                }
+                else
+                {
+                    it++;
+                }
             }
         }
-        else if (holds_alternative<TrainUnitRequest>(it->request))
+        else if (std::holds_alternative<TrainUnitRequest>(it->request))
         {
             const TrainUnitRequest temp = get<TrainUnitRequest>(it->request);
 
@@ -239,7 +341,16 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
-        else if (holds_alternative<ResearchUpgradeRequest>(it->request))
+        else
+        {
+            it++;
+        }
+    }
+
+    //Check if we can build upgrades
+    for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
+    {
+        if (std::holds_alternative<ResearchUpgradeRequest>(it->request))
         {
             ResearchUpgradeRequest temp = get<ResearchUpgradeRequest>(it->request);
 
@@ -262,17 +373,92 @@ void SpenderManager::OnFrame()
                 it++;
             }
         }
+        else
+        {
+            it++;
+        }
 
+    }
+
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    {
+        if (it->probe->isConstructing())
+        {
+            it++;
+            continue;
+        }
+
+
+        //Need to check if we are able to build. Units on tiles can cause buildings NOT to warp in
+        if (it->probe->isIdle() || it->probe->getPosition() == it->positionToBuild)
+        {
+            //std::cout << "In position to build " << it->building << "\n";
+            if (!it->probe->canBuild(it->building))
+            {
+                it++;
+                continue;
+            }
+
+            const bool buildSuccess = it->probe->build(it->building, BWAPI::TilePosition(it->positionToBuild));
+
+            //Get new position to build if we cannot build at this place.
+            if (!buildSuccess)
+            {
+                //std::cout << "BUILD UNSUCCESSFUL, trying another spot\n";
+                it->positionToBuild = getPositionToBuild(it->building);
+                it++;
+                continue;
+            }
+            //std::cout << (it->probe->isConstructing()) << "\n";
+            //std::cout << "Build command returned true, constructing...\n";
+
+            //Need to utilize BWEB's reserving tile system to improve building placement even further.
+            //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
+
+            if (it->building == BWAPI::UnitTypes::Protoss_Assimilator)
+            {
+                //Small chance for assimlator to not be build will try to fix this later.
+                it = builders.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+        else
+        {
+            //Testing this cause the move command has a small chance to fail
+            if (it->probe->getOrder() != BWAPI::Orders::Move)
+            {
+                //std::cout << "Move command failed, trying again\n";
+                it->probe->move(it->positionToBuild);
+            }
+
+            it++;
+        }
     }
 }
 
 void SpenderManager::onUnitCreate(BWAPI::Unit unit)
 {
+    //std::cout << unit->getType() << " created\n";
+
     for (std::vector<BWAPI::UnitType>::iterator it = plannedBuildings.begin(); it != plannedBuildings.end(); ++it)
     {
         if (unit->getType() == *it)
         {
+            //std::cout << "removing " << unit->getType() << " from plannedBuildings\n";
             it = plannedBuildings.erase(it);
+            break;
+        }
+    }
+
+    //Remove worker once a building is being warped in.
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
+    {
+        if (unit->getType() == it->building)
+        {
+            it = builders.erase(it);
             break;
         }
     }
@@ -281,10 +467,42 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
     {
         if (unit->getType() == *it)
         {
+            //std::cout << "removing " << unit->getType() << " from plannedUnits\n";
             it = plannedUnits.erase(it);
             break;
         }
     }
+}
+
+void SpenderManager::onUnitDestroy(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitDestroy(unit);
+
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    {
+        if (it->probe->getID() == unit->getID())
+        {
+            const BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(it->positionToBuild);
+            it->probe = unitAvalible;
+            break;
+        }
+        else
+        {
+            it++;
+        }
+    }
+
+    //check warping buildings
+}
+
+void SpenderManager::onUnitMorph(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitMorph(unit);
+}
+
+void SpenderManager::onUnitDiscover(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitDiscover(unit);
 }
 
 bool SpenderManager::buildingAlreadyMadeRequest(int unitID)
@@ -316,6 +534,31 @@ bool SpenderManager::checkUnitIsPlanned(BWAPI::UnitType building)
         if (building == plannedBuilding)
         {
             return true;
+        }
+    }
+
+    return false;
+}
+
+bool SpenderManager::checkWorkerIsConstructing(BWAPI::Unit unit)
+{
+    for (const Builder& builder : builders)
+    {
+        if (builder.probe->getID() == unit->getID()) return true;
+    }
+
+    return false;
+}
+
+bool SpenderManager::upgradeAlreadyRequested(BWAPI::Unit building)
+{
+    for (const BuildRequest buildRequest : buildRequests)
+    {
+        if (std::holds_alternative<ResearchUpgradeRequest>(buildRequest.request))
+        {
+            const ResearchUpgradeRequest temp = get<ResearchUpgradeRequest>(buildRequest.request);
+
+            if (temp.building->getID() == building->getID()) return true;
         }
     }
 

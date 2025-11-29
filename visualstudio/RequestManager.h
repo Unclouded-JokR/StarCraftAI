@@ -1,5 +1,5 @@
 #pragma once
-#include "UnitManager.h"
+//#include "UnitManager.h"
 #include <BWAPI.h>
 
 class RequestManager

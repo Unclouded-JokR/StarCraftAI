@@ -38,7 +38,12 @@
     <ClInclude Include="InformationManager.h" />
     <ClInclude Include="NexusEconomy.h" />
     <ClInclude Include="ProtoBotCommander.h" />
+    <ClInclude Include="ScoutingDragoon.h" />
     <ClInclude Include="ScoutingManager.h" />
+    <ClInclude Include="ScoutingObserver.h" />
+    <ClInclude Include="ScoutingProbe.h" />
+    <ClInclude Include="ScoutingZealot.h" />
+    <ClInclude Include="ScoutPolicy.h" />
     <ClInclude Include="SpenderManager.h" />
     <ClInclude Include="StrategyManager.h" />
     <ClInclude Include="Squad.h" />
@@ -80,7 +85,11 @@
     <ClCompile Include="InformationManager.cpp" />
     <ClCompile Include="NexusEconomy.cpp" />
     <ClCompile Include="ProtoBotCommander.cpp" />
+    <ClCompile Include="ScoutingDragoon.cpp" />
     <ClCompile Include="ScoutingManager.cpp" />
+    <ClCompile Include="ScoutingObserver.cpp" />
+    <ClCompile Include="ScoutingProbe.cpp" />
+    <ClCompile Include="ScoutingZealot.cpp" />
     <ClCompile Include="SpenderManager.cpp" />
     <ClCompile Include="StrategyManager.cpp" />
     <ClCompile Include="Squad.cpp" />

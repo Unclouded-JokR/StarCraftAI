@@ -13,36 +13,22 @@ void CombatManager::onStart(){
 
 	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
-		if (unit->getType().isWorker() || unit->getType().isBuilding() || unit->getType() != BWAPI::UnitTypes::Protoss_Dark_Templar) {
+		if (unit->getType().isWorker() || unit->getType().isBuilding()
+			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
 			continue;
 		}
-
+		if (commanderReference->scoutingManager.isScout(unit)) {
+			continue;
+		} 
 		if (isAssigned(unit) == false) {
 			assignUnit(unit);
 		}
-
-		BWAPI::Position pos = unit->getPosition();
-		Path AStarPath(unit, BWAPI::Position(pos.x + 300, pos.y));
-		AStarPath.generateAStarPath();
-		unitPathMap[unit] = AStarPath;
 	}
-}
-
-void CombatManager::onFrame() {
 
 	for (auto& squad : Squads) {
 		squad.attack(squad.units.getPosition());
-
-		// If unit in squad has a path, make it walk the path
-		for (const auto& unit : squad.units) {
-			if (unitPathMap.find(unit) != unitPathMap.end()) {
-				Path& path = unitPathMap[unit];
-				path.WalkPath();
-			}
-		}
 	}
-
-	//drawDebugInfo();
+	drawDebugInfo();
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
@@ -107,24 +93,26 @@ void CombatManager::removeSquad(int squadId){
 
 // Function called by ProtoBot commander when unit is sent to combat manager
 
-Squad CombatManager::assignUnit(BWAPI::Unit unit)
+bool CombatManager::assignUnit(BWAPI::Unit unit)
 {
+	if (commanderReference->scoutingManager.isScout(unit)) {
+		return false; // refuse: unit is a scout
+	}
+
 	for (auto& squad : Squads) {
 		if (squad.units.size() < squad.unitSize) {
 			squad.addUnit(unit);
 			combatUnits.insert(unit);
 			unitSquadIdMap[unit->getID()] = squad.squadId;
-			return squad;
+			return true;
 		}
 	}
 
-	// Unit not assigned = no squads with space (creates a new squad)
 	Squad& newSquad = addSquad();
 	newSquad.addUnit(unit);
 	combatUnits.insert(unit);
 	unitSquadIdMap[unit->getID()] = newSquad.squadId;
-
-	return newSquad;
+	return true;
 }
 
 void CombatManager::move(BWAPI::Position position) {
@@ -143,20 +131,24 @@ void CombatManager::drawDebugInfo() {
 	}
 }
 
-BWAPI::Unit CombatManager::getAvailableUnit(){
+BWAPI::Unit CombatManager::getAvailableUnit() {
+	return getAvailableUnit([](BWAPI::Unit) { return true; });
+}
+
+BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> filter) {
 	for (auto& squad : Squads) {
-		// If squad is busy, skip
-		if (squad.isAttacking) {
-			continue;
-		}
+		if (squad.isAttacking) continue;
+		for (auto it = squad.units.begin(); it != squad.units.end(); ++it) {
+			BWAPI::Unit u = *it;                   
+			if (!u || !u->exists()) continue;
+			if (commanderReference->scoutingManager.isScout(u)) continue;
+			if (!filter(u)) continue;
 
-		for (auto& unit : squad.units) {
-			if (unit && unit->exists()) {
-				squad.removeUnit(unit);
-				return unit;
-			}
+			squad.removeUnit(u);                    
+			combatUnits.erase(u);
+			unitSquadIdMap.erase(u->getID());
+			return u;
 		}
-
-		return nullptr;
 	}
+	return nullptr;
 }

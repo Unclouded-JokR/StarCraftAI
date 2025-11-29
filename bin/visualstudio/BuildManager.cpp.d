@@ -29,15 +29,16 @@ bin/./visualstudio/BuildManager.cpp.o: visualstudio/BuildManager.cpp \
  src/bwapi/include/BWAPI/UnitCommandType.h \
  src/bwapi/include/BWAPI/Unitset.h visualstudio/SpenderManager.h \
  visualstudio/../src/starterbot/Tools.h \
- visualstudio/../visualstudio/BWEB/Source/BWEB.h BWEM/src/bwem.h \
- BWEM/src/map.h BWEM/src/tiles.h BWEM/src/area.h BWEM/src/bwapiExt.h \
- BWEM/src/utils.h BWEM/src/defs.h BWEM/src/cp.h BWEM/src/base.h \
- BWEM/src/neutral.h BWEM/src/gridMap.h BWEM/src/examples.h \
- BWEM/src/exampleWall.h BWEM/src/mapPrinter.h BWEM/src/mapDrawer.h \
- visualstudio/../visualstudio/BWEB/Source/Block.h \
- visualstudio/../visualstudio/BWEB/Source/PathFind.h \
- visualstudio/../visualstudio/BWEB/Source/Station.h \
- visualstudio/../visualstudio/BWEB/Source/Wall.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h \
+ BWEM/src/bwem.h BWEM/src/map.h BWEM/src/tiles.h BWEM/src/area.h \
+ BWEM/src/bwapiExt.h BWEM/src/utils.h BWEM/src/defs.h BWEM/src/cp.h \
+ BWEM/src/base.h BWEM/src/neutral.h BWEM/src/gridMap.h \
+ BWEM/src/examples.h BWEM/src/exampleWall.h BWEM/src/mapPrinter.h \
+ BWEM/src/mapDrawer.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Block.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/PathFind.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Station.h \
+ visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h \
  visualstudio/ProtoBotCommander.h visualstudio/StrategyManager.h \
  visualstudio/EconomyManager.h visualstudio/NexusEconomy.h \
  visualstudio/InformationManager.h visualstudio/InfluenceMap.h \
@@ -94,7 +95,7 @@ src/bwapi/include/BWAPI/UnitCommandType.h:
 src/bwapi/include/BWAPI/Unitset.h:
 visualstudio/SpenderManager.h:
 visualstudio/../src/starterbot/Tools.h:
-visualstudio/../visualstudio/BWEB/Source/BWEB.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h:
 BWEM/src/bwem.h:
 BWEM/src/map.h:
 BWEM/src/tiles.h:
@@ -110,10 +111,10 @@ BWEM/src/examples.h:
 BWEM/src/exampleWall.h:
 BWEM/src/mapPrinter.h:
 BWEM/src/mapDrawer.h:
-visualstudio/../visualstudio/BWEB/Source/Block.h:
-visualstudio/../visualstudio/BWEB/Source/PathFind.h:
-visualstudio/../visualstudio/BWEB/Source/Station.h:
-visualstudio/../visualstudio/BWEB/Source/Wall.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Block.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/PathFind.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Station.h:
+visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h:
 visualstudio/ProtoBotCommander.h:
 visualstudio/StrategyManager.h:
 visualstudio/EconomyManager.h:

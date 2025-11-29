@@ -25,22 +25,25 @@ public:
     BuildManager(ProtoBotCommander* commanderReference);
     void onStart();
     void onFrame();
-    void onCreate(BWAPI::Unit unit);
+    void onUnitCreate(BWAPI::Unit unit);
     void onUnitDestroy(BWAPI::Unit unit);
+    void onUnitMorph(BWAPI::Unit);
+    void onUnitDiscover(BWAPI::Unit);
 
     void assignBuilding(BWAPI::Unit unit);
     bool isBuildOrderCompleted();
     bool requestedBuilding(BWAPI::UnitType building);
     bool alreadySentRequest(int unitID);
+    bool upgradeAlreadyRequested(BWAPI::Unit);
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
     bool checkUnitIsPlanned(BWAPI::UnitType building);
+    bool checkWorkerIsConstructing(BWAPI::Unit);
+    int checkAvailableSupply();
     void buildingDoneWarping(BWAPI::Unit unit);
-
 
     void buildBuilding(BWAPI::UnitType building);
     void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
-    void buildUnitType(BWAPI::UnitType unit);
-    void buildUpgadeType(BWAPI::UpgradeType upgradeToBuild);
+    void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
 
     void getBuildOrder();
     void updateBuild();
@@ -54,16 +57,12 @@ public:
     void runBuildQueue();
     void runUnitQueue();
     void pumpUnit();
-    void expansionBuilding();
 
     bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
     std::map<BWAPI::UnitType, int>& getUnitQueue();
     using BuildList = void (BuildManager::*)();
     std::vector<BuildList> getBuildOrders(BWAPI::Race race);
-
-    
-    bool requestsent = false;
 };
 
 namespace All {

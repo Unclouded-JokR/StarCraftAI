@@ -1,6 +1,6 @@
 bin/./visualstudio/RequestManager.cpp.o: visualstudio/RequestManager.cpp \
- visualstudio/RequestManager.h visualstudio/UnitManager.h \
- src/bwapi/include/BWAPI.h src/bwapi/include/BWAPI/InterfaceEvent.h \
+ visualstudio/RequestManager.h src/bwapi/include/BWAPI.h \
+ src/bwapi/include/BWAPI/InterfaceEvent.h \
  src/bwapi/include/BWAPI/Interface.h src/bwapi/include/BWAPI/AIModule.h \
  src/bwapi/include/BWAPI/Position.h \
  src/bwapi/include/BWAPI/TournamentAction.h \
@@ -29,7 +29,6 @@ bin/./visualstudio/RequestManager.cpp.o: visualstudio/RequestManager.cpp \
  src/bwapi/include/BWAPI/UnitCommandType.h \
  src/bwapi/include/BWAPI/Unitset.h
 visualstudio/RequestManager.h:
-visualstudio/UnitManager.h:
 src/bwapi/include/BWAPI.h:
 src/bwapi/include/BWAPI/InterfaceEvent.h:
 src/bwapi/include/BWAPI/Interface.h:

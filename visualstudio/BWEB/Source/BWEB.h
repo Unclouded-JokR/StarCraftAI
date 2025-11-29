@@ -5,6 +5,7 @@
 #include "PathFind.h"
 #include "Station.h"
 #include "Wall.h"
+#include <cfloat>
 
 namespace BWEB::Map
 {

@@ -1,11 +1,35 @@
 #pragma once
+#include <memory>
+#include <variant>
+#include <optional>
+#include <type_traits>
 #include <BWAPI.h>
 #include <bwem.h>
 #include <vector>
-#include <optional>
-#include <cstddef>
+#include <algorithm>
+#include <unordered_map>
+#include <array>
 
 class ProtoBotCommander;
+class ScoutingProbe;
+class ScoutingZealot;
+class ScoutingObserver;
+
+// include concrete behaviors
+#include "ScoutingProbe.h"
+#include "ScoutingZealot.h"
+// #include "ScoutingDragoon.h"
+#include "ScoutingObserver.h"
+
+using BehaviorVariant = std::variant<
+    std::monostate,
+    ScoutingProbe,
+    ScoutingZealot,
+    ScoutingObserver
+    /*Once added ->,
+    ScoutingDragoon,
+    */
+>;
 
 class ScoutingManager {
 public:
@@ -14,78 +38,74 @@ public:
     void onStart();
     void onFrame();
 
-    // New: assign a specific unit to be the scout (called by ProtoBotCommander)
-    void assignScout(BWAPI::Unit unit);
-    bool hasScout() const { return scout && scout->exists(); }
+    void assignScout(BWAPI::Unit unit);              // decides which concrete behavior to use
+    bool hasScout() const;
 
-    // Unchanged helper
     void setEnemyMain(const BWAPI::TilePosition& tp);
-
-    // New: clean de-assignment when units die
+    void setEnemyNatural(const BWAPI::TilePosition& tp);
     void onUnitDestroy(BWAPI::Unit unit);
 
+    std::optional<BWAPI::TilePosition> getEnemyMain() const { return enemyMainCache_; }
+    std::optional<BWAPI::TilePosition> getEnemyNatural() const { return enemyNaturalCache_; }
+
+    void markScout(BWAPI::Unit u);          // call when a unit becomes a scout
+    void unmarkScout(BWAPI::Unit u);        // call when it stops being a scout
+    bool isScout(BWAPI::Unit u) const;      // handy for other modules (e.g., Squad draw)
+    bool isCombatScout(BWAPI::Unit u) const;
+    bool hasWorkerScout() const;
+    void drawScoutTags() const;             // draw labels for all scouts
+
+    void setCombatScoutingStarted(bool v) { combatScoutingStarted_ = v; }
+    bool combatScoutingStarted() const { return combatScoutingStarted_; }
+
+    bool canAcceptWorkerScout() const { return !combatScoutingStarted_ && !workerScout_; }
+
+    bool canAcceptCombatScout(BWAPI::UnitType t) const 
+    {
+        if (t == BWAPI::UnitTypes::Protoss_Zealot)
+            return int(combatZealots_.size()) < maxZealotScouts_;
+        if (t == BWAPI::UnitTypes::Protoss_Dragoon)
+            return int(combatDragoons_.size()) < maxDragoonScouts_;
+        return false;
+    }
+
+    bool canAcceptObserverScout() const { return (int)observerScouts_.size() < maxObserverScouts_; }
+
+    int numCombatScouts() const 
+    {
+        return int(combatZealots_.size() + combatDragoons_.size());
+    }
+
 private:
-    enum class State { Search, GasSteal, Harass, Orbit, Done };
-
-    // ---- core data ----
     ProtoBotCommander* commanderRef = nullptr;
-    BWAPI::Unit scout = nullptr;
 
-    std::optional<BWAPI::TilePosition> enemyMainTile;
-    BWAPI::Position enemyMainPos = BWAPI::Positions::Invalid;
+    std::unordered_map<int, BehaviorVariant> behaviors_;
 
-    std::vector<BWAPI::TilePosition> startTargets;
-    std::size_t nextTarget = 0;
-    State state = State::Done;
+    // helpers
+    BehaviorVariant constructBehaviorFor(BWAPI::Unit unit);
+    static BWAPI::Unit findUnitById(int id);
 
-    // Gas steal bookkeeping
-    bool gasStealDone = false;
-    BWAPI::Unit targetGeyser = nullptr;
-    int nextGasStealRetryFrame = 0;
+    std::vector<BWAPI::Unit> scouts_;
+    BWAPI::Unit workerScout_{ nullptr };
+    bool combatScoutingStarted_{ false };
+    std::optional<BWAPI::TilePosition> enemyMainCache_;
+    std::optional<BWAPI::TilePosition> enemyNaturalCache_;
 
-    // Misc
-    int lastMoveIssueFrame = 0;
+   // Number of scouts
+    int  maxZealotScouts_{ 2 };
+    int  maxDragoonScouts_{ 3 };
+    int  maxObserverScouts_{ 4 };
 
-    // ---- tunables (kept small/simple) ----
-    static constexpr int kCloseEnoughToTarget   = 96;
-    static constexpr int kMoveCooldownFrames    = 8;
-    static constexpr int kOrbitRadius           = 350;
-    static constexpr int kGasStealRetryCooldown = 24; // ~1s
-    static constexpr int kHarassRadiusFromMain  = 320;
+    std::vector<BWAPI::Unit> combatZealots_;
+    std::vector<BWAPI::Unit> combatDragoons_;
 
-    // ---- helpers ----
-    void buildStartTargets();
-    void issueMoveToward(const BWAPI::Position& p, int reissueDist = 32, bool force = false);
+    // assigned observer units + slot ownership (slot 0..3)
+    std::vector<BWAPI::Unit> observerScouts_;
+    int observerSlotOwner_[4] = { -1, -1, -1, -1 }; // unitID or -1
 
-    bool seeAnyEnemyBuildingNear(const BWAPI::Position& p, int radius) const;
-    bool anyRefineryOn(BWAPI::Unit geyser) const;
+    // helpers for observer slots
+    int  reserveObserverSlot(int unitId);   // returns slot [0..3] or -1
+    void releaseObserverSlot(int unitId);
 
-    bool tryGasSteal();     // returns true if it issued a command this frame
-    bool tryHarassWorker(); // returns true if it issued a command this frame
 
-    void ensureOrbitWaypoints();
-    BWAPI::Position currentOrbitPoint() const;
-    void advanceOrbitIfArrived();
-    bool threatenedNow() const;
-    BWAPI::Position getAvgPosition();
-    bool planTerrainPathTo(const BWAPI::Position& goal);
-    bool hasPlannedPath() const { return !plannedPath.empty(); }
-    BWAPI::Position currentPlannedWaypoint() const;
-    static inline BWAPI::Position clampToMapPx(const BWAPI::Position& p, int marginPx = 32);
-    static BWAPI::Position snapToNearestWalkable(BWAPI::Position p, int maxRadiusPx = 128);
-
-    BWAPI::Position computeOrbitCenter() const;                 // enemy main if known, else scout pos
-    static int normDeg(int d) { d %= 360; return d < 0 ? d + 360 : d; }
-    static int angleDeg(const BWAPI::Position& from, const BWAPI::Position& to);
-
-    // orbit data
-    std::vector<BWAPI::Position> orbitWaypoints;
-    std::vector<BWAPI::Position> plannedPath;
-    std::size_t orbitIdx = 0;
-    int dwellUntilFrame = 0;
-
-    // ---- ScoutingManager members ----
-    int lastHP = -1, lastShields = -1;
-    int lastThreatFrame = -999999;
-    static constexpr int kThreatRearmFrames = 8;
 };

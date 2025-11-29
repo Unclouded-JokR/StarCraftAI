@@ -1,6 +1,5 @@
 #include "ProtoBotCommander.h"
-
-namespace { auto& theMap = BWEM::Map::Instance(); }
+#include "ScoutPolicy.h"
 
 ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(this), economyManager(this), scoutingManager(this), combatManager(this), informationManager(this)
 {
@@ -9,6 +8,9 @@ ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(thi
 
 void ProtoBotCommander::onStart()
 {
+	std::cout << "============================\n";
+	std::cout << "Initializing Modules\n";
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -20,15 +22,20 @@ void ProtoBotCommander::onStart()
 	// Enable the flag that tells BWAPI to let users enter input while bot plays
 	BWAPI::Broodwar->enableFlag(BWAPI::Flag::UserInput);
 
+	static bool mapInitialized = false;
+
 	std::cout << "Map initialization...\n";
-	/*theMap.Initialize();
-	theMap.EnableAutomaticPathAnalysis();*/
-	//bool startingLocationsOK = theMap.FindBasesForStartingLocations();
-	//assert(startingLocationsOK);
 
-	// Call MapTools OnStart
-	//m_mapTools.onStart();
+	//theMap = BWEM::Map::Instance();
+	theMap.Initialize();
+	theMap.EnableAutomaticPathAnalysis();
+	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
+	assert(startingLocationsOK);
 
+	BWEB::Map::onStart();
+	BWEB::Blocks::findBlocks();
+
+	m_mapTools.onStart();
 
 
 	/*
@@ -81,7 +88,8 @@ void ProtoBotCommander::onStart()
 
 	//buildManager.onStart();
 
-	std::cout << "gg\n";
+	std::cout << "============================\n";
+	std::cout << "Agent Start\n";
 }
 
 void ProtoBotCommander::onFrame()
@@ -98,9 +106,21 @@ void ProtoBotCommander::onFrame()
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
-	
-	//BWEM::utils::gridMapExample(theMap);
-	//BWEM::utils::drawMap(theMap);
+
+	BWEB::Map::draw();
+
+	for (const Area& area : theMap.Areas())
+	{
+		for (const Base& base : area.Bases())
+		{
+			if (BWEM::utils::MapDrawer::showBases && BWAPI::Broodwar->canBuildHere(base.Location(), BWAPI::UnitTypes::Protoss_Nexus))
+			{
+				BWAPI::Broodwar->drawBoxMap(BWAPI::Position(base.Location()),
+					BWAPI::Position(base.Location() + BWAPI::UnitType(BWAPI::UnitTypes::Protoss_Nexus).tileSize()),
+					BWEM::utils::MapDrawer::Color::bases);
+			}
+		}
+	}
 
 	/*
 	* Protobot Modules
@@ -112,42 +132,42 @@ void ProtoBotCommander::onFrame()
 
 	switch (action.type)
 	{
-		case ActionType::Action_Expand:
+	case ActionType::Action_Expand:
+	{
+		const Expand value = get<Expand>(action.commanderAction);
+		requestBuild(value.unitToBuild);
+		break;
+	}
+	case ActionType::Action_Build:
+	{
+		const Build value = get<Build>(action.commanderAction);
+		requestBuild(value.unitToBuild);
+		break;
+	}
+	case ActionType::Action_Scout:
+	{
+		std::cout << "Reuqesting scout!\n";
+		if (!scoutingManager.hasScout())
 		{
-			const Expand value = get<Expand>(action.commanderAction);
-			requestBuild(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Build:
-		{
-			const Build value = get<Build>(action.commanderAction);
-			requestBuild(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Scout:
-		{
-			std::cout << "Reuqesting scout!\n";
-			if (!scoutingManager.hasScout()) 
-			{
-				if (BWAPI::Unit u = getUnitToScout()) {
-					scoutingManager.assignScout(u);
-					std::cout << "Got unit to scout!\n";
-				}
+			if (BWAPI::Unit u = getUnitToScout()) {
+				scoutingManager.assignScout(u);
+				std::cout << "Got unit to scout!\n";
 			}
-			break;
 		}
-		case ActionType::Action_Attack:
-		{
-			break;
-		}
-		case ActionType::Action_Defend:
-		{
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	case ActionType::Action_Attack:
+	{
+		break;
+	}
+	case ActionType::Action_Defend:
+	{
+		break;
+	}
+	default:
+	{
+		break;
+	}
 	}
 	Tools::updateCount();
 
@@ -185,12 +205,14 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	buildManager.onUnitDestroy(unit);
 }
 
+void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
+{
+	buildManager.onUnitDiscover(unit);
+}
+
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
-	if (unit->getPlayer() != BWAPI::Broodwar->self())
-		return;
-
-	buildManager.onCreate(unit);
+	buildManager.onUnitCreate(unit);
 }
 
 //[TODO] Move this to building manager
@@ -201,8 +223,10 @@ bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-	if (unit->getPlayer() != BWAPI::Broodwar->self())
-		return;
+	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
+	buildManager.onUnitCreate(unit);
+
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
 	buildManager.buildingDoneWarping(unit);
 
@@ -254,18 +278,18 @@ void ProtoBotCommander::onSendText(std::string text)
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
-
+	buildManager.onUnitMorph(unit);
 }
 
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	if(buildManager.isBuildOrderCompleted())
+	if (buildManager.isBuildOrderCompleted())
 		All::currentBuild = "Completed";
 	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
-	
+
 	BWAPI::Broodwar->drawTextScreen(0, 0, currentState.c_str());
-	BWAPI::Broodwar->drawTextScreen(0, 10 , buildOrderSelectedString.c_str());
+	BWAPI::Broodwar->drawTextScreen(0, 10, buildOrderSelectedString.c_str());
 
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
@@ -275,10 +299,10 @@ void ProtoBotCommander::drawDebugInformation()
 	Tools::DrawUnitBoundingBoxes();
 }
 
-BWAPI::Unit ProtoBotCommander::getUnitToBuild()
+BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)
 {
 	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
-	return economyManager.getAvalibleWorker();
+	return economyManager.getAvalibleWorker(buildLocation);
 }
 
 void ProtoBotCommander::requestBuild(BWAPI::UnitType building)
@@ -311,28 +335,6 @@ bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 	return buildManager.requestedBuilding(building);
 }
 
-//[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
-//You can also change the name of this in order to make it clear what "getAvalibleWorker()" is doing.
-//Also get rid of the self get Units, eco should return a unit, not a null ptr.
-BWAPI::Unit ProtoBotCommander::getUnitToScout()
-{
-	if (BWAPI::Unit u = economyManager.getUnitScout())
-	{
-		std::cout << "Got unit " << u->getID() << " to scout" << "\n";
-		return u;
-	}
-
-	//// Fallback: find any completed, non-carrying worker
-	//for (auto& u : BWAPI::Broodwar->self()->getUnits()) {
-	//	if (!u->exists()) continue;
-	//	if (u->getType().isWorker() && u->isCompleted() &&
-	//		!u->isCarryingMinerals() && !u->isCarryingGas()) {
-	//		return u;
-	//	}
-	//}
-	//return nullptr;
-}
-
 std::string ProtoBotCommander::enemyRaceCheck()
 {
 	BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
@@ -359,4 +361,106 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 {
 	return buildManager.checkUnitIsPlanned(building);
+}
+
+std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()
+{
+	return economyManager.getNexusEconomies();
+}
+
+bool ProtoBotCommander::checkWorkerIsConstructing(BWAPI::Unit unit)
+{
+	return buildManager.checkWorkerIsConstructing(unit);
+}
+
+int ProtoBotCommander::checkAvailableSupply()
+{
+	return buildManager.checkAvailableSupply();
+}
+
+//[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
+//You can also change the name of this in order to make it clear what "getAvalibleWorker()" is doing.
+//Also get rid of the self get Units, eco should return a unit, not a null ptr.
+BWAPI::Unit ProtoBotCommander::getUnitToScout()
+{
+	auto isValidUnit = [](BWAPI::Unit u) {
+		return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self();
+		};
+
+	const int frame = BWAPI::Broodwar->getFrameCount();
+
+	// Switch to combat scouting at/after the threshold exactly once
+	if (frame >= kCombatScoutFrame && !scoutingManager.combatScoutingStarted()) {
+		scoutingManager.setCombatScoutingStarted(true);
+	}
+
+	// 1) Before combat-scouting: keep exactly 1 worker scout
+	if (!scoutingManager.combatScoutingStarted()) {
+		if (scoutingManager.canAcceptWorkerScout()) {
+			if (BWAPI::Unit w = economyManager.getUnitScout(); isValidUnit(w)) {
+				scoutingManager.assignScout(w);
+				std::cout << "Assigned worker scout " << w->getID() << "\n";
+			}
+		}
+		return nullptr;
+	}
+
+	// 2) After combat-scouting starts: never request worker scouts again.
+	// Fill up to max combat scouts using combat units.
+	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Zealot))
+	{
+		BWAPI::Unit u = combatManager.getAvailableUnit(
+			[](BWAPI::Unit x) {
+				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Zealot;
+			}
+		);
+		if (!isValidUnit(u)) break;
+		scoutingManager.assignScout(u);
+		std::cout << "Assigned combat scout (Zealot) " << u->getID() << "\n";
+	}
+
+	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Dragoon))
+	{
+		BWAPI::Unit u = combatManager.getAvailableUnit(
+			[](BWAPI::Unit x) {
+				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Dragoon;
+			}
+		);
+		if (!isValidUnit(u)) break;
+		scoutingManager.assignScout(u);
+		std::cout << "Assigned combat scout (Dragoon) " << u->getID() << "\n";
+	}
+
+	while (scoutingManager.canAcceptObserverScout())
+	{
+		BWAPI::Unit u = combatManager.getAvailableUnit
+		(
+			[](BWAPI::Unit x)
+			{
+				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Observer;
+			}
+		);
+		if (!u) break;
+		scoutingManager.assignScout(u);
+		std::cout << "Assigned observer scout " << u->getID() << "\n";
+	}
+
+	return nullptr;
+}
+
+// ------- Enemy Locations ----------
+void ProtoBotCommander::onEnemyMainFound(const BWAPI::TilePosition& tp) {
+	enemy_.main = tp;
+	enemy_.frameLastUpdateMain = BWAPI::Broodwar->getFrameCount();
+	BWAPI::Broodwar->printf("[Commander] Enemy main set to (%d,%d)", tp.x, tp.y);
+
+	// StrategyManager.onEnemyMain(tp);
+}
+
+void ProtoBotCommander::onEnemyNaturalFound(const BWAPI::TilePosition& tp) {
+	enemy_.natural = tp;
+	enemy_.frameLastUpdateNat = BWAPI::Broodwar->getFrameCount();
+	BWAPI::Broodwar->printf("[Commander] Enemy natural set to (%d,%d)", tp.x, tp.y);
+
+	// StrategyManager.onEnemyNaturalFound(tp)
 }

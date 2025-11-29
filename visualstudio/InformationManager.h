@@ -29,7 +29,7 @@ class InformationManager
 private:
     std::set<BWAPI::Unit> _knownEnemies;
     std::map<BWAPI::Unit, EnemyBuildingInfo> _knownEnemyBuildings;
-    std::unordered_map<int, TrackedEnemy> knownEnemies;
+    std::map<int, TrackedEnemy> trackedEnemies;  // track by BWAPI unit ID
     InfluenceMap influenceMap;
     double gameState;
 
@@ -48,4 +48,5 @@ public:
 
     void printKnownEnemies() const;
     void printKnownEnemyBuildings() const;
+    void printTrackedEnemies() const;
 };

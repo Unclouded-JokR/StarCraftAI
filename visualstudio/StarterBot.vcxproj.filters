@@ -40,6 +40,10 @@
     <ClCompile Include="BWEB\Source\Station.cpp" />
     <ClCompile Include="BWEB\Source\Wall.cpp" />
     <ClCompile Include="InfluenceMap.cpp" />
+    <ClCompile Include="ScoutingZealot.cpp" />
+    <ClCompile Include="ScoutingDragoon.cpp" />
+    <ClCompile Include="ScoutingObserver.cpp" />
+    <ClCompile Include="ScoutingProbe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -82,5 +86,10 @@
     <ClInclude Include="BWEB\Source\Station.h" />
     <ClInclude Include="BWEB\Source\Wall.h" />
     <ClInclude Include="InfluenceMap.h" />
+    <ClInclude Include="ScoutingZealot.h" />
+    <ClInclude Include="ScoutingDragoon.h" />
+    <ClInclude Include="ScoutingObserver.h" />
+    <ClInclude Include="ScoutingProbe.h" />
+    <ClInclude Include="ScoutPolicy.h" />
   </ItemGroup>
 </Project>
