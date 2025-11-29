@@ -16,7 +16,7 @@ void ProtoBotCommander::onStart()
 	*/
 
 	// Set our BWAPI options here    
-	BWAPI::Broodwar->setLocalSpeed(10);
+	BWAPI::Broodwar->setLocalSpeed(30);
 	BWAPI::Broodwar->setFrameSkip(0);
 
 	// Enable the flag that tells BWAPI to let users enter input while bot plays
@@ -82,9 +82,11 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
+	combatManager.onStart();
+
 	scoutingManager.onStart();
 
-	buildManager.onStart();
+	//buildManager.onStart();
 
 	std::cout << "============================\n";
 	std::cout << "Agent Start\n";
@@ -169,7 +171,7 @@ void ProtoBotCommander::onFrame()
 	}
 	Tools::updateCount();
 
-	buildManager.onFrame();
+	//buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
 	economyManager.OnFrame();
