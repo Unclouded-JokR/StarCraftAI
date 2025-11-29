@@ -31,6 +31,27 @@ void CombatManager::onStart(){
 	drawDebugInfo();
 }
 
+void CombatManager::onFrame() {
+	// Only for testing on microtesting map
+	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
+		if (unit->getType().isWorker() || unit->getType().isBuilding()
+			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
+			continue;
+		}
+		if (commanderReference->scoutingManager.isScout(unit)) {
+			continue;
+		}
+		if (isAssigned(unit) == false) {
+			assignUnit(unit);
+		}
+	}
+
+	for (auto& squad : Squads) {
+		squad.attack(squad.units.getPosition());
+	}
+	drawDebugInfo();
+}
+
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	// Remove unit from its squad
 	if (isAssigned(unit)) {
