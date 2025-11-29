@@ -335,9 +335,8 @@ void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    buildOrderCompleted = true;
-    return;
-
+    /*buildOrderCompleted = true;
+    return;*/
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
@@ -360,8 +359,6 @@ void BuildManager::PvP_10_12_Gateway() {
     currentBuild = "PvP_10/12_Gateway";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    buildOrderCompleted = true;
-    return;
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 16);
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
@@ -373,8 +370,6 @@ void BuildManager::PvP_10_12_Gateway() {
 void BuildManager::PvZ_10_12_Gateway() {
     currentBuild = "PvZ_10/12_Gateway";
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    buildOrderCompleted = true;
-    return;
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 21);
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 12);
