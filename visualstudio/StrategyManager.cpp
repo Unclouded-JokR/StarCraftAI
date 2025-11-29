@@ -276,7 +276,7 @@ Action StrategyManager::onFrame()
 		//Check if we should build a pylon
 		if (commanderReference->checkAvailableSupply() <= 2 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 		{
-			//std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
+			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
@@ -295,7 +295,7 @@ Action StrategyManager::onFrame()
 				&& nexusEconomy.lifetime >= 500
 				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 			{
-				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
+				std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 
@@ -310,7 +310,7 @@ Action StrategyManager::onFrame()
 			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
 			{
 				mineralsToExpand * 2.5;
-				//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+				std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
 
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
@@ -322,7 +322,7 @@ Action StrategyManager::onFrame()
 			else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
-				//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
+				std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
 
 				minutesPassedIndex++;
 
@@ -396,11 +396,11 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
 		{
-			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
+			std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
 			if (gatewayCount < completedNexusEconomy * 4)
 			{
-				//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
+				std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
 				Build actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
 
@@ -414,7 +414,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && forgeCount <= 3 && forgeCount != completedNexusEconomy)
 		{
-			//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Build actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Forge;
 
@@ -439,7 +439,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && cyberneticsCount <= 3 && cyberneticsCount != completedNexusEconomy)
 		{
-			//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Build actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
 
@@ -450,7 +450,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && citadelCount <= 3 && cyberneticsCount == 1 && citadelCount != completedNexusEconomy)
 		{
-			//std::cout << "BUILD ACTION: Requesting to warp Citadel\n";
+			std::cout << "BUILD ACTION: Requesting to warp Citadel\n";
 			Build actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
 
@@ -461,7 +461,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && templarArchivesCount <= 3 && citadelCount == 1 && templarArchivesCount != completedNexusEconomy)
 		{
-			//std::cout << "BUILD ACTION: Requesting to warp Archives\n";
+			std::cout << "BUILD ACTION: Requesting to warp Archives\n";
 			Build actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Templar_Archives;
 
