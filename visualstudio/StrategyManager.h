@@ -141,6 +141,7 @@ public:
 	void battleLost(); //Optionally can makes these two a single function with a bool parameter 
 	void battleWon();
 	std::string getCurrentStateName();
+	bool checkAlreadyRequested(BWAPI::UnitType type);
 
 	static StrategyContentState contentState;
 	static StrategyBoredomState boredomState;

@@ -3,7 +3,6 @@
 #include <BWAPI.h>
 #include <vector>
 #include <unordered_map>
-#include <random>
 
 #define WORKERS_PER_ASSIMILATOR 3
 #define OPTIMAL_WORKERS_PER_MINERAL 2
@@ -15,18 +14,16 @@ class NexusEconomy
 {
 public:
 	EconomyManager* economyReference;
-	const int nexusID;
+	int nexusID;
+	int lifetime = 0; //Used to delay assimilator build for now.
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
 	BWAPI::Unitset minerals;
+	BWAPI::Unit vespeneGyser = nullptr;
 	BWAPI::Unit assimilator = nullptr;
 	std::unordered_map<BWAPI::Unit, int> mineralWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
 	int assimilatorWorkerCount = 0;
-	int red;
-	int blue;
-	int green;
-	int scannerCheck = 1;
 
 	//Calculated maximums based on number of miners.
 	int maximumWorkerAmount;
@@ -40,6 +37,7 @@ public:
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();
+	void addMissedResources();
 	void OnFrame();
 	void printMineralWorkerCounts();
 
@@ -47,13 +45,10 @@ public:
 	BWAPI::Unit GetClosestMineralToWorker(BWAPI::Unit worker);
 	void assignWorker(BWAPI::Unit unit);
 	void assignAssimilator(BWAPI::Unit assimilator);
-
 	void workOverTime();
 	void breakTime();
 
 	BWAPI::Unitset getWorkersToTransfer(int numberOfWorkersForTransfer);
 	BWAPI::Unit getWorkerToScout();
-	BWAPI::Unit getWorkerToBuild();
-	BWAPI::Unitset onNexusDestroy();
-
+	BWAPI::Unit getWorkerToBuild(BWAPI::Position locationToBuild);
 };

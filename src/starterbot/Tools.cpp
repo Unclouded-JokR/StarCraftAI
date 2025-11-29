@@ -82,21 +82,6 @@ bool Tools::BuildBuilding(BWAPI::UnitType type)
     return builder->build(type, buildPos);
 }
 
-
-bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type)
-{
-    // Get a location that we want to build the building next to
-    BWAPI::TilePosition desiredPos = BWAPI::Broodwar->self()->getStartLocation();
-
-    // Ask BWAPI for a building location near the desired position for the type
-    int maxBuildRange = 128;
-    bool buildingOnCreep = type.requiresCreep();
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, desiredPos, maxBuildRange, buildingOnCreep);
-    return unit->build(type, buildPos);
-}
-
-
-
 void Tools::DrawUnitCommands()
 {
     for (auto& unit : BWAPI::Broodwar->self()->getUnits())
@@ -252,18 +237,6 @@ void Tools::DrawHealthBar(BWAPI::Unit unit, double ratio, BWAPI::Color color, in
     }
 }
 
-
-Tools::PlayerState getPlayerState(Unit unit) {
-    auto state = Tools::PlayerState::None;
-    if (unit->getPlayer() == Broodwar->self())
-        state = Tools::PlayerState::Self;
-    else if (unit->getPlayer()->isEnemy(Broodwar->self()))
-        state = Tools::PlayerState::Enemy;
-    else
-        state = Tools::PlayerState::Neutral;
-    return state;
-}
-
 map<UnitType, int> allVisibleTypeCounts;
 map<UnitType, int> allCompleteTypeCounts;
 map<UnitType, int> allTotalTypeCounts;
@@ -318,24 +291,4 @@ void Tools::updateCount() {
                 allCompleteTypeCounts[type] += 1;
         }
     }
-}
-
-const BWEB::Station * const getMyNatural() { return BWEB::Stations::getStartingNatural(); }
-BWAPI::Position getNaturalPosition() { return BWEB::Stations::getStartingNatural()->getBase()->Center(); }
-BWAPI::TilePosition getNaturalTile() { return BWEB::Stations::getStartingNatural()->getBase()->Location(); }
-const BWEM::Area * getNaturalArea() { return BWEB::Stations::getStartingNatural()->getBase()->GetArea(); }
-
-bool Tools::ExpansionBuild(BWAPI::Unit unit)
-{
-    int maxBuildRange = 64;
-    BWAPI:TilePosition desiredPos = getNaturalTile();
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(Protoss_Nexus, desiredPos, maxBuildRange);
-    return unit->build(Protoss_Nexus, buildPos);
-}
-
-bool Tools::BuildBuilding(BWAPI::Unit unit, BWAPI::UnitType type, BWAPI::TilePosition tile)
-{
-    int maxBuildRange = 256;
-    BWAPI::TilePosition buildPos = BWAPI::Broodwar->getBuildLocation(type, tile, maxBuildRange);
-    return unit->build(type, buildPos);
 }
