@@ -67,7 +67,7 @@ void NexusEconomy::addMissedResources()
 
 	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
 	maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
-	maximumWorkers = optimalWorkerAmount + WORKERS_PER_ASSIMILATOR;
+	maximumWorkers = optimalWorkerAmount + (vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 
 	if (nexusID > 1) economyReference->getWorkersToTransfer(newMinerals.size(), *this);
 	//std::cout << "Total Minerals: " << minerals.size() << "\n";
@@ -79,18 +79,18 @@ void NexusEconomy::OnFrame()
 	if (lifetime >= 500) lifetime = 500;
 
 	//make this solution better.
-	addMissedResources();
+	if(lifetime < 500) addMissedResources();
 
 	/*
 		===========================
 				   Debug
 		===========================
 	*/
-	const int left = nexus->getPosition().x - 300;
+	/*const int left = nexus->getPosition().x - 300;
 	const int top = nexus->getPosition().y - 300;
 	const int right = nexus->getPosition().x + 300;
 	const int bottom = nexus->getPosition().y + 300;
-	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));
+	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));*/
 
 	for (BWAPI::Unit mineral : minerals)
 	{
@@ -102,7 +102,7 @@ void NexusEconomy::OnFrame()
 
 	if (vespeneGyser != nullptr) BWAPI::Broodwar->drawLineMap(nexus->getPosition(), vespeneGyser->getPosition(), BWAPI::Color(144, 238, 144));
 
-	std::string temp = "Nexus ID: " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals Assigned : " + std::to_string(minerals.size());
+	std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
 	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
 
 	/*if (BWAPI::Broodwar->getFrameCount() % 500 == 0 && BWAPI::Broodwar->getFrameCount() != 0)
@@ -120,7 +120,6 @@ void NexusEconomy::OnFrame()
 		printMineralWorkerCounts();
 	}*/
 
-
 	/*
 		===========================
 				 Main loop
@@ -132,15 +131,8 @@ void NexusEconomy::OnFrame()
 
 		if (minerals.size() == 0) continue;
 
-		/*if (assignedResource.find(worker) != assignedResource.end())
-		{
-			BWAPI::Unit assignedMineral = assignedResource[worker];
-			BWAPI::Broodwar->drawLineMap(worker->getPosition(), assignedMineral->getPosition(), BWAPI::Color(255, 0, 0));
-		}*/
-
-
 		//If a worker is constructing skip over them until they are done.
-		if (economyReference->workerIsConstructing(worker))
+		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() || worker->getOrder() == BWAPI::Orders::Move)
 		{
 			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
 			continue;
@@ -181,8 +173,11 @@ void NexusEconomy::OnFrame()
 		}
 	}
 
+	
 	//Train unit if we are not at optimal worker count
-	if (!nexus->isTraining() && workers.size() < maximumWorkers && !economyReference->checkRequestAlreadySent(nexus->getID()))
+	if (!nexus->isTraining() 
+		&& workers.size() < ((OPTIMAL_WORKERS_PER_MINERAL * minerals.size()) + (vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) 
+		&& !economyReference->checkRequestAlreadySent(nexus->getID()))
 	{
 		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
 	}
@@ -201,10 +196,6 @@ void NexusEconomy::printMineralWorkerCounts()
 //[TODO]: also need to figure out edge case when unit destroyed is a nexus
 bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 {
-	//Unit is not ours, return
-	if (unit->getPlayer() != BWAPI::Broodwar->self())
-		return false;
-
 	if (unit->getType().isWorker() && workers.find(unit) != workers.end())
 	{
 		BWAPI::Unit resource = assignedResource[unit];
@@ -222,26 +213,57 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 
 		assignedResource.erase(unit);
 		workers.erase(unit);
+		return true;
 	}
-	else if (unit->getType().isResourceContainer())
+	else if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field && minerals.find(unit) != minerals.end())
 	{
-		/*if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
+		mineralWorkerCount[unit] = 0;
+		minerals.erase(unit);
+
+		BWAPI::Unitset workersToRelocate;
+		for (BWAPI::Unit worker : workers)
 		{
-			assimilator = nullptr;
-			assimilatorWorkerCount = 0;
-		}*/
-		
-		if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field && minerals.find(unit) != minerals.end())
-		{
-			mineralWorkerCount[unit] = 0;
-			minerals.erase(unit);
+			if (workersToRelocate.size() == OPTIMAL_WORKERS_PER_MINERAL) break;
+
+			if (assignedResource.find(worker) == assignedResource.end())
+			{
+				workersToRelocate.insert(worker);
+			}
+			else if (assignedResource.find(worker) != assignedResource.end() && assignedResource[worker] != vespeneGyser)
+			{
+				BWAPI::Unit mineral = assignedResource[worker];
+				mineralWorkerCount[mineral] -= 1;
+				workersToRelocate.insert(worker);
+			}
 		}
+
+		//std::cout << "Worker size before: " << workers.size() << "\n";
+		for (BWAPI::Unit worker : workersToRelocate)
+		{
+			workers.erase(worker);
+		}
+		//std::cout << "Worker size after: " << workers.size() << "\n";
+
+		economyReference->resourcesDepletedTranfer(workersToRelocate, *this);
+
+		return true;
 	}
-	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit == assimilator)
+	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && assimilator != nullptr && unit == assimilator)
 	{
+		std::cout << "Assimilator destroyed...\n";
 		assimilator = nullptr;
 		assimilatorWorkerCount = 0;
+		return true;
 	}
+	else if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser && vespeneGyser != nullptr && unit == vespeneGyser)
+	{
+		std::cout << "Gyser Depleted...\n";
+		//assimilator = nullptr;
+		assimilatorWorkerCount = 0;
+		return true;
+	}
+
+	return false;
 }
 
 BWAPI::Unit NexusEconomy::GetClosestMineralToWorker(BWAPI::Unit worker)

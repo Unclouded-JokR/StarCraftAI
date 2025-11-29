@@ -17,30 +17,114 @@ void EconomyManager::OnFrame()
 
 void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+    if (unit->getPlayer() == BWAPI::Broodwar->enemy()) return;
 
     for (std::vector<NexusEconomy>::iterator it = nexusEconomies.begin(); it != nexusEconomies.end(); ++it) {
+        
         //[TODO] fix handling nexus being destroyed. 
-        //if (unit->getID() == it->nexus->getID())
-        //{
-        //    //it = nexusEconomies.erase(it);
-        //    break;
-        //}
+        if (unit->getID() == it->nexus->getID())
+        {
+            //Get the workers at the destroyed nexus and reassign them.
+            BWAPI::Unitset nexusEconomyWorkers = it->workers;
 
-        if (it->OnUnitDestroy(unit) == true) break;
+            it = nexusEconomies.erase(it);
+
+            //Assign workers to our "Main Base" index 0 of the Nexus Economies.
+            for (BWAPI::Unit worker : nexusEconomyWorkers)
+            {
+                nexusEconomies.at(0).assignWorker(worker);
+            }
+            break;
+        }
+        else if(it->OnUnitDestroy(unit) == true) break;
     }
 }
 
-void EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomy)
+void EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomyRequest)
 {
-    BWAPI::Unitset workersToTransfer = nexusEconomies.at(0).getWorkersToTransfer(numberOfWorkers);
-
-    for (BWAPI::Unit worker : workersToTransfer)
+    //Need to check if the size is sufficent for the transer possibly.
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        nexusEconomy.assignWorker(worker);
+        if (nexusEconomy.nexusID == nexusEconomyRequest.nexusID && nexusEconomy.minerals.size() != 0) continue;
+
+        if (nexusEconomy.workers.size() != 0)
+        {
+            BWAPI::Unitset workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
+
+            for (BWAPI::Unit worker : workersToTransfer)
+            {
+                nexusEconomyRequest.assignWorker(worker);
+            }
+
+            //std::cout << "New nexus workers: " << nexusEconomyRequest.workers.size() << "\n";
+            break;
+        }
+    }
+}
+
+void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, NexusEconomy& transferFrom)
+{
+    //std::cout << "Mineral has been depleted at Nexus Economy " << transferFrom.nexusID << ": Transfering " << workersToTransfer.size() << " probes...\n";
+    BWAPI::Unitset workersAdded;
+
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
+
+        if (nexusEconomy.workers.size() < nexusEconomy.optimalWorkerAmount)
+        {
+            //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
+
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
+
+            for (BWAPI::Unit worker : workersToTransfer)
+            {
+                nexusEconomy.assignWorker(worker);
+                workersAdded.insert(worker);
+
+                //std::cout << "Adding worker\n";
+
+                if (nexusEconomy.workers.size() == nexusEconomy.optimalWorkerAmount || workersAdded.size() == workersToTransfer.size())
+                {
+                    break;
+                }
+            }
+
+            if (workersAdded.size() == workersToTransfer.size()) break;
+
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
+        }
     }
 
-    std::cout << "New nexus workers: " << nexusEconomy.workers.size() << "\n";
+    //Remove workers added.
+    for (BWAPI::Unit worker : workersAdded)
+    {
+        workersToTransfer.erase(worker);
+    }
+
+    //std::cout << "Workers left to transfer: " << workersToTransfer.size() << "\n";
+
+    //No nexus economies avalible just send them to the first one that has minerals.
+    if (workersToTransfer.size() != 0)
+    {
+        //std::cout << "No open nexus economies, just rtransfering them anyway\n";
+        for (NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
+
+            //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
+
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
+            for (BWAPI::Unit worker : workersToTransfer)
+            {
+                nexusEconomy.assignWorker(worker);
+            }
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
+        }
+    }
+
+    workersToTransfer.clear();
+    workersAdded.clear();
 }
 
 void EconomyManager::assignUnit(BWAPI::Unit unit)

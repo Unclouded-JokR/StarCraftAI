@@ -3,11 +3,11 @@
 
 SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
-    std::cout << "Spender Manager Initialized" << "\n";
 }
 
 void SpenderManager::onStart()
 {
+    std::cout << "Spender Manager Initialized" << "\n";
     builders.clear();
     buildRequests.clear();
     plannedBuildings.clear();
@@ -169,7 +169,7 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
                 //std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
                 //std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
 
-                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 50, nexusEconomy.vespeneGyser->getPosition().y - 20);
+                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 55, nexusEconomy.vespeneGyser->getPosition().y - 25);
                 return position;
             }
         }
@@ -299,7 +299,15 @@ void SpenderManager::OnFrame()
             }
             else
             {
-                it++;
+                //Prioritize exapnsions and pylons 
+                if (temp.buildingType == BWAPI::UnitTypes::Protoss_Nexus || temp.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
+                {
+                    break;
+                }
+                else
+                {
+                    it++;
+                }
             }
         }
         else if (std::holds_alternative<TrainUnitRequest>(it->request))
@@ -409,6 +417,7 @@ void SpenderManager::OnFrame()
 
             if (it->building == BWAPI::UnitTypes::Protoss_Assimilator)
             {
+                //Small chance for assimlator to not be build will try to fix this later.
                 it = builders.erase(it);
             }
             else

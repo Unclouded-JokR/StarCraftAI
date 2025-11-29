@@ -14,7 +14,7 @@ class NexusEconomy
 {
 public:
 	EconomyManager* economyReference;
-	const int nexusID;
+	int nexusID;
 	int lifetime = 0; //Used to delay assimilator build for now.
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;

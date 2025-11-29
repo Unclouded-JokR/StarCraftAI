@@ -33,7 +33,6 @@ void ProtoBotCommander::onStart()
 
 	BWEB::Map::onStart();
 	BWEB::Blocks::findBlocks();
-	//BWEB::Stations::findStations();
 
 	m_mapTools.onStart();
 
@@ -104,6 +103,8 @@ void ProtoBotCommander::onFrame()
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
+
+	BWEB::Map::draw();
 
 	for (const Area& area : theMap.Areas())
 	{
