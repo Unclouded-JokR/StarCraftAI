@@ -1,6 +1,7 @@
 #pragma once
 #include <BWAPI.h>
 #include "Squad.h"
+#include "A-StarPathfinding.h"
 
 class ProtoBotCommander;
 
@@ -10,6 +11,7 @@ public:
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset combatUnits;
 	std::map<int, int> unitSquadIdMap;
+    std::map<BWAPI::Unit, Path> unitPathMap;
     std::vector<Squad> Squads;
 
     void onStart();

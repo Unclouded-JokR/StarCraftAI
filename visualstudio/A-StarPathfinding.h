@@ -1,5 +1,9 @@
+#pragma once
+
 #include <BWAPI.h>
+#include "../visualstudio/BWEB/Source/BWEB.h"
 #include <vector>
+#include <bwem.h>
 
 using namespace std;
 
@@ -52,6 +56,15 @@ class Path {
 			this->tiles = {};
 		}
 
+		Path()
+		{
+			this->unit = nullptr;
+			this->start = BWAPI::TilePositions::Invalid;
+			this->end = BWAPI::TilePositions::Invalid;
+			this->reachable = false;
+			this->tiles = {};
+		};
+
 		void generateAStarPath();
 
 		vector<Node> getNeighbours(const Node& node);
@@ -60,4 +73,6 @@ class Path {
 		}
 
 		void WalkPath();
+
+		bool tileWalkable(BWAPI::TilePosition tile);
 };

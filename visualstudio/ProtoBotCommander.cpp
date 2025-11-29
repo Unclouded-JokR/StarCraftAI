@@ -14,7 +14,7 @@ void ProtoBotCommander::onStart()
 	*/
 
 	// Set our BWAPI options here    
-	BWAPI::Broodwar->setLocalSpeed(10);
+	BWAPI::Broodwar->setLocalSpeed(30);
 	BWAPI::Broodwar->setFrameSkip(0);
 
 	// Enable the flag that tells BWAPI to let users enter input while bot plays

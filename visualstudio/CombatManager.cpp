@@ -13,7 +13,7 @@ void CombatManager::onStart(){
 
 	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
-		if (unit->getType().isWorker() || unit->getType().isBuilding()) {
+		if (unit->getType().isWorker() || unit->getType().isBuilding() || unit->getType() != BWAPI::UnitTypes::Protoss_Dark_Templar) {
 			continue;
 		}
 
@@ -22,10 +22,9 @@ void CombatManager::onStart(){
 		}
 
 		BWAPI::Position pos = unit->getPosition();
-		Path AStarPath(unit, BWAPI::Position(pos.x + 500, pos.y + 500));
+		Path AStarPath(unit, BWAPI::Position(pos.x + 300, pos.y));
 		AStarPath.generateAStarPath();
-		cout << AStarPath.tiles.size() << endl;
-		AStarPath.WalkPath();
+		unitPathMap[unit] = AStarPath;
 	}
 }
 
@@ -33,8 +32,17 @@ void CombatManager::onFrame() {
 
 	for (auto& squad : Squads) {
 		squad.attack(squad.units.getPosition());
+
+		// If unit in squad has a path, make it walk the path
+		for (const auto& unit : squad.units) {
+			if (unitPathMap.find(unit) != unitPathMap.end()) {
+				Path& path = unitPathMap[unit];
+				path.WalkPath();
+			}
+		}
 	}
-	drawDebugInfo();
+
+	//drawDebugInfo();
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {

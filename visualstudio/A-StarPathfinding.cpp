@@ -5,41 +5,6 @@
 
 using namespace std;
 
-vector<Node> Path::getNeighbours(const Node& node) {
-	vector<Node> neighbours = {};
-
-	for (int x = -1; x <= 1; x++) {
-		for (int y = -1; y <= 1; y++) {
-
-			// Ignore self
-			if (x == 0 && y == 0) {
-				continue;
-			}
-
-			// Check diagonals to avoid walking diagonally through corner where two unwalkable tiles meet
-			if (x != 0 && y != 0) {
-				BWAPI::TilePosition a(node.tile.x + x, node.tile.y);
-				BWAPI::TilePosition b(node.tile.x, node.tile.y + y);
-				if (!BWAPI::Broodwar->isWalkable(BWAPI::WalkPosition(a)) || !BWAPI::Broodwar->isWalkable(BWAPI::WalkPosition(b)))
-					continue;
-			}
-
-			BWAPI::TilePosition neighbourTile = BWAPI::TilePosition(node.tile.x + x, node.tile.y + y);
-
-			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
-			if (BWAPI::Broodwar->isWalkable(BWAPI::WalkPosition(neighbourTile))) {
-				double gCost = node.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0); // Diagonal movement has more cost (Euclidean distance)
-				double hCost = neighbourTile.getDistance(end);
-				double fCost = gCost + hCost;
-				Node neighbourNode = Node(neighbourTile, node.tile, gCost, hCost, fCost, BWAPI::Broodwar->getFrameCount());
-				neighbours.push_back(neighbourNode);
-			}
-		}
-	}
-
-	return neighbours;
-}
-
 void Path::generateAStarPath() {
 	tiles.clear();
 	reachable = false;
@@ -48,6 +13,13 @@ void Path::generateAStarPath() {
 	// Checks if either the starting or ending tile positions are invalid
 	// If so, returns early with no tiles added to the path
 	if (!start.isValid() || !end.isValid()) {
+		return;
+	}
+
+	// Flying units can move directly to the end position without pathfinding
+	if (unit->getType().isFlyer()) {
+		tiles.push_back(end);
+		reachable = true;
 		return;
 	}
 
@@ -61,7 +33,7 @@ void Path::generateAStarPath() {
 	// Tile position will be converted into 1D value for indexing
 	const int mapWidth = BWAPI::Broodwar->mapWidth();
 	const int mapHeight = BWAPI::Broodwar->mapHeight();
-	vector<bool> closedSet(mapWidth * mapHeight, false); // Default: all tiles are not closed
+	vector<bool> closedSet(mapWidth * mapHeight, false); // Default: no closed tiles
 	vector<double> gCostMap(mapWidth * mapHeight, DBL_MAX); // Default: all gCosts are as large as possible
 
 	// Store parents in an unordered_map for reconstructing path later
@@ -96,7 +68,7 @@ void Path::generateAStarPath() {
 			// We'll skip the neighbour if:
 			// 1. It's already in the closed set
 			// 2. It's not walkable terrain
-			if (!neighbour.tile.isValid() || !BWAPI::Broodwar->isWalkable(BWAPI::WalkPosition(neighbour.tile))) {
+			if (!neighbour.tile.isValid() || !tileWalkable(neighbour.tile)) {
 				continue;
 			}
 
@@ -122,6 +94,7 @@ void Path::generateAStarPath() {
 
 void Path::WalkPath() {
 	if (tiles.empty()) {
+		BWAPI::Broodwar->sendText("Tiles empty");
 		return;
 	}
 
@@ -134,9 +107,11 @@ void Path::WalkPath() {
 		return;
 	}
 
-	// Get center of tile position since TilePosition is 32 x 32 pixels and unit moves to pixel positions
+	// Gets center of tile position since TilePosition is 32 x 32 pixels and unit moves to pixel positions
 	BWAPI::Position target(tiles[currentIndex].x * 32 + 16, tiles[currentIndex].y * 32 + 16);
-	if (unit->getDistance(target) <= 50){
+
+	// Some arbitrary distance to consider unit "close enough" to target tile
+	if (unit->getDistance(target) <= 20) {
 		currentIndex++; // Close enough to target tile, start moving to next tile
 		if (currentIndex >= (int)tiles.size()) {
 			return; // Path complete
@@ -144,9 +119,85 @@ void Path::WalkPath() {
 		target = BWAPI::Position(tiles[currentIndex].x * 32 + 16, tiles[currentIndex].y * 32 + 16);
 	}
 
-	// Check if last command frame was more than 2 frames ago or if the distance between a unit and its next movement target is far enough
+	// Unit moves if it gets a new target
 	if (unit->getLastCommand().getTargetPosition() != target) {
-		BWAPI::Broodwar->printf("MOVING");
 		unit->move(target);
+	}
+	// Checks if the unit is stuck (arbitrary value of 15 frames since last command)
+	else if (unit->getLastCommand().getTargetPosition() == target && BWAPI::Broodwar->getFrameCount() - unit->getLastCommandFrame() > 15) {
+		unit->move(target);
+	}
+}
+
+vector<Node> Path::getNeighbours(const Node& node) {
+	vector<Node> neighbours = {};
+
+	for (int x = -1; x <= 1; x++) {
+		for (int y = -1; y <= 1; y++) {
+
+			// Ignore self
+			if (x == 0 && y == 0) {
+				continue;
+			}
+
+			// Check diagonals to avoid walking diagonally through corner where two unwalkable tiles meet
+			if (x != 0 && y != 0) {
+				BWAPI::TilePosition a(node.tile.x + x, node.tile.y);
+				BWAPI::TilePosition b(node.tile.x, node.tile.y + y);
+				if (!tileWalkable(a) || !tileWalkable(b))
+				continue;
+			}
+
+			BWAPI::TilePosition neighbourTile = BWAPI::TilePosition(node.tile.x + x, node.tile.y + y);
+
+			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
+			if (tileWalkable(neighbourTile)) {
+				double gCost = node.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0); // Diagonal movement has more cost (Euclidean distance)
+				double hCost = neighbourTile.getDistance(end);
+				double fCost = gCost + hCost;
+				Node neighbourNode = Node(neighbourTile, node.tile, gCost, hCost, fCost, BWAPI::Broodwar->getFrameCount());
+				neighbours.push_back(neighbourNode);
+			}
+		}
+	}
+
+	return neighbours;
+}
+
+bool Path::tileWalkable(BWAPI::TilePosition tile) {
+	int unitWidth = unit->getType().width();
+	int unitHeight = unit->getType().height();
+	
+	// When checking for walkable, we check if any of the 4 corners of the unit would be unwalkable if CENTERED on tile
+	// If so, the unit would get stuck on them when trying to move through the tile.
+	BWAPI::Position center = BWAPI::Position(tile.x * 32 + 16, tile.y * 32 + 16);
+	int left = center.x - (unitWidth / 2);
+	int right = center.x + (unitWidth / 2);
+	int top = center.y - (unitHeight / 2);
+	int bottom = center.y + (unitHeight / 2);
+
+	// Pixel position -> Walk position
+	int walkTileLeft = left / 8;
+	int walkTileRight = right / 8;
+	int walkTileTop = top / 8;
+	int walkTileBottom = bottom / 8;
+
+	// BWAPI::Broodwar->isWalkable() only checks static terrain, so we also need to check for buildings on the tile
+	const auto& unitsOnTile = BWAPI::Broodwar->getUnitsInRectangle(left, top, right, bottom);
+	for (const auto& unit : unitsOnTile) {
+		if (unit->getType().isBuilding()) {
+			return false;
+		}
+	}
+
+	// Iterates through every walk tile the unit would occupy
+	for (int wx = walkTileLeft; wx <= walkTileRight; wx++) {
+		for (int wy = walkTileTop; wy <= walkTileBottom; wy++) {
+
+			BWAPI::WalkPosition walkPos(wx, wy);
+			if (!BWAPI::Broodwar->isWalkable(walkPos)) {
+				return false;
+			}
+		}
 	}
 }
