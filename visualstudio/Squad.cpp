@@ -2,9 +2,9 @@
 #include "Squad.h"
 #include "../src/starterbot/Tools.h"
 
-Squad::Squad(int squadType, int squadId, BWAPI::Color squadColor, int unitSize)
+Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize)
 {
-	this->squadType = squadType;
+	this->leader = leader;
 	this->squadId = squadId;
 	this->squadColor = squadColor;
 	this->unitSize = unitSize;

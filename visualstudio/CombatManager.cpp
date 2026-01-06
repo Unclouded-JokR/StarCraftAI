@@ -20,7 +20,7 @@ void CombatManager::onStart(){
 		if (commanderReference->scoutingManager.isScout(unit)) {
 			continue;
 		} 
-		if (isAssigned(unit) == false) {
+		if (isAssigned(unit) == -1) {
 			assignUnit(unit);
 		}
 	}
@@ -41,7 +41,7 @@ void CombatManager::onFrame() {
 		if (commanderReference->scoutingManager.isScout(unit)) {
 			continue;
 		}
-		if (isAssigned(unit) == false) {
+		if (isAssigned(unit) == -1) {
 			assignUnit(unit);
 		}
 	}
@@ -53,12 +53,19 @@ void CombatManager::onFrame() {
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
-	// Remove unit from its squad
-	if (isAssigned(unit)) {
-		int squadId = unitSquadIdMap[unit->getID()];
+	int squadId = isAssigned(unit);
 
+	if (squadId != -1) {
 		for (Squad& squad : Squads) {
 			if (squad.squadId == squadId) {
+				// If the leader died, assign a new leader randomly
+				if (unit == squad.leader) {
+					for (auto& u : squad.units) {
+						if (u != nullptr && u != unit) {
+							squad.leader = u;
+						}
+					}
+				}
 				squad.removeUnit(unit);
 
 				// After removing unit, check if squad is empty
@@ -69,9 +76,9 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 				break;
 			}
 		}
-
-		unitSquadIdMap.erase(unit->getID());
 	}
+
+	unitSquadIdMap.erase(unit->getID());
 }
 
 void CombatManager::attack(BWAPI::Position position) {
@@ -80,7 +87,7 @@ void CombatManager::attack(BWAPI::Position position) {
 	}
 }
 
-Squad& CombatManager::addSquad(){
+Squad& CombatManager::addSquad(BWAPI::Unit leaderUnit){
 	// Workaround for bwapi random color issue
 	int r = 50 + std::rand() % 200;
 	int g = 50 + std::rand() % 200;
@@ -91,8 +98,10 @@ Squad& CombatManager::addSquad(){
 	int id = Squads.size() + 1;
 	int unitSize = 8;
 
-	Squad newSquad(0, id, randomColor, unitSize);
+	Squad newSquad(leaderUnit, id, randomColor, unitSize);
+	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
 	Squads.push_back(newSquad);
+
 	return Squads.back();
 }
 
@@ -129,7 +138,9 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 		}
 	}
 
-	Squad& newSquad = addSquad();
+	// If all squads are full or there are no squads, creates a new squad
+	// Assigns first unit as the leader
+	Squad& newSquad = addSquad(unit);
 	newSquad.addUnit(unit);
 	combatUnits.insert(unit);
 	unitSquadIdMap[unit->getID()] = newSquad.squadId;
@@ -142,8 +153,12 @@ void CombatManager::move(BWAPI::Position position) {
 	}
 }
 
-bool CombatManager::isAssigned(BWAPI::Unit unit) {
-	return unitSquadIdMap.find(unit->getID()) != unitSquadIdMap.end();
+int CombatManager::isAssigned(BWAPI::Unit unit) {
+	if (unitSquadIdMap.find(unit->getID()) != unitSquadIdMap.end()) {
+		return unitSquadIdMap[unit->getID()];
+	}
+
+	return -1;
 }
 
 void CombatManager::drawDebugInfo() {

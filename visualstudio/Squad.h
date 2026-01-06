@@ -3,14 +3,14 @@
 
 class Squad {
 public:
-	int squadType;
 	int squadId;
 	BWAPI::Color squadColor;
 	int unitSize;
+	BWAPI::Unit leader;
 	BWAPI::Unitset units;
 	bool isAttacking = false;
 
-	Squad(int squadType, int squadId, BWAPI::Color squadColor, int unitSize);
+	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize);
 
 	void removeUnit(BWAPI::Unit unit);
 	void move(BWAPI::Position position);

@@ -18,12 +18,12 @@ public:
     void onFrame();
     void onUnitDestroy(BWAPI::Unit unit);
     void attack(BWAPI::Position position);
-    Squad& addSquad();
+    Squad& addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(int squadId);
     void move(BWAPI::Position position);
     bool assignUnit(BWAPI::Unit unit);
     void drawDebugInfo();
     BWAPI::Unit getAvailableUnit();
     BWAPI::Unit getAvailableUnit(std::function<bool(BWAPI::Unit)> filter);
-    bool isAssigned(BWAPI::Unit unit);
+    int isAssigned(BWAPI::Unit unit);
 };
