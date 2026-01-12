@@ -1,7 +1,6 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
 #include "../src/starterbot/Tools.h"
-#include "A-StarPathfinding.h"
 #include "Squad.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
@@ -9,7 +8,6 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-	std::map<int, int> unitSquadMap;
 
 	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
@@ -25,15 +23,12 @@ void CombatManager::onStart(){
 		}
 	}
 
-	for (auto& squad : Squads) {
-		squad.attack(squad.units.getPosition());
-	}
 	drawDebugInfo();
 }
 
 void CombatManager::onFrame() {
 	// Only for testing on microtesting map
-	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
+	/*for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
 		if (unit->getType().isWorker() || unit->getType().isBuilding()
 			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
 			continue;
@@ -44,59 +39,46 @@ void CombatManager::onFrame() {
 		if (isAssigned(unit) == -1) {
 			assignUnit(unit);
 		}
-	}
+	}*/
 
 	for (auto& squad : Squads) {
-		squad.attack(squad.units.getPosition());
+		squad.onFrame();
 	}
+
 	drawDebugInfo();
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
-	int squadId = isAssigned(unit);
+	for (auto& squad : Squads) {
+		if (squad.squadId = unitSquadIdMap[unit]) {
+			squad.removeUnit(unit);
 
-	if (squadId != -1) {
-		for (Squad& squad : Squads) {
-			if (squad.squadId == squadId) {
-				// If the leader died, assign a new leader randomly
-				if (unit == squad.leader) {
-					for (auto& u : squad.units) {
-						if (u != nullptr && u != unit) {
-							squad.leader = u;
-						}
-					}
-				}
-				squad.removeUnit(unit);
-
-				// After removing unit, check if squad is empty
-				if (squad.units.empty()) {
-					removeSquad(squad.squadId);
-				}
-
-				break;
+			if (squad.units.empty()) {
+				removeSquad(squad);
 			}
 		}
 	}
 
-	unitSquadIdMap.erase(unit->getID());
+	unitSquadIdMap.erase(unit);
 }
 
 void CombatManager::attack(BWAPI::Position position) {
 	for (auto& squad : Squads) {
-		squad.attack(position);
+		squad.move(position);
 	}
 }
 
-Squad& CombatManager::addSquad(BWAPI::Unit leaderUnit){
+Squad& CombatManager::addSquad(BWAPI::Unit leaderUnit) {
+
 	// Workaround for bwapi random color issue
-	int r = 50 + std::rand() % 200;
-	int g = 50 + std::rand() % 200;
-	int b = 50 + std::rand() % 200;
+	const int r = 50 + std::rand() % 200;
+	const int g = 50 + std::rand() % 200;
+	const int b = 50 + std::rand() % 200;
 
-	BWAPI::Color randomColor(r, g, b);
+	const BWAPI::Color randomColor(r, g, b);
 
-	int id = Squads.size() + 1;
-	int unitSize = 8;
+	const int id = Squads.size() + 1;
+	const int unitSize = 8;
 
 	Squad newSquad(leaderUnit, id, randomColor, unitSize);
 	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
@@ -105,20 +87,10 @@ Squad& CombatManager::addSquad(BWAPI::Unit leaderUnit){
 	return Squads.back();
 }
 
-void CombatManager::removeSquad(int squadId){
-	Squads.erase(std::remove_if(Squads.begin(), Squads.end(), [&](const Squad& obj)
-		{return obj.squadId == squadId; }),
-		Squads.end());
+void CombatManager::removeSquad(Squad squad) {
+	Squads.erase(std::remove(Squads.begin(), Squads.end(), squad), Squads.end());
 
-	for (auto it = unitSquadIdMap.begin(); it != unitSquadIdMap.end(); ) {
-		if (it->second == squadId) {
-			it = unitSquadIdMap.erase(it);
-		} else {
-			++it;
-		}
-	}
-
-	BWAPI::Broodwar->printf("Removed empty Squad %d", squadId);
+	BWAPI::Broodwar->printf("Removed empty Squad %d", squad.squadId);
 }
 
 // Function called by ProtoBot commander when unit is sent to combat manager
@@ -133,7 +105,7 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 		if (squad.units.size() < squad.unitSize) {
 			squad.addUnit(unit);
 			combatUnits.insert(unit);
-			unitSquadIdMap[unit->getID()] = squad.squadId;
+			unitSquadIdMap[unit] = squad.squadId;
 			return true;
 		}
 	}
@@ -143,26 +115,27 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 	Squad& newSquad = addSquad(unit);
 	newSquad.addUnit(unit);
 	combatUnits.insert(unit);
-	unitSquadIdMap[unit->getID()] = newSquad.squadId;
+	unitSquadIdMap[unit] = newSquad.squadId;
 	return true;
 }
 
+int CombatManager::isAssigned(BWAPI::Unit unit) {
+	if (unitSquadIdMap.find(unit) != unitSquadIdMap.end()) {
+		return unitSquadIdMap[unit];
+	}
+	else {
+		return -1;
+	}
+}
+
 void CombatManager::move(BWAPI::Position position) {
-	for (auto& squad : Squads) {
+	for (Squad& squad : Squads) {
 		squad.move(position);
 	}
 }
 
-int CombatManager::isAssigned(BWAPI::Unit unit) {
-	if (unitSquadIdMap.find(unit->getID()) != unitSquadIdMap.end()) {
-		return unitSquadIdMap[unit->getID()];
-	}
-
-	return -1;
-}
-
 void CombatManager::drawDebugInfo() {
-	for (Squad squad : Squads) {
+	for (Squad& squad : Squads) {
 		squad.drawDebugInfo();
 	}
 }
@@ -173,18 +146,42 @@ BWAPI::Unit CombatManager::getAvailableUnit() {
 
 BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> filter) {
 	for (auto& squad : Squads) {
-		if (squad.isAttacking) continue;
+		if (squad.state == ATTACK) continue;
 		for (auto it = squad.units.begin(); it != squad.units.end(); ++it) {
-			BWAPI::Unit u = *it;                   
-			if (!u || !u->exists()) continue;
-			if (commanderReference->scoutingManager.isScout(u)) continue;
-			if (!filter(u)) continue;
+			BWAPI::Unit unit = *it;
+			if (!unit || !unit->exists()) continue;
+			if (commanderReference->scoutingManager.isScout(unit)) continue;
+			if (!filter(unit)) continue;
 
-			squad.removeUnit(u);                    
-			combatUnits.erase(u);
-			unitSquadIdMap.erase(u->getID());
-			return u;
+			squad.removeUnit(unit);
+			combatUnits.erase(unit);
+			unitSquadIdMap.erase(unit);
+			return unit;
 		}
 	}
+
 	return nullptr;
+}
+
+void CombatManager::handleTextCommand(std::string text) {
+	if (text == "left") {
+		for (Squad squad : Squads) {
+			squad.move(BWAPI::Position(squad.leader->getPosition().x - 200, squad.leader->getPosition().y));
+		}
+	}
+	if (text == "right") {
+		for (Squad squad : Squads) {
+			squad.move(BWAPI::Position(squad.leader->getPosition().x + 200, squad.leader->getPosition().y));
+		}
+	}
+	if (text == "up") {
+		for (Squad squad : Squads) {
+			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y + 200));
+		}
+	}
+	if (text == "down") {
+		for (Squad squad : Squads) {
+			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y - 200));
+		}
+	}
 }

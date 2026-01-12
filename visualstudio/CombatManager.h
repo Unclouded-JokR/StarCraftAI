@@ -10,7 +10,7 @@ public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset combatUnits;
-	std::map<int, int> unitSquadIdMap;
+    std::map<BWAPI::Unit, int> unitSquadIdMap;
     std::map<BWAPI::Unit, Path> unitPathMap;
     std::vector<Squad> Squads;
 
@@ -19,11 +19,13 @@ public:
     void onUnitDestroy(BWAPI::Unit unit);
     void attack(BWAPI::Position position);
     Squad& addSquad(BWAPI::Unit leaderUnit);
-    void removeSquad(int squadId);
+    void removeSquad(Squad squad);
     void move(BWAPI::Position position);
     bool assignUnit(BWAPI::Unit unit);
+    int isAssigned(BWAPI::Unit unit);
     void drawDebugInfo();
     BWAPI::Unit getAvailableUnit();
     BWAPI::Unit getAvailableUnit(std::function<bool(BWAPI::Unit)> filter);
-    int isAssigned(BWAPI::Unit unit);
+
+    void handleTextCommand(std::string text);
 };
