@@ -16,7 +16,7 @@ public:
 	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
 	State state;
-	double minNDistance = 5;
+	double minNDistance = 30;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize);
 

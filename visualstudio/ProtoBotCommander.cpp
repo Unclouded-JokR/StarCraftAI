@@ -27,13 +27,13 @@ void ProtoBotCommander::onStart()
 	std::cout << "Map initialization...\n";
 
 	//theMap = BWEM::Map::Instance();
-	theMap.Initialize();
-	theMap.EnableAutomaticPathAnalysis();
-	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
-	assert(startingLocationsOK);
+	//theMap.Initialize();
+	//theMap.EnableAutomaticPathAnalysis();
+	//bool startingLocationsOK = theMap.FindBasesForStartingLocations();
+	//assert(startingLocationsOK);
 
-	BWEB::Map::onStart();
-	BWEB::Blocks::findBlocks();
+	//BWEB::Map::onStart();
+	//BWEB::Blocks::findBlocks();
 
 	m_mapTools.onStart();
 
@@ -55,8 +55,8 @@ void ProtoBotCommander::onStart()
 	* Create code to select opening randomly for avalible openings.
 	* Have functions that can ask building manager how many openings we have.
 	*/
-	std::string enemyRace = enemyRaceCheck();
-	std::cout << "Enemy Race " << enemyRace << '\n';
+	//std::string enemyRace = enemyRaceCheck();
+	//std::cout << "Enemy Race " << enemyRace << '\n';
 
 	//[TODO] Need build order structure to be implemented.
 	//vector<BuildOrder> build_orders = buildManager.getBuildOrders(enemyRace);
@@ -107,7 +107,7 @@ void ProtoBotCommander::onFrame()
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
 
-	BWEB::Map::draw();
+	//BWEB::Map::draw();
 
 	/*for (const Area& area : theMap.Areas())
 	{

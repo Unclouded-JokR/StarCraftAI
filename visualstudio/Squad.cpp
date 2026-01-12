@@ -10,12 +10,18 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 }
 
 void Squad::onFrame() {
+	BWAPI::Broodwar->printf("State = %d", state);
 	if (state == POSITIONING) {
 		flockingHandler();
+	}
+
+	if (!leader->isMoving()) {
+		state = IDLE;
 	}
 }
 
 void Squad::flockingHandler() {
+	BWAPI::Broodwar->printf("In flock function");
 	// Uses BOIDS algorithm to maintain formation while leader is moving
 	// Separation vector points away from neighbors
 	// Cohesion vector points towards center of group
@@ -27,8 +33,13 @@ void Squad::flockingHandler() {
 		totalPos += unit->getPosition();
 	}
 	cohesionVec = totalPos / (int) units.size();
+	BWAPI::Broodwar->drawCircle(cohesionVec, 5, BWAPI::Colors::Yellow, true);
 
 	for(auto& unit : units){
+		if (!unit->exists() || unit == leader) {
+			continue;
+		}
+
 		// Grab all neighbors that are too close
 		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unit->getPosition(), minNDistance);
 		for (auto& neighbor : neighbors) {

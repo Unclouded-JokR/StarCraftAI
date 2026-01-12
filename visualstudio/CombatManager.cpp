@@ -22,25 +22,9 @@ void CombatManager::onStart(){
 			assignUnit(unit);
 		}
 	}
-
-	drawDebugInfo();
 }
 
 void CombatManager::onFrame() {
-	// Only for testing on microtesting map
-	/*for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
-		if (unit->getType().isWorker() || unit->getType().isBuilding()
-			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
-			continue;
-		}
-		if (commanderReference->scoutingManager.isScout(unit)) {
-			continue;
-		}
-		if (isAssigned(unit) == -1) {
-			assignUnit(unit);
-		}
-	}*/
-
 	for (auto& squad : Squads) {
 		squad.onFrame();
 	}
@@ -50,12 +34,15 @@ void CombatManager::onFrame() {
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	for (auto& squad : Squads) {
-		if (squad.squadId = unitSquadIdMap[unit]) {
+		if (squad.squadId == unitSquadIdMap[unit]) {
 			squad.removeUnit(unit);
+			unitSquadIdMap.erase(unit);
+			combatUnits.erase(unit);
 
 			if (squad.units.empty()) {
 				removeSquad(squad);
 			}
+			break;
 		}
 	}
 
@@ -78,7 +65,7 @@ Squad& CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 	const BWAPI::Color randomColor(r, g, b);
 
 	const int id = Squads.size() + 1;
-	const int unitSize = 8;
+	const int unitSize = 12;
 
 	Squad newSquad(leaderUnit, id, randomColor, unitSize);
 	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
@@ -165,23 +152,23 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 
 void CombatManager::handleTextCommand(std::string text) {
 	if (text == "left") {
-		for (Squad squad : Squads) {
+		for (Squad& squad : Squads) {
 			squad.move(BWAPI::Position(squad.leader->getPosition().x - 200, squad.leader->getPosition().y));
 		}
 	}
 	if (text == "right") {
-		for (Squad squad : Squads) {
+		for (Squad& squad : Squads) {
 			squad.move(BWAPI::Position(squad.leader->getPosition().x + 200, squad.leader->getPosition().y));
 		}
 	}
 	if (text == "up") {
-		for (Squad squad : Squads) {
-			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y + 200));
+		for (Squad& squad : Squads) {
+			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y - 200));
 		}
 	}
 	if (text == "down") {
-		for (Squad squad : Squads) {
-			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y - 200));
+		for (Squad& squad : Squads) {
+			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y + 200));
 		}
 	}
 }
