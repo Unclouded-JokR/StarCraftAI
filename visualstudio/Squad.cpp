@@ -41,7 +41,7 @@ void Squad::flockingHandler() {
 	BWAPI::Position cohesionVec = BWAPI::Position(0, 0);
 	BWAPI::Position alignmentVec = BWAPI::Position(0, 0);
 
-	BWAPI::Position centerPos = BWAPI::Position(0, 0);
+	BWAPI::Position centerPos = leader->getPosition();
 
 	for(auto& unit : units){
 		if (!unit->exists() || unit == leader) {
@@ -56,28 +56,24 @@ void Squad::flockingHandler() {
 			}
 
 			// Separation vector points away from neighbor
-			separationVec += unit->getPosition() - neighbor->getPosition();
+			BWAPI::Position awayVector = unit->getPosition() - neighbor->getPosition();
+			awayVector = normalize(awayVector);
+			// Farther away neighbors contribute less to separation
+			separationVec += awayVector / getMagnitude(awayVector);
 
 			// Get alignment vector by using neighbor's velocity
 			double neighborvelocity_x = neighbor->getVelocityX();
 			double neighborvelocity_y = neighbor->getVelocityY();
-			alignmentVec += normalize(BWAPI::Position(neighborvelocity_x, neighborvelocity_y));
-
-			// Cohesion vector points towards center of mass of neighbors
-			cohesionVec += neighbor->getPosition();
+			alignmentVec += BWAPI::Position(neighborvelocity_x, neighborvelocity_y);
 		}
 
-		if (neighbors.size() > 0) {
-			separationVec /= neighbors.size();
-			alignmentVec /= neighbors.size();
-			cohesionVec /= neighbors.size();
-			cohesionVec = cohesionVec - unit->getPosition();
-		}
+		alignmentVec = normalize(alignmentVec);
+		cohesionVec += normalize(centerPos - unit->getPosition());
 
 		// Flocking strength variables
-		double separationStrength = 0.5;
-		double cohesionStrength = 0.1;
-		double alignmentStrength = 0.5;
+		double separationStrength = 1;
+		double cohesionStrength = 1;
+		double alignmentStrength = 1;
 
 		// Add to unit position since bwapi only uses positive coordinates
 		BWAPI::Position attackPos = (alignmentVec * alignmentStrength
@@ -265,7 +261,7 @@ void Squad::kitingAttack(BWAPI::Unit unit, BWAPI::Unit target) {
 }
 
 BWAPI::Position Squad::normalize(BWAPI::Position vector) {
-	return vector / getMagnitude(vector);
+	return BWAPI::Position(round(vector.x / getMagnitude(vector)), round(vector.y / getMagnitude(vector)));
 }
 
 // Returns magnitude of vector using sqrt(x^2 + y^2)
