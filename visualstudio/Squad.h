@@ -28,7 +28,7 @@ public:
 	}
 
 	void onFrame();
-	void flockingHandler();
+	void flockingHandler(BWAPI::Position leaderDest);
 	void removeUnit(BWAPI::Unit unit);
 	void move(BWAPI::Position position);
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
