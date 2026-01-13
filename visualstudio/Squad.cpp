@@ -10,23 +10,38 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 }
 
 void Squad::onFrame() {
-	if (!leader->isMoving()) {
-		state = IDLE;
+	if (state == POSITIONING) {
+		flockingHandler();
 	}
 }
 
-void Squad::flockingHandler(BWAPI::Position leaderDest) {
+void Squad::simpleFlock() {
+	BWAPI::Position centerPos = BWAPI::Position(0, 0);
+	// Calculate center position of group for cohesion vector
+	for (auto& unit : units) {
+		centerPos += unit->getPosition();
+	}
+	centerPos /= units.size();
+
+	BWAPI::Position generalVector = leader->getTargetPosition() - centerPos;
+	for (auto& unit : units) {
+		if (!unit->exists() || unit == leader) {
+			continue;
+		}
+		unit->attack(generalVector + unit->getPosition());
+	}
+
+}
+
+// Uses BOIDS algorithm to maintain formation while leader is moving
+void Squad::flockingHandler() {
 	BWAPI::Broodwar->printf("In flock function");
-	// Uses BOIDS algorithm to maintain formation while leader is moving
-	// Separation vector points away from neighbors
-	// Cohesion vector points towards center of group
 
 	BWAPI::Position separationVec = BWAPI::Position(0, 0);
 	BWAPI::Position cohesionVec = BWAPI::Position(0, 0);
-	BWAPI::Position totalPos = BWAPI::Position(0, 0);
-	for (auto& unit : units) {
-		totalPos += unit->getPosition();
-	}
+	BWAPI::Position alignmentVec = BWAPI::Position(0, 0);
+
+	BWAPI::Position centerPos = BWAPI::Position(0, 0);
 
 	for(auto& unit : units){
 		if (!unit->exists() || unit == leader) {
@@ -39,12 +54,40 @@ void Squad::flockingHandler(BWAPI::Position leaderDest) {
 			if (neighbor == unit){
 				continue;
 			}
+
+			// Separation vector points away from neighbor
 			separationVec += unit->getPosition() - neighbor->getPosition();
+
+			// Get alignment vector by using neighbor's velocity
+			double neighborvelocity_x = neighbor->getVelocityX();
+			double neighborvelocity_y = neighbor->getVelocityY();
+			alignmentVec += normalize(BWAPI::Position(neighborvelocity_x, neighborvelocity_y));
+
+			// Cohesion vector points towards center of mass of neighbors
+			cohesionVec += neighbor->getPosition();
 		}
 
-		cohesionVec = leaderDest - unit->getPosition();
+		if (neighbors.size() > 0) {
+			separationVec /= neighbors.size();
+			alignmentVec /= neighbors.size();
+			cohesionVec /= neighbors.size();
+			cohesionVec = cohesionVec - unit->getPosition();
+		}
 
-		unit->attack((cohesionVec + separationVec) + unit->getPosition());
+		// Flocking strength variables
+		double separationStrength = 0.5;
+		double cohesionStrength = 0.1;
+		double alignmentStrength = 0.5;
+
+		// Add to unit position since bwapi only uses positive coordinates
+		BWAPI::Position attackPos = (alignmentVec * alignmentStrength
+									+ cohesionVec * cohesionStrength
+									+ separationVec * separationStrength) 
+									+ unit->getPosition();
+		
+		BWAPI::Broodwar->printf("Attack position: (%d, %d)", attackPos.x, attackPos.y);
+
+		unit->attack(attackPos);
 	}
 }
 
@@ -68,7 +111,7 @@ void Squad::removeUnit(BWAPI::Unit unit){
 		BWAPI::Unit closestUnit;
 		for (BWAPI::Unit _unit : units) {
 			const double dist = getMagnitude(unit->getPosition() - leaderPos);
-			if (dist < closest) {
+			if (dist < closest && _unit->exists()) {
 				closest = dist;
 				closestUnit = _unit;
 			}
@@ -87,7 +130,6 @@ void Squad::removeUnit(BWAPI::Unit unit){
 void Squad::move(BWAPI::Position position) {
 	state = POSITIONING;
 	leader->attack(position);
-	flockingHandler(position);
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {
@@ -222,6 +264,10 @@ void Squad::kitingAttack(BWAPI::Unit unit, BWAPI::Unit target) {
 	}
 }
 
+BWAPI::Position Squad::normalize(BWAPI::Position vector) {
+	return vector / getMagnitude(vector);
+}
+
 // Returns magnitude of vector using sqrt(x^2 + y^2)
 double Squad::getMagnitude(BWAPI::Position vector) {
 	return sqrt(pow(vector.x, 2) + pow(vector.y, 2));
@@ -237,6 +283,10 @@ void Squad::drawDebugInfo() {
 		const BWAPI::UnitCommand command = unit->getLastCommand();
 
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 5, squadColor, true);
+		if (unit == leader) {
+			BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 2, BWAPI::Colors::White, true);
+		}
+
 		if (command.getTargetPosition() != BWAPI::Positions::None) {
 			BWAPI::Broodwar->drawLineMap(unit->getPosition(), command.getTargetPosition(), squadColor);
 		}

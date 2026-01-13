@@ -153,22 +153,22 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 void CombatManager::handleTextCommand(std::string text) {
 	if (text == "left") {
 		for (Squad& squad : Squads) {
-			squad.move(BWAPI::Position(squad.leader->getPosition().x - 200, squad.leader->getPosition().y));
+			squad.move(BWAPI::Position(squad.leader->getPosition().x - 100, squad.leader->getPosition().y));
 		}
 	}
 	if (text == "right") {
 		for (Squad& squad : Squads) {
-			squad.move(BWAPI::Position(squad.leader->getPosition().x + 200, squad.leader->getPosition().y));
+			squad.move(BWAPI::Position(squad.leader->getPosition().x + 100, squad.leader->getPosition().y));
 		}
 	}
 	if (text == "up") {
 		for (Squad& squad : Squads) {
-			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y - 200));
+			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y - 100));
 		}
 	}
 	if (text == "down") {
 		for (Squad& squad : Squads) {
-			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y + 200));
+			squad.move(BWAPI::Position(squad.leader->getPosition().x, squad.leader->getPosition().y + 100));
 		}
 	}
 }

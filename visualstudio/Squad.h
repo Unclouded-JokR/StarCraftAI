@@ -28,7 +28,8 @@ public:
 	}
 
 	void onFrame();
-	void flockingHandler(BWAPI::Position leaderDest);
+	void simpleFlock();
+	void flockingHandler();
 	void removeUnit(BWAPI::Unit unit);
 	void move(BWAPI::Position position);
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
@@ -38,5 +39,6 @@ public:
 
 	// Utility functions
 	double getMagnitude(BWAPI::Position vector);
+	BWAPI::Position normalize(BWAPI::Position vector);
 	void drawDebugInfo();
 };
