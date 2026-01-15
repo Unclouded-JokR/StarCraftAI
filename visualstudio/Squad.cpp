@@ -48,15 +48,17 @@ void Squad::flockingHandler() {
 			continue;
 		}
 
+		BWAPI::Position unitPos = unit->getPosition();
+
 		// Grab all neighbors that are too close
-		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unit->getPosition(), minNDistance);
+		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, minNDistance);
 		for (auto& neighbor : neighbors) {
 			if (neighbor == unit){
 				continue;
 			}
 
 			// Separation vector points away from neighbor
-			BWAPI::Position awayVector = unit->getPosition() - neighbor->getPosition();
+			BWAPI::Position awayVector = unitPos - neighbor->getPosition();
 			awayVector = normalize(awayVector);
 			// Farther away neighbors contribute less to separation
 			separationVec += awayVector / getMagnitude(awayVector);
@@ -68,22 +70,36 @@ void Squad::flockingHandler() {
 		}
 
 		alignmentVec = normalize(alignmentVec);
-		cohesionVec += normalize(centerPos - unit->getPosition());
+		cohesionVec += normalize(centerPos - unitPos);
 
 		// Flocking strength variables
 		double separationStrength = 1;
 		double cohesionStrength = 1;
 		double alignmentStrength = 1;
 
-		// Add to unit position since bwapi only uses positive coordinates
-		BWAPI::Position attackPos = (alignmentVec * alignmentStrength
-									+ cohesionVec * cohesionStrength
-									+ separationVec * separationStrength) 
-									+ unit->getPosition();
-		
-		BWAPI::Broodwar->printf("Attack position: (%d, %d)", attackPos.x, attackPos.y);
+		BWAPI::Position flockDirection = (alignmentVec * alignmentStrength
+			+ cohesionVec * cohesionStrength
+			+ separationVec * separationStrength);
 
-		unit->attack(attackPos);
+		// Now that we have the direction, we'll walk through the path to check for collisions
+		int x = 0;
+		int y = 0;
+
+		while (x < flockDirection.x || y < flockDirection.y) {
+			BWAPI::Position pos = BWAPI::Position(unitPos.x + x, unitPos.y + y);
+			if (BWAPI::Broodwar->isWalkable(pos) == false) {
+				// [TODO]: Figure out orientation to decide which direction to steer towards
+				// Use angle between right of unit and line
+			}
+
+			if (x < flockDirection.x) {
+				x++;
+			}
+			if (y < flockDirection.y) {
+				y++;
+			}
+		}
+		
 	}
 }
 
@@ -261,7 +277,7 @@ void Squad::kitingAttack(BWAPI::Unit unit, BWAPI::Unit target) {
 }
 
 BWAPI::Position Squad::normalize(BWAPI::Position vector) {
-	return BWAPI::Position(round(vector.x / getMagnitude(vector)), round(vector.y / getMagnitude(vector)));
+	return BWAPI::Position((int) round(vector.x / getMagnitude(vector)), (int) round(vector.y / getMagnitude(vector)));
 }
 
 // Returns magnitude of vector using sqrt(x^2 + y^2)
