@@ -21,18 +21,12 @@ public:
 	BWAPI::Unitset minerals;
 	BWAPI::Unit vespeneGyser = nullptr; //Should maybe consider changing this to a unit set like minerals in case multiple gysers.
 	BWAPI::Unit assimilator = nullptr;
-	std::unordered_map<BWAPI::Unit, int> mineralWorkerCount;
+	std::unordered_map<BWAPI::Unit, int> resourceWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
-	int assimilatorWorkerCount = 0;
 
-	//Calculated maximums based on number of miners.
-	int maximumWorkerAmount;
+	//Calculated maximums based on number of minerals.
 	int optimalWorkerAmount;
-
-	//Values that can change based on overtime.
-	int maximumWorkerPerMineral;
 	int maximumWorkers;
-	bool requestAlreadyMade = false;
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();

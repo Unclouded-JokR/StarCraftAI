@@ -23,14 +23,21 @@ public:
     BWAPI::Unitset buildingWarps;
 
     BuildManager(ProtoBotCommander* commanderReference);
+
+    //BWAPI Events
     void onStart();
     void onFrame();
     void onUnitCreate(BWAPI::Unit unit);
     void onUnitDestroy(BWAPI::Unit unit);
     void onUnitMorph(BWAPI::Unit);
+    void onUnitComplete(BWAPI::Unit);
     void onUnitDiscover(BWAPI::Unit);
 
-    void assignBuilding(BWAPI::Unit unit);
+    //Spender Manager Request methods
+    void buildBuilding(BWAPI::UnitType building);
+    void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
+    void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
+
     bool isBuildOrderCompleted();
     bool requestedBuilding(BWAPI::UnitType building);
     bool alreadySentRequest(int unitID);
@@ -40,10 +47,6 @@ public:
     bool checkWorkerIsConstructing(BWAPI::Unit);
     int checkAvailableSupply();
     void buildingDoneWarping(BWAPI::Unit unit);
-
-    void buildBuilding(BWAPI::UnitType building);
-    void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
-    void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
 
     void getBuildOrder();
     void updateBuild();

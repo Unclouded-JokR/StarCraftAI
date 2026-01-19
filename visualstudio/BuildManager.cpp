@@ -60,8 +60,11 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
+    if (unit == nullptr) return;
+
     spenderManager.onUnitCreate(unit);
-    buildingWarps.insert(unit);
+
+    if(unit->getType() != BWAPI::UnitTypes::Protoss_Pylon) buildingWarps.insert(unit);
 }
 
 void BuildManager::onUnitMorph(BWAPI::Unit unit)
@@ -99,11 +102,10 @@ void BuildManager::onFrame() {
     }
 }
 
-void BuildManager::assignBuilding(BWAPI::Unit unit)
+void BuildManager::onUnitComplete(BWAPI::Unit unit)
 {
-    //std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
     buildings.insert(unit);
-    //std::cout << "Buildings size: " << buildings.size() << "\n";
+    spenderManager.onUnitComplete(unit);
 }
 
 bool BuildManager::isBuildOrderCompleted()
@@ -335,8 +337,8 @@ void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-    /*buildOrderCompleted = true;
-    return;*/
+    buildOrderCompleted = true;
+    return;
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
@@ -425,5 +427,5 @@ vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race) {
 
 int BuildManager::checkAvailableSupply()
 {
-    return spenderManager.availableSupply();
+    return spenderManager.plannedSupply();
 }

@@ -274,7 +274,7 @@ Action StrategyManager::onFrame()
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon
-		if (commanderReference->checkAvailableSupply() <= 2 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
+		if (commanderReference->checkAvailableSupply() <= 3 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 		{
 			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
@@ -319,7 +319,7 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
-			else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
+			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
 				std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
@@ -332,7 +332,7 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}
+			}*/
 		}
 	}
 	#pragma endregion

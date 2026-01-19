@@ -217,7 +217,6 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 	buildManager.onUnitCreate(unit);
 }
 
-//[TODO] Move this to building manager
 bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
 {
 	return buildManager.checkUnitIsBeingWarpedIn(building);
@@ -234,9 +233,6 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	const BWAPI::UnitType unit_type = unit->getType();
 
-	//If unit is a pylon we dont care about the unit really for now.
-	if (unit_type == BWAPI::UnitTypes::Protoss_Pylon) return;
-
 	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
 	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator || unit_type == BWAPI::UnitTypes::Protoss_Probe)
 	{
@@ -244,10 +240,9 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		return;
 	}
 
-	//Give all buildings to the Building Manager.
-	if (unit_type.isBuilding() && unit_type != BWAPI::UnitTypes::Protoss_Pylon)
+	if (unit_type.isBuilding())
 	{
-		buildManager.assignBuilding(unit);
+		buildManager.onUnitComplete(unit);
 		return;
 	}
 

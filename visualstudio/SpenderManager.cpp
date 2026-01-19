@@ -5,53 +5,65 @@ SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commande
 {
 }
 
-void SpenderManager::onStart()
-{
-    std::cout << "Spender Manager Initialized" << "\n";
-    builders.clear();
-    buildRequests.clear();
-    plannedBuildings.clear();
-    plannedUnits.clear();
-    requestIdentifiers.clear();
-}
+/*
+    Current requests that can be added:
+        - Buildings
+        - Upgrades (some)
+        - Training units
 
+    Upgrades is "some" since BWAPI defines some of the data types for abilities as Research instead of Upgrades.
+    Future modifications need to be made to spender manager to make sure we can recieve other different request types and be able to handle it. 1/19/26
+*/
+#pragma region Add Requests Methods
 void SpenderManager::addRequest(BWAPI::UnitType building)
 {
     BuildRequest requestToAdd;
-    BuildStructureRequest temp;
+    BuildStructureRequest buildingRequest;
+    buildingRequest.buildingType = building;
 
-    temp.buildingType = building;
-    requestToAdd.request = temp;
-
+    requestToAdd.request = buildingRequest;
     buildRequests.push_back(requestToAdd);
 }
 
 void SpenderManager::addRequest(BWAPI::Unit unit, BWAPI::UpgradeType upgradeToResearch)
 {
     BuildRequest requestToAdd;
-    ResearchUpgradeRequest temp;
-    temp.upgradeType = upgradeToResearch;
-    temp.building = unit;
-    requestToAdd.request = temp;
+    ResearchUpgradeRequest researchRequest;
+    researchRequest.upgradeType = upgradeToResearch;
+    researchRequest.building = unit;
 
+    requestToAdd.request = researchRequest;
     buildRequests.push_back(requestToAdd);
 }
 
-void SpenderManager::addRequest(BWAPI::UnitType unitToTrain, BWAPI::Unit buildingRequesting)
+void SpenderManager::addRequest(BWAPI::UnitType unit, BWAPI::TilePosition location, BWAPI::Unit requester)
 {
     BuildRequest requestToAdd;
-    TrainUnitRequest temp;
-    temp.unitType = unitToTrain;
-    temp.building = buildingRequesting;
+    UnitBuildStructureRequest buildRequest;
+    buildRequest.worker = requester;
+    buildRequest.buildingType = unit;
+    buildRequest.locationToBuild = location;
 
-    //Add unit to already sent requests
-    requestIdentifiers.push_back(buildingRequesting->getID());
-
-    requestToAdd.request = temp;
-
+    requestToAdd.request = buildRequest;
     buildRequests.push_back(requestToAdd);
 }
 
+void SpenderManager::addRequest(BWAPI::UnitType unit, BWAPI::Unit requester)
+{
+    BuildRequest requestToAdd;
+    TrainUnitRequest trainRequest;
+    trainRequest.unitType = unit;
+    trainRequest.building = requester;
+
+    //Add unit to already sent requests
+    requestIdentifiers.push_back(requester->getID());
+
+    requestToAdd.request = trainRequest;
+    buildRequests.push_back(requestToAdd);
+}
+#pragma endregion
+
+#pragma region Debug Statements
 void SpenderManager::printQueue()
 {
     std::cout << "Build Request Queue:" << "\n";
@@ -77,11 +89,14 @@ void SpenderManager::printQueue()
         index++;
     }
 }
+#pragma endregion
 
+#pragma region Helper Methods
 int SpenderManager::availableMinerals()
 {
     int currentMineralCount = BWAPI::Broodwar->self()->minerals();
 
+    //Only need to factor in buildings since mineral and upgrade spending happens immedietly.
     for (BWAPI::UnitType building : plannedBuildings)
     {
         currentMineralCount -= building.mineralPrice();
@@ -114,18 +129,22 @@ int SpenderManager::availableSupply()
     return unusedSupply;
 }
 
-//Working on better way to build pylons in advance
 int SpenderManager::plannedSupply()
 {
-    int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2;
-
-    int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+    const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2; //Current supply total StarCraft notes us having.
+    int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2; //Used supply total StarCraft notes us having.
+    int plannedUsedSuply = 0; //Supply we plan on using (Units are in the build queue but have not been accepted yet.
+    int plannedSupply = 0; //Buildings we plan on constructing that provide supply. 
 
     for (BWAPI::UnitType unit : plannedUnits)
     {
         usedSupply += (unit.supplyRequired() / 2);
     }
 
+    /*
+        Add buildings that provide supply currently in the queue to plannedSupply.
+        Add units that use supply to plannedUsedSupply 
+    */
     for (BuildRequest buildRequest : buildRequests)
     {
         if (std::holds_alternative<BuildStructureRequest>(buildRequest.request))
@@ -135,20 +154,37 @@ int SpenderManager::plannedSupply()
             if (buildStrctureRequest.buildingType == BWAPI::UnitTypes::Protoss_Pylon
                 || buildStrctureRequest.buildingType == BWAPI::UnitTypes::Protoss_Nexus)
             {
-                totalSupply += buildStrctureRequest.buildingType.supplyProvided();
+                plannedSupply += buildStrctureRequest.buildingType.supplyProvided() / 2;
             }
+        }
+        else if (std::holds_alternative<TrainUnitRequest>(buildRequest.request))
+        {
+            const TrainUnitRequest buildStrctureRequest = get<TrainUnitRequest>(buildRequest.request);
+
+            plannedUsedSuply += buildStrctureRequest.unitType.supplyRequired() / 2;
         }
     }
 
-    for (BWAPI::UnitType building : plannedBuildings)
+    //Building request has been accepted it has just not been built yet.
+    for (const BWAPI::UnitType building : plannedBuildings)
     {
-        if (building == BWAPI::UnitTypes::Protoss_Pylon || building == BWAPI::UnitTypes::Protoss_Nexus) totalSupply += building.supplyProvided();
+        //if (building.supplyProvided() / 2 > 0) std::cout << "Planned Building " << building << ", provides " << building.supplyProvided() / 2 << " supply\n";
+
+        plannedSupply += building.supplyProvided() / 2;
     }
 
-    std::cout << "Total supply (with planned building considerations) = " << totalSupply << "\n";
+    //Building is not being warped in.
+    for (const BWAPI::Unit unit : incompleteBuildings)
+    {
+        //if (unit->getType().supplyProvided() / 2 > 0) std::cout << "Incomplete Building " << unit->getType() << ", provides " << unit->getType().supplyProvided() / 2 << " supply\n";
+
+        plannedSupply += unit->getType().supplyProvided() / 2;
+    }
+
+    /*std::cout << "Total supply (with planned building considerations) = " << (totalSupply + plannedSupply) << "\n";
     std::cout << "Used supply (with planned unit considerations) = " << usedSupply << "\n";
-    std::cout << "Supply avalible = " << (totalSupply - usedSupply) << "\n";
-    return (totalSupply - usedSupply);
+    std::cout << "StarCraft Supply avalible = " << (totalSupply - usedSupply) << "\n";*/
+    return ((totalSupply + plannedSupply) - (usedSupply + plannedUsedSuply));
 }
 
 bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas)
@@ -160,109 +196,19 @@ bool SpenderManager::canAfford(int mineralPrice, int gasPrice, int currentMinera
 
     return false;
 }
+#pragma endregion
 
-bool SpenderManager::alreadyUsingTiles(BWAPI::TilePosition positon)
+
+#pragma region BWAPI Events
+void SpenderManager::onStart()
 {
-    for (const Builder& builder : builders)
-    {
-        if (builder.positionToBuild == BWAPI::Position(positon)) return true;
-    }
-
-    return false;
-}
-
-BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
-{
-    if (type == BWAPI::UnitTypes::Protoss_Nexus)
-    {
-        int distance = INT_MAX;
-        BWAPI::TilePosition closestDistance;
-
-        for (const BWEM::Area& area : theMap.Areas())
-        {
-            for (const BWEM::Base& base : area.Bases())
-            {
-                if (BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location()) < distance
-                    && base.Location() != BWAPI::Broodwar->self()->getStartLocation()
-                    && BWAPI::Broodwar->canBuildHere(base.Location(), type))
-                {
-                    distance = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
-                    closestDistance = base.Location();
-                }
-            }
-        }
-
-        //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
-        return BWAPI::Position(closestDistance);
-    }
-    else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
-    {
-        std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-
-        for (const NexusEconomy& nexusEconomy : nexusEconomies)
-        {
-            if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator == nullptr)
-            {
-                //std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
-                //std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
-
-                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 55, nexusEconomy.vespeneGyser->getPosition().y - 25);
-                return position;
-            }
-        }
-    }
-    else
-    {
-        int distance = INT_MAX;
-        BWAPI::TilePosition closestDistance;
-        std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
-
-        for (BWEB::Block block : blocks)
-        {
-            std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
-
-            for (const BWAPI::TilePosition placement : placements)
-            {
-                const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
-
-                if (BWAPI::Broodwar->canBuildHere(placement, type)
-                    && distanceToPlacement < distance
-                    && !alreadyUsingTiles(placement))
-                {
-                    distance = distanceToPlacement;
-                    closestDistance = placement;
-                }
-            }
-        }
-
-        //std::cout << distance << "\n";
-        return BWAPI::Position(closestDistance);
-    }
-
-    return BWAPI::Position(0, 0);
-}
-
-bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
-{
-    if (buildRequests.size() == 0)
-    {
-        return false;
-    }
-
-    for (BuildRequest& buildRequest : buildRequests)
-    {
-        if (holds_alternative<BuildStructureRequest>(buildRequest.request))
-        {
-            const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
-
-            if (buildingInQueue.buildingType == building)
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
+    std::cout << "Spender Manager Initialized" << "\n";
+    builders.clear();
+    buildRequests.clear();
+    plannedBuildings.clear();
+    plannedUnits.clear();
+    requestIdentifiers.clear();
+    incompleteBuildings.clear();
 }
 
 void SpenderManager::OnFrame()
@@ -274,15 +220,16 @@ void SpenderManager::OnFrame()
     int mineralPrice = 0;
     int gasPrice = 0;
 
-    if (BWAPI::Broodwar->getFrameCount() % 48 == 0)
-    {
-        //printQueue();
+    //if (BWAPI::Broodwar->getFrameCount() % 256) std::cout << "Planned supply test:\n" << plannedSupply() << "\n";
 
-        /*for (const BWAPI::UnitType building : plannedBuildings)
-        {
-            std::cout << "Planning to build: " << building << "\n";
-        }*/
-    }
+    //if (BWAPI::Broodwar->getFrameCount() % 96 == 0)
+    //{
+    //    //printQueue();
+    //    /*for (const BWAPI::UnitType building : plannedBuildings)
+    //    {
+    //        std::cout << "Planning to build: " << building << "\n";
+    //    }*/
+    //}
 
     //prioritize buildings and units first.
     for (std::vector<BuildRequest>::iterator it = buildRequests.begin(); it != buildRequests.end();)
@@ -336,15 +283,17 @@ void SpenderManager::OnFrame()
             }
             else
             {
-                //Prioritize exapnsions and pylons 
-                if (temp.buildingType == BWAPI::UnitTypes::Protoss_Nexus || temp.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
-                {
-                    break;
-                }
-                else
-                {
-                    it++;
-                }
+                ////Prioritize exapnsions and pylons 
+                //if (temp.buildingType == BWAPI::UnitTypes::Protoss_Nexus || temp.buildingType == BWAPI::UnitTypes::Protoss_Pylon)
+                //{
+                //    break;
+                //}
+                //else
+                //{
+                //    it++;
+                //}
+
+                it++;
             }
         }
         else if (std::holds_alternative<TrainUnitRequest>(it->request))
@@ -372,6 +321,22 @@ void SpenderManager::OnFrame()
                 std::cout << "Supply used: " << BWAPI::Broodwar->self()->supplyUsed() / 2 << "\n";*/
                 //std::cout << "Avalible supply (considering planned units): " << currentSupply << "\n";
                 //std::cout << "Training " << temp.unitType << " needs " << temp.unitType.supplyRequired() / 2 << " supply." << "\n";
+            }
+            else
+            {
+                it++;
+            }
+        }
+        else if (std::holds_alternative<UnitBuildStructureRequest>(it->request))
+        {
+            const UnitBuildStructureRequest temp = get<UnitBuildStructureRequest>(it->request);
+
+            mineralPrice = temp.buildingType.mineralPrice();
+            gasPrice = temp.buildingType.gasPrice();
+
+            if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount) && ((currentSupply - (temp.buildingType.supplyRequired() / 2)) >= 0))
+            {
+                //Send back acknowledgement to scout that they are allowed to spend minerals.
             }
             else
             {
@@ -478,7 +443,10 @@ void SpenderManager::OnFrame()
 
 void SpenderManager::onUnitCreate(BWAPI::Unit unit)
 {
+    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
     //std::cout << unit->getType() << " created\n";
+    if (unit->getType().isBuilding() && !unit->isCompleted()) incompleteBuildings.insert(unit);
 
     for (std::vector<BWAPI::UnitType>::iterator it = plannedBuildings.begin(); it != plannedBuildings.end(); ++it)
     {
@@ -532,6 +500,19 @@ void SpenderManager::onUnitDestroy(BWAPI::Unit unit)
     //check warping buildings
 }
 
+void SpenderManager::onUnitComplete(BWAPI::Unit unit)
+{
+    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+    //std::cout << unit->getType() << " completed\n";
+
+    if (!unit->getType().isBuilding()) return;
+
+    //Might cause error if the unit was not added possibly.
+    std::cout << "Removing " << unit->getType() << "\n";
+    incompleteBuildings.erase(unit);
+}
+
 void SpenderManager::onUnitMorph(BWAPI::Unit unit)
 {
     BWEB::Map::onUnitMorph(unit);
@@ -540,6 +521,111 @@ void SpenderManager::onUnitMorph(BWAPI::Unit unit)
 void SpenderManager::onUnitDiscover(BWAPI::Unit unit)
 {
     BWEB::Map::onUnitDiscover(unit);
+}
+#pragma endregion
+
+bool SpenderManager::alreadyUsingTiles(BWAPI::TilePosition positon)
+{
+    for (const Builder& builder : builders)
+    {
+        if (builder.positionToBuild == BWAPI::Position(positon)) return true;
+    }
+
+    return false;
+}
+
+BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
+{
+    if (type == BWAPI::UnitTypes::Protoss_Nexus)
+    {
+        int distance = INT_MAX;
+        BWAPI::TilePosition closestDistance;
+
+        for (const BWEM::Area& area : theMap.Areas())
+        {
+            for (const BWEM::Base& base : area.Bases())
+            {
+                if (BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location()) < distance
+                    && base.Location() != BWAPI::Broodwar->self()->getStartLocation()
+                    && BWAPI::Broodwar->canBuildHere(base.Location(), type))
+                {
+                    distance = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
+                    closestDistance = base.Location();
+                }
+            }
+        }
+
+        //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        return BWAPI::Position(closestDistance);
+    }
+    else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
+    {
+        std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+        for (const NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator == nullptr)
+            {
+                //std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
+                //std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
+
+                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 55, nexusEconomy.vespeneGyser->getPosition().y - 25);
+                return position;
+            }
+        }
+    }
+    else
+    {
+        int distance = INT_MAX;
+        BWAPI::TilePosition closestDistance;
+        std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+
+        for (BWEB::Block block : blocks)
+        {
+            std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
+
+            for (const BWAPI::TilePosition placement : placements)
+            {
+                const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
+
+                if (BWAPI::Broodwar->canBuildHere(placement, type)
+                    && distanceToPlacement < distance
+                    && !alreadyUsingTiles(placement))
+                {
+                    distance = distanceToPlacement;
+                    closestDistance = placement;
+                }
+            }
+        }
+
+        //std::cout << distance << "\n";
+        return BWAPI::Position(closestDistance);
+    }
+
+    return BWAPI::Position(0, 0);
+}
+
+bool SpenderManager::requestedBuilding(BWAPI::UnitType building)
+{
+    if (buildRequests.size() == 0)
+    {
+        return false;
+    }
+
+    for (BuildRequest& buildRequest : buildRequests)
+    {
+        if (holds_alternative<BuildStructureRequest>(buildRequest.request))
+        {
+            const BuildStructureRequest buildingInQueue = get<BuildStructureRequest>(buildRequest.request);
+
+            if (buildingInQueue.buildingType == building)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool SpenderManager::buildingAlreadyMadeRequest(int unitID)
