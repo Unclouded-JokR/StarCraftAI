@@ -66,14 +66,13 @@ void NexusEconomy::addMissedResources()
 	}
 
 	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
-	maximumWorkerAmount = minerals.size() * MAXIMUM_WORKERS_PER_MINERAL;
 	maximumWorkers = optimalWorkerAmount + (vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 
 	if (nexusID > 1) economyReference->getWorkersToTransfer(newMinerals.size(), *this);
 	//std::cout << "Total Minerals: " << minerals.size() << "\n";
 }
 
-void NexusEconomy::OnFrame()
+void NexusEconomy::onFrame()
 {
 	lifetime += 1;
 	if (lifetime >= 500) lifetime = 500;
@@ -129,7 +128,7 @@ void NexusEconomy::OnFrame()
 	{
 		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
 
-		if (minerals.size() == 0) continue;
+		if (minerals.size() == 0) break;
 
 		//If a worker is constructing skip over them until they are done.
 		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() || worker->getOrder() == BWAPI::Orders::Move)
@@ -146,7 +145,6 @@ void NexusEconomy::OnFrame()
 				worker->gather(assimilator);
 				assignedResource[worker] = vespeneGyser;
 				assimilatorWorkerCount += 1;
-				//continue;
 			}
 			else if (assignedResource.find(worker) == assignedResource.end())
 			{
@@ -155,7 +153,6 @@ void NexusEconomy::OnFrame()
 				assignedResource[worker] = closestMineral;
 				worker->gather(closestMineral);
 			}
-
 
 			//BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(255, 0, 0), true);
 		}
@@ -192,7 +189,6 @@ void NexusEconomy::printMineralWorkerCounts()
 }
 
 //Return true if the unit was apart of instance of NexusEconomy
-//[TODO]: need to figure out what to do with units once a mineral patch or gas is done.
 //[TODO]: also need to figure out edge case when unit destroyed is a nexus
 bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 {
@@ -266,6 +262,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	return false;
 }
 
+//[TODO] Change this to A*
 BWAPI::Unit NexusEconomy::GetClosestMineralToWorker(BWAPI::Unit worker)
 {
 	//Check if we have a mineral patch that has no workers
@@ -310,19 +307,6 @@ void NexusEconomy::assignAssimilator(BWAPI::Unit assimilator)
 {
 	this->assimilator = assimilator;
 	assimilatorWorkerCount = 0;
-}
-
-void NexusEconomy::workOverTime()
-{
-	maximumWorkers = maximumWorkerAmount;
-	maximumWorkerPerMineral = OPTIMAL_WORKERS_PER_MINERAL + WORKERS_PER_ASSIMILATOR;
-}
-
-//[TODO]: Hand workers to combat or scout when we get out of rage.
-void NexusEconomy::breakTime()
-{
-	maximumWorkers = optimalWorkerAmount;
-	maximumWorkerPerMineral = MAXIMUM_WORKERS_PER_MINERAL + WORKERS_PER_ASSIMILATOR;
 }
 
 //[TODO]: make sure we are handing off probe properlly

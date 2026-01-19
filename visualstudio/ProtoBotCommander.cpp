@@ -82,6 +82,8 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
+	economyManager.onStart();
+
 	combatManager.onStart();
 
 	scoutingManager.onStart();
@@ -174,7 +176,7 @@ void ProtoBotCommander::onFrame()
 	buildManager.onFrame();
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
-	economyManager.OnFrame();
+	economyManager.onFrame();
 
 	//Uncomment this once onFrame does not steal a worker.
 	scoutingManager.onFrame();

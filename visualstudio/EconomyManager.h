@@ -11,10 +11,13 @@ class EconomyManager
 {
 public:
 	ProtoBotCommander* commanderReference;
+
+	//Change to array based on SC base locations
 	std::vector<NexusEconomy> nexusEconomies;
 
 	EconomyManager(ProtoBotCommander* commanderReference);
-	void OnFrame();
+	void onStart();
+	void onFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
 	void assignUnit(BWAPI::Unit unit);
 	std::vector<NexusEconomy> getNexusEconomies();
