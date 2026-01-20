@@ -4,7 +4,7 @@
 #include <limits.h>
 #include "../src/starterbot/Tools.h"
 
-class ProtoBotCommander;
+class BuildManager;
 
 struct TrainUnitRequest
 {
@@ -47,14 +47,14 @@ class SpenderManager
 {
 public:
     std::vector<BuildRequest> buildRequests;
-    ProtoBotCommander* commanderReference;
+    BuildManager* buildManagerReference;
     std::vector<BWAPI::UnitType> plannedBuildings; //Building Requests that have been accepted and waiting for a unit to place.
     BWAPI::Unitset incompleteBuildings; //Buildings in the process of being warped/built/formed, not yet completed.
     std::vector<BWAPI::UnitType> plannedUnits;
     std::vector<int> requestIdentifiers; //list of the buildings that have already sent train commands, can also do this for upgrades.
     std::vector<Builder> builders;
 
-    SpenderManager(ProtoBotCommander* commanderReference);
+    SpenderManager(BuildManager*);
 
     //Requests
     void addRequest(BWAPI::UnitType);

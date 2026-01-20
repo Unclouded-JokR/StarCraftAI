@@ -10,7 +10,7 @@ using namespace All;
 using namespace UnitTypes;
 using namespace std;
 
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(this))
 {
 
 }
@@ -428,4 +428,14 @@ vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race) {
 int BuildManager::checkAvailableSupply()
 {
     return spenderManager.plannedSupply();
+}
+
+BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
+{
+    return commanderReference->getUnitToBuild(position);
+}
+
+std::vector<NexusEconomy> BuildManager::getNexusEconomies()
+{
+    return commanderReference->getNexusEconomies();
 }

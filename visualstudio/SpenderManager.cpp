@@ -1,8 +1,10 @@
+#include "BuildManager.h"
 #include "ProtoBotCommander.h"
 #include "SpenderManager.h"
 
-SpenderManager::SpenderManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+SpenderManager::SpenderManager(BuildManager* buildManagerReference) : buildManagerReference(buildManagerReference)
 {
+
 }
 
 /*
@@ -252,7 +254,7 @@ void SpenderManager::OnFrame()
                     continue;
                 }
 
-                BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(positionToBuild);
+                BWAPI::Unit unitAvalible = buildManagerReference->getUnitToBuild(positionToBuild);
                 //BWAPI::Unit unitAvalible = commanderReference->getUnitToScout();
 
                 if (unitAvalible == nullptr)
@@ -487,7 +489,7 @@ void SpenderManager::onUnitDestroy(BWAPI::Unit unit)
     {
         if (it->probe->getID() == unit->getID())
         {
-            const BWAPI::Unit unitAvalible = commanderReference->getUnitToBuild(it->positionToBuild);
+            const BWAPI::Unit unitAvalible = buildManagerReference->getUnitToBuild(it->positionToBuild);
             it->probe = unitAvalible;
             break;
         }
@@ -560,7 +562,7 @@ BWAPI::Position SpenderManager::getPositionToBuild(BWAPI::UnitType type)
     }
     else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
     {
-        std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+        std::vector<NexusEconomy> nexusEconomies = buildManagerReference->getNexusEconomies();
 
         for (const NexusEconomy& nexusEconomy : nexusEconomies)
         {

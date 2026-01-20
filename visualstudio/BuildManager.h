@@ -7,9 +7,8 @@
 #include "../src/starterbot/Tools.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
-
-
 class ProtoBotCommander;
+class NexusEconomy;
 
 class BuildManager
 {
@@ -50,6 +49,10 @@ public:
 
     void getBuildOrder();
     void updateBuild();
+
+    BWAPI::Unit getUnitToBuild(BWAPI::Position);
+    std::vector<NexusEconomy> getNexusEconomies();
+    
 
     void PvP();
     void PvT();

@@ -134,42 +134,42 @@ void ProtoBotCommander::onFrame()
 
 	switch (action.type)
 	{
-	case ActionType::Action_Expand:
-	{
-		const Expand value = get<Expand>(action.commanderAction);
-		requestBuild(value.unitToBuild);
-		break;
-	}
-	case ActionType::Action_Build:
-	{
-		const Build value = get<Build>(action.commanderAction);
-		requestBuild(value.unitToBuild);
-		break;
-	}
-	case ActionType::Action_Scout:
-	{
-		std::cout << "Reuqesting scout!\n";
-		if (!scoutingManager.hasScout())
+		case ActionType::Action_Expand:
 		{
-			if (BWAPI::Unit u = getUnitToScout()) {
-				scoutingManager.assignScout(u);
-				std::cout << "Got unit to scout!\n";
-			}
+			const Expand value = get<Expand>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
 		}
-		break;
-	}
-	case ActionType::Action_Attack:
-	{
-		break;
-	}
-	case ActionType::Action_Defend:
-	{
-		break;
-	}
-	default:
-	{
-		break;
-	}
+		case ActionType::Action_Build:
+		{
+			const Build value = get<Build>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Scout:
+		{
+			std::cout << "Reuqesting scout!\n";
+			if (!scoutingManager.hasScout())
+			{
+				if (BWAPI::Unit u = getUnitToScout()) {
+					scoutingManager.assignScout(u);
+					std::cout << "Got unit to scout!\n";
+				}
+			}
+			break;
+		}
+		case ActionType::Action_Attack:
+		{
+			break;
+		}
+		case ActionType::Action_Defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
 	}
 	Tools::updateCount();
 
@@ -210,6 +210,8 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
 {
 	buildManager.onUnitDiscover(unit);
+
+	//add information manager here.
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
