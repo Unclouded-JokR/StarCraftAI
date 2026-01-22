@@ -15,12 +15,47 @@ BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderRef
 
 }
 
+#pragma region BWAPI EVENTS
 void BuildManager::onStart()
 {
     //Make false at the start of a game.
     std::cout << "Builder Manager Initialized" << "\n";
     buildOrderCompleted = false;
     spenderManager.onStart();
+}
+
+void BuildManager::onFrame() {
+    spenderManager.OnFrame();
+    buildQueue.clear();
+
+    if (!buildOrderCompleted)
+    {
+        updateBuild();
+        runBuildQueue();
+        runUnitQueue();
+    }
+
+    pumpUnit();
+
+    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
+    //for (BWAPI::Unit building : buildingWarps)
+    //{
+    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
+    //}
+
+    for (BWAPI::Unit building : buildings)
+    {
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
+    }
+}
+
+void BuildManager::onUnitCreate(BWAPI::Unit unit)
+{
+    if (unit == nullptr) return;
+
+    spenderManager.onUnitCreate(unit);
+
+    if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon) buildingWarps.insert(unit);
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
@@ -58,48 +93,9 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 }
 
-void BuildManager::onUnitCreate(BWAPI::Unit unit)
-{
-    if (unit == nullptr) return;
-
-    spenderManager.onUnitCreate(unit);
-
-    if(unit->getType() != BWAPI::UnitTypes::Protoss_Pylon) buildingWarps.insert(unit);
-}
-
 void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
     spenderManager.onUnitMorph(unit);
-}
-
-void BuildManager::onUnitDiscover(BWAPI::Unit unit)
-{
-    spenderManager.onUnitDiscover(unit);
-}
-
-void BuildManager::onFrame() {
-    spenderManager.OnFrame();
-    buildQueue.clear();
-
-    if (!buildOrderCompleted)
-    {
-        updateBuild();
-        runBuildQueue();
-        runUnitQueue();
-    }
-
-    pumpUnit();
-
-    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
-    //for (BWAPI::Unit building : buildingWarps)
-    //{
-    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
-    //}
-
-    for (BWAPI::Unit building : buildings)
-    {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }
 }
 
 void BuildManager::onUnitComplete(BWAPI::Unit unit)
@@ -108,24 +104,16 @@ void BuildManager::onUnitComplete(BWAPI::Unit unit)
     spenderManager.onUnitComplete(unit);
 }
 
-bool BuildManager::isBuildOrderCompleted()
+void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 {
-    return buildOrderCompleted;
+    spenderManager.onUnitDiscover(unit);
 }
+#pragma endregion
 
-bool BuildManager::requestedBuilding(BWAPI::UnitType building)
-{
-    return spenderManager.requestedBuilding(building);
-}
-
+#pragma region Spender Manager Methods
 void BuildManager::buildBuilding(BWAPI::UnitType building)
 {
     spenderManager.addRequest(building);
-}
-
-void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
-{
-    spenderManager.addRequest(unit, upgrade);
 }
 
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
@@ -133,22 +121,19 @@ void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
     spenderManager.addRequest(unitToTrain, unit);
 }
 
+void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
+{
+    spenderManager.addRequest(unit, upgrade);
+}
+
 bool BuildManager::alreadySentRequest(int unitID)
 {
     return spenderManager.buildingAlreadyMadeRequest(unitID);
 }
 
-bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+bool BuildManager::requestedBuilding(BWAPI::UnitType building)
 {
-    for (BWAPI::Unit warp : buildingWarps)
-    {
-        if (building == warp->getType())
-        {
-            return true;
-        }
-    }
-
-    return false;
+    return spenderManager.requestedBuilding(building);
 }
 
 bool BuildManager::upgradeAlreadyRequested(BWAPI::Unit building)
@@ -164,6 +149,30 @@ bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
 bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
     return spenderManager.checkWorkerIsConstructing(unit);
+}
+
+int BuildManager::checkAvailableSupply()
+{
+    return spenderManager.plannedSupply();
+}
+#pragma endregion
+
+bool BuildManager::isBuildOrderCompleted()
+{
+    return buildOrderCompleted;
+}
+
+bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+{
+    for (BWAPI::Unit warp : buildingWarps)
+    {
+        if (building == warp->getType())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
@@ -423,11 +432,6 @@ vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race) {
     else
         builds.push_back(&BuildManager::PvT_2Gateway_Observer);
     return builds;
-}
-
-int BuildManager::checkAvailableSupply()
-{
-    return spenderManager.plannedSupply();
 }
 
 BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)

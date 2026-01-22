@@ -7,9 +7,10 @@ EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commande
 
 }
 
+#pragma region BWAPI EVENTS
 void EconomyManager::onStart()
 {
-    
+
 }
 
 void EconomyManager::onFrame()
@@ -45,7 +46,77 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
         else if (it->OnUnitDestroy(unit) == true) break;
     }
 }
+#pragma endregion
 
+#pragma region Nexus Economy Methods
+
+/*
+    This is kinda like OnUnitCreate which would be better to call it but whatever
+    
+    We currently assign units to a nexus economy based on distance. Could change the way this works but it is functional for now.
+*/
+void EconomyManager::assignUnit(BWAPI::Unit unit)
+{
+    switch (unit->getType())
+    {
+    case BWAPI::UnitTypes::Protoss_Nexus:
+    {
+        bool alreadyExists = false;
+        for (const NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (nexusEconomy.nexus == unit)
+            {
+                alreadyExists = true;
+                break;
+            }
+        }
+
+        if (alreadyExists == false)
+        {
+            NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
+            nexusEconomies.push_back(temp);
+        }
+        else
+        {
+            //std::cout << "Nexus Already Exists" << "\n";
+        }
+
+        break;
+    }
+    case BWAPI::UnitTypes::Protoss_Assimilator:
+    {
+        //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
+        for (NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 300)
+            {
+                nexusEconomy.assignAssimilator(unit);
+                //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                break;
+            }
+        }
+        break;
+    }
+    case BWAPI::UnitTypes::Protoss_Probe:
+    {
+        for (NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 300)
+            {
+                //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
+                nexusEconomy.assignWorker(unit);
+                break;
+            }
+        }
+        break;
+    }
+    }
+}
+
+
+/*
+    Transfering of workers from one nexus economy to another.
+*/
 void EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomyRequest)
 {
     //Need to check if the size is sufficent for the transer possibly.
@@ -134,70 +205,7 @@ void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, 
     workersAdded.clear();
 }
 
-void EconomyManager::assignUnit(BWAPI::Unit unit)
-{
-    switch (unit->getType())
-    {
-        case BWAPI::UnitTypes::Protoss_Nexus:
-        {
-            bool alreadyExists = false;
-            for (const NexusEconomy& nexusEconomy : nexusEconomies)
-            {
-                if (nexusEconomy.nexus == unit)
-                {
-                    alreadyExists = true;
-                    break;
-                }
-            }
-
-            if (alreadyExists == false)
-            {
-                NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
-                nexusEconomies.push_back(temp);
-            }
-            else
-            {
-                //std::cout << "Nexus Already Exists" << "\n";
-            }
-
-            break;
-        }
-        case BWAPI::UnitTypes::Protoss_Assimilator:
-        {
-            //[TODO] need to verify that this will not assign a assimilator if we are performing a gas steal 
-            for (NexusEconomy& nexusEconomy : nexusEconomies)
-            {
-                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 300)
-                {
-                    nexusEconomy.assignAssimilator(unit);
-                    //std::cout << "Assigned Assimilator " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
-                    break;
-                }
-            }
-            break;
-        }
-        case BWAPI::UnitTypes::Protoss_Probe:
-        {
-            for (NexusEconomy& nexusEconomy : nexusEconomies)
-            {
-                if (unit->getDistance(nexusEconomy.nexus->getPosition()) <= 300)
-                {
-                    //std::cout << "Assigned Probe " << unit->getID() << " to Nexus " << nexusEconomy.nexusID << "\n";
-                    nexusEconomy.assignWorker(unit);
-                    break;
-                }
-            }
-            break;
-        }
-    }
-}
-
-std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
-{
-    return nexusEconomies;
-}
-
-//[TODO]: Get the closest worker to the request we are trying to make.
+//[TODO]: Works but does not factor in travel distance. Need a way to estimate the travel time to get better workers.
 BWAPI::Unit EconomyManager::getAvalibleWorker(BWAPI::Position buildLocation)
 {
     BWAPI::Unit closestWorker = nullptr;
@@ -231,6 +239,13 @@ BWAPI::Unit EconomyManager::getUnitScout()
     }
 }
 
+std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
+{
+    return nexusEconomies;
+}
+#pragma endregion
+
+#pragma region Commander Requests
 void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 {
     commanderReference->requestUnitToTrain(worker, nexus);
@@ -245,3 +260,4 @@ bool EconomyManager::workerIsConstructing(BWAPI::Unit unit)
 {
     return commanderReference->checkWorkerIsConstructing(unit);
 }
+#pragma endregion

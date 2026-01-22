@@ -6,6 +6,7 @@ ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(thi
 
 }
 
+#pragma region BWAPI EVENTS
 void ProtoBotCommander::onStart()
 {
 	std::cout << "============================\n";
@@ -64,6 +65,7 @@ void ProtoBotCommander::onStart()
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
 	//Get nexus and create a new instace of a NexusEconomy
+	//Need to do this because when units are created at the beggining of the game a nexus economy does not exist.
 	for (BWAPI::Unit unit : units)
 	{
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
@@ -134,42 +136,42 @@ void ProtoBotCommander::onFrame()
 
 	switch (action.type)
 	{
-		case ActionType::Action_Expand:
+	case ActionType::Action_Expand:
+	{
+		const Expand value = get<Expand>(action.commanderAction);
+		requestBuild(value.unitToBuild);
+		break;
+	}
+	case ActionType::Action_Build:
+	{
+		const Build value = get<Build>(action.commanderAction);
+		requestBuild(value.unitToBuild);
+		break;
+	}
+	case ActionType::Action_Scout:
+	{
+		std::cout << "Reuqesting scout!\n";
+		if (!scoutingManager.hasScout())
 		{
-			const Expand value = get<Expand>(action.commanderAction);
-			requestBuild(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Build:
-		{
-			const Build value = get<Build>(action.commanderAction);
-			requestBuild(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Scout:
-		{
-			std::cout << "Reuqesting scout!\n";
-			if (!scoutingManager.hasScout())
-			{
-				if (BWAPI::Unit u = getUnitToScout()) {
-					scoutingManager.assignScout(u);
-					std::cout << "Got unit to scout!\n";
-				}
+			if (BWAPI::Unit u = getUnitToScout()) {
+				scoutingManager.assignScout(u);
+				std::cout << "Got unit to scout!\n";
 			}
-			break;
 		}
-		case ActionType::Action_Attack:
-		{
-			break;
-		}
-		case ActionType::Action_Defend:
-		{
-			break;
-		}
-		default:
-		{
-			break;
-		}
+		break;
+	}
+	case ActionType::Action_Attack:
+	{
+		break;
+	}
+	case ActionType::Action_Defend:
+	{
+		break;
+	}
+	default:
+	{
+		break;
+	}
 	}
 	Tools::updateCount();
 
@@ -214,14 +216,22 @@ void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
 	//add information manager here.
 }
 
+void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
+{
+	buildManager.onUnitMorph(unit);
+}
+
+void ProtoBotCommander::onSendText(std::string text)
+{
+	if (text == "/map")
+	{
+		m_mapTools.toggleDraw();
+	}
+}
+
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
-}
-
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
-{
-	return buildManager.checkUnitIsBeingWarpedIn(building);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
@@ -267,19 +277,6 @@ void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 
 }
 
-void ProtoBotCommander::onSendText(std::string text)
-{
-	if (text == "/map")
-	{
-		m_mapTools.toggleDraw();
-	}
-}
-
-void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
-{
-	buildManager.onUnitMorph(unit);
-}
-
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
@@ -299,6 +296,12 @@ void ProtoBotCommander::drawDebugInformation()
 
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
+}
+#pragma endregion
+
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+{
+	return buildManager.checkUnitIsBeingWarpedIn(building);
 }
 
 BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)

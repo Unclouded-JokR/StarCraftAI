@@ -26,27 +26,26 @@ public:
     //BWAPI Events
     void onStart();
     void onFrame();
-    void onUnitCreate(BWAPI::Unit unit);
-    void onUnitDestroy(BWAPI::Unit unit);
+    void onUnitCreate(BWAPI::Unit);
+    void onUnitDestroy(BWAPI::Unit);
     void onUnitMorph(BWAPI::Unit);
     void onUnitComplete(BWAPI::Unit);
     void onUnitDiscover(BWAPI::Unit);
 
     //Spender Manager Request methods
-    void buildBuilding(BWAPI::UnitType building);
-    void trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit building);
+    void buildBuilding(BWAPI::UnitType);
+    void trainUnit(BWAPI::UnitType, BWAPI::Unit);
     void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
-
-    bool isBuildOrderCompleted();
-    bool requestedBuilding(BWAPI::UnitType building);
     bool alreadySentRequest(int unitID);
+    bool requestedBuilding(BWAPI::UnitType);
     bool upgradeAlreadyRequested(BWAPI::Unit);
-    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
-    bool checkUnitIsPlanned(BWAPI::UnitType building);
+    bool checkUnitIsPlanned(BWAPI::UnitType);
     bool checkWorkerIsConstructing(BWAPI::Unit);
     int checkAvailableSupply();
-    void buildingDoneWarping(BWAPI::Unit unit);
 
+    bool isBuildOrderCompleted();
+    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
+    void buildingDoneWarping(BWAPI::Unit unit);
     void getBuildOrder();
     void updateBuild();
 

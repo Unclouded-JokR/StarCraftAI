@@ -67,8 +67,6 @@ public:
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
-	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
-	bool checkUnitIsPlanned(BWAPI::UnitType building);
 
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
@@ -89,6 +87,8 @@ public:
 	void onEnemyNaturalFound(const BWAPI::TilePosition& tp);
 
 	//Build Manager Methods
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
+	bool checkUnitIsPlanned(BWAPI::UnitType building);
 	bool buildOrderCompleted();
 	bool requestedBuilding(BWAPI::UnitType building);
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
