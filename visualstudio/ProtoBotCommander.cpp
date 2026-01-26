@@ -106,7 +106,7 @@ void ProtoBotCommander::onFrame()
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
 	m_mapTools.onFrame();
-	timerManager.startTimer(TimerManager::MapTools);
+	timerManager.stopTimer(TimerManager::MapTools);
 
 	/*for (const Area& area : theMap.Areas())
 	{
@@ -199,10 +199,10 @@ void ProtoBotCommander::onFrame()
 	// Draw unit health bars, which brood war unfortunately does not do
 	Tools::DrawUnitHealthBars();
 
+	BWEB::Map::draw();
+
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
-
-	BWEB::Map::draw();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -313,10 +313,10 @@ void ProtoBotCommander::drawDebugInformation()
 	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
 	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
 
-	timerManager.displayTimers(490, 225);
-
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
+
+	timerManager.displayTimers(490, 225);
 }
 #pragma endregion
 

@@ -6,7 +6,7 @@
 class TimerManager
 {
 	std::vector<Timer> moduleTimers;
-    std::string timerNames[8] = { "All", "Economy", "Scouting", "Build", "Combat", "Information", "Strategy", "MapTools"};
+    std::string timerNames[8] = {"All", "Economy", "Scouting", "Build", "Combat", "Information", "Strategy", "MapTools"};
     int moduleBarWidth = 0;
 
 public:
