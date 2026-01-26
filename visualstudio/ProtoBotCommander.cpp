@@ -101,17 +101,12 @@ void ProtoBotCommander::onFrame()
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
+	timerManager.startTimer(TimerManager::All);
 
 	// Update our MapTools information
+	timerManager.startTimer(TimerManager::MapTools);
 	m_mapTools.onFrame();
-
-	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
-
-	// Draw some relevent information to the screen to help us debug the bot
-	drawDebugInformation();
-
-	BWEB::Map::draw();
+	timerManager.startTimer(TimerManager::MapTools);
 
 	/*for (const Area& area : theMap.Areas())
 	{
@@ -129,61 +124,85 @@ void ProtoBotCommander::onFrame()
 	/*
 	* Protobot Modules
 	*/
+	timerManager.startTimer(TimerManager::Information);
 	informationManager.onFrame();
+	timerManager.stopTimer(TimerManager::Information);
 
+	timerManager.startTimer(TimerManager::Strategy);
 	Action action = strategyManager.onFrame();
 	//std::cout << action.type << "\n";
 
 	switch (action.type)
 	{
-	case ActionType::Action_Expand:
-	{
-		const Expand value = get<Expand>(action.commanderAction);
-		requestBuild(value.unitToBuild);
-		break;
-	}
-	case ActionType::Action_Build:
-	{
-		const Build value = get<Build>(action.commanderAction);
-		requestBuild(value.unitToBuild);
-		break;
-	}
-	case ActionType::Action_Scout:
-	{
-		std::cout << "Reuqesting scout!\n";
-		if (!scoutingManager.hasScout())
+		case ActionType::Action_Expand:
 		{
-			if (BWAPI::Unit u = getUnitToScout()) {
-				scoutingManager.assignScout(u);
-				std::cout << "Got unit to scout!\n";
-			}
+			const Expand value = get<Expand>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
 		}
-		break;
+		case ActionType::Action_Build:
+		{
+			const Build value = get<Build>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Scout:
+		{
+			std::cout << "Reuqesting scout!\n";
+			if (!scoutingManager.hasScout())
+			{
+				if (BWAPI::Unit u = getUnitToScout()) {
+					scoutingManager.assignScout(u);
+					std::cout << "Got unit to scout!\n";
+				}
+			}
+			break;
+		}
+		case ActionType::Action_Attack:
+		{
+			break;
+		}
+		case ActionType::Action_Defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
 	}
-	case ActionType::Action_Attack:
-	{
-		break;
-	}
-	case ActionType::Action_Defend:
-	{
-		break;
-	}
-	default:
-	{
-		break;
-	}
-	}
+	timerManager.stopTimer(TimerManager::Strategy);
+
+	//Get rid of this line since this should be information.
 	Tools::updateCount();
 
+	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame();
+	timerManager.stopTimer(TimerManager::Build);
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
+	timerManager.startTimer(TimerManager::Economy);
 	economyManager.onFrame();
+	timerManager.stopTimer(TimerManager::Economy);
 
 	//Uncomment this once onFrame does not steal a worker.
+	timerManager.startTimer(TimerManager::Scouting);
 	scoutingManager.onFrame();
+	timerManager.stopTimer(TimerManager::Scouting);
 
+	timerManager.startTimer(TimerManager::Combat);
 	combatManager.onFrame();
+	timerManager.stopTimer(TimerManager::Combat);
+
+	timerManager.stopTimer(TimerManager::All);
+
+	// Draw unit health bars, which brood war unfortunately does not do
+	Tools::DrawUnitHealthBars();
+
+	// Draw some relevent information to the screen to help us debug the bot
+	drawDebugInformation();
+
+	BWEB::Map::draw();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -291,8 +310,10 @@ void ProtoBotCommander::drawDebugInformation()
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
 
-	BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
-	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);
+	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
+	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
+
+	timerManager.displayTimers(490, 225);
 
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();

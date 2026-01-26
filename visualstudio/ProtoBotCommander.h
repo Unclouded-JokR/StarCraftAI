@@ -6,6 +6,7 @@
 #include "BuildManager.h"
 #include "CombatManager.h"
 #include "SpenderManager.h"
+#include "TimerManager.h"
 #include "../../src/starterbot/MapTools.h"
 #include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
@@ -37,6 +38,7 @@ class ProtoBotCommander
 {
 public:
 	MapTools m_mapTools;
+	TimerManager timerManager;
 	EconomyManager economyManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
