@@ -6,6 +6,7 @@
 #include "BuildManager.h"
 #include "CombatManager.h"
 #include "SpenderManager.h"
+#include "TimerManager.h"
 #include "../../src/starterbot/MapTools.h"
 #include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
@@ -37,6 +38,7 @@ class ProtoBotCommander
 {
 public:
 	MapTools m_mapTools;
+	TimerManager timerManager;
 	EconomyManager economyManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
@@ -67,8 +69,6 @@ public:
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
-	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
-	bool checkUnitIsPlanned(BWAPI::UnitType building);
 
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
@@ -89,6 +89,8 @@ public:
 	void onEnemyNaturalFound(const BWAPI::TilePosition& tp);
 
 	//Build Manager Methods
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
+	bool checkUnitIsPlanned(BWAPI::UnitType building);
 	bool buildOrderCompleted();
 	bool requestedBuilding(BWAPI::UnitType building);
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);

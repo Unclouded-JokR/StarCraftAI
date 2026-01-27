@@ -44,6 +44,10 @@
     <ClCompile Include="ScoutingDragoon.cpp" />
     <ClCompile Include="ScoutingObserver.cpp" />
     <ClCompile Include="ScoutingProbe.cpp" />
+    <ClCompile Include="A-StarPathfinding.h" />
+    <ClCompile Include="A-StarPathfinding.cpp" />
+    <ClCompile Include="TimerManager.cpp" />
+    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -91,5 +95,7 @@
     <ClInclude Include="ScoutingObserver.h" />
     <ClInclude Include="ScoutingProbe.h" />
     <ClInclude Include="ScoutPolicy.h" />
+    <ClInclude Include="TimerManager.h" />
+    <ClInclude Include="Timer.h" />
   </ItemGroup>
 </Project>

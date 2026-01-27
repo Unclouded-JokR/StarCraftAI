@@ -7,11 +7,17 @@ EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commande
 
 }
 
-void EconomyManager::OnFrame()
+#pragma region BWAPI EVENTS
+void EconomyManager::onStart()
+{
+
+}
+
+void EconomyManager::onFrame()
 {
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
-        nexusEconomy.OnFrame();
+        nexusEconomy.onFrame();
     }
 }
 
@@ -19,9 +25,10 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 {
     if (unit->getPlayer() == BWAPI::Broodwar->enemy()) return;
 
+    //Check which nexus economy the unit is assigned to.
     for (std::vector<NexusEconomy>::iterator it = nexusEconomies.begin(); it != nexusEconomies.end(); ++it) {
 
-        //[TODO] fix handling nexus being destroyed. 
+        //[TODO] Get assign workers to the closest nexus instead of just main.
         if (unit->getID() == it->nexus->getID())
         {
             //Get the workers at the destroyed nexus and reassign them.
@@ -39,94 +46,15 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
         else if (it->OnUnitDestroy(unit) == true) break;
     }
 }
+#pragma endregion
 
-void EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomyRequest)
-{
-    //Need to check if the size is sufficent for the transer possibly.
-    for (NexusEconomy& nexusEconomy : nexusEconomies)
-    {
-        if (nexusEconomy.nexusID == nexusEconomyRequest.nexusID && nexusEconomy.minerals.size() != 0) continue;
+#pragma region Nexus Economy Methods
 
-        if (nexusEconomy.workers.size() != 0)
-        {
-            BWAPI::Unitset workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
-
-            for (BWAPI::Unit worker : workersToTransfer)
-            {
-                nexusEconomyRequest.assignWorker(worker);
-            }
-
-            //std::cout << "New nexus workers: " << nexusEconomyRequest.workers.size() << "\n";
-            break;
-        }
-    }
-}
-
-void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, NexusEconomy& transferFrom)
-{
-    //std::cout << "Mineral has been depleted at Nexus Economy " << transferFrom.nexusID << ": Transfering " << workersToTransfer.size() << " probes...\n";
-    BWAPI::Unitset workersAdded;
-
-    for (NexusEconomy& nexusEconomy : nexusEconomies)
-    {
-        if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
-
-        if (nexusEconomy.workers.size() < nexusEconomy.optimalWorkerAmount)
-        {
-            //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
-
-            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
-
-            for (BWAPI::Unit worker : workersToTransfer)
-            {
-                nexusEconomy.assignWorker(worker);
-                workersAdded.insert(worker);
-
-                //std::cout << "Adding worker\n";
-
-                if (nexusEconomy.workers.size() == nexusEconomy.optimalWorkerAmount || workersAdded.size() == workersToTransfer.size())
-                {
-                    break;
-                }
-            }
-
-            if (workersAdded.size() == workersToTransfer.size()) break;
-
-            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
-        }
-    }
-
-    //Remove workers added.
-    for (BWAPI::Unit worker : workersAdded)
-    {
-        workersToTransfer.erase(worker);
-    }
-
-    //std::cout << "Workers left to transfer: " << workersToTransfer.size() << "\n";
-
-    //No nexus economies avalible just send them to the first one that has minerals.
-    if (workersToTransfer.size() != 0)
-    {
-        //std::cout << "No open nexus economies, just rtransfering them anyway\n";
-        for (NexusEconomy& nexusEconomy : nexusEconomies)
-        {
-            if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
-
-            //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
-
-            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
-            for (BWAPI::Unit worker : workersToTransfer)
-            {
-                nexusEconomy.assignWorker(worker);
-            }
-            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
-        }
-    }
-
-    workersToTransfer.clear();
-    workersAdded.clear();
-}
-
+/*
+    This is kinda like OnUnitCreate which would be better to call it but whatever
+    
+    We currently assign units to a nexus economy based on distance. Could change the way this works but it is functional for now.
+*/
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
     switch (unit->getType())
@@ -185,12 +113,99 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
     }
 }
 
-std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
+
+/*
+    Transfering of workers from one nexus economy to another.
+*/
+void EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomyRequest)
 {
-    return nexusEconomies;
+    //Need to check if the size is sufficent for the transer possibly.
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        if (nexusEconomy.nexusID == nexusEconomyRequest.nexusID) continue;
+
+        //Check if a nexus economy has workers to spare.
+        if (nexusEconomy.workers.size() != 0)
+        {
+            BWAPI::Unitset workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
+
+            for (BWAPI::Unit worker : workersToTransfer)
+            {
+                nexusEconomyRequest.assignWorker(worker);
+            }
+
+            //std::cout << "New nexus workers: " << nexusEconomyRequest.workers.size() << "\n";
+            break;
+        }
+    }
 }
 
-//[TODO]: Get the closest worker to the request we are trying to make.
+void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, NexusEconomy& transferFrom)
+{
+    //std::cout << "Mineral has been depleted at Nexus Economy " << transferFrom.nexusID << ": Transfering " << workersToTransfer.size() << " probes...\n";
+    BWAPI::Unitset workersAdded;
+
+    //Search Nexus Economies for open worker slots.
+    for (NexusEconomy& nexusEconomy : nexusEconomies)
+    {
+        if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
+
+        if (nexusEconomy.workers.size() < nexusEconomy.optimalWorkerAmount)
+        {
+            //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
+
+            for (BWAPI::Unit worker : workersToTransfer)
+            {
+                nexusEconomy.assignWorker(worker);
+                workersAdded.insert(worker);
+
+                //std::cout << "Adding worker\n";
+
+                if (nexusEconomy.workers.size() == nexusEconomy.optimalWorkerAmount || workersAdded.size() == workersToTransfer.size())
+                {
+                    break;
+                }
+            }
+
+            if (workersAdded.size() == workersToTransfer.size()) break;
+
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
+        }
+    }
+
+    //Remove workers added.
+    for (BWAPI::Unit worker : workersAdded)
+    {
+        workersToTransfer.erase(worker);
+    }
+
+    //std::cout << "Workers left to transfer: " << workersToTransfer.size() << "\n";
+
+    //No nexus economies avalible just send them to the first one that has minerals.
+    if (workersToTransfer.size() != 0)
+    {
+        //std::cout << "No open nexus economies, just transfering them anyway\n";
+        for (NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
+
+            //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
+
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
+            for (BWAPI::Unit worker : workersToTransfer)
+            {
+                nexusEconomy.assignWorker(worker);
+            }
+            //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
+        }
+    }
+
+    workersToTransfer.clear();
+    workersAdded.clear();
+}
+
+//[TODO]: Works but does not factor in travel distance. Need a way to estimate the travel time to get better workers.
 BWAPI::Unit EconomyManager::getAvalibleWorker(BWAPI::Position buildLocation)
 {
     BWAPI::Unit closestWorker = nullptr;
@@ -224,6 +239,13 @@ BWAPI::Unit EconomyManager::getUnitScout()
     }
 }
 
+std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
+{
+    return nexusEconomies;
+}
+#pragma endregion
+
+#pragma region Commander Requests
 void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 {
     commanderReference->requestUnitToTrain(worker, nexus);
@@ -238,3 +260,4 @@ bool EconomyManager::workerIsConstructing(BWAPI::Unit unit)
 {
     return commanderReference->checkWorkerIsConstructing(unit);
 }
+#pragma endregion

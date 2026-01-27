@@ -6,6 +6,7 @@ ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(thi
 
 }
 
+#pragma region BWAPI EVENTS
 void ProtoBotCommander::onStart()
 {
 	std::cout << "============================\n";
@@ -27,13 +28,13 @@ void ProtoBotCommander::onStart()
 	std::cout << "Map initialization...\n";
 
 	//theMap = BWEM::Map::Instance();
-	//theMap.Initialize();
-	//theMap.EnableAutomaticPathAnalysis();
-	//bool startingLocationsOK = theMap.FindBasesForStartingLocations();
-	//assert(startingLocationsOK);
+	theMap.Initialize();
+	theMap.EnableAutomaticPathAnalysis();
+	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
+	assert(startingLocationsOK);
 
-	//BWEB::Map::onStart();
-	//BWEB::Blocks::findBlocks();
+	BWEB::Map::onStart();
+	BWEB::Blocks::findBlocks();
 
 	m_mapTools.onStart();
 
@@ -55,8 +56,8 @@ void ProtoBotCommander::onStart()
 	* Create code to select opening randomly for avalible openings.
 	* Have functions that can ask building manager how many openings we have.
 	*/
-	//std::string enemyRace = enemyRaceCheck();
-	//std::cout << "Enemy Race " << enemyRace << '\n';
+	std::string enemyRace = enemyRaceCheck();
+	std::cout << "Enemy Race " << enemyRace << '\n';
 
 	//[TODO] Need build order structure to be implemented.
 	//vector<BuildOrder> build_orders = buildManager.getBuildOrders(enemyRace);
@@ -64,6 +65,7 @@ void ProtoBotCommander::onStart()
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
 	//Get nexus and create a new instace of a NexusEconomy
+	//Need to do this because when units are created at the beggining of the game a nexus economy does not exist.
 	for (BWAPI::Unit unit : units)
 	{
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
@@ -82,6 +84,8 @@ void ProtoBotCommander::onStart()
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
+	economyManager.onStart();
+
 	combatManager.onStart();
 
 	scoutingManager.onStart();
@@ -97,17 +101,12 @@ void ProtoBotCommander::onFrame()
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
+	timerManager.startTimer(TimerManager::All);
 
 	// Update our MapTools information
+	timerManager.startTimer(TimerManager::MapTools);
 	m_mapTools.onFrame();
-
-	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
-
-	// Draw some relevent information to the screen to help us debug the bot
-	drawDebugInformation();
-
-	//BWEB::Map::draw();
+	timerManager.stopTimer(TimerManager::MapTools);
 
 	/*for (const Area& area : theMap.Areas())
 	{
@@ -125,61 +124,85 @@ void ProtoBotCommander::onFrame()
 	/*
 	* Protobot Modules
 	*/
+	timerManager.startTimer(TimerManager::Information);
 	informationManager.onFrame();
+	timerManager.stopTimer(TimerManager::Information);
 
+	timerManager.startTimer(TimerManager::Strategy);
 	Action action = strategyManager.onFrame();
 	//std::cout << action.type << "\n";
 
 	switch (action.type)
 	{
-	case ActionType::Action_Expand:
-	{
-		const Expand value = get<Expand>(action.commanderAction);
-		requestBuild(value.unitToBuild);
-		break;
-	}
-	case ActionType::Action_Build:
-	{
-		const Build value = get<Build>(action.commanderAction);
-		requestBuild(value.unitToBuild);
-		break;
-	}
-	case ActionType::Action_Scout:
-	{
-		std::cout << "Reuqesting scout!\n";
-		if (!scoutingManager.hasScout())
+		case ActionType::Action_Expand:
 		{
-			if (BWAPI::Unit u = getUnitToScout()) {
-				scoutingManager.assignScout(u);
-				std::cout << "Got unit to scout!\n";
-			}
+			const Expand value = get<Expand>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
 		}
-		break;
+		case ActionType::Action_Build:
+		{
+			const Build value = get<Build>(action.commanderAction);
+			requestBuild(value.unitToBuild);
+			break;
+		}
+		case ActionType::Action_Scout:
+		{
+			std::cout << "Reuqesting scout!\n";
+			if (!scoutingManager.hasScout())
+			{
+				if (BWAPI::Unit u = getUnitToScout()) {
+					scoutingManager.assignScout(u);
+					std::cout << "Got unit to scout!\n";
+				}
+			}
+			break;
+		}
+		case ActionType::Action_Attack:
+		{
+			break;
+		}
+		case ActionType::Action_Defend:
+		{
+			break;
+		}
+		default:
+		{
+			break;
+		}
 	}
-	case ActionType::Action_Attack:
-	{
-		break;
-	}
-	case ActionType::Action_Defend:
-	{
-		break;
-	}
-	default:
-	{
-		break;
-	}
-	}
+	timerManager.stopTimer(TimerManager::Strategy);
+
+	//Get rid of this line since this should be information.
 	Tools::updateCount();
 
+	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame();
+	timerManager.stopTimer(TimerManager::Build);
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
-	economyManager.OnFrame();
+	timerManager.startTimer(TimerManager::Economy);
+	economyManager.onFrame();
+	timerManager.stopTimer(TimerManager::Economy);
 
 	//Uncomment this once onFrame does not steal a worker.
+	timerManager.startTimer(TimerManager::Scouting);
 	scoutingManager.onFrame();
+	timerManager.stopTimer(TimerManager::Scouting);
 
+	timerManager.startTimer(TimerManager::Combat);
 	combatManager.onFrame();
+	timerManager.stopTimer(TimerManager::Combat);
+
+	timerManager.stopTimer(TimerManager::All);
+
+	// Draw unit health bars, which brood war unfortunately does not do
+	Tools::DrawUnitHealthBars();
+
+	BWEB::Map::draw();
+
+	// Draw some relevent information to the screen to help us debug the bot
+	drawDebugInformation();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -208,17 +231,26 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
 {
 	buildManager.onUnitDiscover(unit);
+
+	//add information manager here.
+}
+
+void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
+{
+	buildManager.onUnitMorph(unit);
+}
+
+void ProtoBotCommander::onSendText(std::string text)
+{
+	if (text == "/map")
+	{
+		m_mapTools.toggleDraw();
+	}
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
-}
-
-//[TODO] Move this to building manager
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
-{
-	return buildManager.checkUnitIsBeingWarpedIn(building);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
@@ -232,9 +264,6 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	const BWAPI::UnitType unit_type = unit->getType();
 
-	//If unit is a pylon we dont care about the unit really for now.
-	if (unit_type == BWAPI::UnitTypes::Protoss_Pylon) return;
-
 	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
 	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator || unit_type == BWAPI::UnitTypes::Protoss_Probe)
 	{
@@ -242,10 +271,9 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		return;
 	}
 
-	//Give all buildings to the Building Manager.
-	if (unit_type.isBuilding() && unit_type != BWAPI::UnitTypes::Protoss_Pylon)
+	if (unit_type.isBuilding())
 	{
-		buildManager.assignBuilding(unit);
+		buildManager.onUnitComplete(unit);
 		return;
 	}
 
@@ -268,21 +296,6 @@ void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 
 }
 
-void ProtoBotCommander::onSendText(std::string text)
-{
-	if (text == "/map")
-	{
-		m_mapTools.toggleDraw();
-	}
-
-	combatManager.handleTextCommand(text);
-}
-
-void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
-{
-	buildManager.onUnitMorph(unit);
-}
-
 void ProtoBotCommander::drawDebugInformation()
 {
 	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
@@ -297,11 +310,19 @@ void ProtoBotCommander::drawDebugInformation()
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
 
-	BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
-	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);
+	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
+	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
 
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
+
+	timerManager.displayTimers(490, 225);
+}
+#pragma endregion
+
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+{
+	return buildManager.checkUnitIsBeingWarpedIn(building);
 }
 
 BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)
