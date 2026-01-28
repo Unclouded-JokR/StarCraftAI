@@ -35,12 +35,12 @@ struct Node {
 
 static class AStar {
 private:
-	vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
+	static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
 
-	int TileToIndex(BWAPI::TilePosition tile);
+	static int TileToIndex(BWAPI::TilePosition tile);
 
-	bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile);
+	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile);
 
 public:
-	vector<BWAPI::TilePosition> GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
+	static vector<BWAPI::TilePosition> GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
 };

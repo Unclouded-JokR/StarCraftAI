@@ -10,7 +10,7 @@ public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset combatUnits;
-	std::map<int, int> unitSquadIdMap;
+	std::map<BWAPI::Unit, int> unitSquadIdMap;
     std::vector<Squad> Squads;
 
     void onStart();

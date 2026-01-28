@@ -17,6 +17,8 @@ public:
 	std::vector<BWAPI::Unit> units;
 	State state;
 	double minNDistance = 40;
+	vector<BWAPI::TilePosition> currentPath;
+	int currentPathIdx = -1;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize);
 
@@ -30,6 +32,7 @@ public:
 	void onFrame();
 	void simpleFlock();
 	void flockingHandler();
+	void pathHandler();
 	void removeUnit(BWAPI::Unit unit);
 	void move(BWAPI::Position position);
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);

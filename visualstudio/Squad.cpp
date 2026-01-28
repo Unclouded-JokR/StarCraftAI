@@ -46,7 +46,7 @@ void Squad::flockingHandler() {
 
 	BWAPI::Position centerPos = leader->getPosition();
 
-	for(auto& unit : units){
+	for (auto& unit : units) {
 		if (!unit->exists() || unit == leader) {
 			continue;
 		}
@@ -61,7 +61,7 @@ void Squad::flockingHandler() {
 		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, minNDistance);
 		BWAPI::Broodwar->drawCircleMap(unitPos, minNDistance, BWAPI::Colors::Yellow);
 		for (auto& neighbor : neighbors) {
-			if (neighbor == unit){
+			if (neighbor == unit) {
 				continue;
 			}
 
@@ -75,8 +75,8 @@ void Squad::flockingHandler() {
 			cohesionVec += neighborPos - unitPos;
 
 			// Get alignment vector by using neighbor's velocity
-			int neighborvelocity_x = (int) neighbor->getVelocityX();
-			int neighborvelocity_y = (int) neighbor->getVelocityY();
+			int neighborvelocity_x = (int)neighbor->getVelocityX();
+			int neighborvelocity_y = (int)neighbor->getVelocityY();
 			alignmentVec += BWAPI::Position(neighborvelocity_x, neighborvelocity_y);
 		}
 
@@ -98,9 +98,9 @@ void Squad::flockingHandler() {
 		double leaderStrength = 2;
 
 		BWAPI::Position flockDirection = (alignmentVec * alignmentStrength
-										+ cohesionVec * cohesionStrength
-										+ separationVec * separationStrength 
-										+ leaderVec * leaderStrength);
+			+ cohesionVec * cohesionStrength
+			+ separationVec * separationStrength
+			+ leaderVec * leaderStrength);
 
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 20, BWAPI::Colors::Red);
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 20, BWAPI::Colors::White);
@@ -110,7 +110,7 @@ void Squad::flockingHandler() {
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + flockDirection * 20, BWAPI::Colors::Green);
 
 		unit->attack((flockDirection + unitPos));
-		
+
 		BWAPI::Broodwar->printf("Separation strength: %f", getMagnitude(separationVec));
 		BWAPI::Broodwar->printf("Cohesion strength: %f", getMagnitude(cohesionVec));
 		BWAPI::Broodwar->printf("Alignment strength: %f", getMagnitude(alignmentVec));
@@ -138,7 +138,20 @@ void Squad::flockingHandler() {
 		//		
 		//	}
 		//}
-		
+
+	}
+}
+
+void Squad::pathHandler() {
+	int distThreshold = 10;
+	if (currentPath.empty() == false && currentPathIdx < currentPath.size()) {
+		BWAPI::Position target = BWAPI::Position(currentPath[currentPathIdx]);
+		if (leader->getDistance(target) < distThreshold){
+			currentPathIdx += 1;
+		}
+		else if (leader->getTargetPosition() != target) {
+			leader->attack(target);
+		}
 	}
 }
 
