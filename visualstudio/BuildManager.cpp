@@ -1,8 +1,8 @@
 #include "BuildManager.h"
 #include "ProtoBotCommander.h"
-#include <fstream>
-#include "../src/starterbot/Tools.h"
-#include "../src/starterbot/MapTools.h"
+#include "SpenderManager.h"
+#include "BuildingPlacer.h"
+#include "Builder.h"
 
 using namespace BWAPI;
 using namespace Tools;
@@ -10,7 +10,7 @@ using namespace All;
 using namespace UnitTypes;
 using namespace std;
 
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(this))
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(new SpenderManager(this)), buildingPlacer(new BuildingPlacer(this))
 {
 
 }
@@ -21,11 +21,87 @@ void BuildManager::onStart()
     //Make false at the start of a game.
     std::cout << "Builder Manager Initialized" << "\n";
     buildOrderCompleted = false;
-    spenderManager.onStart();
+    spenderManager->onStart();
+    builders.clear();
 }
 
 void BuildManager::onFrame() {
-    spenderManager.OnFrame();
+    spenderManager->OnFrame();
+
+    //build order check here
+
+    //For now get old functionality to work.
+    /*for (std::vector<Builder>::iterator builder = builders.begin(); builder != builders.end();)
+    {
+        builder->onFrame();
+    }*/
+
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    {
+        if (it->getUnitReference()->isConstructing())
+        {
+            it++;
+            continue;
+        }
+
+
+        //Need to check if we are able to build. Units on tiles can cause buildings NOT to warp in
+        if (it->getUnitReference()->isIdle() || it->getUnitReference()->getPosition() == it->positionToBuild)
+        {
+            //std::cout << "In position to build " << it->building << "\n";
+            if (!it->getUnitReference()->canBuild(it->buildingToConstruct))
+            {
+                it++;
+                continue;
+            }
+
+            const bool buildSuccess = it->getUnitReference()->build(it->buildingToConstruct, BWAPI::TilePosition(it->positionToBuild));
+
+            //Get new position to build if we cannot build at this place.
+            if (!buildSuccess)
+            {
+                //std::cout << "BUILD UNSUCCESSFUL, trying another spot\n";
+                it->positionToBuild = buildingPlacer->getPositionToBuild(it->buildingToConstruct);
+                it++;
+                continue;
+            }
+            //std::cout << (it->probe->isConstructing()) << "\n";
+            //std::cout << "Build command returned true, constructing...\n";
+
+            //Need to utilize BWEB's reserving tile system to improve building placement even further.
+            //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
+
+            if (it->buildingToConstruct == BWAPI::UnitTypes::Protoss_Assimilator)
+            {
+                //Small chance for assimlator to not be build will try to fix this later.
+                it = builders.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+        else
+        {
+            //Testing this cause the move command has a small chance to fail
+            if (it->getUnitReference()->getOrder() != BWAPI::Orders::Move)
+            {
+                //std::cout << "Move command failed, trying again\n";
+                it->getUnitReference()->move(it->positionToBuild);
+            }
+
+            it++;
+        }
+    }
+
+
+    //Debug
+    for (BWAPI::Unit building : buildings)
+    {
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
+    }
+
+    //Remove everything under here
     buildQueue.clear();
 
     if (!buildOrderCompleted)
@@ -42,25 +118,44 @@ void BuildManager::onFrame() {
     //{
     //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
     //}
-
-    for (BWAPI::Unit building : buildings)
-    {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }
 }
 
 void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
     if (unit == nullptr) return;
 
-    spenderManager.onUnitCreate(unit);
+    //Remove worker once a building is being warped in.
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
+    {
+        if (unit->getType() == it->buildingToConstruct)
+        {
+            it = builders.erase(it);
+            break;
+        }
+    }
+
+    spenderManager->onUnitCreate(unit);
 
     if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon) buildingWarps.insert(unit);
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    spenderManager.onUnitDestroy(unit);
+    spenderManager->onUnitDestroy(unit);
+
+    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    {
+        if (it->getUnitReference()->getID() == unit->getID())
+        {
+            const BWAPI::Unit unitAvalible = getUnitToBuild(it->positionToBuild);
+            it->setUnitReference(unitAvalible);
+            break;
+        }
+        else
+        {
+            it++;
+        }
+    }
 
     if (unit->getPlayer() != BWAPI::Broodwar->self())
         return;
@@ -95,67 +190,80 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
-    spenderManager.onUnitMorph(unit);
+    spenderManager->onUnitMorph(unit);
 }
 
 void BuildManager::onUnitComplete(BWAPI::Unit unit)
 {
     buildings.insert(unit);
-    spenderManager.onUnitComplete(unit);
+    spenderManager->onUnitComplete(unit);
 }
 
 void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 {
-    spenderManager.onUnitDiscover(unit);
+    spenderManager->onUnitDiscover(unit);
 }
 #pragma endregion
 
 #pragma region Spender Manager Methods
 void BuildManager::buildBuilding(BWAPI::UnitType building)
 {
-    spenderManager.addRequest(building);
+    spenderManager->addRequest(building);
 }
 
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
-    spenderManager.addRequest(unitToTrain, unit);
+    spenderManager->addRequest(unitToTrain, unit);
 }
 
 void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
 {
-    spenderManager.addRequest(unit, upgrade);
+    spenderManager->addRequest(unit, upgrade);
 }
 
 bool BuildManager::alreadySentRequest(int unitID)
 {
-    return spenderManager.buildingAlreadyMadeRequest(unitID);
+    return spenderManager->buildingAlreadyMadeRequest(unitID);
 }
 
 bool BuildManager::requestedBuilding(BWAPI::UnitType building)
 {
-    return spenderManager.requestedBuilding(building);
+    return spenderManager->requestedBuilding(building);
 }
 
 bool BuildManager::upgradeAlreadyRequested(BWAPI::Unit building)
 {
-    return spenderManager.upgradeAlreadyRequested(building);
+    return spenderManager->upgradeAlreadyRequested(building);
 }
 
 bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
 {
-    return spenderManager.checkUnitIsPlanned(building);
+    return spenderManager->checkUnitIsPlanned(building);
 }
 
 bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
-    return spenderManager.checkWorkerIsConstructing(unit);
+    for (Builder& builder : builders)
+    {
+        if (builder.getUnitReference()->getID() == unit->getID()) return true;
+    }
+
+    return false;
 }
 
 int BuildManager::checkAvailableSupply()
 {
-    return spenderManager.plannedSupply();
+    return spenderManager->plannedSupply();
 }
 #pragma endregion
+
+void BuildManager::createBuilder(BWAPI::Unit unit, BWAPI::UnitType building, BWAPI::Position positionToBuild)
+{
+    Builder temp = Builder(unit, building);
+    temp.positionToBuild = positionToBuild;
+
+    builders.push_back(temp);
+}
 
 bool BuildManager::isBuildOrderCompleted()
 {
@@ -442,4 +550,10 @@ BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
 std::vector<NexusEconomy> BuildManager::getNexusEconomies()
 {
     return commanderReference->getNexusEconomies();
+}
+
+std::vector<Builder> BuildManager::getBuilders()
+{
+    //Need to check if this is not passing back a reference.
+    return builders;
 }

@@ -2,11 +2,15 @@
 #include <vector>
 #include <string>
 #include <BWAPI.h>
-#include <variant>
-#include "SpenderManager.h"
+#include <fstream>
+
+#include "../src/starterbot/MapTools.h"
 #include "../src/starterbot/Tools.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
+#include "Builder.h"
 
+class SpenderManager;
+class BuildingPlacer;
 class ProtoBotCommander;
 class NexusEconomy;
 
@@ -14,7 +18,9 @@ class BuildManager
 {
 public:
     ProtoBotCommander* commanderReference;
-    SpenderManager spenderManager;
+    SpenderManager* spenderManager;
+    BuildingPlacer* buildingPlacer;
+    std::vector<Builder> builders;
 
     bool buildOrderCompleted = false;
 
@@ -51,6 +57,9 @@ public:
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
+
+    //Builder helper methods
+    std::vector<Builder> getBuilders();
     
 
     void PvP();
@@ -62,6 +71,7 @@ public:
     void runBuildQueue();
     void runUnitQueue();
     void pumpUnit();
+    void createBuilder(BWAPI::Unit, BWAPI::UnitType, BWAPI::Position);
 
     bool zealotUnitPump = false;
     std::map<BWAPI::UnitType, int>& getBuildQueue();
