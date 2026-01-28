@@ -45,9 +45,13 @@ bin/./src/starterbot/StarterBot.cpp.o: src/starterbot/StarterBot.cpp \
  src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h \
  src/starterbot/../../visualstudio/CombatManager.h \
  src/starterbot/../../visualstudio/Squad.h \
+ src/starterbot/../../visualstudio/A-StarPathfinding.h \
  src/starterbot/../../visualstudio/InformationManager.h \
  src/starterbot/../../visualstudio/InfluenceMap.h \
  src/starterbot/../../visualstudio/ScoutingManager.h \
+ src/starterbot/../../visualstudio/ScoutingProbe.h \
+ src/starterbot/../../visualstudio/ScoutingZealot.h \
+ src/starterbot/../../visualstudio/ScoutingObserver.h \
  src/starterbot/../../visualstudio/EconomyManager.h \
  src/starterbot/../../visualstudio/NexusEconomy.h
 src/starterbot/StarterBot.h:
@@ -126,8 +130,12 @@ src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Sour
 src/starterbot/../../visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h:
 src/starterbot/../../visualstudio/CombatManager.h:
 src/starterbot/../../visualstudio/Squad.h:
+src/starterbot/../../visualstudio/A-StarPathfinding.h:
 src/starterbot/../../visualstudio/InformationManager.h:
 src/starterbot/../../visualstudio/InfluenceMap.h:
 src/starterbot/../../visualstudio/ScoutingManager.h:
+src/starterbot/../../visualstudio/ScoutingProbe.h:
+src/starterbot/../../visualstudio/ScoutingZealot.h:
+src/starterbot/../../visualstudio/ScoutingObserver.h:
 src/starterbot/../../visualstudio/EconomyManager.h:
 src/starterbot/../../visualstudio/NexusEconomy.h:

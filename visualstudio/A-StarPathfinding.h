@@ -33,7 +33,7 @@ struct Node {
 	}
 };
 
-static class AStar {
+class AStar {
 private:
 	vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
 

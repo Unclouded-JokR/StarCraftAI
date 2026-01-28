@@ -1,18 +1,18 @@
 #pragma once
-#include "StrategyManager.h"
-#include "EconomyManager.h"
-#include "InformationManager.h"
-#include "ScoutingManager.h"
-#include "BuildManager.h"
-#include "CombatManager.h"
-#include "SpenderManager.h"
-#include "TimerManager.h"
-#include "../../src/starterbot/MapTools.h"
-#include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
 #include <vector> 
 #include <cstdlib>
 #include <variant>
+
+#include "StrategyManager.h"
+#include "EconomyManager.h"
+#include "InformationManager.h"
+#include "ScoutingManager.h"
+#include "CombatManager.h"
+#include "TimerManager.h"
+#include "BuildManager.h"
+#include "../../src/starterbot/MapTools.h"
+#include "../../src/starterbot/Tools.h"
 #include "../../BWEM/src/bwem.h"
 
 #define FRAMES_PER_SECOND 24
