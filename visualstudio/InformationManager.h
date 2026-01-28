@@ -144,6 +144,11 @@ public:
     void printKnownEnemyBuildings() const;
     void printTrackedEnemies() const;
 
+	FriendlyUnitCounter getFriendlyUnitCounter() const { return friendlyUnitCounter; }
+	FriendlyBuildingCounter getFriendlyBuildingCounter() const { return friendlyBuildingCounter; }
+	FriendlyTechCounter getFriendlyTechCounter() const { return friendlyTechCounter; }
+	FriendlyUpgradeCounter getFriendlyUpgradeCounter() const { return friendlyUpgradeCounter; }
+
     // Returns a list of BWEM base locations that currently have no nearby resource depot
     std::vector<const BWEM::Base*> FindUnownedBases() const;
     // Returns a list of BWEM bases that have one of our resource depots nearby

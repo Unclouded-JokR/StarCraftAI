@@ -43,3 +43,15 @@ bin_linux/src
 !libgcc_s_dw2-1.dll
 !libstdc++-6.dll
 .vs/*
+bin/visualstudio/A-StarPathfinding.cpp.d
+bin/visualstudio/BWEB/
+bin/visualstudio/InfluenceMap.cpp.d
+bin/visualstudio/NexusEconomy.cpp.d
+bin/visualstudio/ScoutingDragoon.cpp.d
+bin/visualstudio/ScoutingObserver.cpp.d
+bin/visualstudio/ScoutingProbe.cpp.d
+bin/visualstudio/ScoutingZealot.cpp.d
+bin/visualstudio/SpenderManager.cpp.d
+bin/visualstudio/Squad.cpp.d
+bin/visualstudio/Timer.cpp.d
+bin/visualstudio/TimerManager.cpp.d
