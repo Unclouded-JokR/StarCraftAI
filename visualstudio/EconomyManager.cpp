@@ -3,6 +3,8 @@
 #include "NexusEconomy.h"
 #include "ProtoBotCommander.h"
 
+//hi
+
 EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 
