@@ -76,6 +76,8 @@ public:
         return int(combatZealots_.size() + combatDragoons_.size());
     }
 
+    BWAPI::Unit ScoutingManager::getAvaliableDetectors();
+
 private:
     ProtoBotCommander* commanderRef = nullptr;
 
@@ -106,6 +108,7 @@ private:
     // helpers for observer slots
     int  reserveObserverSlot(int unitId);   // returns slot [0..3] or -1
     void releaseObserverSlot(int unitId);
+
 
 
 };
