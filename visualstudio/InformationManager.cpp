@@ -19,6 +19,7 @@ void InformationManager::onFrame()
 {
     checkResearch();
     checkUpgrades();
+
     //TestDrawBaseOwnership();
 	if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
     {

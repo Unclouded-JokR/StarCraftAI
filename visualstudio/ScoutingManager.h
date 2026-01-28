@@ -76,7 +76,7 @@ public:
         return int(combatZealots_.size() + combatDragoons_.size());
     }
 
-    BWAPI::Unit ScoutingManager::getAvaliableDetectors();
+    BWAPI::Unit getAvaliableDetectors();
 
 private:
     ProtoBotCommander* commanderRef = nullptr;
