@@ -31,7 +31,8 @@ bin/./visualstudio/ScoutingManager.cpp.o: \
  BWEM/src/tiles.h BWEM/src/area.h BWEM/src/bwapiExt.h BWEM/src/utils.h \
  BWEM/src/defs.h BWEM/src/cp.h BWEM/src/base.h BWEM/src/neutral.h \
  BWEM/src/gridMap.h BWEM/src/examples.h BWEM/src/exampleWall.h \
- BWEM/src/mapPrinter.h BWEM/src/mapDrawer.h \
+ BWEM/src/mapPrinter.h BWEM/src/mapDrawer.h visualstudio/ScoutingProbe.h \
+ visualstudio/ScoutingZealot.h visualstudio/ScoutingObserver.h \
  visualstudio/ProtoBotCommander.h visualstudio/StrategyManager.h \
  visualstudio/EconomyManager.h visualstudio/../src/starterbot/Tools.h \
  visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/BWEB.h \
@@ -42,7 +43,9 @@ bin/./visualstudio/ScoutingManager.cpp.o: \
  visualstudio/NexusEconomy.h visualstudio/InformationManager.h \
  visualstudio/InfluenceMap.h visualstudio/BuildManager.h \
  visualstudio/SpenderManager.h visualstudio/CombatManager.h \
- visualstudio/Squad.h src/bwapi/../../src/starterbot/MapTools.h \
+ visualstudio/Squad.h visualstudio/A-StarPathfinding.h \
+ visualstudio/TimerManager.h visualstudio/Timer.h \
+ src/bwapi/../../src/starterbot/MapTools.h \
  src/bwapi/../../src/starterbot/Grid.hpp src/bwapi/../../BWEM/src/bwem.h
 visualstudio/ScoutingManager.h:
 src/bwapi/include/BWAPI.h:
@@ -107,6 +110,9 @@ BWEM/src/examples.h:
 BWEM/src/exampleWall.h:
 BWEM/src/mapPrinter.h:
 BWEM/src/mapDrawer.h:
+visualstudio/ScoutingProbe.h:
+visualstudio/ScoutingZealot.h:
+visualstudio/ScoutingObserver.h:
 visualstudio/ProtoBotCommander.h:
 visualstudio/StrategyManager.h:
 visualstudio/EconomyManager.h:
@@ -123,6 +129,9 @@ visualstudio/BuildManager.h:
 visualstudio/SpenderManager.h:
 visualstudio/CombatManager.h:
 visualstudio/Squad.h:
+visualstudio/A-StarPathfinding.h:
+visualstudio/TimerManager.h:
+visualstudio/Timer.h:
 src/bwapi/../../src/starterbot/MapTools.h:
 src/bwapi/../../src/starterbot/Grid.hpp:
 src/bwapi/../../BWEM/src/bwem.h:

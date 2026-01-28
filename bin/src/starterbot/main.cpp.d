@@ -65,10 +65,16 @@ bin/./src/starterbot/main.cpp.o: src/starterbot/main.cpp \
  src/starterbot/../../visualstudio/InformationManager.h \
  src/starterbot/../../visualstudio/InfluenceMap.h \
  src/starterbot/../../visualstudio/ScoutingManager.h \
+ src/starterbot/../../visualstudio/ScoutingProbe.h \
+ src/starterbot/../../visualstudio/ScoutingZealot.h \
+ src/starterbot/../../visualstudio/ScoutingObserver.h \
  src/starterbot/../../visualstudio/BuildManager.h \
  src/starterbot/../../visualstudio/SpenderManager.h \
  src/starterbot/../../visualstudio/CombatManager.h \
  src/starterbot/../../visualstudio/Squad.h \
+ src/starterbot/../../visualstudio/A-StarPathfinding.h \
+ src/starterbot/../../visualstudio/TimerManager.h \
+ src/starterbot/../../visualstudio/Timer.h \
  src/bwapi/../../src/starterbot/MapTools.h \
  src/bwapi/../../src/starterbot/Grid.hpp src/bwapi/../../BWEM/src/bwem.h \
  src/starterbot/ReplayParser.h
@@ -168,10 +174,16 @@ src/starterbot/../../visualstudio/NexusEconomy.h:
 src/starterbot/../../visualstudio/InformationManager.h:
 src/starterbot/../../visualstudio/InfluenceMap.h:
 src/starterbot/../../visualstudio/ScoutingManager.h:
+src/starterbot/../../visualstudio/ScoutingProbe.h:
+src/starterbot/../../visualstudio/ScoutingZealot.h:
+src/starterbot/../../visualstudio/ScoutingObserver.h:
 src/starterbot/../../visualstudio/BuildManager.h:
 src/starterbot/../../visualstudio/SpenderManager.h:
 src/starterbot/../../visualstudio/CombatManager.h:
 src/starterbot/../../visualstudio/Squad.h:
+src/starterbot/../../visualstudio/A-StarPathfinding.h:
+src/starterbot/../../visualstudio/TimerManager.h:
+src/starterbot/../../visualstudio/Timer.h:
 src/bwapi/../../src/starterbot/MapTools.h:
 src/bwapi/../../src/starterbot/Grid.hpp:
 src/bwapi/../../BWEM/src/bwem.h:
