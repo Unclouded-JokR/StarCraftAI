@@ -298,9 +298,6 @@ void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 
 void ProtoBotCommander::drawDebugInformation()
 {
-	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	if (buildManager.isBuildOrderCompleted())
-
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
