@@ -6,6 +6,7 @@
 #include "BuildManager.h"
 #include "CombatManager.h"
 #include "SpenderManager.h"
+#include "TimerManager.h"
 #include "../../src/starterbot/MapTools.h"
 #include "../../src/starterbot/Tools.h"
 #include <BWAPI.h>
@@ -18,6 +19,14 @@
 
 using namespace BWEM;
 
+namespace
+{
+	auto& theMap = BWEM::Map::Instance();
+
+	// 2:15 in frames
+	constexpr int kCombatScoutFrame = 3240;
+}
+
 struct EnemyLocations {
 	std::optional<BWAPI::TilePosition> main;
 	std::optional<BWAPI::TilePosition> natural;
@@ -29,6 +38,7 @@ class ProtoBotCommander
 {
 public:
 	MapTools m_mapTools;
+	TimerManager timerManager;
 	EconomyManager economyManager;
 	InformationManager informationManager;
 	ScoutingManager scoutingManager;
@@ -50,6 +60,7 @@ public:
 	void onFrame();
 	void onEnd(bool isWinner);
 	void onUnitDestroy(BWAPI::Unit unit);
+	void onUnitDiscover(BWAPI::Unit unit);
 	void onUnitMorph(BWAPI::Unit unit);
 	void onSendText(std::string text);
 	void onUnitCreate(BWAPI::Unit unit);
@@ -58,8 +69,6 @@ public:
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
-	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
-	bool checkUnitIsPlanned(BWAPI::UnitType building);
 
 	/*
 	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
@@ -67,7 +76,8 @@ public:
 	std::string enemyRaceCheck();
 
 	//Ecconomy Manager Methods
-	BWAPI::Unit getUnitToBuild();
+	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
+	std::vector<NexusEconomy> getNexusEconomies();
 	//BWAPI::Unitset getAllUnitsAssignedToNexus();
 
 	//Information Manager Methods
@@ -79,11 +89,15 @@ public:
 	void onEnemyNaturalFound(const BWAPI::TilePosition& tp);
 
 	//Build Manager Methods
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
+	bool checkUnitIsPlanned(BWAPI::UnitType building);
 	bool buildOrderCompleted();
 	bool requestedBuilding(BWAPI::UnitType building);
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 	void requestBuild(BWAPI::UnitType building);
 	bool alreadySentRequest(int unitID);
+	bool checkWorkerIsConstructing(BWAPI::Unit);
+	int checkAvailableSupply();
 
 	//Scouting
 	BWAPI::Unit getUnitToScout();

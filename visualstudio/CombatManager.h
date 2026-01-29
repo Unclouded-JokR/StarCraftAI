@@ -1,6 +1,7 @@
 #pragma once
 #include <BWAPI.h>
 #include "Squad.h"
+#include "A-StarPathfinding.h"
 
 class ProtoBotCommander;
 

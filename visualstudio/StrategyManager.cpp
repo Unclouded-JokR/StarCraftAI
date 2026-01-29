@@ -2,8 +2,8 @@
 #include "ProtoBotCommander.h"
 #include <BWAPI.h>
 
-int previousFrameSecond = 0;
-std::vector<int> expansionTimes = { 5, 10, 20, 30, 40 , 50 };
+int expansionTimes[9] = { 1, 2, 3, 5, 8, 13, 21, 34, 55 };
+int mineralsToExpand = 3000;
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
 int frameSinceLastBuild = 0;
@@ -210,7 +210,6 @@ StrategyDenialState StrategyManager::denialState("Denial");
 StrategyRageState StrategyManager::rageState("Rage");
 StrategyAngryState StrategyManager::angryState("Angry");
 
-
 StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 	StrategyManager::currentState = &StrategyManager::contentState;
@@ -218,16 +217,30 @@ StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : comman
 
 std::string StrategyManager::onStart()
 {
-	std::cout << "StrategyManager is a go!" << '\n';
-	currentState->enter(*this);
+	std::cout << "Strategy Manager Initialized" << '\n';
+	//currentState->enter(*this);
 
 	//Test logic to select a random build order that will be passed to the strategy manager. We can take into account the state the bot was in when it lost in later iterations.
-	std::vector<int> myVector = { 10, 20, 30, 40, 50 };
+	/*std::vector<int> myVector = { 10, 20, 30, 40, 50 };
 	const size_t test = myVector.size();
-	const int chooseRandBuildOrder = rand() % test;
+	const int chooseRandBuildOrder = rand() % test;*/
+
+	//Reset Static Variables
+	minutesPassedIndex = 0;
+	frameSinceLastScout = 0;
+	frameSinceLastBuild = 0;
+	mineralsToExpand = 3000;
+
 
 	//return empty string
 	return "";
+}
+
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
+{
+	return (!commanderReference->requestedBuilding(type)
+		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
+			|| commanderReference->checkUnitIsPlanned(type)));
 }
 
 Action StrategyManager::onFrame()
@@ -238,154 +251,228 @@ Action StrategyManager::onFrame()
 
 	// time bookkeeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	// const int seconds = frame / FRAMES_PER_SECOND;
+	const int seconds = frame / FRAMES_PER_SECOND;
 
+
+	#pragma region Scout
 	// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+	/*if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;                 // <-- ensure we actually send the action
-	}
+	}*/
+	#pragma endregion
 
 	// from here on, build logic etc.
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
 
-	if (!buildOrderCompleted) return action;
-
-#pragma region Expand
-	//Check if we should build a pylon
-	if (supplyUsed + 2 == totalSupply && !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Pylon)
-		&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Pylon) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Pylon)))
+	#pragma region Expand
+	if (buildOrderCompleted)
 	{
-		Expand actionToTake;
-		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
-			
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Expand;
-		return action;
-	}
-
-	//Check for assimilators on nexus economies here.
-	/*else if(workerSet != nullptr)
-	{
-		Exapnd action;
-		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
-	}*/
-
-	if (!commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Nexus))
-	{
-		//Have ridiculous amount of minerals
-		if (BWAPI::Broodwar->self()->minerals() > 3000 
-			&& !(commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Nexus) || commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Nexus)))
+		//Check if we should build a pylon
+		if (commanderReference->checkAvailableSupply() <= 3 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
 		{
+			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
 		}
 
-		//Add expansion times here
-	}
-
-	/*else if(workerSet != nullptr)
-	{
-		Exapnd action;
-		action.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
-	}*/
-	//If we have a stock pile of minerals
-	/*else if (BWAPI::Broodwar->self()->minerals() > 3000)
-	{
-		Expand actionToTake;
-		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
-
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Expand;
-		return action;
-	}
-	else if (buildOrderCompleted)
-	{
-		if (minutesPassedIndex < expansionTimes.size() && seconds / 60 > expansionTimes.at(minutesPassedIndex))
+		//Check for assimilators on nexus economies here.
+		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+		for (const NexusEconomy& nexusEconomy : nexusEconomies)
 		{
-			minutesPassedIndex++;
+			if (nexusEconomy.vespeneGyser != nullptr
+				&& nexusEconomy.assimilator == nullptr
+				&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
+				&& nexusEconomy.lifetime >= 500
+				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
+			{
+				std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 
-			Expand actionToTake;
-			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
+		}
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
+		{
+			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
+			{
+				mineralsToExpand * 2.5;
+				std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
+			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
+				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
+			{
+				std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
+
+				minutesPassedIndex++;
+
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}*/
+		}
+	}
+	#pragma endregion
+
+	#pragma region Build
+	if (buildOrderCompleted)
+	{
+		const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
+		int gatewayCount = 0;
+		int templarArchivesCount = 0;
+		int citadelCount = 0;
+		int forgeCount = 0;
+		int cyberneticsCount = 0;
+		int stargateCount = 0;
+
+		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+		int completedNexusEconomy = 0;
+
+		for (NexusEconomy nexusEconomy : nexusEconomies)
+		{
+			/*
+			* Nexus Economy considered complete if
+			*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
+			*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
+			*/
+			if ((nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size())
+				|| (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator != nullptr))
+			{
+				completedNexusEconomy++;
+			}
+		}
+
+		for (const BWAPI::Unit unit : units)
+		{
+			const BWAPI::UnitType temp = unit->getType();
+
+			if (!unit->isCompleted()) continue;
+
+			switch (temp)
+			{
+			case BWAPI::UnitTypes::Protoss_Gateway:
+				gatewayCount++;
+				break;
+			case BWAPI::UnitTypes::Protoss_Templar_Archives:
+				templarArchivesCount++;
+				break;
+			case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+				citadelCount++;
+				break;
+			case BWAPI::UnitTypes::Protoss_Forge:
+				forgeCount++;
+				break;
+			case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+				cyberneticsCount++;
+				break;
+			case BWAPI::UnitTypes::Protoss_Stargate:
+				stargateCount++;
+				break;
+			}
+		}
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
+		{
+			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
+
+			if (gatewayCount < completedNexusEconomy * 4)
+			{
+				std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
+				Build actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Build;
+				return action;
+			}
+		}
+
+		if (gatewayCount < 1) return action;
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && forgeCount <= 3 && forgeCount != completedNexusEconomy)
+		{
+			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Forge;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
 			return action;
 		}
-	}*/
-#pragma endregion
 
-	//#pragma region Build Anti-Air
-	//const std::set<BWAPI::Unit>& knownEnemyUnits = commanderReference->getKnownEnemyUnits();
-	//const std::map<BWAPI::Unit, EnemyBuildingInfo>& knownEnemyBuildings = commanderReference->getKnownEnemyBuildings();
+		if (gatewayCount < 2) return action;
 
-	//for (const BWAPI::Unit unit : knownEnemyUnits)
-	//{
-	//	if (unit->isFlying())
-	//	{
-	//		//Build anti air around base
-	//	}
-	//}
+		//Removing stargares for now.
+		/*if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Stargate) && cyberneticsCount == 1 && stargateCount != (gatewayCount / 2))
+		{
+			std::cout << "BUILD ACTION: Requesting to Stargate\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
 
-	//for (const auto building : knownEnemyBuildings)
-	//{
-	//	if (building.first->isFlying())
-	//	{
-	//		//Build anti air around base
-	//	}
-	//}
-	//#pragma endregion
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}*/
 
-	//#pragma region Scout
-	//	if (buildOrderCompleted && frame - frameSinceLastScout >= 200)
-	//	{
-	//		frameSinceLastScout = frame;
-	//		Scout actionToTake;
-	//
-	//		action.commanderAction = actionToTake;
-	//		action.type = ActionType::Action_Scout;
-	//		return action;
-	//	}
-	//	#pragma endregion
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && cyberneticsCount <= 3 && cyberneticsCount != completedNexusEconomy)
+		{
+			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
 
-		//#pragma region Building
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
 
-		////Add building logic here, build tons of gateways and check to make sure we are not building too many upgrades.
-		//if (buildOrderCompleted && (frame - frameSinceLastBuild) >= 50)
-		//{
-		//	frameSinceLastBuild = frame;
-		//	const int buildingToBuild = rand() % 100;
-		//	Build actionToTake;
-		//	action.type = Action_Build;
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && citadelCount <= 3 && cyberneticsCount == 1 && citadelCount != completedNexusEconomy)
+		{
+			std::cout << "BUILD ACTION: Requesting to warp Citadel\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
 
-		//	if (buildingToBuild <= 60)
-		//	{
-		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
-		//	}
-		//	else if (buildingToBuild <= 80)
-		//	{
-		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-		//	}
-		//	else
-		//	{
-		//		actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Stargate;
-		//	}
-		//	action.commanderAction = actionToTake;
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
 
-		//	return action;
-		//}
-		//
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && templarArchivesCount <= 3 && citadelCount == 1 && templarArchivesCount != completedNexusEconomy)
+		{
+			std::cout << "BUILD ACTION: Requesting to warp Archives\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Templar_Archives;
 
-		//#pragma endregion
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
+	}
+	#pragma endregion
 
-
-		//StrategyManager::printBoredomMeter();
+	//StrategyManager::printBoredomMeter();
 
 	return action;
 }

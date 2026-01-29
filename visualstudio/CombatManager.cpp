@@ -1,6 +1,7 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
 #include "../src/starterbot/Tools.h"
+#include "A-StarPathfinding.h"
 #include "Squad.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
@@ -9,17 +10,37 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 
 void CombatManager::onStart(){
 	std::map<int, int> unitSquadMap;
-}
 
-void CombatManager::onFrame() {
 	// Only for testing on microtesting map
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
-		if (unit->getType().isWorker() || unit->getType().isBuilding()) {
+		if (unit->getType().isWorker() || unit->getType().isBuilding()
+			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
 			continue;
 		}
 		if (commanderReference->scoutingManager.isScout(unit)) {
 			continue;
 		} 
+		if (isAssigned(unit) == false) {
+			assignUnit(unit);
+		}
+	}
+
+	for (auto& squad : Squads) {
+		squad.attack(squad.units.getPosition());
+	}
+	drawDebugInfo();
+}
+
+void CombatManager::onFrame() {
+	// Only for testing on microtesting map
+	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
+		if (unit->getType().isWorker() || unit->getType().isBuilding()
+			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
+			continue;
+		}
+		if (commanderReference->scoutingManager.isScout(unit)) {
+			continue;
+		}
 		if (isAssigned(unit) == false) {
 			assignUnit(unit);
 		}

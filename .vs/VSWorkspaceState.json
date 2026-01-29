@@ -1,10 +1,10 @@
 {
   "ExpandedNodes": [
     "",
+    "\\BWEM",
     "\\src",
-    "\\src\\starterbot",
     "\\visualstudio"
   ],
-  "SelectedNode": "\\visualstudio\\EconomyManager.cpp",
+  "SelectedNode": "\\visualstudio\\BuildManager.cpp",
   "PreviewInSolutionExplorer": false
 }

@@ -14,14 +14,23 @@ public:
 	std::vector<NexusEconomy> nexusEconomies;
 
 	EconomyManager(ProtoBotCommander* commanderReference);
-	void OnFrame();
+
+	//BWAPI EVENTS
+	void onStart();
+	void onFrame();
 	void onUnitDestroy(BWAPI::Unit unit);
+
+	//Nexus Economy Methods
 	void assignUnit(BWAPI::Unit unit);
-	bool checkAssimilator();
-	BWAPI::Unit getAvalibleWorker();
+	std::vector<NexusEconomy> getNexusEconomies();
+	void getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomy);
+	void resourcesDepletedTranfer(BWAPI::Unitset workers, NexusEconomy& nexusEconomy);
+	BWAPI::Unit getAvalibleWorker(BWAPI::Position buildLocation);
 	BWAPI::Unit getUnitScout();
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
+
+	//Requets to Commander
 	bool checkRequestAlreadySent(int unitID);
-	void destroyedNexus(BWAPI::Unitset worker, int nexus);
-	BWAPI::Unitset getMoreWorkers(int moreWorkers);
+	bool workerIsConstructing(BWAPI::Unit);
 };
+

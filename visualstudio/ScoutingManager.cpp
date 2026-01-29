@@ -2,30 +2,68 @@
 #include "ProtoBotCommander.h"
 
 ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
-    : commanderRef(commander) {
+    : commanderRef(commander) 
+{
 }
 
 void ScoutingManager::onStart() 
 {
-    std::visit([&](auto& b) {
+    std::cout << "Scouting Manager Initialized\n";
+    drawScoutTags();
+}
+
+static void visit_start(BehaviorVariant& sb) 
+{
+    std::visit([](auto& b) 
+        {
         using T = std::decay_t<decltype(b)>;
         if constexpr (!std::is_same_v<T, std::monostate>) b.onStart();
-        }, behavior);
+        }, sb);
+}
 
-    drawScoutTags();
+static void visit_frame(BehaviorVariant& sb)
+{
+    std::visit([](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.onFrame();
+        }, sb);
+}
+
+static void visit_assign(BehaviorVariant& sb, BWAPI::Unit u)
+{
+    std::visit([&](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.assign(u);
+        }, sb);
+}
+
+static void visit_setEnemyMain(BehaviorVariant& sb, const BWAPI::TilePosition& tp)
+{
+    std::visit([&](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.setEnemyMain(tp);
+        }, sb);
+}
+
+static void visit_onUnitDestroy(BehaviorVariant& sb, BWAPI::Unit u)
+{
+    std::visit([&](auto& b) 
+        {
+        using T = std::decay_t<decltype(b)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) b.onUnitDestroy(u);
+        }, sb);
 }
 
 void ScoutingManager::onFrame() 
 {
-    std::visit([&](auto& b) 
+    // iterate all active behaviors; each owns its own state
+    for (auto& [id, sb] : behaviors_) 
     {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (!std::is_same_v<T, std::monostate>) 
-        {
-            b.onFrame();
-        }
-
-    }, behavior);
+        visit_frame(sb);
+    }
 
     drawScoutTags();
 }
@@ -33,38 +71,65 @@ void ScoutingManager::onFrame()
 void ScoutingManager::assignScout(BWAPI::Unit unit) 
 {
     if (!unit || !unit->exists()) return;
-    constructBehaviorFor(unit);
-    markScout(unit);
-    std::visit([&](auto& b) 
-        {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (!std::is_same_v<T, std::monostate>) 
-        {
-            b.onStart();
-            b.assign(unit);
+
+    const auto t = unit->getType();
+
+    if (t.isWorker())
+    {
+        if (workerScout_ && workerScout_->exists()) return;
+    }
+    else if (t == BWAPI::UnitTypes::Protoss_Observer)
+    {
+        if (!canAcceptObserverScout()) return;
+        int slot = reserveObserverSlot(unit->getID());
+        if (slot < 0) return;
+    }
+    else
+    {
+        // zealot or dragoon
+        if (!canAcceptCombatScout(unit->getType())) return;
+    }
+    // build a behavior instance for THIS unit and store by id
+    BehaviorVariant sb = constructBehaviorFor(unit);
+    visit_start(sb);
+    visit_assign(sb, unit);
+
+    if (t == BWAPI::UnitTypes::Protoss_Observer) 
+    {
+        // find slot we reserved (it’s in observerSlotOwner_)
+        int slot = -1;
+        for (int i = 0; i < 4; ++i) if (observerSlotOwner_[i] == unit->getID()) { slot = i; break; }
+        if (slot >= 0) {
+            if (auto* ob = std::get_if<ScoutingObserver>(&sb)) 
+            {
+                ob->setObserverSlot(slot);
+            }
+            observerScouts_.push_back(unit);
         }
-        }, behavior);
+    }
+
+    // cache into the map (overwrite if re-assigning the same id)
+    behaviors_[unit->getID()] = std::move(sb);
+
+    // bookkeeping
+    markScout(unit);
 }
 
 bool ScoutingManager::hasScout() const 
 {
-    return std::visit([&](auto const& b)->bool 
-        {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (std::is_same_v<T, std::monostate>) return false;
-        else return b.hasScout();
-        }, behavior);
+    if (workerScout_ && workerScout_->exists()) return true;
+    for (auto u : combatZealots_) if (u && u->exists()) return true;
+    for (auto u : combatDragoons_) if (u && u->exists()) return true;
+    return false;
 }
 
 void ScoutingManager::setEnemyMain(const BWAPI::TilePosition& tp) 
 {
     enemyMainCache_ = tp;
     if (commanderRef) commanderRef->onEnemyMainFound(tp);
-    std::visit([&](auto& b) 
-        {   
-            using T = std::decay_t<decltype(b)>;
-            if constexpr (!std::is_same_v<T, std::monostate>) b.setEnemyMain(tp);
-        }, behavior);
+
+    // broadcast to all current behaviors
+    for (auto& [id, sb] : behaviors_) visit_setEnemyMain(sb, tp);
 }
 
 void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp) 
@@ -76,109 +141,217 @@ void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp)
 void ScoutingManager::onUnitDestroy(BWAPI::Unit unit) 
 {
     unmarkScout(unit);
-    std::visit([&](auto& b) 
+    const int id = unit ? unit->getID() : -1;
+    if (id != -1) 
+    {
+        auto it = behaviors_.find(id);
+        if (it != behaviors_.end()) 
         {
-        using T = std::decay_t<decltype(b)>;
-        if constexpr (!std::is_same_v<T, std::monostate>) b.onUnitDestroy(unit);
-        }, behavior);
+            visit_onUnitDestroy(it->second, unit);
+            behaviors_.erase(it);
+        }
+        releaseObserverSlot(id);
+        observerScouts_.erase(std::remove(observerScouts_.begin(), observerScouts_.end(), unit),
+                              observerScouts_.end());
+    }
+
+    for (auto& [_, sb] : behaviors_) visit_onUnitDestroy(sb, unit);
 }
 
-void ScoutingManager::constructBehaviorFor(BWAPI::Unit unit) 
+int ScoutingManager::reserveObserverSlot(int unitId) 
 {
-    const BWAPI::UnitType t = unit->getType();
-
-    if (t == BWAPI::UnitTypes::Protoss_Probe)
+    // priority order is 0..3; pick first free
+    for (int i = 0; i < 4; ++i) 
     {
-        behavior.emplace<ScoutingProbe>(commanderRef, this);
-        BWAPI::Broodwar->printf("[SM] behavior = Probe");
+        if (observerSlotOwner_[i] == -1) { observerSlotOwner_[i] = unitId; return i; }
     }
-    else if (t == BWAPI::UnitTypes::Protoss_Zealot || t == BWAPI::UnitTypes::Protoss_Dragoon)
-    {
-        behavior.emplace<ScoutingZealot>(commanderRef, this);
-        BWAPI::Broodwar->printf("[SM] behavior = Zealot");
-    }
-   /* else if (t == BWAPI::UnitTypes::Protoss_Dragoon)
-    {
-        //behavior.emplace<ScoutingDragoon>(commanderRef, this);
-    }
-    else if (t == BWAPI::UnitTypes::Protoss_Observer)
-    {
-        //behavior.emplace<ScoutingObserver>(commanderRef, this);
-    }*/
-    else 
-    {
-        // default to Probe behavior for now
-        behavior.emplace<ScoutingProbe>(commanderRef, this);
-        BWAPI::Broodwar->printf("[SM] behavior = Fallback->Probe");
-    }
-
-    if (enemyMainCache_) {
-        std::visit([&](auto& b) {
-            using T = std::decay_t<decltype(b)>;
-            if constexpr (!std::is_same_v<T, std::monostate>)
-                b.setEnemyMain(*enemyMainCache_);
-            }, behavior);
-    }
+    return -1;
 }
 
-void ScoutingManager::markScout(BWAPI::Unit u) 
+void ScoutingManager::releaseObserverSlot(int unitId) 
 {
-    const bool isCombat = u && !u->getType().isWorker();
-    markScout(u, isCombat);
+    for (int i = 0; i < 4; ++i) if (observerSlotOwner_[i] == unitId) observerSlotOwner_[i] = -1;
 }
 
-void ScoutingManager::markScout(BWAPI::Unit u, bool isCombat) 
+BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
+{
+    const auto t = unit->getType();
+
+    if (t == BWAPI::UnitTypes::Protoss_Probe) 
+    {
+        ScoutingProbe probe(commanderRef, this);
+        // pass cache if we already know main
+        if (enemyMainCache_) probe.setEnemyMain(*enemyMainCache_);
+        BWAPI::Broodwar->printf("[SM] behavior = Probe for id=%d", unit->getID());
+        return probe;
+    }
+
+    if (t == BWAPI::UnitTypes::Protoss_Zealot || t == BWAPI::UnitTypes::Protoss_Dragoon) 
+    {
+        ScoutingZealot z(commanderRef, this);
+        if (enemyMainCache_) z.setEnemyMain(*enemyMainCache_);
+        BWAPI::Broodwar->printf("[SM] behavior = ZealotBehavior for %s id=%d",
+            t.c_str(), unit->getID());
+        return z;
+    }
+
+    if (t == BWAPI::UnitTypes::Protoss_Observer) 
+    {
+        ScoutingObserver o(commanderRef, this);
+        if (enemyMainCache_) o.setEnemyMain(*enemyMainCache_);
+        BWAPI::Broodwar->printf("[SM] behavior = Observer for id=%d", unit->getID());
+        return o;
+    }
+
+    // fallback
+    ScoutingProbe fallback(commanderRef, this);
+    if (enemyMainCache_) fallback.setEnemyMain(*enemyMainCache_);
+    BWAPI::Broodwar->printf("[SM] behavior = Fallback->Probe for id=%d", unit->getID());
+    return fallback;
+}
+
+BWAPI::Unit ScoutingManager::findUnitById(int id) 
+{
+    for (auto u : BWAPI::Broodwar->self()->getUnits())
+        if (u && u->exists() && u->getID() == id) return u;
+    return nullptr;
+}
+
+void ScoutingManager::markScout(BWAPI::Unit u)
 {
     if (!u || !u->exists()) return;
 
-    if (isCombat) 
-    {
-        if (std::find(combatScouts_.begin(), combatScouts_.end(), u) == combatScouts_.end())
-            combatScouts_.push_back(u);
-    }
-    else 
-    {
-        // only one worker scout; if someone calls this while occupied, ignore
+    if (u->getType().isWorker()) {
         if (!workerScout_) workerScout_ = u;
+        return;
+    }
+
+    if (u->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
+        if ((int)combatZealots_.size() < maxZealotScouts_ &&
+            std::find(combatZealots_.begin(), combatZealots_.end(), u) == combatZealots_.end()) {
+            combatZealots_.push_back(u);
+        }
+        return;
+    }
+
+    if (u->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
+        if ((int)combatDragoons_.size() < maxDragoonScouts_ &&
+            std::find(combatDragoons_.begin(), combatDragoons_.end(), u) == combatDragoons_.end()) {
+            combatDragoons_.push_back(u);
+        }
+        return;
     }
 }
 
-void ScoutingManager::unmarkScout(BWAPI::Unit u) 
+void ScoutingManager::unmarkScout(BWAPI::Unit u)
 {
     if (!u) return;
-    if (workerScout_ == u) workerScout_ = nullptr;
-    combatScouts_.erase(std::remove(combatScouts_.begin(), combatScouts_.end(), u), combatScouts_.end());
+
+    if (workerScout_ == u) {
+        workerScout_ = nullptr;
+        return;
+    }
+
+    if (u->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
+        combatZealots_.erase(std::remove(combatZealots_.begin(), combatZealots_.end(), u),
+            combatZealots_.end());
+        return;
+    }
+
+    if (u->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
+        combatDragoons_.erase(std::remove(combatDragoons_.begin(), combatDragoons_.end(), u),
+            combatDragoons_.end());
+        return;
+    }
+
+    // If type is unknown (edge case), try removing from both
+    combatZealots_.erase(std::remove(combatZealots_.begin(), combatZealots_.end(), u),
+        combatZealots_.end());
+    combatDragoons_.erase(std::remove(combatDragoons_.begin(), combatDragoons_.end(), u),
+        combatDragoons_.end());
 }
 
 bool ScoutingManager::isScout(BWAPI::Unit u) const 
 {
     if (!u) return false;
     if (workerScout_ == u) return true;
-    return std::find(combatScouts_.begin(), combatScouts_.end(), u) != combatScouts_.end();
+    if (std::find(combatZealots_.begin(), combatZealots_.end(), u) != combatZealots_.end()) return true;
+    if (std::find(combatDragoons_.begin(), combatDragoons_.end(), u) != combatDragoons_.end()) return true;
+    if (std::find(observerScouts_.begin(), observerScouts_.end(), u) != observerScouts_.end()) return true;
+    return false;
 }
 
-bool ScoutingManager::isCombatScout(BWAPI::Unit u) const 
+bool ScoutingManager::isCombatScout(BWAPI::Unit u) const
 {
     if (!u) return false;
-    return std::find(combatScouts_.begin(), combatScouts_.end(), u) != combatScouts_.end();
+    if (std::find(combatZealots_.begin(), combatZealots_.end(), u) != combatZealots_.end())
+        return true;
+    if (std::find(combatDragoons_.begin(), combatDragoons_.end(), u) != combatDragoons_.end())
+        return true;
+    return false;
 }
 
 bool ScoutingManager::hasWorkerScout() const { return workerScout_ && workerScout_->exists(); }
-int  ScoutingManager::numCombatScouts() const { return int(combatScouts_.size()); }
 
-void ScoutingManager::drawScoutTags() const 
+void ScoutingManager::drawScoutTags() const
 {
-    // worker
     if (workerScout_ && workerScout_->exists()) 
     {
         const auto p = workerScout_->getPosition();
-        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT");
+        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Worker)");
     }
-    // combats
-    for (auto u : combatScouts_) 
+    for (auto u : combatZealots_) 
     {
         if (!u || !u->exists()) continue;
         const auto p = u->getPosition();
-        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT");
+        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Zealot)");
     }
+    for (auto u : combatDragoons_) 
+    {
+        if (!u || !u->exists()) continue;
+        const auto p = u->getPosition();
+        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Dragoon)");
+    }
+    for (auto u : observerScouts_) 
+    {
+        if (!u || !u->exists()) continue;
+        const auto p = u->getPosition();
+        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 32, "\x10SCOUT (Observer)");
+    }
+}
+
+// Unassign an observer if we have one to give to a squad
+
+BWAPI::Unit ScoutingManager::getAvaliableDetectors()
+{
+    for (auto it = observerScouts_.begin(); it != observerScouts_.end(); ++it)
+    {
+        BWAPI::Unit obs = *it;
+        if (!obs || !obs->exists())
+            continue;
+
+        const int id = obs->getID();
+
+        // 1) Remove behavior so ScoutingManager stops controlling it
+        auto bIt = behaviors_.find(id);
+        if (bIt != behaviors_.end())
+        {
+            // Let the behavior clean itself up
+            visit_onUnitDestroy(bIt->second, obs);
+            behaviors_.erase(bIt);
+        }
+
+        // 2) Release observer slot
+        releaseObserverSlot(id);
+
+        // 3) Remove from scout bookkeeping
+        observerScouts_.erase(it);
+
+        // 4) Done: return unit to combat
+        BWAPI::Broodwar->printf("[SM] Reassigning Observer %d to combat", id);
+        return obs;
+    }
+
+    // No available observers
+    return nullptr;
 }

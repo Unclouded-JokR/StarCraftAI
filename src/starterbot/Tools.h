@@ -5,9 +5,6 @@
 
 namespace Tools
 {
-    enum class PlayerState {
-        None, Self, Enemy, Neutral, All
-    };
     BWAPI::Unit GetClosestUnitTo(BWAPI::Position p, const BWAPI::Unitset& units);
     BWAPI::Unit GetClosestUnitTo(BWAPI::Unit unit, const BWAPI::Unitset& units);
 
@@ -34,7 +31,7 @@ namespace Tools
     int getTotalCount(BWAPI::UnitType);
     int getDeadCount(BWAPI::UnitType);
     bool ExpansionBuild(BWAPI::Unit unit);
-    const BWEB::Station * const getMyNatural();
+    const BWEB::Station* const getMyNatural();
 
     void updateCount();
 
@@ -52,6 +49,4 @@ namespace Tools
     static int total(BWAPI::UnitType t) {
         return Tools::getTotalCount(t);
     }
-
-
 }

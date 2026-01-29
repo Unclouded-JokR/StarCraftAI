@@ -10,24 +10,58 @@ using namespace All;
 using namespace UnitTypes;
 using namespace std;
 
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(commanderReference))
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(SpenderManager(this))
 {
 
 }
 
+#pragma region BWAPI EVENTS
 void BuildManager::onStart()
 {
     //Make false at the start of a game.
+    std::cout << "Builder Manager Initialized" << "\n";
     buildOrderCompleted = false;
+    spenderManager.onStart();
+}
 
-    BWEB::Map::onStart();
-	BWEB::Blocks::findBlocks();
-	BWEB::Stations::findStations();
+void BuildManager::onFrame() {
+    spenderManager.OnFrame();
+    buildQueue.clear();
 
+    if (!buildOrderCompleted)
+    {
+        updateBuild();
+        runBuildQueue();
+        runUnitQueue();
+    }
+
+    pumpUnit();
+
+    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
+    //for (BWAPI::Unit building : buildingWarps)
+    //{
+    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
+    //}
+
+    for (BWAPI::Unit building : buildings)
+    {
+        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
+    }
+}
+
+void BuildManager::onUnitCreate(BWAPI::Unit unit)
+{
+    if (unit == nullptr) return;
+
+    spenderManager.onUnitCreate(unit);
+
+    if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon) buildingWarps.insert(unit);
 }
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
+    spenderManager.onUnitDestroy(unit);
+
     if (unit->getPlayer() != BWAPI::Broodwar->self())
         return;
 
@@ -59,23 +93,24 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 }
 
-void BuildManager::assignBuilding(BWAPI::Unit unit)
+void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
-    std::cout << "Assigning " << unit->getType() << " to BuildManager\n";
+    spenderManager.onUnitMorph(unit);
+}
+
+void BuildManager::onUnitComplete(BWAPI::Unit unit)
+{
     buildings.insert(unit);
-    std::cout << "Buildings size: " << buildings.size() << "\n";
+    spenderManager.onUnitComplete(unit);
 }
 
-bool BuildManager::isBuildOrderCompleted()
+void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 {
-    return buildOrderCompleted;
+    spenderManager.onUnitDiscover(unit);
 }
+#pragma endregion
 
-bool BuildManager::requestedBuilding(BWAPI::UnitType building)
-{
-    return spenderManager.requestedBuilding(building);
-}
-
+#pragma region Spender Manager Methods
 void BuildManager::buildBuilding(BWAPI::UnitType building)
 {
     spenderManager.addRequest(building);
@@ -86,15 +121,45 @@ void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
     spenderManager.addRequest(unitToTrain, unit);
 }
 
-void BuildManager::onCreate(BWAPI::Unit unit)
+void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
 {
-    buildingWarps.insert(unit);
-    spenderManager.onUnitCreate(unit);
+    spenderManager.addRequest(unit, upgrade);
 }
 
 bool BuildManager::alreadySentRequest(int unitID)
 {
     return spenderManager.buildingAlreadyMadeRequest(unitID);
+}
+
+bool BuildManager::requestedBuilding(BWAPI::UnitType building)
+{
+    return spenderManager.requestedBuilding(building);
+}
+
+bool BuildManager::upgradeAlreadyRequested(BWAPI::Unit building)
+{
+    return spenderManager.upgradeAlreadyRequested(building);
+}
+
+bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+    return spenderManager.checkUnitIsPlanned(building);
+}
+
+bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
+{
+    return spenderManager.checkWorkerIsConstructing(unit);
+}
+
+int BuildManager::checkAvailableSupply()
+{
+    return spenderManager.plannedSupply();
+}
+#pragma endregion
+
+bool BuildManager::isBuildOrderCompleted()
+{
+    return buildOrderCompleted;
 }
 
 bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
@@ -110,11 +175,6 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
     return false;
 }
 
-bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
-{
-    return spenderManager.checkUnitIsPlanned(building);
-}
-
 void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 {
     for (BWAPI::Unit warp : buildingWarps)
@@ -125,32 +185,7 @@ void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
             break;
         }
     }
-}
 
-void BuildManager::onFrame() {
-    spenderManager.OnFrame();
-    buildQueue.clear();
-    BWEB::Map::draw();
-
-    if (!buildOrderCompleted)
-    {
-        updateBuild();
-        runBuildQueue();
-        runUnitQueue();
-    }
-
-    pumpUnit();
-    expansionBuilding();
-    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
-    //for (BWAPI::Unit building : buildingWarps)
-    //{
-    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
-    //}
-
-    for (BWAPI::Unit building : buildings)
-    {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }
 }
 
 void BuildManager::updateBuild() {
@@ -185,30 +220,123 @@ void BuildManager::PvZ() {
     PvZ_10_12_Gateway();
 }
 
-void BuildManager::pumpUnit() {
-    const int currentMineral = BWAPI::Broodwar->self()->minerals();
-    const int currentGas = BWAPI::Broodwar->self()->gas();
-    int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+void BuildManager::pumpUnit()
+{
+    /*BWAPI::Unit firstTemplar = nullptr;
+
+    for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
+    {
+        if (unit->getType() == BWAPI::UnitTypes::Protoss_High_Templar && firstTemplar == nullptr && unit->getOrder() != BWAPI::Orders::ArchonWarp)
+        {
+            firstTemplar = unit;
+        }
+        else if (unit->getType() == BWAPI::UnitTypes::Protoss_High_Templar && firstTemplar != nullptr && unit->getOrder() != BWAPI::Orders::ArchonWarp)
+        {
+            firstTemplar->useTech(BWAPI::TechTypes::Archon_Warp, unit);
+            std::cout << firstTemplar->getOrder() << "\n";
+
+            firstTemplar = nullptr;
+        }
+    }*/
 
     for (auto& unit : buildings)
     {
-        if (unit->getType() == Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
+        BWAPI::UnitType type = unit->getType();
+        if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            if (unit->canTrain(Protoss_Dragoon))
+            if (unit->canTrain(Protoss_High_Templar))
             {
-                trainUnit(Protoss_Dragoon, unit);
-                cout << "Training Dragoon\n";
+                trainUnit(BWAPI::UnitTypes::Protoss_High_Templar, unit);
+            }
+            else if (unit->canTrain(Protoss_Dragoon))
+            {
+                trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
+                //cout << "Training Dragoon\n";
+            }
+            else
+            {
+                trainUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
             }
         }
-        else if (unit->getType() == Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
+        /*else if (type == Protoss_Stargate && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            //20 percent chance to create a 
-            const int temp = rand() % 5;
-
-            if (temp == 0)
+            if (unit->canTrain(Protoss_Corsair))
             {
-                trainUnit(Protoss_Observer, unit);
-                cout << "Training Observer\n";
+                trainUnit(Protoss_Corsair, unit);
+            }
+        }*/
+        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(Protoss_Observer))
+        {
+            int observerCount = 0;
+            for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
+            {
+                if (unit->getType() == BWAPI::UnitTypes::Protoss_Observer) observerCount++;
+            }
+
+            if (observerCount < 4)
+            {
+                trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
+        {
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Singularity_Charge);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
+        {
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
+            }
+
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
+        {
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
+            }
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+            }
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
+        {
+            /*if (unit->canUpgrade(BWAPI::TechTypes::Psionic_Storm))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
+                continue;
+            }
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+                continue;
+            }
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
+                continue;
+            }*/
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Observatory)
+        {
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
+            }
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
             }
         }
     }
@@ -218,6 +346,8 @@ void BuildManager::PvT_2Gateway_Observer() {
     currentBuild = "PvT_2Gateway_Observer";
 
     const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+    buildOrderCompleted = true;
+    return;
 
     buildQueue[Protoss_Pylon] = (currentSupply >= 8) + (currentSupply >= 15) + (currentSupply >= 22) + ((currentSupply >= 31));
     buildQueue[Protoss_Gateway] = (currentSupply >= 10) + (currentSupply >= 29);
@@ -227,8 +357,8 @@ void BuildManager::PvT_2Gateway_Observer() {
     buildQueue[Protoss_Observatory] = (currentSupply >= 38);
     //buildQueue[Protoss_Nexus] = (currentSupply >= 20);
 
-    unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
-    unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;
+    /*unitQueue[Protoss_Dragoon] = com(Protoss_Cybernetics_Core) > 0;
+    unitQueue[Protoss_Observer] = com(Protoss_Observatory) > 0;*/
 
     ////Start pumping Zealots once 1st Dragoon built, can be changed
     //zealotUnitPump = vis(Protoss_Dragoon) > 0;
@@ -291,23 +421,25 @@ void BuildManager::runUnitQueue() {
     }
 }
 
-// Test function to build a nexus, will be replaced with an addRequest from spenderManager
-void BuildManager::expansionBuilding(){
-    if(!buildOrderCompleted || vis(Protoss_Nexus > 1) || requestsent)
-        return;
-    const bool startedbuilding = Tools::ExpansionBuild(Tools::GetUnitOfType(Protoss_Probe));
-    requestsent = true;
-}
-
-vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race){
+vector<BuildManager::BuildList> BuildManager::getBuildOrders(BWAPI::Race race) {
     vector<BuildList> builds;
     if (race == BWAPI::Races::Terran)
         builds.push_back(&BuildManager::PvT_2Gateway_Observer);
     if (race == BWAPI::Races::Protoss)
-        builds.push_back(&BuildManager::PvP_10_12_Gateway);    
+        builds.push_back(&BuildManager::PvP_10_12_Gateway);
     if (race == BWAPI::Races::Zerg)
         builds.push_back(&BuildManager::PvZ_10_12_Gateway);
     else
         builds.push_back(&BuildManager::PvT_2Gateway_Observer);
     return builds;
+}
+
+BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
+{
+    return commanderReference->getUnitToBuild(position);
+}
+
+std::vector<NexusEconomy> BuildManager::getNexusEconomies()
+{
+    return commanderReference->getNexusEconomies();
 }
