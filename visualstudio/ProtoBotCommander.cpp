@@ -244,6 +244,8 @@ void ProtoBotCommander::onSendText(std::string text)
 	{
 		m_mapTools.toggleDraw();
 	}
+
+	combatManager.handleTextCommand(text);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)

@@ -1,60 +1,224 @@
-#include <BWAPI.h>
 #include "Squad.h"
-#include "../src/starterbot/Tools.h"
 
-Squad::Squad(int squadType, int squadId, BWAPI::Color squadColor, int unitSize)
+Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize)
 {
-	this->squadType = squadType;
+	this->leader = leader;
 	this->squadId = squadId;
 	this->squadColor = squadColor;
 	this->unitSize = unitSize;
-	this->units = BWAPI::Unitset();
+	this->state = IDLE;
 }
 
-void Squad::removeUnit(BWAPI::Unit unit) {
-	units.erase(unit);
+void Squad::onFrame() {
+	/*if (state == POSITIONING) {
+		flockingHandler();
+	}
+	
+	pathHandler();*/
+}
+
+void Squad::simpleFlock() {
+	BWAPI::Position centerPos = BWAPI::Position(0, 0);
+	// Calculate center position of group for cohesion vector
+	for (auto& unit : units) {
+		centerPos += unit->getPosition();
+	}
+	centerPos /= units.size();
+
+	BWAPI::Position generalVector = leader->getTargetPosition() - centerPos;
+	for (auto& unit : units) {
+		if (!unit->exists() || unit == leader) {
+			continue;
+		}
+		unit->attack(generalVector + unit->getPosition());
+	}
+
+}
+
+// Uses BOIDS algorithm to maintain formation while leader is moving
+// leaderVec keeps units close to leader
+// cohesionVec keeps units close to each other
+// separationVec keeps units from crowding each other
+// alignmentVec keeps units moving in same direction
+void Squad::flockingHandler() {
+	VectorPos separationVec = VectorPos(0, 0);
+	VectorPos cohesionVec = VectorPos(0, 0);
+	VectorPos alignmentVec = VectorPos(0, 0);
+	VectorPos leaderVec = VectorPos(0, 0);
+
+	for (auto& unit : units) {
+		if (!unit->exists() || unit == leader) {
+			continue;
+		}
+
+		const double unitSpeed = unit->getType().topSpeed();
+		const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
+		const VectorPos unitVelocity = VectorPos(unit->getVelocityX(), unit->getVelocityY());
+
+		const VectorPos leaderPos = VectorPos(leader->getPosition().x, leader->getPosition().y);
+		leaderVec = leaderPos - unitPos;
+
+		// Grab all neighbors that are too close
+		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, minNDistance);
+		BWAPI::Broodwar->drawCircleMap(unitPos, minNDistance, BWAPI::Colors::Grey);
+		BWAPI::Broodwar->drawCircleMap(unitPos, minSepDistance, BWAPI::Colors::Red);
+
+		// Cohesion Vector
+		const VectorPos neighborAvgPos = VectorPos(neighbors.getPosition().x, neighbors.getPosition().y);
+
+		VectorPos averageVelocity = VectorPos(0, 0);
+		for (auto& neighbor : neighbors) {
+			if (neighbor == unit) {
+				continue;
+			}
+
+			const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
+
+			// Separation Vector
+			const double distance = unitPos.getApproxDistance(neighborPos);
+			if (distance < minSepDistance) {
+				separationVec += unitPos - neighborPos;
+			}
+
+			// Alignment Vector
+			double neighborvelocity_x = neighbor->getVelocityX();
+			double neighborvelocity_y = neighbor->getVelocityY();
+			BWAPI::Broodwar->printf("Neighbor Velocity: X: %f, Y: %f", neighborvelocity_x, neighborvelocity_y);
+			averageVelocity += VectorPos(neighborvelocity_x, neighborvelocity_y);
+		}
+
+		if (neighbors.size() > 0) {
+			// Average out the velocity
+			// neighbors.getPosition() is already averaged
+			// separationVec is summed
+			averageVelocity /= neighbors.size();
+		}
+
+		// If no average velocity, set alignment to zero vector
+		// Avoids pointing unit towards (0,0)
+		/*if (averageVelocity == VectorPos(0, 0)) {
+			alignmentVec = VectorPos(0, 0);
+		}
+		else {*/
+
+		alignmentVec = averageVelocity - unitVelocity;
+		if (averageVelocity == VectorPos(0, 0)) {
+			alignmentVec = VectorPos(0, 0);
+		}
+
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 20, BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 20, BWAPI::Colors::White);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec * 20, BWAPI::Colors::Blue);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec * 20, BWAPI::Colors::Purple);
+
+		cohesionVec = neighborAvgPos - unitPos;
+
+		const VectorPos separationDirection = normalize(separationVec) * unitSpeed;
+		const VectorPos cohesionDirection = normalize(cohesionVec) * unitSpeed;
+		const VectorPos alignmentDirection = normalize(alignmentVec) * unitSpeed;
+		const VectorPos leaderDirection = normalize(leaderVec) * unitSpeed;
+
+		// Flocking strength variables
+		const double separationStrength = 1;
+		const double cohesionStrength = 1;
+		const double alignmentStrength = 1;
+		const double leaderStrength = 1;
+
+		const VectorPos finalDirection = (separationDirection * separationStrength) +
+			(cohesionDirection * cohesionStrength) +
+			(alignmentDirection * alignmentStrength) +
+			(leaderDirection * leaderStrength);
+
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec, BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec, BWAPI::Colors::Yellow);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec, BWAPI::Colors::Purple);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec, BWAPI::Colors::Blue);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + finalDirection, BWAPI::Colors::Green);
+		
+		BWAPI::Broodwar->printf("Separation magnitude: %f", BWAPI::Position(0,0).getDistance(separationVec));
+		BWAPI::Broodwar->printf("Cohesion magnitude: %f", BWAPI::Position(0,0).getDistance(cohesionVec));
+		BWAPI::Broodwar->printf("Alignment magnitude: %f", BWAPI::Position(0,0).getDistance(alignmentVec));
+		BWAPI::Broodwar->printf("Leader magnitude: %f", BWAPI::Position(0,0).getDistance(leaderDirection));
+		BWAPI::Broodwar->printf("FinalDirection magnitude: %f", BWAPI::Position(0,0).getDistance(finalDirection));
+
+		//unit->attack(unitPos + finalDirection);
+	}
+}
+
+void Squad::pathHandler() {
+	const int distThreshold = 10;
+	if (currentPath.positions.empty() == false && currentPathIdx < currentPath.positions.size()) {
+		const BWAPI::Position target = BWAPI::Position(currentPath.positions.at(currentPathIdx));
+		if (leader->getDistance(target) < distThreshold){
+			currentPathIdx += 1;
+		}
+		else if (leader->getTargetPosition() != target) {
+			leader->attack(target);
+		}
+	}
+
+	drawCurrentPath();
+}
+
+void Squad::removeUnit(BWAPI::Unit unit){
+	if (unit == nullptr) {
+		return;
+	}
+
+	if (unit == leader) {
+		const BWAPI::Position leaderPos = unit->getPosition();
+		std::erase_if(units, [unit](const BWAPI::Unit& _unit) {
+			return unit->getID() == _unit->getID();
+			});
+
+		if (units.empty()){
+			return;
+		}
+
+		// Closest unit to the leader is assigned as the new leader
+		double closest = std::numeric_limits<double>::infinity();
+		BWAPI::Unit closestUnit;
+		for (BWAPI::Unit _unit : units) {
+			BWAPI::Position unitPos = unit->getPosition();
+			const double dist = unitPos.getDistance(leaderPos);
+			if (dist < closest && _unit->exists()) {
+				closest = dist;
+				closestUnit = _unit;
+			}
+		}
+
+		// Assign closest unit to leader as the new leader
+		if (closestUnit != nullptr) {
+			leader = closestUnit;
+		}
+	}
+	else {
+		units.erase(std::remove(units.begin(), units.end(), unit), units.end());
+	}
 }
 
 void Squad::move(BWAPI::Position position) {
-	units.attack(position);
+	state = POSITIONING;
+	leader->attack(position);
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {
+	if (unit == nullptr) {
+		return;
+	}
+
 	if (std::find(units.begin(), units.end(), unit) != units.end()) {
 		// Avoids adding duplicate units
 		return;
 	}
 
-	units.insert(unit);
+	units.push_back(unit);
 	BWAPI::Broodwar->printf("Unit %d added to Squad %d", unit->getID(), squadId);
-}
-
-void Squad::attack(BWAPI::Position initialAttackPos) {
-	BWAPI::Position squadPos = units.getPosition();
-	BWAPI::Unitset enemies = BWAPI::Broodwar->enemy()->getUnits();
-	BWAPI::Unit closestEnemy = Tools::GetClosestUnitTo(squadPos, enemies);
-	if (!closestEnemy) { return; }
-
-	for (auto& unit : units) {
-		closestEnemy = Tools::GetClosestUnitTo(unit->getPosition(), enemies);
-		if (!closestEnemy) {
-			unit->attack(initialAttackPos);
-		}
-		
-		// If units are the same UnitType, attack normally (same range, same firerate, etc. makes kiting useless for now)
-		// Also, if unit is melee/short-range, attack normally
-		if (closestEnemy->getType() == unit->getType() || unit->getType().groundWeapon().maxRange() <= 32) {
-			attackUnit(unit, closestEnemy);
-		}
-		else {
-			attackKite(unit, closestEnemy);
-		}
-	}
 }
 
 // Despite the name, this method is not about attack-moving
 // Acts as the move command when attacking/kiting
-void Squad::attackMove(BWAPI::Unit unit, BWAPI::Position position) {
+void Squad::kitingMove(BWAPI::Unit unit, BWAPI::Position position) {
 
 	// If unit or position is invalid, return
 	if (!unit) {
@@ -65,8 +229,8 @@ void Squad::attackMove(BWAPI::Unit unit, BWAPI::Position position) {
 	if (!position.isValid()) {
 		BWAPI::Position newPos;
 		int searches = 0;
-		int min = -50;
-		int max = 50;
+		const int min = -50;
+		const int max = 50;
 
 		// Limit searches to 25 attempts
 		while (searches < 25) {
@@ -108,19 +272,11 @@ void Squad::attackUnit(BWAPI::Unit unit, BWAPI::Unit target) {
 		return;
 	}
 
-	// If the target is cloaked, RUN TOWARDS BASE!!!
+	// If the target is cloaked, run back towards base
 	if (target->isCloaked()) {
-		BWAPI::Unitset selfUnits = BWAPI::Broodwar->self()->getUnits();
-		BWAPI::Position kitePosition;
-
-		// If cloaked enemy detected and can't attack it, run towards Nexus
-		for (auto& unit : selfUnits) {
-			if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus) {
-				kitePosition = unit->getPosition();
-				break;
-			}
+		if (!unit->canAttack(target)) {
+			unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
 		}
-		unit->move(kitePosition);
 		return;
 	}
 
@@ -132,7 +288,7 @@ void Squad::attackUnit(BWAPI::Unit unit, BWAPI::Unit target) {
 	// Otherwise, attack the target
 	unit->attack(target);
 }
-void Squad::attackKite(BWAPI::Unit unit, BWAPI::Unit target) {
+void Squad::kitingAttack(BWAPI::Unit unit, BWAPI::Unit target) {
 
 	// If unit or target is invalid, return
 	if (!unit || !target) {
@@ -147,16 +303,8 @@ void Squad::attackKite(BWAPI::Unit unit, BWAPI::Unit target) {
 	// If the target is cloaked, RUN TOWARDS BASE!!!
 	if (target->isCloaked()) {
 		BWAPI::Unitset selfUnits = BWAPI::Broodwar->self()->getUnits();
-		BWAPI::Position kitePosition;
 
-		// If cloaked enemy detected and can't attack it, run towards Nexus
-		for (auto& unit : selfUnits) {
-			if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus) {
-				kitePosition = unit->getPosition();
-				break;
-			}
-		}
-		unit->move(kitePosition);
+		unit->move((BWAPI::Position) BWAPI::Broodwar->self()->getStartLocation());
 		return;
 	}
 	
@@ -165,37 +313,66 @@ void Squad::attackKite(BWAPI::Unit unit, BWAPI::Unit target) {
 		return;
 	}
 
-	BWAPI::Position kiteVector = unit->getPosition() - target->getPosition();
-	BWAPI::Position kitePosition = unit->getPosition() + kiteVector;
+	const BWAPI::Position kiteVector = unit->getPosition() - target->getPosition();
+	const BWAPI::Position kitePosition = unit->getPosition() + kiteVector;
 
-	double distance = unit->getDistance(target);
-	double speed = unit->getType().topSpeed();
-	double range = unit->getType().groundWeapon().maxRange();
+	const double distance = unit->getDistance(target);
+	const double speed = unit->getType().topSpeed();
+	const double range = unit->getType().groundWeapon().maxRange();
 
-	double timeToEnterRange = (distance - range) / speed;
+	const double timeToEnterRange = (distance - range) / speed;
 	// If weapon cooldown will be ready by the time we enter range, go and attack the target
 	// Otherwise, kite
 	if (unit->getGroundWeaponCooldown() <= timeToEnterRange || target->getType().isBuilding()) {
-		attackUnit(unit, target);
+		kitingAttack(unit, target);
 	}
 	else if (unit->getGroundWeaponCooldown() == 0 && distance <= range) {
-		attackUnit(unit, target);
+		kitingAttack(unit, target);
 	}
 	else {
-		attackMove(unit, kitePosition);
+		kitingMove(unit, kitePosition);
 	}
 }
 
+double Squad::getMagnitude(BWAPI::Position vector) {
+	return sqrt(pow(vector.x, 2) + pow(vector.y, 2));
+}
+
+VectorPos Squad::normalize(VectorPos vector) {
+	return VectorPos(vector.x / vector.getApproxDistance(BWAPI::Position(0, 0)), 
+							vector.y / vector.getApproxDistance(BWAPI::Position(0, 0))
+							);
+}
+
+void Squad::drawCurrentPath() {
+	if (currentPath.positions.size() <= 1) {
+		return;
+	}
+	
+	BWAPI::Position prevPos = currentPath.positions.at(0);
+	for (const BWAPI::Position pos : currentPath.positions) {
+		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
+		prevPos = pos;
+	}
+
+	BWAPI::Broodwar->drawCircleMap(currentPath.positions.at(0), 5, BWAPI::Colors::Green);
+	BWAPI::Broodwar->drawCircleMap(currentPath.positions.at(currentPath.positions.size()-1), 5, BWAPI::Colors::Red);
+}
+
 void Squad::drawDebugInfo() {
-	for (auto & unit : units) {
+	for (auto& unit : units) {
 		if (!unit || !unit->exists()) {
 			continue;
 		}
 
 		// Draw lines and shapes to debug commands
-		BWAPI::UnitCommand command = unit->getLastCommand();
+		const BWAPI::UnitCommand command = unit->getLastCommand();
 
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 5, squadColor, true);
+		if (unit == leader) {
+			BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 2, BWAPI::Colors::White, true);
+		}
+
 		if (command.getTargetPosition() != BWAPI::Positions::None) {
 			BWAPI::Broodwar->drawLineMap(unit->getPosition(), command.getTargetPosition(), squadColor);
 		}
@@ -207,7 +384,7 @@ void Squad::drawDebugInfo() {
 		}
 
 		// Draws squad ID below unit
-		BWAPI::Position textPos(unit->getPosition().x - 20, unit->getPosition().y + 20);
+		const BWAPI::Position textPos(unit->getPosition().x - 20, unit->getPosition().y + 20);
 		BWAPI::Broodwar->drawTextMap(textPos, "Squad %d", squadId);
 	}
 }
