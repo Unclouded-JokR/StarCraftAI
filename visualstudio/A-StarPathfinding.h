@@ -33,6 +33,19 @@ struct Node {
 	}
 };
 
+class Path {
+public:
+	vector<BWAPI::Position> positions;
+	double distance;
+
+	Path(vector<BWAPI::Position> positions, double distance) {
+		this->positions = positions;
+		this->distance = distance;
+	}
+
+	Path() : positions(vector<BWAPI::Position>()), distance(0) {};
+};
+
 static class AStar {
 private:
 	static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
@@ -42,5 +55,5 @@ private:
 	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile);
 
 public:
-	static vector<BWAPI::TilePosition> GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
+	static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
 };

@@ -17,8 +17,8 @@ public:
 	std::vector<BWAPI::Unit> units;
 	State state;
 	double minNDistance = 40;
-	vector<BWAPI::TilePosition> currentPath;
-	int currentPathIdx = -1;
+	Path currentPath;
+	int currentPathIdx = 0;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize);
 
@@ -41,6 +41,7 @@ public:
 	void addUnit(BWAPI::Unit unit);
 
 	// Utility functions
+	void drawCurrentPath();
 	double getMagnitude(BWAPI::Position vector);
 	BWAPI::Position normalize(BWAPI::Position vector);
 	void drawDebugInfo();

@@ -13,6 +13,8 @@ void Squad::onFrame() {
 	if (state == POSITIONING) {
 		flockingHandler();
 	}
+	
+	pathHandler();
 }
 
 void Squad::simpleFlock() {
@@ -116,11 +118,11 @@ void Squad::flockingHandler() {
 		BWAPI::Broodwar->printf("Alignment strength: %f", getMagnitude(alignmentVec));
 		BWAPI::Broodwar->printf("FinalDirection strength: %f", getMagnitude(flockDirection));
 		// Now that we have the direction, we'll walk through the path to check for collisions
-		int x = 0;
-		int y = 0;
+		const int x = 0;
+		const int y = 0;
 
-		bool negX = flockDirection.x < 0;
-		bool negY = flockDirection.y < 0;
+		const bool negX = flockDirection.x < 0;
+		const bool negY = flockDirection.y < 0;
 
 		//while (x != flockDirection.x && y != flockDirection.y) {
 		//	x = negX ? x - 1 : x + 1;
@@ -143,9 +145,9 @@ void Squad::flockingHandler() {
 }
 
 void Squad::pathHandler() {
-	int distThreshold = 10;
-	if (currentPath.empty() == false && currentPathIdx < currentPath.size()) {
-		BWAPI::Position target = BWAPI::Position(currentPath[currentPathIdx]);
+	const int distThreshold = 10;
+	if (currentPath.positions.empty() == false && currentPathIdx < currentPath.positions.size()) {
+		const BWAPI::Position target = BWAPI::Position(currentPath.positions.at(currentPathIdx));
 		if (leader->getDistance(target) < distThreshold){
 			currentPathIdx += 1;
 		}
@@ -153,6 +155,8 @@ void Squad::pathHandler() {
 			leader->attack(target);
 		}
 	}
+
+	drawCurrentPath();
 }
 
 void Squad::removeUnit(BWAPI::Unit unit){
@@ -174,6 +178,10 @@ void Squad::removeUnit(BWAPI::Unit unit){
 		double closest = std::numeric_limits<double>::infinity();
 		BWAPI::Unit closestUnit;
 		for (BWAPI::Unit _unit : units) {
+			if (unit == nullptr) {
+				continue;
+			}
+
 			const double dist = getMagnitude(unit->getPosition() - leaderPos);
 			if (dist < closest && _unit->exists()) {
 				closest = dist;
@@ -335,6 +343,21 @@ BWAPI::Position Squad::normalize(BWAPI::Position vector) {
 // Returns magnitude of vector using sqrt(x^2 + y^2)
 double Squad::getMagnitude(BWAPI::Position vector) {
 	return sqrt(pow(vector.x, 2) + pow(vector.y, 2));
+}
+
+void Squad::drawCurrentPath() {
+	if (currentPath.positions.size() <= 1) {
+		return;
+	}
+	
+	BWAPI::Position prevPos = currentPath.positions.at(0);
+	for (const BWAPI::Position pos : currentPath.positions) {
+		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
+		prevPos = pos;
+	}
+
+	BWAPI::Broodwar->drawCircleMap(currentPath.positions.at(0), 5, BWAPI::Colors::Green);
+	BWAPI::Broodwar->drawCircleMap(currentPath.positions.at(currentPath.positions.size()-1), 5, BWAPI::Colors::Red);
 }
 
 void Squad::drawDebugInfo() {

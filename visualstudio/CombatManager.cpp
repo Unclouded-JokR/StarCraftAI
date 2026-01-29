@@ -151,11 +151,37 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 }
 
 void CombatManager::handleTextCommand(std::string text) {
+	//PRESET POSITIONS FOR CUSTOM MAP ../pathPlayground.scx
+	const BWAPI::Position leftPos = BWAPI::Position(224, 450);
+	const BWAPI::Position rightPos = BWAPI::Position(1407, 450);
+	const BWAPI::Position upPos = BWAPI::Position(832, 64);
+	const BWAPI::Position downPos = BWAPI::Position(832, 895);
+	const BWAPI::Position centerPos = BWAPI::Position(832, 449);
+
 	for (Squad& squad : Squads) {
-		BWAPI::Position leaderPos = squad.leader->getPosition();
-		BWAPI::UnitType leaderType = squad.leader->getType();
-		vector<BWAPI::TilePosition> tiles;
-		if (text == "left")
-			tiles = AStar::GeneratePath(leaderPos, leaderType, BWAPI::Position(223, 448));
+		const BWAPI::Position leaderPos = squad.leader->getPosition();
+		const BWAPI::UnitType leaderType = squad.leader->getType();
+		vector<BWAPI::Position> tiles;
+		if (text == "left") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, leftPos);
+		}
+		if (text == "right") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, rightPos);
+		}if (text == "up") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, upPos);
+		}if (text == "down") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, downPos);
+		}if (text == "center") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
+		}
+
+		vector<BWAPI::Position> positions = squad.currentPath.positions;
+		const double dist = squad.currentPath.distance;
+		BWAPI::Broodwar->printf("Current path: (%d, %d) %f", positions.at(positions.size()-1).x, positions.at(positions.size()-1).y, dist);
 	}
 }

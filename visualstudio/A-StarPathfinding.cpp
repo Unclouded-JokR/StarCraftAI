@@ -5,21 +5,22 @@
 
 using namespace std;
 
-vector<BWAPI::TilePosition> AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end) {
+Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end) {
 	BWAPI::TilePosition start = BWAPI::TilePosition(_start);
 	BWAPI::TilePosition end = BWAPI::TilePosition(_end);
-	vector<BWAPI::TilePosition> tiles;
+	vector<BWAPI::Position> tiles;
 
 	// Checks if either the starting or ending tile positions are invalid
 	// If so, returns early with no tiles added to the path
 	if (!start.isValid() || !end.isValid()) {
-		return tiles;
+		return Path();
 	}
 
 	// Flying units can move directly to the end position without pathfinding
 	if (unitType.isFlyer()) {
-		tiles.push_back(end);
-		return tiles;
+		tiles.push_back(_end);
+		double dist = _start.getDistance(_end);
+		return Path(tiles, dist);
 	}
 
 	// Optimization using priority_queue for open set
@@ -49,16 +50,22 @@ vector<BWAPI::TilePosition> AStar::GeneratePath(BWAPI::Position _start, BWAPI::U
 
 		// Check if path is finished
 		if (currentNode.tile == end) {
+			double distance = 0;
+			const BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
 			while (currentNode.tile != start) {
-				tiles.push_back(currentNode.tile);
+				const BWAPI::Position pathTile = BWAPI::Position(currentNode.tile);
+				tiles.push_back(pathTile);
 				currentNode.tile = parent[TileToIndex(currentNode.tile)];
+
+				distance += prevPos.getDistance(pathTile);
 			}
 
-			tiles.push_back(start);
+			tiles.push_back(_start);
+			distance += prevPos.getDistance(_start);
 
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(tiles.begin(), tiles.end());
-			return tiles;
+			return Path(tiles, distance);
 		}
 
 		// Step through each neighbour of the current node and add to open set if valid and not in closed set yet
