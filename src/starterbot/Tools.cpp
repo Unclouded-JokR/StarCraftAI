@@ -1,7 +1,4 @@
 #include "Tools.h"
-using namespace BWAPI;
-using namespace std;
-using namespace UnitTypes;
 
 BWAPI::Unit Tools::GetClosestUnitTo(BWAPI::Position p, const BWAPI::Unitset& units)
 {
@@ -234,61 +231,5 @@ void Tools::DrawHealthBar(BWAPI::Unit unit, double ratio, BWAPI::Color color, in
     for (int i(left); i < right - 1; i += ticWidth)
     {
         BWAPI::Broodwar->drawLineMap(BWAPI::Position(i, hpTop), BWAPI::Position(i, hpBottom), BWAPI::Colors::Black);
-    }
-}
-
-map<UnitType, int> allVisibleTypeCounts;
-map<UnitType, int> allCompleteTypeCounts;
-map<UnitType, int> allTotalTypeCounts;
-
-int Tools::getCompleteCount(UnitType type)
-{
-    // Finds how many of a UnitType we currently have completed
-    auto& list = allCompleteTypeCounts;
-    auto itr = list.find(type);
-    if (itr != list.end())
-        return itr->second;
-    return 0;
-}
-
-int Tools::getVisibleCount(UnitType type)
-{
-    // Finds how many of a UnitType we currently have visible
-    auto& list = allVisibleTypeCounts;
-    auto itr = list.find(type);
-    if (itr != list.end())
-        return itr->second;
-    return 0;
-}
-
-int Tools::getTotalCount(UnitType type)
-{
-    // Finds how many of a UnitType we have ever had in total
-    auto& list = allTotalTypeCounts;
-    auto itr = list.find(type);
-    if (itr != list.end())
-        return itr->second;
-    return 0;
-}
-
-int Tools::getDeadCount(UnitType type)
-{
-    // Finds how many of a UnitType we have lost
-    return Tools::getTotalCount(type) - Tools::getVisibleCount(type);
-}
-
-
-void Tools::updateCount() {
-    allVisibleTypeCounts.clear();
-    allCompleteTypeCounts.clear();
-    const BWAPI::Unitset& myUnits = BWAPI::Broodwar->self()->getUnits();
-    for (auto u : myUnits) {
-        auto& unit = *u;
-        auto type = unit.getType();
-        if (type != UnitTypes::None && type.isValid()) {
-            allVisibleTypeCounts[type] += 1;
-            if (unit.isCompleted())
-                allCompleteTypeCounts[type] += 1;
-        }
     }
 }

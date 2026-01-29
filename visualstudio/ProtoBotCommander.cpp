@@ -173,9 +173,6 @@ void ProtoBotCommander::onFrame()
 	}
 	timerManager.stopTimer(TimerManager::Strategy);
 
-	//Get rid of this line since this should be information.
-	Tools::updateCount();
-
 	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame();
 	timerManager.stopTimer(TimerManager::Build);
@@ -301,14 +298,6 @@ void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 
 void ProtoBotCommander::drawDebugInformation()
 {
-	std::string currentState = "Current State: " + strategyManager.getCurrentStateName() + "\n";
-	if (buildManager.isBuildOrderCompleted())
-		All::currentBuild = "Completed";
-	std::string buildOrderSelectedString = "Selected Build Order: " + All::currentBuild + "\n";
-
-	BWAPI::Broodwar->drawTextScreen(0, 0, currentState.c_str());
-	BWAPI::Broodwar->drawTextScreen(0, 10, buildOrderSelectedString.c_str());
-
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
