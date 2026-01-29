@@ -42,10 +42,14 @@ bin/./visualstudio/ProtoBotCommander.cpp.o: \
  visualstudio/../src/starterbot/../../visualstudio/BWEB/Source/Wall.h \
  visualstudio/NexusEconomy.h visualstudio/InformationManager.h \
  visualstudio/InfluenceMap.h visualstudio/ScoutingManager.h \
- visualstudio/BuildManager.h visualstudio/SpenderManager.h \
- visualstudio/CombatManager.h visualstudio/Squad.h \
+ visualstudio/ScoutingProbe.h visualstudio/ScoutingZealot.h \
+ visualstudio/ScoutingObserver.h visualstudio/BuildManager.h \
+ visualstudio/SpenderManager.h visualstudio/CombatManager.h \
+ visualstudio/Squad.h visualstudio/A-StarPathfinding.h \
+ visualstudio/TimerManager.h visualstudio/Timer.h \
  src/bwapi/../../src/starterbot/MapTools.h \
- src/bwapi/../../src/starterbot/Grid.hpp src/bwapi/../../BWEM/src/bwem.h
+ src/bwapi/../../src/starterbot/Grid.hpp src/bwapi/../../BWEM/src/bwem.h \
+ visualstudio/ScoutPolicy.h
 visualstudio/ProtoBotCommander.h:
 visualstudio/StrategyManager.h:
 src/bwapi/include/BWAPI.h:
@@ -121,10 +125,17 @@ visualstudio/NexusEconomy.h:
 visualstudio/InformationManager.h:
 visualstudio/InfluenceMap.h:
 visualstudio/ScoutingManager.h:
+visualstudio/ScoutingProbe.h:
+visualstudio/ScoutingZealot.h:
+visualstudio/ScoutingObserver.h:
 visualstudio/BuildManager.h:
 visualstudio/SpenderManager.h:
 visualstudio/CombatManager.h:
 visualstudio/Squad.h:
+visualstudio/A-StarPathfinding.h:
+visualstudio/TimerManager.h:
+visualstudio/Timer.h:
 src/bwapi/../../src/starterbot/MapTools.h:
 src/bwapi/../../src/starterbot/Grid.hpp:
 src/bwapi/../../BWEM/src/bwem.h:
+visualstudio/ScoutPolicy.h:

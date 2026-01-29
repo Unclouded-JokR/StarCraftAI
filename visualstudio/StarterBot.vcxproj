@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Builder.cpp" />
+    <ClCompile Include="BuildingPlacer.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TimerManager.cpp" />
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -26,6 +28,8 @@
     <ClInclude Include="..\src\starterbot\ReplayParser.h" />
     <ClInclude Include="..\src\starterbot\StarterBot.h" />
     <ClInclude Include="..\src\starterbot\Tools.h" />
+    <ClInclude Include="Builder.h" />
+    <ClInclude Include="BuildingPlacer.h" />
     <ClInclude Include="BuildManager.h" />
     <ClInclude Include="BWEB\Source\Block.h" />
     <ClInclude Include="BWEB\Source\BWEB.h" />

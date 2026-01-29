@@ -42,8 +42,11 @@ bin/./visualstudio/BuildManager.cpp.o: visualstudio/BuildManager.cpp \
  visualstudio/ProtoBotCommander.h visualstudio/StrategyManager.h \
  visualstudio/EconomyManager.h visualstudio/NexusEconomy.h \
  visualstudio/InformationManager.h visualstudio/InfluenceMap.h \
- visualstudio/ScoutingManager.h visualstudio/CombatManager.h \
- visualstudio/Squad.h src/bwapi/../../src/starterbot/MapTools.h \
+ visualstudio/ScoutingManager.h visualstudio/ScoutingProbe.h \
+ visualstudio/ScoutingZealot.h visualstudio/ScoutingObserver.h \
+ visualstudio/CombatManager.h visualstudio/Squad.h \
+ visualstudio/A-StarPathfinding.h visualstudio/TimerManager.h \
+ visualstudio/Timer.h src/bwapi/../../src/starterbot/MapTools.h \
  src/bwapi/../../src/starterbot/Grid.hpp src/bwapi/../../BWEM/src/bwem.h
 visualstudio/BuildManager.h:
 src/bwapi/include/BWAPI.h:
@@ -122,8 +125,14 @@ visualstudio/NexusEconomy.h:
 visualstudio/InformationManager.h:
 visualstudio/InfluenceMap.h:
 visualstudio/ScoutingManager.h:
+visualstudio/ScoutingProbe.h:
+visualstudio/ScoutingZealot.h:
+visualstudio/ScoutingObserver.h:
 visualstudio/CombatManager.h:
 visualstudio/Squad.h:
+visualstudio/A-StarPathfinding.h:
+visualstudio/TimerManager.h:
+visualstudio/Timer.h:
 src/bwapi/../../src/starterbot/MapTools.h:
 src/bwapi/../../src/starterbot/Grid.hpp:
 src/bwapi/../../BWEM/src/bwem.h:

@@ -237,6 +237,7 @@ void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
+	informationManager.onUnitMorph(unit);
 	buildManager.onUnitMorph(unit);
 }
 
@@ -253,12 +254,14 @@ void ProtoBotCommander::onSendText(std::string text)
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
+	informationManager.onUnitCreate(unit);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
 	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
 	buildManager.onUnitCreate(unit);
+	informationManager.onUnitComplete(unit);
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 

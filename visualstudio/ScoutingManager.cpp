@@ -319,3 +319,39 @@ void ScoutingManager::drawScoutTags() const
         BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 32, "\x10SCOUT (Observer)");
     }
 }
+
+// Unassign an observer if we have one to give to a squad
+
+BWAPI::Unit ScoutingManager::getAvaliableDetectors()
+{
+    for (auto it = observerScouts_.begin(); it != observerScouts_.end(); ++it)
+    {
+        BWAPI::Unit obs = *it;
+        if (!obs || !obs->exists())
+            continue;
+
+        const int id = obs->getID();
+
+        // 1) Remove behavior so ScoutingManager stops controlling it
+        auto bIt = behaviors_.find(id);
+        if (bIt != behaviors_.end())
+        {
+            // Let the behavior clean itself up
+            visit_onUnitDestroy(bIt->second, obs);
+            behaviors_.erase(bIt);
+        }
+
+        // 2) Release observer slot
+        releaseObserverSlot(id);
+
+        // 3) Remove from scout bookkeeping
+        observerScouts_.erase(it);
+
+        // 4) Done: return unit to combat
+        BWAPI::Broodwar->printf("[SM] Reassigning Observer %d to combat", id);
+        return obs;
+    }
+
+    // No available observers
+    return nullptr;
+}

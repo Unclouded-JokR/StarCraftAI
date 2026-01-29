@@ -34,26 +34,29 @@ struct Node {
 };
 
 class Path {
-public:
-	vector<BWAPI::Position> positions;
-	double distance;
+	public:
+		vector<BWAPI::Position> positions;
+		double distance;
 
-	Path(vector<BWAPI::Position> positions, double distance) {
-		this->positions = positions;
-		this->distance = distance;
-	}
+		Path(vector<BWAPI::Position> positions, double distance) {
+			this->positions = positions;
+			this->distance = distance;
+		};
 
-	Path() : positions(vector<BWAPI::Position>()), distance(0) {};
+		Path() {
+			this->positions = vector<BWAPI::Position>();
+			this->distance = 0;
+		};
 };
 
 static class AStar {
-private:
-	static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
+	private:
+		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
 
-	static int TileToIndex(BWAPI::TilePosition tile);
+		static int TileToIndex(BWAPI::TilePosition tile);
 
-	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile);
+		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile);
 
-public:
-	static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
+	public:
+		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
 };
