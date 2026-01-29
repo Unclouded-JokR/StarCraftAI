@@ -7,6 +7,7 @@
 #include "../src/starterbot/MapTools.h"
 #include "../src/starterbot/Tools.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
+#include "A-StarPathfinding.h"
 #include "Builder.h"
 
 class SpenderManager;

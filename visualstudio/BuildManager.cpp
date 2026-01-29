@@ -260,9 +260,7 @@ int BuildManager::checkAvailableSupply()
 
 void BuildManager::createBuilder(BWAPI::Unit unit, BWAPI::UnitType building, BWAPI::Position positionToBuild)
 {
-    Builder temp = Builder(unit, building);
-    temp.positionToBuild = positionToBuild;
-
+    Builder temp = Builder(unit, building, positionToBuild);
     builders.push_back(temp);
 }
 
