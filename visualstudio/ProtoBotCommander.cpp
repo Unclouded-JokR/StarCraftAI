@@ -28,7 +28,7 @@ void ProtoBotCommander::onStart()
 	std::cout << "Map initialization...\n";
 
 	//theMap = BWEM::Map::Instance();
-	/*theMap.Initialize();
+	theMap.Initialize();
 	theMap.EnableAutomaticPathAnalysis();
 	bool startingLocationsOK = theMap.FindBasesForStartingLocations();
 	assert(startingLocationsOK);
@@ -36,7 +36,7 @@ void ProtoBotCommander::onStart()
 	BWEB::Map::onStart();
 	BWEB::Blocks::findBlocks();
 
-	m_mapTools.onStart();*/
+	m_mapTools.onStart();
 
 
 	/*
@@ -199,7 +199,7 @@ void ProtoBotCommander::onFrame()
 	// Draw unit health bars, which brood war unfortunately does not do
 	Tools::DrawUnitHealthBars();
 
-	//BWEB::Map::draw();
+	BWEB::Map::draw();
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
