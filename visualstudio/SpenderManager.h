@@ -4,8 +4,6 @@
 #include <limits.h>
 #include "../src/starterbot/Tools.h"
 
-class BuildManager;
-
 struct TrainUnitRequest
 {
     BWAPI::UnitType unitType;
@@ -35,24 +33,17 @@ struct BuildRequest
     std::variant<TrainUnitRequest, BuildStructureRequest, ResearchUpgradeRequest, UnitBuildStructureRequest> request;
 };
 
-//Keep track of units that have been requested to build.
-struct Builder
-{
-    BWAPI::Unit probe;
-    BWAPI::UnitType building;
-    BWAPI::Position positionToBuild;
-};
+class BuildManager;
 
 class SpenderManager
 {
 public:
-    std::vector<BuildRequest> buildRequests;
     BuildManager* buildManagerReference;
+    std::vector<BuildRequest> buildRequests;
     std::vector<BWAPI::UnitType> plannedBuildings; //Building Requests that have been accepted and waiting for a unit to place.
     BWAPI::Unitset incompleteBuildings; //Buildings in the process of being warped/built/formed, not yet completed.
     std::vector<BWAPI::UnitType> plannedUnits;
     std::vector<int> requestIdentifiers; //list of the buildings that have already sent train commands, can also do this for upgrades.
-    std::vector<Builder> builders;
 
     SpenderManager(BuildManager*);
 
@@ -72,9 +63,7 @@ public:
     bool requestedBuilding(BWAPI::UnitType building);
     bool buildingAlreadyMadeRequest(int unitID);
     bool checkUnitIsPlanned(BWAPI::UnitType building);
-    bool checkWorkerIsConstructing(BWAPI::Unit);
     bool upgradeAlreadyRequested(BWAPI::Unit);
-    BWAPI::Position getPositionToBuild(BWAPI::UnitType type);
     void printQueue();
     void removeRequestID(int unitID);
     bool alreadyUsingTiles(BWAPI::TilePosition);
