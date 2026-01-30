@@ -50,6 +50,7 @@
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="BuildingPlacer.cpp" />
     <ClCompile Include="Builder.cpp" />
+    <ClCompile Include="ThreatGrid.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -101,5 +102,6 @@
     <ClInclude Include="Timer.h" />
     <ClInclude Include="BuildingPlacer.h" />
     <ClInclude Include="Builder.h" />
+    <ClInclude Include="ThreatGrid.h" />
   </ItemGroup>
 </Project>

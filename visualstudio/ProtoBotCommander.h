@@ -34,6 +34,8 @@ struct EnemyLocations {
 	int frameLastUpdateNat = -1;
 };
 
+struct ThreatQueryResult;
+
 class ProtoBotCommander
 {
 public:
@@ -87,6 +89,11 @@ public:
 	EnemyLocations& enemy() { return enemy_; }
 	void onEnemyMainFound(const BWAPI::TilePosition& tp);
 	void onEnemyNaturalFound(const BWAPI::TilePosition& tp);
+	int getEnemyGroundThreatAt(BWAPI::Position p) const;
+	int getEnemyDetectionAt(BWAPI::Position p) const;
+	ThreatQueryResult queryThreatAt(const BWAPI::Position& pos) const;
+	bool isAirThreatened(const BWAPI::Position& pos, int threshold) const;
+	bool isDetectorThreatened(const BWAPI::Position& pos) const;
 
 	//Build Manager Methods
 	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);

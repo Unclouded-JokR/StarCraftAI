@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="Builder.cpp" />
     <ClCompile Include="BuildingPlacer.cpp" />
+    <ClCompile Include="ThreatGrid.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TimerManager.cpp" />
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -71,6 +72,7 @@
     <ClInclude Include="..\BWEM\src\tiles.h" />
     <ClInclude Include="..\BWEM\src\utils.h" />
     <ClInclude Include="..\BWEM\src\winutils.h" />
+    <ClInclude Include="ThreatGrid.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="TimerManager.h" />
   </ItemGroup>

@@ -148,14 +148,8 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Scout:
 		{
-			std::cout << "Reuqesting scout!\n";
-			if (!scoutingManager.hasScout())
-			{
-				if (BWAPI::Unit u = getUnitToScout()) {
-					scoutingManager.assignScout(u);
-					std::cout << "Got unit to scout!\n";
-				}
-			}
+			std::cout << "Requesting scout!\n";
+			getUnitToScout();
 			break;
 		}
 		case ActionType::Action_Attack:
@@ -279,6 +273,17 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		return;
 	}
 
+	if (unit_type == BWAPI::UnitTypes::Protoss_Observer)
+	{
+		if (scoutingManager.canAcceptObserverScout())
+		{
+			scoutingManager.assignScout(unit);
+			BWAPI::Broodwar->printf("[Commander] Assigned Observer %d to Scouting", unit->getID());
+			return;
+		}
+	}
+
+	getUnitToScout();
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }
@@ -484,3 +489,29 @@ void ProtoBotCommander::onEnemyNaturalFound(const BWAPI::TilePosition& tp) {
 
 	// StrategyManager.onEnemyNaturalFound(tp)
 }
+
+int ProtoBotCommander::getEnemyGroundThreatAt(BWAPI::Position p) const {
+	return informationManager.getEnemyGroundThreatAt(p);
+}
+
+int ProtoBotCommander::getEnemyDetectionAt(BWAPI::Position p) const {
+	return informationManager.getEnemyDetectionAt(p);
+}
+
+ThreatQueryResult ProtoBotCommander::queryThreatAt(const BWAPI::Position& pos) const
+{
+	return informationManager.queryThreatAt(pos);
+}
+
+bool ProtoBotCommander::isAirThreatened(const BWAPI::Position& pos, int threshold) const
+{
+	const auto r = queryThreatAt(pos);
+	return r.airThreat >= threshold;
+}
+
+bool ProtoBotCommander::isDetectorThreatened(const BWAPI::Position& pos) const
+{
+	const auto r = queryThreatAt(pos);
+	return r.detectorThreat > 0;
+}
+

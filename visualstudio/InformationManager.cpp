@@ -11,7 +11,11 @@ void InformationManager::onStart()
 {
     _knownEnemies.clear();
     _knownEnemyBuildings.clear();
+    trackedEnemies.clear();
+
     //influenceMap.onStart();
+    threatGrid.onStart();
+    
     std::cout << "Information Manager Initialized\n";
 }
 
@@ -28,6 +32,39 @@ void InformationManager::onFrame()
         //printFriendlyResearch();
         //printFriendlyUpgrades();
 		//TestPrintBaseOwnership();
+    }
+
+    threatGrid.onFrameStart(BWAPI::Broodwar->getFrameCount());
+
+    // Track visible enemies
+    for (auto enemy : BWAPI::Broodwar->enemy()->getUnits())
+    {
+        if (!enemy || !enemy->exists()) continue;
+
+        const int id = enemy->getID();
+
+        TrackedEnemy& entry = trackedEnemies[id];
+        entry.id = id;
+        entry.type = enemy->getType();
+        entry.lastSeenPos = enemy->getPosition();
+        entry.isBuilding = enemy->getType().isBuilding();
+        entry.destroyed = false;
+
+        _knownEnemies.insert(enemy);
+
+        if (enemy->getType().isBuilding())
+        {
+            EnemyBuildingInfo& info = _knownEnemyBuildings[enemy];
+            info.type = enemy->getType();
+            info.lastKnownPosition = enemy->getPosition();
+            info.destroyed = false;
+        }
+
+        const bool completed = enemy->isCompleted();
+        const bool burrowed = enemy->isBurrowed();
+        const bool immobile = enemy->getType().isBuilding();
+
+        threatGrid.addOrUpdateEnemy(id, enemy->getType(), enemy->getPosition(), completed, burrowed, immobile);
     }
 }
 
@@ -562,6 +599,9 @@ void InformationManager::onUnitDestroy(BWAPI::Unit unit)
 
         if (unit->getPlayer() == BWAPI::Broodwar->enemy())
         {
+            // Remove threat from grid
+            threatGrid.removeEnemy(id);
+
             // Mark destroyed building
             if (unit->getType().isBuilding())
             {
@@ -992,3 +1032,24 @@ std::vector<const BWEM::Base*> InformationManager::GetNearestUnownedBases(const 
     for (auto &p : distList) res.push_back(p.second);
     return res;
 }
+
+// Communication to ThreatGrid
+
+int InformationManager::getEnemyGroundThreatAt(BWAPI::Position p) const
+{
+    return threatGrid.groundThreatAt(p);
+}
+
+int InformationManager::getEnemyDetectionAt(BWAPI::Position p) const
+{
+    return threatGrid.detectionAt(p);
+}
+
+ThreatQueryResult InformationManager::queryThreatAt(const BWAPI::Position& pos) const
+{
+    ThreatQueryResult r;
+    r.airThreat = threatGrid.getAirThreat(pos);
+    r.detectorThreat = threatGrid.getDetection(pos);
+    return r;
+}
+
