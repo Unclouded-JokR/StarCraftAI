@@ -13,7 +13,7 @@ public:
     BWAPI::Position positionToBuild;
     BWAPI::UnitType buildingToConstruct;
 
-    Builder(BWAPI::Unit, BWAPI::UnitType);
+    Builder(BWAPI::Unit, BWAPI::UnitType, BWAPI::Position);
     ~Builder();
     void onFrame();
     BWAPI::Unit getUnitReference();

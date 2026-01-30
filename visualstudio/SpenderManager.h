@@ -40,8 +40,9 @@ class SpenderManager
 public:
     BuildManager* buildManagerReference;
     std::vector<BuildRequest> buildRequests;
+
     std::vector<BWAPI::UnitType> plannedBuildings; //Building Requests that have been accepted and waiting for a unit to place.
-    BWAPI::Unitset incompleteBuildings; //Buildings in the process of being warped/built/formed, not yet completed.
+
     std::vector<BWAPI::UnitType> plannedUnits;
     std::vector<int> requestIdentifiers; //list of the buildings that have already sent train commands, can also do this for upgrades.
 

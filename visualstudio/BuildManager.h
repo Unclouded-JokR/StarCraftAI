@@ -7,6 +7,7 @@
 #include "../src/starterbot/MapTools.h"
 #include "../src/starterbot/Tools.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
+#include "A-StarPathfinding.h"
 #include "Builder.h"
 
 class SpenderManager;
@@ -24,10 +25,11 @@ public:
 
     bool buildOrderCompleted = false;
 
-    BWAPI::Unitset buildings;
-    BWAPI::Unitset buildingWarps;
+    BWAPI::Unitset buildings; //Completed Buildings
+    BWAPI::Unitset incompleteBuildings; //Buildings in the process of being warped/built/formed, not yet completed.
 
     BuildManager(ProtoBotCommander* commanderReference);
+    //~BuildManager();
 
     //BWAPI Events
     void onStart();
@@ -52,41 +54,12 @@ public:
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
     void buildingDoneWarping(BWAPI::Unit unit);
-    void getBuildOrder();
-    void updateBuild();
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
 
     //Builder helper methods
     std::vector<Builder> getBuilders();
-    
-
-    void PvP();
-    void PvT();
-    void PvZ();
-    void PvT_2Gateway_Observer();
-    void PvP_10_12_Gateway();
-    void PvZ_10_12_Gateway();
-    void runBuildQueue();
-    void runUnitQueue();
+    void createBuilder(BWAPI::Unit unit, BWAPI::UnitType building, BWAPI::Position positionToBuild);
     void pumpUnit();
-    void createBuilder(BWAPI::Unit, BWAPI::UnitType, BWAPI::Position);
-
-    bool zealotUnitPump = false;
-    std::map<BWAPI::UnitType, int>& getBuildQueue();
-    std::map<BWAPI::UnitType, int>& getUnitQueue();
-    using BuildList = void (BuildManager::*)();
-    std::vector<BuildList> getBuildOrders(BWAPI::Race race);
 };
-
-namespace All {
-    inline std::map <BWAPI::UnitType, int> buildQueue;
-    inline std::map <BWAPI::UnitType, int> unitQueue;
-    inline std::map <BWAPI::TechType, int> techQueue;
-
-    inline std::string currentBuild = "";
-    inline std::string currentOpener = "";
-    inline std::string currentTransition = "";
-
-}
