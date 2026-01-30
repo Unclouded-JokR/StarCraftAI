@@ -181,7 +181,7 @@ void CombatManager::handleTextCommand(std::string text) {
 		}
 
 		vector<BWAPI::Position> positions = squad.currentPath.positions;
-		const double dist = squad.currentPath.distance;
-		BWAPI::Broodwar->printf("Current path: (%d, %d) %f", positions.at(positions.size()-1).x, positions.at(positions.size()-1).y, dist);
+		const int dist = squad.currentPath.distance;
+		BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size()-1).x, positions.at(positions.size()-1).y, dist);
 	}
 }
