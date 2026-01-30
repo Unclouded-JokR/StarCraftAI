@@ -36,9 +36,9 @@ struct Node {
 class Path {
 	public:
 		vector<BWAPI::Position> positions;
-		double distance;
+		int distance;
 
-		Path(vector<BWAPI::Position> positions, double distance) {
+		Path(vector<BWAPI::Position> positions, int distance) {
 			this->positions = positions;
 			this->distance = distance;
 		};
