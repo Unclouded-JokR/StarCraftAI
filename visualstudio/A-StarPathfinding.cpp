@@ -51,13 +51,14 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 		// Check if path is finished
 		if (currentNode.tile == end) {
 			double distance = 0;
-			const BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
+			BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
 			while (currentNode.tile != start) {
 				const BWAPI::Position pathTile = BWAPI::Position(currentNode.tile);
 				tiles.push_back(pathTile);
 				currentNode.tile = parent[TileToIndex(currentNode.tile)];
 
 				distance += prevPos.getDistance(pathTile);
+				prevPos = pathTile;
 			}
 
 			tiles.push_back(_start);
