@@ -157,7 +157,7 @@ void Squad::pathHandler() {
 		}
 	}
 
-	drawCurrentPath();
+	AStar::drawPath(currentPath);
 }
 
 void Squad::removeUnit(BWAPI::Unit unit){
@@ -342,21 +342,6 @@ VectorPos Squad::normalize(VectorPos vector) {
 	return VectorPos(vector.x / vector.getApproxDistance(BWAPI::Position(0, 0)), 
 							vector.y / vector.getApproxDistance(BWAPI::Position(0, 0))
 							);
-}
-
-void Squad::drawCurrentPath() {
-	if (currentPath.positions.size() <= 1) {
-		return;
-	}
-	
-	BWAPI::Position prevPos = currentPath.positions.at(0);
-	for (const BWAPI::Position pos : currentPath.positions) {
-		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
-		prevPos = pos;
-	}
-
-	BWAPI::Broodwar->drawCircleMap(currentPath.positions.at(0), 5, BWAPI::Colors::Green);
-	BWAPI::Broodwar->drawCircleMap(currentPath.positions.at(currentPath.positions.size()-1), 5, BWAPI::Colors::Red);
 }
 
 void Squad::drawDebugInfo() {

@@ -35,15 +35,15 @@ struct Node {
 
 class Path {
 	public:
-		vector<BWAPI::Position> positions;
-		int distance;
+		vector<BWAPI::Position> positions = vector<BWAPI::Position>();
+		int distance = 0;
 
 		Path(vector<BWAPI::Position> positions, int distance) {
 			this->positions = positions;
 			this->distance = distance;
 		};
 
-		Path() {
+		Path() noexcept {
 			this->positions = vector<BWAPI::Position>();
 			this->distance = 0;
 		};
@@ -59,4 +59,5 @@ static class AStar {
 
 	public:
 		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
+		static void drawPath(Path path);
 };

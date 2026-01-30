@@ -76,7 +76,6 @@ public:
 	void addUnit(BWAPI::Unit unit);
 
 	// Utility functions
-	void drawCurrentPath();
 	double getMagnitude(BWAPI::Position vector);
 	VectorPos normalize(VectorPos vector);
 	void drawDebugInfo();

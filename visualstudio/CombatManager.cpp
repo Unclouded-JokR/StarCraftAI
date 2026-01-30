@@ -8,9 +8,8 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-
 	// Only for testing on microtesting map
-	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
+	/*for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
 		if (unit->getType().isWorker() || unit->getType().isBuilding()
 			|| unit->getType() == BWAPI::UnitTypes::Protoss_Observer) {
 			continue;
@@ -21,7 +20,7 @@ void CombatManager::onStart(){
 		if (isAssigned(unit) == -1) {
 			assignUnit(unit);
 		}
-	}
+	}*/
 }
 
 void CombatManager::onFrame() {
