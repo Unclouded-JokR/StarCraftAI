@@ -91,8 +91,7 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
     }
     // build a behavior instance for THIS unit and store by id
     BehaviorVariant sb = constructBehaviorFor(unit);
-    visit_start(sb);
-    visit_assign(sb, unit);
+    
 
     if (t == BWAPI::UnitTypes::Protoss_Observer) 
     {
@@ -108,6 +107,9 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
         }
     }
 
+    visit_start(sb);
+    visit_assign(sb, unit);
+
     // cache into the map (overwrite if re-assigning the same id)
     behaviors_[unit->getID()] = std::move(sb);
 
@@ -117,9 +119,35 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
 
 bool ScoutingManager::hasScout() const 
 {
-    if (workerScout_ && workerScout_->exists()) return true;
-    for (auto u : combatZealots_) if (u && u->exists()) return true;
-    for (auto u : combatDragoons_) if (u && u->exists()) return true;
+    if (workerScout_ && workerScout_->exists())
+    {
+        return true;
+    }
+
+    for (auto u : combatZealots_)
+    {
+        if (u && u->exists())
+        {
+            return true;
+        }
+    }
+
+    for (auto u : combatDragoons_)
+    {
+        if (u && u->exists())
+        {
+            return true;
+        }
+    }
+
+    for (auto u : observerScouts_)
+    {
+        if (u && u->exists())
+        {
+            return true;
+        }
+    }
+
     return false;
 }
 

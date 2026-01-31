@@ -1,19 +1,19 @@
 #include "BuildingPlacer.h"
 #include "ProtoBotCommander.h"
-#include "BuildManager.h"
-#include "Builder.h"
 
-BuildingPlacer::BuildingPlacer(BuildManager* buildManagerReference) : buildManagerReference(buildManagerReference)
+BuildingPlacer::BuildingPlacer()
 {
 
 }
 
-//[TODO] changine this to check the tiles being reserved instead of the builders.
-bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition positon)
+//[TODO] Add a reserve system into the BuildingPlacer since the BWEB's reserve system does not properlly have a reserving system for tiles.
+bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, int height)
 {
-    for (const Builder& builder : buildManagerReference->getBuilders())
+    const BWAPI::UnitType typeFound = BWEB::Map::isUsed(position, width, height);
+
+    if (BWAPI::UnitTypes::None != typeFound)
     {
-        if (builder.positionToBuild == BWAPI::Position(positon)) return true;
+        return true;
     }
 
     return false;
@@ -41,21 +41,54 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         }
 
         //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        BWEB::Map::addReserve(closestDistance, BWAPI::UnitTypes::Protoss_Nexus.tileWidth(), BWAPI::UnitTypes::Protoss_Nexus.tileHeight());
         return BWAPI::Position(closestDistance);
     }
     else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
     {
-        std::vector<NexusEconomy> nexusEconomies = buildManagerReference->getNexusEconomies();
-
-        for (const NexusEconomy& nexusEconomy : nexusEconomies)
+        for (const BWEM::Area& area : theMap.Areas())
         {
-            if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator == nullptr)
+            for (const BWEM::Base& base : area.Bases())
             {
-                //std::cout << "Nexus " << nexusEconomy.nexusID << " needs assimilator\n";
-                //std::cout << "Gyser position = " << nexusEconomy.vespeneGyser->getPosition() << "\n";
+                BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(base.Location()), 
+                    BWAPI::Position(32 * (base.Location().x + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth())), 32 * (base.Location().y + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight()))));
+                bool nexusOnLocation = false;
 
-                BWAPI::Position position = BWAPI::Position(nexusEconomy.vespeneGyser->getPosition().x - 55, nexusEconomy.vespeneGyser->getPosition().y - 25);
-                return position;
+                /*BWAPI::Broodwar->drawBoxMap(
+                    base.Location().x * 32,
+                    base.Location().y * 32,
+                    base.Location().x * 32 + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth() * 32),
+                    base.Location().y * 32 + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight() * 32),
+                    BWAPI::Color::Color(255, 0, 0));*/
+
+                for (BWAPI::Unit unit : units)
+                {
+                    if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
+                    {
+                        nexusOnLocation = true;
+                        break;
+                    }
+                }
+
+                bool gyserAvalible = false;
+                auto gysers = base.Geysers();
+
+                for (BWEM::Geyser* gyser : gysers)
+                {
+                    units = BWAPI::Broodwar->getUnitsInRectangle(gyser->Pos(),
+                        BWAPI::Position(32 * (gyser->Pos().x + BWAPI::UnitTypes::Resource_Vespene_Geyser.tileWidth()), 32 * (gyser->Pos().y + BWAPI::UnitTypes::Resource_Vespene_Geyser.tileHeight())));
+
+                    for (BWAPI::Unit unit : units)
+                    {
+                        if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
+                        {
+                            gyserAvalible = true;
+                            BWEB::Map::addReserve(gyser->TopLeft(), BWAPI::UnitTypes::Resource_Vespene_Geyser.tileWidth(), BWAPI::UnitTypes::Resource_Vespene_Geyser.tileHeight());
+                            return BWAPI::Position(gyser->TopLeft());
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -75,15 +108,16 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 
                 if (BWAPI::Broodwar->canBuildHere(placement, type)
                     && distanceToPlacement < distance
-                    && !alreadyUsingTiles(placement))
+                    && !alreadyUsingTiles(placement, type.tileWidth(), type.tileHeight()))
                 {
+                    std::cout << "Found position to place\n";
                     distance = distanceToPlacement;
                     closestDistance = placement;
                 }
             }
         }
 
-        //std::cout << distance << "\n";
+        BWEB::Map::addReserve(closestDistance, type.tileWidth(), type.tileHeight());
         return BWAPI::Position(closestDistance);
     }
 

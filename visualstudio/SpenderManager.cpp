@@ -177,7 +177,7 @@ int SpenderManager::plannedSupply()
     }
 
     //Building is not being warped in.
-    for (const BWAPI::Unit unit : incompleteBuildings)
+    for (const BWAPI::Unit unit : buildManagerReference->incompleteBuildings)
     {
         //if (unit->getType().supplyProvided() / 2 > 0) std::cout << "Incomplete Building " << unit->getType() << ", provides " << unit->getType().supplyProvided() / 2 << " supply\n";
 
@@ -209,7 +209,6 @@ void SpenderManager::onStart()
     plannedBuildings.clear();
     plannedUnits.clear();
     requestIdentifiers.clear();
-    incompleteBuildings.clear();
 }
 
 void SpenderManager::OnFrame()
@@ -245,7 +244,7 @@ void SpenderManager::OnFrame()
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
                 //Find position to place building using BWEB and BWEM
-                const BWAPI::Position positionToBuild = buildManagerReference->buildingPlacer->getPositionToBuild(temp.buildingType);
+                const BWAPI::Position positionToBuild = buildManagerReference->buildingPlacer.getPositionToBuild(temp.buildingType);
 
                 if (positionToBuild == BWAPI::Position(0, 0))
                 {
@@ -383,9 +382,6 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
 {
     if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-    //std::cout << unit->getType() << " created\n";
-    if (unit->getType().isBuilding() && !unit->isCompleted()) incompleteBuildings.insert(unit);
-
     for (std::vector<BWAPI::UnitType>::iterator it = plannedBuildings.begin(); it != plannedBuildings.end(); ++it)
     {
         if (unit->getType() == *it)
@@ -416,15 +412,7 @@ void SpenderManager::onUnitDestroy(BWAPI::Unit unit)
 
 void SpenderManager::onUnitComplete(BWAPI::Unit unit)
 {
-    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
-
-    //std::cout << unit->getType() << " completed\n";
-
-    if (!unit->getType().isBuilding()) return;
-
-    //Might cause error if the unit was not added possibly.
-    std::cout << "Removing " << unit->getType() << "\n";
-    incompleteBuildings.erase(unit);
+    
 }
 
 void SpenderManager::onUnitMorph(BWAPI::Unit unit)
