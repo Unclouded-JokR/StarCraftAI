@@ -6,9 +6,9 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	buildingToConstruct(buildingToConstruct),
 	positionToBuild(positionToBuild)
 {
-	std::cout << unitReference->getID() << "\n";
+	/*std::cout << unitReference->getID() << "\n";
 	std::cout << buildingToConstruct.getName() << "\n";
-	std::cout << positionToBuild.x << ", " << positionToBuild.y << "\n";
+	std::cout << positionToBuild.x << ", " << positionToBuild.y << "\n";*/
 
 	//auto temp = AStar::GeneratePath(unitReference->getPosition(), unitReference->getType(), positionToBuild);
 	//std::cout << temp.size() << "\n";

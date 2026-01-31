@@ -8,10 +8,10 @@
 #include "../src/starterbot/Tools.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
 #include "A-StarPathfinding.h"
+#include "BuildingPlacer.h"
 #include "Builder.h"
 
 class SpenderManager;
-class BuildingPlacer;
 class ProtoBotCommander;
 class NexusEconomy;
 
@@ -20,7 +20,7 @@ class BuildManager
 public:
     ProtoBotCommander* commanderReference;
     SpenderManager* spenderManager;
-    BuildingPlacer* buildingPlacer;
+    BuildingPlacer buildingPlacer;
     std::vector<Builder> builders;
 
     bool buildOrderCompleted = false;

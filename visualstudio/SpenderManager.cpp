@@ -244,7 +244,7 @@ void SpenderManager::OnFrame()
             if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
             {
                 //Find position to place building using BWEB and BWEM
-                const BWAPI::Position positionToBuild = buildManagerReference->buildingPlacer->getPositionToBuild(temp.buildingType);
+                const BWAPI::Position positionToBuild = buildManagerReference->buildingPlacer.getPositionToBuild(temp.buildingType);
 
                 if (positionToBuild == BWAPI::Position(0, 0))
                 {
