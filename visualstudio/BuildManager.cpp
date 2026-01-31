@@ -62,6 +62,8 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
     if (unit == nullptr) return;
 
+    buildingPlacer.onUnitCreate(unit);
+
     //Remove worker once a building is being warped in.
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
     {
@@ -80,7 +82,7 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
 
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    spenderManager->onUnitDestroy(unit);
+    buildingPlacer.onUnitDestroy(unit);
 
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
@@ -129,7 +131,7 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
 void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
-    spenderManager->onUnitMorph(unit);
+    buildingPlacer.onUnitMorph(unit);
 }
 
 void BuildManager::onUnitComplete(BWAPI::Unit unit)
@@ -145,7 +147,7 @@ void BuildManager::onUnitComplete(BWAPI::Unit unit)
 
 void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 {
-    spenderManager->onUnitDiscover(unit);
+    buildingPlacer.onUnitDiscover(unit);
 }
 #pragma endregion
 

@@ -402,28 +402,6 @@ void SpenderManager::onUnitCreate(BWAPI::Unit unit)
         }
     }
 }
-
-void SpenderManager::onUnitDestroy(BWAPI::Unit unit)
-{
-    BWEB::Map::onUnitDestroy(unit);
-
-    //check warping buildings
-}
-
-void SpenderManager::onUnitComplete(BWAPI::Unit unit)
-{
-    
-}
-
-void SpenderManager::onUnitMorph(BWAPI::Unit unit)
-{
-    BWEB::Map::onUnitMorph(unit);
-}
-
-void SpenderManager::onUnitDiscover(BWAPI::Unit unit)
-{
-    BWEB::Map::onUnitDiscover(unit);
-}
 #pragma endregion
 
 bool SpenderManager::requestedBuilding(BWAPI::UnitType building)

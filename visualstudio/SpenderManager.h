@@ -73,8 +73,5 @@ public:
     void onStart();
     void OnFrame();
     void onUnitCreate(BWAPI::Unit);
-    void onUnitDestroy(BWAPI::Unit);
     void onUnitComplete(BWAPI::Unit);
-    void onUnitMorph(BWAPI::Unit);
-    void onUnitDiscover(BWAPI::Unit);
 };
