@@ -62,6 +62,8 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
     if (unit == nullptr) return;
 
+    //std::cout << "Created " << unit->getType() << "\n";
+
     buildingPlacer.onUnitCreate(unit);
 
     //Remove worker once a building is being warped in.
@@ -132,6 +134,20 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
     buildingPlacer.onUnitMorph(unit);
+
+    std::cout << "Created " << unit->getType() << "\n";
+
+    if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit->getPlayer() == BWAPI::Broodwar->self())
+    {
+        for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
+        {
+            if (unit->getType() == it->buildingToConstruct)
+            {
+                it = builders.erase(it);
+                break;
+            }
+        }
+    }
 }
 
 void BuildManager::onUnitComplete(BWAPI::Unit unit)
