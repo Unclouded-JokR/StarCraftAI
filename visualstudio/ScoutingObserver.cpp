@@ -9,6 +9,20 @@
 using namespace BWAPI;
 using namespace BWEM;
 
+namespace
+{
+    static BWAPI::Position rotatePoint(const BWAPI::Position& v, double ang)
+    {
+        const double c = std::cos(ang);
+        const double s = std::sin(ang);
+
+        return BWAPI::Position(
+            int(v.x * c - v.y * s),
+            int(v.x * s + v.y * c)
+        );
+    }
+}
+
 namespace {
     static inline int mapWpx() { return Broodwar->mapWidth() * 32; }
     static inline int mapHpx() { return Broodwar->mapHeight() * 32; }
@@ -55,7 +69,8 @@ void ScoutingObserver::onFrame() {
 
     // Detection avoidance
     Position safePt;
-    if (detectorThreat(safePt)) {
+    if (detectorThreat(safePt)) 
+    {
         lastThreatFrame = Broodwar->getFrameCount();
         issueMove(safePt, /*force*/true, /*reissue*/32);
         state = State::AvoidDetection;
@@ -67,10 +82,17 @@ void ScoutingObserver::onFrame() {
         state = State::MoveToPost;
         break;
 
-    case State::MoveToPost: {
-        const Position tgt = postTarget();
-        issueMove(tgt, /*force*/false, /*reissue*/64);
-        if (observer->getDistance(tgt) <= 80) state = State::Hold;
+    case State::MoveToPost: 
+    {
+        const BWAPI::Position tgt = postTarget();
+        const BWAPI::Position step = pickDetourToward(tgt);
+
+        issueMove(step, false, 64);
+
+        if (observer->getDistance(tgt) <= 80)
+        {
+            state = State::Hold;
+        }
         break;
     }
 
@@ -201,18 +223,18 @@ bool ScoutingObserver::detectorThreat(BWAPI::Position& avoidTo) const
         const int over = detR - d;                // >0 means we are inside detection
 
         // If we're inside (or nearly at the edge), compute a point just outside
-        if (over >= -8) 
+        if (over >= -kDetectReactBufferPx) 
         {
             // step along vector from detector->me to just outside radius+margin
             const Position c = e->getPosition();
             int dx = me.x - c.x, dy = me.y - c.y;
             double len = std::max(1.0, std::sqrt(double(dx * dx + dy * dy)));
-            const int want = detR + kEdgeMarginPx;
+            const int want = detR + kEdgeMarginPx + kDetectReactBufferPx;
             Position out(c.x + int(dx / len * want), c.y + int(dy / len * want));
             out = clampToMapPx(out, 12);
 
             // pick the “most violating” detector (largest over) to react to
-            if (over < bestOver) 
+            if (over > bestOver) 
             {
                 bestOver = over;
                 bestPos = out;
@@ -229,7 +251,6 @@ int ScoutingObserver::detectionRadiusFor(const BWAPI::UnitType& t)
     if (t == BWAPI::UnitTypes::Terran_Missile_Turret) return 224;
     if (t == BWAPI::UnitTypes::Protoss_Photon_Cannon) return 224;
     if (t == BWAPI::UnitTypes::Zerg_Spore_Colony)     return 224;
-    if (t == BWAPI::UnitTypes::Zerg_Sunken_Colony)     return 224;
     if (t == BWAPI::UnitTypes::Terran_Science_Vessel) return 224;
     if (t == BWAPI::UnitTypes::Protoss_Observer)      return 224; // enemy obs can reveal you to army
     int r = t.sightRange();
@@ -262,3 +283,112 @@ double ScoutingObserver::groundPathLengthPx(const BWAPI::Position& from, const B
     sum += prev.getDistance(to);
     return sum;
 }
+
+bool ScoutingObserver::isUnsafe(const BWAPI::Position& p) const
+{
+    if (!commanderRef) return false;
+
+    const auto threat = commanderRef->queryThreatAt(p);
+
+    if (threat.detectorThreat > 0)
+    {
+        return true;
+    }
+
+    if (threat.airThreat > kAirThreatThreshold)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+BWAPI::Position ScoutingObserver::pickDetourToward(const BWAPI::Position& target) const
+{
+    if (!observer || !observer->exists())
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    const BWAPI::Position me = observer->getPosition();
+
+    // If target itself is safe, just go directly.
+    if (!isUnsafe(target))
+    {
+        return target;
+    }
+
+    // Try a few detours around our current heading.
+    const BWAPI::Position toTgt = BWAPI::Position(target.x - me.x, target.y - me.y);
+
+    // If we're basically on top of target, no detour helps.
+    if (std::abs(toTgt.x) + std::abs(toTgt.y) < 8)
+    {
+        return target;
+    }
+
+    // Candidate radii (pixels)
+    const int radii[] = { 96, 160, 224, 288 };
+
+    // Candidate angles around heading (radians)
+    const double angles[] =
+    {
+        0.0,
+        0.35, -0.35,
+        0.70, -0.70,
+        1.05, -1.05,
+        1.40, -1.40
+    };
+
+    int bestScore = INT_MIN;
+    BWAPI::Position bestPos = BWAPI::Positions::Invalid;
+
+    // Normalize direction roughly (avoid expensive normalize)
+    BWAPI::Position dir = toTgt;
+    const int len = std::max(1, int(std::sqrt(double(dir.x * dir.x + dir.y * dir.y))));
+    dir = BWAPI::Position(int(double(dir.x) / len * 64.0), int(double(dir.y) / len * 64.0)); // scaled
+
+    for (int r : radii)
+    {
+        for (double a : angles)
+        {
+            BWAPI::Position cand = me + rotatePoint(BWAPI::Position(int(dir.x * (double(r) / 64.0)), int(dir.y * (double(r) / 64.0))), a);
+            cand = clampToMapPx(cand, 12);
+
+            // Must be walkable-ish (observers fly, but avoid silly invalid positions)
+            if (!cand.isValid())
+            {
+                continue;
+            }
+
+            // Skip unsafe candidates.
+            if (isUnsafe(cand))
+            {
+                continue;
+            }
+
+            // Score: prefer getting closer to target, with a mild bias for larger steps.
+            const int distNow = me.getApproxDistance(target);
+            const int distCand = cand.getApproxDistance(target);
+            const int progress = distNow - distCand;
+
+            const int score = progress + (r / 8);
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestPos = cand;
+            }
+        }
+    }
+
+    // If nothing safe found, just return the safest “least bad” direction (fallback).
+    if (!bestPos.isValid())
+    {
+        return target;
+    }
+
+    return bestPos;
+}
+
+

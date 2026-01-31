@@ -3,7 +3,7 @@
 #include <BWAPI.h>
 
 int expansionTimes[9] = { 1, 2, 3, 5, 8, 13, 21, 34, 55 };
-int mineralsToExpand = 3000;
+int mineralsToExpand = 1000;
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
 int frameSinceLastBuild = 0;
@@ -229,7 +229,7 @@ std::string StrategyManager::onStart()
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
 	frameSinceLastBuild = 0;
-	mineralsToExpand = 3000;
+	mineralsToExpand = 1000;
 
 
 	//return empty string
@@ -256,13 +256,13 @@ Action StrategyManager::onFrame()
 
 	#pragma region Scout
 	// ----- emit SCOUT periodically -----
-	/*if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;                 // <-- ensure we actually send the action
-	}*/
+	}
 	#pragma endregion
 
 	// from here on, build logic etc.
@@ -347,6 +347,8 @@ Action StrategyManager::onFrame()
 		int forgeCount = 0;
 		int cyberneticsCount = 0;
 		int stargateCount = 0;
+		int roboticsCount = 0;
+		int observatoryCount = 0;
 
 		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
 		int completedNexusEconomy = 0;
@@ -358,8 +360,12 @@ Action StrategyManager::onFrame()
 			*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
 			*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
 			*/
-			if ((nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size())
-				|| (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator != nullptr))
+			/*if ((nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size()))
+			{
+				completedNexusEconomy++;
+			}*/
+
+			if (nexusEconomy.vespeneGyser != nullptr && nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())
 			{
 				completedNexusEconomy++;
 			}
@@ -373,28 +379,34 @@ Action StrategyManager::onFrame()
 
 			switch (temp)
 			{
-			case BWAPI::UnitTypes::Protoss_Gateway:
-				gatewayCount++;
-				break;
-			case BWAPI::UnitTypes::Protoss_Templar_Archives:
-				templarArchivesCount++;
-				break;
-			case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-				citadelCount++;
-				break;
-			case BWAPI::UnitTypes::Protoss_Forge:
-				forgeCount++;
-				break;
-			case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-				cyberneticsCount++;
-				break;
-			case BWAPI::UnitTypes::Protoss_Stargate:
-				stargateCount++;
-				break;
+				case BWAPI::UnitTypes::Protoss_Gateway:
+					gatewayCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Templar_Archives:
+					templarArchivesCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+					citadelCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Forge:
+					forgeCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+					cyberneticsCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Stargate:
+					stargateCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Observatory:
+					observatoryCount++;
+					break;
+				case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+					roboticsCount++;
+					break;
 			}
 		}
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && completedNexusEconomy >= 1)
 		{
 			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
@@ -412,7 +424,7 @@ Action StrategyManager::onFrame()
 
 		if (gatewayCount < 1) return action;
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && forgeCount <= 3 && forgeCount != completedNexusEconomy)
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && forgeCount < 1)
 		{
 			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Build actionToTake;
@@ -437,7 +449,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}*/
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && cyberneticsCount <= 3 && cyberneticsCount != completedNexusEconomy)
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && cyberneticsCount < 1 && gatewayCount >= 1)
 		{
 			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Build actionToTake;
@@ -448,7 +460,29 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && citadelCount <= 3 && cyberneticsCount == 1 && citadelCount != completedNexusEconomy)
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && roboticsCount < 1 && cyberneticsCount == 1)
+		{
+			std::cout << "BUILD ACTION: Requesting to warp Robotics Facility\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
+
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && observatoryCount < 1 && roboticsCount == 1)
+		{
+			std::cout << "BUILD ACTION: Requesting to warp Observatory\n";
+			Build actionToTake;
+			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Observatory;
+
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Build;
+			return action;
+		}
+
+		/*if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && citadelCount < 3 && cyberneticsCount == 1 && citadelCount != completedNexusEconomy)
 		{
 			std::cout << "BUILD ACTION: Requesting to warp Citadel\n";
 			Build actionToTake;
@@ -459,7 +493,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && templarArchivesCount <= 3 && citadelCount == 1 && templarArchivesCount != completedNexusEconomy)
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && templarArchivesCount < 3 && citadelCount == 1 && templarArchivesCount != completedNexusEconomy)
 		{
 			std::cout << "BUILD ACTION: Requesting to warp Archives\n";
 			Build actionToTake;
@@ -468,7 +502,7 @@ Action StrategyManager::onFrame()
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Build;
 			return action;
-		}
+		}*/
 	}
 	#pragma endregion
 

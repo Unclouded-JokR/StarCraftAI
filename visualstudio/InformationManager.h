@@ -6,6 +6,7 @@
 #include <iostream>
 #include "InfluenceMap.h"
 #include <vector>
+#include "ThreatGrid.h"
 
 namespace BWEM { class Base; } // forward-declare BWEM::Base
 
@@ -101,6 +102,11 @@ struct TrackedEnemy {
     bool destroyed = false;
 };
 
+struct ThreatQueryResult {
+    int airThreat = 0;          // higher = more dangerous
+    int detectorThreat = 0;     // 0
+};
+
 class InformationManager
 {
 private:
@@ -108,6 +114,7 @@ private:
     std::map<BWAPI::Unit, EnemyBuildingInfo> _knownEnemyBuildings;
     std::map<int, TrackedEnemy> trackedEnemies;  // track by BWAPI unit ID
     InfluenceMap influenceMap;
+    ThreatGrid threatGrid;
     double gameState;
 	FriendlyUnitCounter friendlyUnitCounter;
 	FriendlyBuildingCounter friendlyBuildingCounter;
@@ -168,4 +175,9 @@ public:
     // Test / debug helpers
     void TestPrintBaseOwnership() const;
     void TestDrawBaseOwnership() const;
+
+    // Communication to ThreatGrid
+    int getEnemyGroundThreatAt(BWAPI::Position p) const;
+    int getEnemyDetectionAt(BWAPI::Position p) const;
+    ThreatQueryResult queryThreatAt(const BWAPI::Position& pos) const;
 };
