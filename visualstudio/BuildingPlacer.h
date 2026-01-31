@@ -1,15 +1,11 @@
 #pragma once
 #include <BWAPI.h>
 
-class BuildManager;
-
 class BuildingPlacer
 {
 public:
-	BuildManager* buildManagerReference;
-
-	BuildingPlacer(BuildManager*);
+	BuildingPlacer();
 	BWAPI::Position getPositionToBuild(BWAPI::UnitType);
-	bool alreadyUsingTiles(BWAPI::TilePosition);
+	bool alreadyUsingTiles(BWAPI::TilePosition, int, int);
 };
 

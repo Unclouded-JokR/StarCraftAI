@@ -4,7 +4,7 @@
 #include "BuildingPlacer.h"
 #include "Builder.h"
 
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(new SpenderManager(this)), buildingPlacer(new BuildingPlacer(this))
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(new SpenderManager(this))
 {
 
 }
@@ -67,7 +67,7 @@ void BuildManager::onFrame() {
             if (!buildSuccess)
             {
                 //std::cout << "BUILD UNSUCCESSFUL, trying another spot\n";
-                it->positionToBuild = buildingPlacer->getPositionToBuild(it->buildingToConstruct);
+                it->positionToBuild = buildingPlacer.getPositionToBuild(it->buildingToConstruct);
                 it++;
                 continue;
             }
@@ -75,7 +75,7 @@ void BuildManager::onFrame() {
             //std::cout << "Build command returned true, constructing...\n";
 
             //Need to utilize BWEB's reserving tile system to improve building placement even further.
-            //BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->building);
+            BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->buildingToConstruct);
 
             if (it->buildingToConstruct == BWAPI::UnitTypes::Protoss_Assimilator)
             {
