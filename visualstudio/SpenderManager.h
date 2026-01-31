@@ -73,5 +73,4 @@ public:
     void onStart();
     void OnFrame();
     void onUnitCreate(BWAPI::Unit);
-    void onUnitComplete(BWAPI::Unit);
 };

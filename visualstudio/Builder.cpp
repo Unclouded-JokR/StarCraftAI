@@ -11,7 +11,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	/*std::cout << unitReference->getID() << "\n";
 	std::cout << buildingToConstruct.getName() << "\n";
 	std::cout << positionToBuild.x << ", " << positionToBuild.y << "\n";*/
-	if (buildingToConstruct == BWAPI::UnitTypes::Protoss_Assimilator)
+	/*if (buildingToConstruct == BWAPI::UnitTypes::Protoss_Assimilator)
 	{
 		unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 	}
@@ -19,7 +19,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	{
 		referencePath = AStar::GeneratePath(unitReference->getPosition(), unitReference->getType(), positionToBuild);
 		path = referencePath.positions;
-	}
+	}*/
 
 	unitReference->stop();
 }
@@ -31,32 +31,34 @@ Builder::~Builder()
 
 void Builder::onFrame()
 {
-	if(referencePath.positions.empty() == false)
-		AStar::drawPath(referencePath);
+	//if(referencePath.positions.empty() == false)
+	//	AStar::drawPath(referencePath);
 
-	if (pathIndex == path.size() || unitReference->getDistance(requestedPositionToBuild) < DISTANCE_THRESHOLD)
-	{
-		unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-	}
-	else
-	{
-		//First initial move
-		if (unitReference->isIdle())
-		{
-			//std::cout << "First move\n";
-			unitReference->move(path.at(pathIndex));
-		}
+	//if (pathIndex == path.size() || unitReference->getDistance(requestedPositionToBuild) < DISTANCE_THRESHOLD)
+	//{
+	//	unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+	//}
+	//else
+	//{
+	//	//First initial move
+	//	if (unitReference->isIdle())
+	//	{
+	//		//std::cout << "First move\n";
+	//		unitReference->move(path.at(pathIndex));
+	//	}
 
-		if (unitReference->getDistance(path.at(pathIndex)) < DISTANCE_THRESHOLD)
-		{
-			//std::cout << "Moving\n";
-			pathIndex++;
+	//	if (unitReference->getDistance(path.at(pathIndex)) < DISTANCE_THRESHOLD)
+	//	{
+	//		//std::cout << "Moving\n";
+	//		pathIndex++;
 
-			if(pathIndex != path.size())
-				unitReference->move(path.at(pathIndex));
-		}
-	}
+	//		if(pathIndex != path.size())
+	//			unitReference->move(path.at(pathIndex));
+	//	}
+	//}
 
+
+	unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 
 }
 

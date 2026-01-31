@@ -138,11 +138,7 @@ void BuildManager::onUnitComplete(BWAPI::Unit unit)
 {
     buildings.insert(unit);
 
-    //Might cause error if the unit was not added possibly.
-    std::cout << "Removing " << unit->getType() << "\n";
     incompleteBuildings.erase(unit);
-
-    spenderManager->onUnitComplete(unit);
 }
 
 void BuildManager::onUnitDiscover(BWAPI::Unit unit)

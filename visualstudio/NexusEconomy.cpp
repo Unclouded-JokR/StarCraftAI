@@ -152,7 +152,7 @@ void NexusEconomy::onFrame()
 			}
 			else if (assignedResource.find(worker) == assignedResource.end())
 			{
-				std::cout << "reached this point\n";
+				//std::cout << "reached this point\n";
 				BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
 				if (closestMineral) {
 						resourceWorkerCount[closestMineral] += 1;
