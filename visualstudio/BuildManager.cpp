@@ -36,68 +36,10 @@ void BuildManager::onFrame() {
 
     //build order check here
 
-    //For now get old functionality to work.
-    /*for (std::vector<Builder>::iterator builder = builders.begin(); builder != builders.end();)
-    {
-        builder->onFrame();
-    }*/
-
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
-        if (it->getUnitReference()->isConstructing())
-        {
-            it++;
-            continue;
-        }
-
-
-        //Need to check if we are able to build. Units on tiles can cause buildings NOT to warp in
-        if (it->getUnitReference()->isIdle() || it->getUnitReference()->getPosition() == it->positionToBuild)
-        {
-            //std::cout << "In position to build " << it->building << "\n";
-            if (!it->getUnitReference()->canBuild(it->buildingToConstruct))
-            {
-                it++;
-                continue;
-            }
-
-            const bool buildSuccess = it->getUnitReference()->build(it->buildingToConstruct, BWAPI::TilePosition(it->positionToBuild));
-
-            //Get new position to build if we cannot build at this place.
-            if (!buildSuccess)
-            {
-                //std::cout << "BUILD UNSUCCESSFUL, trying another spot\n";
-                it->positionToBuild = buildingPlacer.getPositionToBuild(it->buildingToConstruct);
-                it++;
-                continue;
-            }
-            //std::cout << (it->probe->isConstructing()) << "\n";
-            //std::cout << "Build command returned true, constructing...\n";
-
-            //Need to utilize BWEB's reserving tile system to improve building placement even further.
-            BWEB::Map::addUsed(BWAPI::TilePosition(it->positionToBuild), it->buildingToConstruct);
-
-            if (it->buildingToConstruct == BWAPI::UnitTypes::Protoss_Assimilator)
-            {
-                //Small chance for assimlator to not be build will try to fix this later.
-                it = builders.erase(it);
-            }
-            else
-            {
-                it++;
-            }
-        }
-        else
-        {
-            //Testing this cause the move command has a small chance to fail
-            if (it->getUnitReference()->getOrder() != BWAPI::Orders::Move)
-            {
-                //std::cout << "Move command failed, trying again\n";
-                it->getUnitReference()->move(it->positionToBuild);
-            }
-
-            it++;
-        }
+        it->onFrame();
+        it++;
     }
 
 
@@ -135,6 +77,7 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
     if (unit->getType().isBuilding() && !unit->isCompleted()) incompleteBuildings.insert(unit);
 }
 
+
 void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
     spenderManager->onUnitDestroy(unit);
@@ -143,7 +86,7 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
     {
         if (it->getUnitReference()->getID() == unit->getID())
         {
-            const BWAPI::Unit unitAvalible = getUnitToBuild(it->positionToBuild);
+            const BWAPI::Unit unitAvalible = getUnitToBuild(it->requestedPositionToBuild);
             it->setUnitReference(unitAvalible);
             break;
         }

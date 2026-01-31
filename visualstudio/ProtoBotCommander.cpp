@@ -190,10 +190,10 @@ void ProtoBotCommander::onFrame()
 	// Draw unit health bars, which brood war unfortunately does not do
 	Tools::DrawUnitHealthBars();
 
-	BWEB::Map::draw();
+	//BWEB::Map::draw();
 
 	// Draw some relevent information to the screen to help us debug the bot
-	drawDebugInformation();
+	//drawDebugInformation();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)

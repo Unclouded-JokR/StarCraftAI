@@ -70,6 +70,8 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                     }
                 }
 
+                if (nexusOnLocation == false) continue;
+
                 bool gyserAvalible = false;
                 auto gysers = base.Geysers();
 
@@ -110,7 +112,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                     && distanceToPlacement < distance
                     && !alreadyUsingTiles(placement, type.tileWidth(), type.tileHeight()))
                 {
-                    std::cout << "Found position to place\n";
+                    //std::cout << "Found position to place\n";
                     distance = distanceToPlacement;
                     closestDistance = placement;
                 }

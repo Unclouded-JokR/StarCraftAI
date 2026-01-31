@@ -255,14 +255,14 @@ Action StrategyManager::onFrame()
 
 
 	#pragma region Scout
-	// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
-	}
+	//// ----- emit SCOUT periodically -----
+	//if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+	//	frameSinceLastScout = frame;
+	//	Scout s;
+	//	action.commanderAction = s;
+	//	action.type = ActionType::Action_Scout;
+	//	return action;                 // <-- ensure we actually send the action
+	//}
 	#pragma endregion
 
 	// from here on, build logic etc.
