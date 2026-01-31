@@ -172,12 +172,12 @@ void NexusEconomy::onFrame()
 			if((assignedResource[worker] != vespeneGyser && !(worker->isGatheringMinerals()) && assignedResource[worker]) || (worker->isIdle() && assignedResource[worker] && !(worker->isCarryingMinerals())))
 			{
 				//moveToMineral(worker, assignedResource[worker]);
-				std::cout << "moving... " << "\n";
+				//std::cout << "moving... " << "\n";
 				worker->move(assignedResource[worker]->getPosition(), true);
 				if (worker->getDistance(assignedResource[worker]) < 50)
 				{
-					std::cout << "gathering Mineral " << "\n";
-					worker->gather(assignedResource[worker]);
+					//std::cout << "gathering Mineral " << "\n";
+					worker->rightClick(assignedResource[worker]);
 				}
 
 
