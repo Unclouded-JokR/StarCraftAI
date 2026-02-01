@@ -49,7 +49,7 @@ class Path {
 		};
 };
 
-static class AStar {
+class AStar {
 	private:
 		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
 

@@ -31,7 +31,7 @@ INC_FLAGS += -Isrc/bwapi/include -I./BWEM/src
 
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
-CXXFLAGS += -std=gnu++17 -O0 -g 
+CXXFLAGS += -std=gnu++20 -O0 -g 
 # CXXFLAGS += -static-libgcc -static-libstdc++            
 CPPFLAGS := $(INC_FLAGS) -MMD -MP -DNOMINMAX
 
