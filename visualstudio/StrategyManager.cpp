@@ -1,5 +1,6 @@
 #include "StrategyManager.h"
 #include "ProtoBotCommander.h"
+#include "Squad.h"
 #include <BWAPI.h>
 
 int expansionTimes[9] = { 1, 2, 3, 5, 8, 13, 21, 34, 55 };
@@ -269,6 +270,7 @@ Action StrategyManager::onFrame()
 	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
 	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
+
 
 	#pragma region Expand
 	if (buildOrderCompleted)

@@ -9,20 +9,17 @@ class Builder
 {
 private:
     BWAPI::Unit unitReference;
-    std::vector<BWAPI::Position> path;
-    size_t pathIndex = 0;
-
-    BWAPI::Position initialPosition; //used for debug
     Path referencePath;
+    size_t pathIndex = 0;
 
     std::vector<BWAPI::TilePosition> getPathToConstruct();
 public:
     BWAPI::Position requestedPositionToBuild;
     BWAPI::UnitType buildingToConstruct;
-    bool isConstructing = false;
 
-    Builder(BWAPI::Unit, BWAPI::UnitType, BWAPI::Position);
+    Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToPlace, BWAPI::Position requestedLocation, Path path);
     ~Builder();
+
     void onFrame();
     BWAPI::Unit getUnitReference();
     void setUnitReference(BWAPI::Unit);

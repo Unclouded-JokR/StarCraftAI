@@ -1,12 +1,11 @@
 #include "Builder.h"
 #include "BuildManager.h"
 
-Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct, BWAPI::Position positionToBuild) : 
+Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct, BWAPI::Position positionToBuild, Path path) :
 	unitReference(unitReference), 
 	buildingToConstruct(buildingToConstruct),
 	requestedPositionToBuild(positionToBuild),
-	isConstructing(true),
-	initialPosition(unitReference->getPosition())
+	referencePath(path)
 {
 	/*std::cout << unitReference->getID() << "\n";
 	std::cout << buildingToConstruct.getName() << "\n";
@@ -26,7 +25,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 
 Builder::~Builder() 
 {
-	path.clear();
+	//path.clear();
 }
 
 void Builder::onFrame()

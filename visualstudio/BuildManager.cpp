@@ -4,7 +4,7 @@
 #include "BuildingPlacer.h"
 #include "Builder.h"
 
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), spenderManager(new SpenderManager(this))
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 
 }
@@ -27,21 +27,93 @@ void BuildManager::onStart()
     //Make false at the start of a game.
     std::cout << "Builder Manager Initialized" << "\n";
     buildOrderCompleted = true;
-    spenderManager->onStart();
+    spenderManager.onStart();
     builders.clear();
 }
 
 void BuildManager::onFrame() {
-    spenderManager->OnFrame();
+    spenderManager.OnFrame(resourceRequests);
+
+
+    for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
+    {
+        (it->state == ResourceRequest::State::Accepted_Completed) ? it = resourceRequests.erase(it) : it++;
+    }
+
+    for (ResourceRequest& request : resourceRequests)
+    {
+        if (request.state != ResourceRequest::State::Approved_InProgress)
+        {
+            continue;
+        }
+
+        switch (request.type)
+        {
+            case ResourceRequest::Type::Unit:
+            {
+                if (request.requestedBuilding->canTrain(request.unit) &&
+                    !request.requestedBuilding->isTraining() &&
+                    request.requestedBuilding->isCompleted())
+                {
+                    request.requestedBuilding->train(request.unit);
+                    request.state = ResourceRequest::State::Accepted_Completed;
+                }
+
+                break;
+            }
+            case ResourceRequest::Type::Building:
+            {
+                //Should change this to consider distance measure but is fine for now.
+                const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
+                const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
+
+                if (workerAvalible == nullptr) continue;
+
+                //Skip path generation for now until bug is fixed.
+                //const Path pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                Path pathToLocation;
+
+                Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
+                builders.push_back(temp);
+               
+                std::cout << "Building " << request.unit << "\n";
+                std::cout << request.state << "\n";
+                request.state = ResourceRequest::State::Approved_BeingBuilt;
+                std::cout << request.state << "\n";
+                break;
+            }
+            case ResourceRequest::Type::Upgrade:
+            {
+                if (request.requestedBuilding->canUpgrade(request.upgrade) &&
+                    !request.requestedBuilding->isUpgrading() &&
+                    request.requestedBuilding->isCompleted())
+                {
+                    request.requestedBuilding->upgrade(request.upgrade);
+                    request.state = ResourceRequest::State::Accepted_Completed;
+                }
+                break;
+            }
+            case ResourceRequest::Type::Tech:
+            {
+                if (request.requestedBuilding->canResearch(request.upgrade) &&
+                    !request.requestedBuilding->isResearching() &&
+                    request.requestedBuilding->isCompleted())
+                {
+                    request.requestedBuilding->upgrade(request.upgrade);
+                    request.state = ResourceRequest::State::Accepted_Completed;
+                }
+                break;
+            }
+        }
+    }
+
 
     //build order check here
 
-    for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
+    for (Builder builder : builders)
     {
-        it->onFrame();
-        it++;
+        builder.onFrame();
     }
-
 
     //Debug
     for (BWAPI::Unit building : buildings)
@@ -66,6 +138,21 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
 
     buildingPlacer.onUnitCreate(unit);
 
+    //Need to check this for tech and upgrades;
+    for (ResourceRequest& request : resourceRequests)
+    {
+        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+            request.unit == unit->getType())
+        {
+            request.state = ResourceRequest::State::Accepted_Completed;
+        }
+        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+            request.unit == unit->getType())
+        {
+            request.state = ResourceRequest::State::Accepted_Completed;
+        }
+    }
+
     //Remove worker once a building is being warped in.
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
     {
@@ -76,9 +163,7 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
         }
     }
 
-    spenderManager->onUnitCreate(unit);
-
-    if (unit->getType().isBuilding() && !unit->isCompleted()) incompleteBuildings.insert(unit);
+    if (unit->getType().isBuilding() && !unit->isCompleted()) buildings.insert(unit);
 }
 
 
@@ -107,28 +192,15 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
     if (!unitType.isBuilding()) return;
 
-    //Check if a non-completed building has been killed
-    for (BWAPI::Unit warp : incompleteBuildings)
+    //Check if a building has been killed
+    for (BWAPI::Unit building : buildings)
     {
-        if (unit == warp)
+        if (building == unit)
         {
-            incompleteBuildings.erase(warp);
+            buildings.erase(unit);
             return;
         }
     }
-
-    //If the unit is something dealing with economy exit.
-    if (unitType == BWAPI::UnitTypes::Protoss_Pylon || unitType == BWAPI::UnitTypes::Protoss_Nexus || unitType == BWAPI::UnitTypes::Protoss_Assimilator) return;
-
-    for (BWAPI::Unit building : buildings)
-    {
-        if (building->getID() == unit->getID())
-        {
-            buildings.erase(building);
-            break;
-        }
-    }
-
 }
 
 void BuildManager::onUnitMorph(BWAPI::Unit unit)
@@ -147,14 +219,14 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
                 break;
             }
         }
+
+        buildings.insert(unit);
     }
 }
 
 void BuildManager::onUnitComplete(BWAPI::Unit unit)
 {
-    buildings.insert(unit);
 
-    incompleteBuildings.erase(unit);
 }
 
 void BuildManager::onUnitDiscover(BWAPI::Unit unit)
@@ -164,39 +236,81 @@ void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 #pragma endregion
 
 #pragma region Spender Manager Methods
+/// <summary>
+/// Using these methods for now to get this working but it should be refactored later.
+/// </summary>
+/// <param name="building"></param>
 void BuildManager::buildBuilding(BWAPI::UnitType building)
 {
-    spenderManager->addRequest(building);
+    ResourceRequest request;
+    request.type = ResourceRequest::Type::Building;
+    request.unit = building;
+
+    resourceRequests.push_back(request);
+    std::cout << "Making Building request\n";
 }
 
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
-    spenderManager->addRequest(unitToTrain, unit);
+    ResourceRequest request;
+    request.type = ResourceRequest::Type::Unit;
+    request.unit = unitToTrain;
+    request.requestedBuilding = unit;
+
+    resourceRequests.push_back(request);
+    std::cout << "Making Unit request\n";
 }
 
 void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
 {
-    spenderManager->addRequest(unit, upgrade);
+    ResourceRequest request;
+    request.type = ResourceRequest::Type::Upgrade;
+    request.upgrade = upgrade;
+    request.requestedBuilding = unit;
+
+    resourceRequests.push_back(request);
 }
 
 bool BuildManager::alreadySentRequest(int unitID)
 {
-    return spenderManager->buildingAlreadyMadeRequest(unitID);
+    for (const ResourceRequest& request : resourceRequests)
+    {
+        if (request.requestedBuilding != nullptr)
+        {
+            if (unitID == request.requestedBuilding->getID()) return true;
+        }
+    }
+    return false;
 }
 
 bool BuildManager::requestedBuilding(BWAPI::UnitType building)
 {
-    return spenderManager->requestedBuilding(building);
+    for (const ResourceRequest& request : resourceRequests)
+    {
+        if (building == request.unit) return true;
+    }
+    return false;
 }
 
 bool BuildManager::upgradeAlreadyRequested(BWAPI::Unit building)
 {
-    return spenderManager->upgradeAlreadyRequested(building);
+    for (const ResourceRequest& request : resourceRequests)
+    {
+        if (request.requestedBuilding != nullptr)
+        {
+            if (building->getID() == request.requestedBuilding->getID()) return true;
+        }
+    }
+    return false;
 }
 
 bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
 {
-    return spenderManager->checkUnitIsPlanned(building);
+    for (const ResourceRequest& request : resourceRequests)
+    {
+        if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress) return true;
+    }
+    return false;
 }
 
 bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
@@ -211,14 +325,14 @@ bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 
 int BuildManager::checkAvailableSupply()
 {
-    return spenderManager->plannedSupply();
+    return spenderManager.plannedSupply(resourceRequests);
 }
 #pragma endregion
 
 void BuildManager::createBuilder(BWAPI::Unit unit, BWAPI::UnitType building, BWAPI::Position positionToBuild)
 {
-    Builder temp = Builder(unit, building, positionToBuild);
-    builders.push_back(temp);
+    /*Builder temp = Builder(unit, building, positionToBuild);
+    builders.push_back(temp);*/
 }
 
 bool BuildManager::isBuildOrderCompleted()
@@ -226,11 +340,11 @@ bool BuildManager::isBuildOrderCompleted()
     return buildOrderCompleted;
 }
 
-bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit)
 {
-    for (BWAPI::Unit warp : incompleteBuildings)
+    for (BWAPI::Unit building : buildings)
     {
-        if (building == warp->getType())
+        if (unit == building->getType() && !building->isCompleted())
         {
             return true;
         }
@@ -241,14 +355,7 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
 
 void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 {
-    for (BWAPI::Unit warp : incompleteBuildings)
-    {
-        if (unit == warp)
-        {
-            incompleteBuildings.erase(unit);
-            break;
-        }
-    }
+    
 
 }
 
