@@ -76,10 +76,7 @@ void BuildManager::onFrame() {
                 Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
                 builders.push_back(temp);
                
-                std::cout << "Building " << request.unit << "\n";
-                std::cout << request.state << "\n";
                 request.state = ResourceRequest::State::Approved_BeingBuilt;
-                std::cout << request.state << "\n";
                 break;
             }
             case ResourceRequest::Type::Upgrade:
@@ -247,7 +244,6 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
     request.unit = building;
 
     resourceRequests.push_back(request);
-    std::cout << "Making Building request\n";
 }
 
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
@@ -258,7 +254,6 @@ void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
     request.requestedBuilding = unit;
 
     resourceRequests.push_back(request);
-    std::cout << "Making Unit request\n";
 }
 
 void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
