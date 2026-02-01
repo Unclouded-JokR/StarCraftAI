@@ -32,13 +32,12 @@ void BuildManager::onStart()
 }
 
 void BuildManager::onFrame() {
-    spenderManager.OnFrame(resourceRequests);
-
-
     for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
     {
         (it->state == ResourceRequest::State::Accepted_Completed) ? it = resourceRequests.erase(it) : it++;
     }
+
+    spenderManager.OnFrame(resourceRequests);
 
     for (ResourceRequest& request : resourceRequests)
     {

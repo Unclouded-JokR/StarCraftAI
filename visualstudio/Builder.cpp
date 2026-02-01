@@ -56,8 +56,7 @@ void Builder::onFrame()
 	//	}
 	//}
 
-
-	unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+	if(unitReference->isIdle()) unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 
 }
 

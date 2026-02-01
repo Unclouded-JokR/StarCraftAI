@@ -1,7 +1,6 @@
 #pragma once
 #include "SpenderManager.h"
 #include "BuildManager.h"
-#include "BuildingPlacer.h"
 
 SpenderManager::SpenderManager()
 {
@@ -19,13 +18,13 @@ int SpenderManager::availableMinerals(std::vector<ResourceRequest> &requests)
 {
     int currentMineralCount = BWAPI::Broodwar->self()->minerals();
 
-    for (const ResourceRequest request : requests)
+    for (const ResourceRequest &request : requests)
     {
         //Sanity Check
         if (request.state == ResourceRequest::State::Accepted_Completed ||
             request.state == ResourceRequest::State::PendingApproval) continue;
 
-        if (request.type == ResourceRequest::Type::Building) currentMineralCount -= request.unit.gasPrice();
+        if (request.type == ResourceRequest::Type::Building) currentMineralCount -= request.unit.mineralPrice();
     }
 
     return currentMineralCount;
@@ -35,7 +34,7 @@ int SpenderManager::availableGas(std::vector<ResourceRequest> &requests)
 {
     int currentGasCount = BWAPI::Broodwar->self()->gas();
 
-    for (const ResourceRequest request : requests)
+    for (const ResourceRequest &request : requests)
     {
         //Sanity Check
         if (request.state == ResourceRequest::State::Accepted_Completed ||
@@ -58,12 +57,12 @@ int SpenderManager::availableSupply()
 int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests)
 {
     const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2; //Current supply total StarCraft notes us having.
-    int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2; //Used supply total StarCraft notes us having.
+    const int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2; //Used supply total StarCraft notes us having.
 
     int plannedUsedSuply = 0; //Supply we plan on using (Units are in the build queue but have not been accepted yet.
     int plannedSupply = 0; //Buildings we plan on constructing that provide supply. 
 
-    for (const ResourceRequest request : requests)
+    for (const ResourceRequest &request : requests)
     {
         //Sanity Check
         if (request.state == ResourceRequest::State::Accepted_Completed) continue;
@@ -105,8 +104,11 @@ void SpenderManager::onStart()
 
 void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
 {
+    //Calculate avalible minerals to spend. This considers the minerals we plan to spend as well.
     int currentMineralCount = availableMinerals(requests);
     int currentGasCount = availableGas(requests);
+
+    //Need to modify spender manager to be able to consider supply usage.
     int currentSupply = availableSupply();
 
     int mineralPrice = 0;
