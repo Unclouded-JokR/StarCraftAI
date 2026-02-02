@@ -10,11 +10,30 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 }
 
 void Squad::onFrame() {
-	/*if (state == POSITIONING) {
+	if (state == POSITIONING) {
 		flockingHandler();
 	}
 	
-	pathHandler();*/
+	pathHandler();
+
+	int tilesX = BWAPI::Broodwar->mapWidth();
+	int tilesY = BWAPI::Broodwar->mapHeight();
+
+	for (int x = 0; x < tilesX; x++)
+	{
+		for (int y = 0; y < tilesY; y++)
+		{
+			BWAPI::Position topLeft(x * 32, y * 32);
+			BWAPI::Position bottomRight((x + 1) * 32, (y + 1) * 32);
+
+			BWAPI::Broodwar->drawBoxMap(
+				topLeft,
+				bottomRight,
+				BWAPI::Colors::Blue,
+				false
+			);
+		}
+	}
 }
 
 void Squad::simpleFlock() {

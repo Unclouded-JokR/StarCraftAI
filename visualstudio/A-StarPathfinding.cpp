@@ -81,12 +81,11 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			}
 
 			// Check if neighbour is already in closed set
-			bool cs = closedSet[TileToIndex(neighbour.tile)];
-			if (cs == true) {
+			if (closedSet[TileToIndex(neighbour.tile)]) {
 				continue;
 			}
 
-			// If neighbour is not in the closed set, add to open set ONLY IF it has a better gCost than previously recorded
+			// If neighbour has a worse gCost, don't add to openSet
 			if (neighbour.gCost >= gCostMap[TileToIndex(neighbour.tile)]) {
 				continue;
 			}
@@ -125,7 +124,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 			if (tileWalkable(unitType, neighbourTile)) {
-				double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0); // Diagonal movement has more cost (Euclidean distance)
+				double gCost = currentNode.gCost + currentNode.tile.getDistance(neighbourTile);
 				double hCost = neighbourTile.getDistance(end);
 				double fCost = gCost + hCost;
 				Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
@@ -146,37 +145,29 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile) {
 		return false;
 	}
 
-	const int unitWidth = unitType.width();
-	const int unitHeight = unitType.height();
-	
-	// When checking for walkable, we check if any of the 4 corners of the unit would be unwalkable if CENTERED on tile
-	// If so, the unit would get stuck on them when trying to move through the tile.
-	const BWAPI::Position center = BWAPI::Position(tile.x * 32 + 16, tile.y * 32 + 16);
-	const int left = center.x - (unitWidth / 2);
-	const int right = center.x + (unitWidth / 2);
-	const int top = center.y - (unitHeight / 2);
-	const int bottom = center.y + (unitHeight / 2);
+	// Get measurements in terms of WalkPositions (8x8)
+	const int unitWidth = unitType.width() / 8;
+	const int unitHeight = unitType.height() / 8;
 
-	// Pixel position -> Walk position
-	const int walkTileLeft = left / 8;
-	const int walkTileRight = right / 8;
-	const int walkTileTop = top / 8;
-	const int walkTileBottom = bottom / 8;
+	// Check all WalkPositions the unit would inhabit if it reached the center of the tile
+	BWAPI::WalkPosition wpCenter = BWAPI::WalkPosition(tile.x * 4 + 2, tile.y * 4 + 2);
 
-	// BWAPI::Broodwar->isWalkable() only checks static terrain, so we also need to check for buildings on the tile
-	const auto& unitsOnTile = BWAPI::Broodwar->getUnitsInRectangle(left, top, right, bottom);
-	for (const auto& unit : unitsOnTile) {
-		if (unit->getType().isBuilding()) {
-			return false;
-		}
-	}
+	for (int xOffset = -unitWidth / 2; xOffset < unitWidth / 2; xOffset++) {
+		for (int yOffset = -unitHeight / 2; yOffset < unitHeight / 2; yOffset++) {
+			BWAPI::WalkPosition pos = BWAPI::WalkPosition(wpCenter.x + xOffset, wpCenter.y + yOffset);
 
-	// Iterates through every walk tile the unit would occupy
-	for (int wx = walkTileLeft; wx <= walkTileRight; wx++) {
-		for (int wy = walkTileTop; wy <= walkTileBottom; wy++) {
-			BWAPI::WalkPosition walkPos(wx, wy);
-			if (!BWAPI::Broodwar->isWalkable(walkPos)) {
+			if (!pos.isValid() || !BWAPI::Broodwar->isWalkable(pos)) {
 				return false;
+			}
+
+			// BWAPI::Broodwar->isWalkable() only checks static terrain so we'll also need to check for buildings
+			BWAPI::Position topLeft = BWAPI::Position(pos.x * 8 - 4, pos.y * 8 - 4);
+			BWAPI::Position bottomRight = BWAPI::Position(pos.x * 8 + 4, pos.y * 8 + 4);
+			const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight);
+			for (BWAPI::Unit unit : unitsInRect) {
+				if (unit->getType().isBuilding()) {
+					return false;
+				}
 			}
 		}
 	}
@@ -192,6 +183,7 @@ void AStar::drawPath(Path path) {
 	BWAPI::Position prevPos = path.positions.at(0);
 	for (const BWAPI::Position pos : path.positions) {
 		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
+		BWAPI::Broodwar->drawCircleMap(pos, 3, BWAPI::Colors::Black, true);
 		prevPos = pos;
 	}
 

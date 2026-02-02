@@ -157,6 +157,10 @@ void CombatManager::handleTextCommand(std::string text) {
 	const BWAPI::Position downPos = BWAPI::Position(832, 895);
 	const BWAPI::Position centerPos = BWAPI::Position(832, 449);
 
+	// PRESET POSITIONS FOR CUSTOM MAP ../pathBuildingTest.scx
+	const BWAPI::Position topPos = BWAPI::Position(1041, 177);
+	const BWAPI::Position bottomPos = BWAPI::Position(508, 507);
+
 	for (Squad& squad : Squads) {
 		const BWAPI::Position leaderPos = squad.leader->getPosition();
 		const BWAPI::UnitType leaderType = squad.leader->getType();
@@ -177,6 +181,15 @@ void CombatManager::handleTextCommand(std::string text) {
 		}if (text == "center") {
 			squad.currentPathIdx = 0;
 			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
+		}
+
+		if (text == "top") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, topPos);
+		}
+		if (text == "bottom") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, bottomPos);
 		}
 
 		vector<BWAPI::Position> positions = squad.currentPath.positions;
