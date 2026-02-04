@@ -56,7 +56,14 @@ void Builder::onFrame()
 	//	}
 	//}
 
-	if(unitReference->isIdle()) unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+	if (unitReference->isIdle())
+	{
+		unitReference->move(requestedPositionToBuild);
+	}
+	else if (unitReference->getDistance(requestedPositionToBuild) < 100)
+	{
+		unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+	}
 
 }
 

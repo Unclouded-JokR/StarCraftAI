@@ -119,6 +119,13 @@ public:
 class ProtoBotCommander;
 struct Action;
 
+struct BaseLocation
+{
+	BWAPI::Unit unitReference;
+	BWAPI::Position lastKnownPosition;
+};
+
+
 class StrategyManager
 {
 public:
@@ -130,6 +137,8 @@ public:
 	float boredomPerSecond = 0.05f;
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
+
+	std::vector<BaseLocation> baseLocations;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 	std::string onStart();

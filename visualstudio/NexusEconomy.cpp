@@ -520,7 +520,7 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 //[TODO]: make sure we are handing off probe properlly
 BWAPI::Unit NexusEconomy::getWorkerToScout()
 {
-	std::cout << "Reuqest for Worker scouts!\n";
+	std::cout << "Request for Worker scouts!\n";
 	if (workers.size() == 0) return nullptr;
 
 	BWAPI::Unit unitToReturn = nullptr;
@@ -550,7 +550,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	if (unitToReturn != nullptr)
 	{
 		workers.erase(unitToReturn);
-		std::cout << "Reuqesting Worker scouts!\n";
+		std::cout << "Requesting Worker scouts!\n";
 		return unitToReturn;
 	}
 
@@ -570,7 +570,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	if (unitToReturn != nullptr)
 	{
 		workers.erase(unitToReturn);
-		std::cout << "Reuqesting Worker scouts!\n";
+		std::cout << "Requesting Worker scouts!\n";
 		return unitToReturn;
 	}
 
@@ -595,7 +595,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	}
 
 	workers.erase(unitToReturn);
-	std::cout << "Reuqesting Worker scouts!\n";
+	std::cout << "Requesting Worker scouts!\n";
 	return unitToReturn;
 }
 

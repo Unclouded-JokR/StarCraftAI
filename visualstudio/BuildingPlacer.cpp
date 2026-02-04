@@ -26,6 +26,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         int distance = INT_MAX;
         BWAPI::TilePosition closestDistance;
 
+        //To Avoid expanding to bases father than expected and generating paths for every base. Create a sorted list.
         for (const BWEM::Area& area : theMap.Areas())
         {
             for (const BWEM::Base& base : area.Bases())

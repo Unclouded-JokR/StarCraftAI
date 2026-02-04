@@ -281,6 +281,8 @@ private:
 public:
     ProtoBotCommander* commanderReference;
 
+    std::vector<BWAPI::Position> EnemyBaseLocations;
+
     InformationManager(ProtoBotCommander* commanderReference);
     void onStart();
     void onFrame();
