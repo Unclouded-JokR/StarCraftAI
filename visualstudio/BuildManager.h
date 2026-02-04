@@ -28,6 +28,9 @@ struct ResourceRequest
     BWAPI::UpgradeType upgrade = BWAPI::UpgradeTypes::None;
     BWAPI::TechType tech = BWAPI::TechTypes::None;
 
+    BWAPI::Unit scoutToPlaceBuilding = nullptr; //Used if a scout requests a gas steal
+    bool isCheese = false;
+
     //For now buildings will request to make units but we should remove this later
     //The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
     BWAPI::Unit requestedBuilding = nullptr;
@@ -62,8 +65,11 @@ public:
 
     //Spender Manager Request methods
     void buildBuilding(BWAPI::UnitType);
+    void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
     void trainUnit(BWAPI::UnitType, BWAPI::Unit);
     void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
+
+    bool cheeseIsApproved(BWAPI::Unit scout);
     bool alreadySentRequest(int unitID);
     bool requestedBuilding(BWAPI::UnitType);
     bool upgradeAlreadyRequested(BWAPI::Unit);
@@ -73,13 +79,11 @@ public:
 
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
-    void buildingDoneWarping(BWAPI::Unit unit);
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
 
     //Builder helper methods
     std::vector<Builder> getBuilders();
-    void createBuilder(BWAPI::Unit unit, BWAPI::UnitType building, BWAPI::Position positionToBuild);
     void pumpUnit();
 };

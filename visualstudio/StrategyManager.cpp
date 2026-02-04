@@ -540,6 +540,12 @@ Action StrategyManager::onFrame()
 	return action;
 }
 
+//More logic to this later
+bool StrategyManager::shouldGasSteal()
+{
+	return true;
+}
+
 std::string StrategyManager::getCurrentStateName()
 {
 	return currentState->stringStateName;

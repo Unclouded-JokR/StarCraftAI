@@ -63,19 +63,27 @@ void BuildManager::onFrame() {
             case ResourceRequest::Type::Building:
             {
                 //Should change this to consider distance measure but is fine for now.
-                const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
-                const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
+                if (request.isCheese)
+                {
+                    request.state = ResourceRequest::State::Approved_BeingBuilt;
+                }
+                else
+                {
+                    const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
+                    const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
 
-                if (workerAvalible == nullptr) continue;
+                    if (workerAvalible == nullptr) continue;
 
-                //Skip path generation for now until bug is fixed.
-                //const Path pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
-                Path pathToLocation;
+                    //Skip path generation for now until bug is fixed.
+                    //const Path pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                    Path pathToLocation;
 
-                Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
-                builders.push_back(temp);
-               
-                request.state = ResourceRequest::State::Approved_BeingBuilt;
+                    Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
+                    builders.push_back(temp);
+
+                    request.state = ResourceRequest::State::Approved_BeingBuilt;
+                }
+
                 break;
             }
             case ResourceRequest::Type::Upgrade:
@@ -246,6 +254,17 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
     resourceRequests.push_back(request);
 }
 
+void BuildManager::buildBuilding(BWAPI::UnitType building, BWAPI::Unit scout)
+{
+    ResourceRequest request;
+    request.type = ResourceRequest::Type::Building;
+    request.unit = building;
+    request.scoutToPlaceBuilding = scout;
+    request.isCheese = true;
+
+    resourceRequests.push_back(request);
+}
+
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
     ResourceRequest request;
@@ -282,7 +301,7 @@ bool BuildManager::requestedBuilding(BWAPI::UnitType building)
 {
     for (const ResourceRequest& request : resourceRequests)
     {
-        if (building == request.unit) return true;
+        if (building == request.unit && !request.isCheese) return true;
     }
     return false;
 }
@@ -303,7 +322,7 @@ bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
 {
     for (const ResourceRequest& request : resourceRequests)
     {
-        if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress) return true;
+        if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
     }
     return false;
 }
@@ -324,12 +343,6 @@ int BuildManager::checkAvailableSupply()
 }
 #pragma endregion
 
-void BuildManager::createBuilder(BWAPI::Unit unit, BWAPI::UnitType building, BWAPI::Position positionToBuild)
-{
-    /*Builder temp = Builder(unit, building, positionToBuild);
-    builders.push_back(temp);*/
-}
-
 bool BuildManager::isBuildOrderCompleted()
 {
     return buildOrderCompleted;
@@ -348,10 +361,16 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit)
     return false;
 }
 
-void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
+bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
 {
-    
+    for (ResourceRequest& request : resourceRequests)
+    {
+        if (request.type != ResourceRequest::Type::Building && request.isCheese) continue;
+        
+        if (request.scoutToPlaceBuilding == unit && request.state == ResourceRequest::State::Approved_BeingBuilt) return true;
+    }
 
+    return false;
 }
 
 void BuildManager::pumpUnit()

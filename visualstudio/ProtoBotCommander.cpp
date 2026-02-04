@@ -256,8 +256,6 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-	buildManager.buildingDoneWarping(unit);
-
 	const BWAPI::UnitType unit_type = unit->getType();
 
 	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
@@ -348,6 +346,16 @@ const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
 const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemyBuildings()
 {
 	return informationManager.getKnownEnemyBuildings();
+}
+
+void ProtoBotCommander::requestCheese(BWAPI::UnitType building, BWAPI::Unit unit)
+{
+	buildManager.buildBuilding(building, unit);
+}
+
+bool ProtoBotCommander::checkCheeseRequest(BWAPI::Unit unit)
+{
+	return buildManager.cheeseIsApproved(unit);
 }
 
 bool ProtoBotCommander::buildOrderCompleted()

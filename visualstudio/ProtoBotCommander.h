@@ -102,6 +102,8 @@ public:
 	bool requestedBuilding(BWAPI::UnitType building);
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 	void requestBuild(BWAPI::UnitType building);
+	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
+	bool checkCheeseRequest(BWAPI::Unit);
 	bool alreadySentRequest(int unitID);
 	bool checkWorkerIsConstructing(BWAPI::Unit);
 	int checkAvailableSupply();

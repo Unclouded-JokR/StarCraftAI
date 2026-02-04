@@ -144,6 +144,8 @@ public:
 	std::string onStart();
 	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
+	bool shouldGasSteal();
+
 	void printBoredomMeter();
 	void printAngerMeter();
 	void changeState(StrategyState*);
