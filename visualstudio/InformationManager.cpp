@@ -106,18 +106,6 @@ void InformationManager::onFrame()
         ++it;
     }
 
-    for (auto enemy : BWAPI::Broodwar->enemy()->getUnits())
-    {
-        int id = enemy->getID();
-
-        TrackedEnemy& e = trackedEnemies[id];
-        e.id = id;
-        e.type = enemy->getType();
-        e.lastSeenPos = enemy->getPosition();
-        e.isBuilding = enemy->getType().isBuilding();
-        e.destroyed = false;
-    }
-
     updateEnemyBuildingCounter();
 
     //TestDrawBaseOwnership();
