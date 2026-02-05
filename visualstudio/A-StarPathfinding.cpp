@@ -66,6 +66,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(tiles.begin(), tiles.end());
+			smoothPath(tiles, unitType);
 
 			return Path(tiles, distance);
 		}
@@ -124,7 +125,8 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 			if (tileWalkable(unitType, neighbourTile)) {
-				double gCost = currentNode.gCost + currentNode.tile.getDistance(neighbourTile);
+				// Tile cost decided by euclidean distance
+				double gCost = currentNode.gCost + (x != 0 && y != 0) ? 1.414 : 1;
 				double hCost = neighbourTile.getDistance(end);
 				double fCost = gCost + hCost;
 				Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
@@ -175,6 +177,43 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile) {
 	return true;
 }
 
+void AStar::smoothPath(vector<BWAPI::Position>& vec, BWAPI::UnitType type) {
+	if (vec.size() < 2) {
+		return;
+	}
+
+	BWAPI::Position dir;
+	for (int i = 1; i < vec.size(); i++) {
+		if (i == 1) {
+			dir = vec[i] - vec[i - 1];
+			continue;
+		}
+
+		const BWAPI::Position newDir = vec[i] - vec[i - 1];
+		if (newDir == dir) {
+			vec.erase(vec.begin() + i);
+			continue;
+		}
+		else {
+			// Checks for 90 degree change in direction. Positions are 32 pixels apart (TilePosition)
+			if (i != vec.size()-1){
+				if ((abs(newDir.x) == 32 && newDir.y == 0) || (newDir.x == 0 && abs(newDir.y) == 32)){
+					BWAPI::Unitset circle1 = BWAPI::Broodwar->getUnitsInRadius(vec[i], 20, BWAPI::Filter::IsBuilding);
+					BWAPI::Unitset circle2 = BWAPI::Broodwar->getUnitsInRadius(vec[i - 1], 20, BWAPI::Filter::IsBuilding);
+					// 90 degree turn occurring around a building
+					if (!circle1.empty() && !circle2.empty()) {
+						vec.erase(vec.begin() + i);
+					}
+				}
+			}
+
+			dir = newDir;
+		}
+	}
+
+	return;
+}
+
 void AStar::drawPath(Path path) {
 	if (path.positions.size() <= 1) {
 		return;
@@ -184,6 +223,7 @@ void AStar::drawPath(Path path) {
 	for (const BWAPI::Position pos : path.positions) {
 		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
 		BWAPI::Broodwar->drawCircleMap(pos, 3, BWAPI::Colors::Black, true);
+		BWAPI::Broodwar->drawCircleMap(pos, 20, BWAPI::Colors::Grey);
 		prevPos = pos;
 	}
 
