@@ -21,6 +21,7 @@ public:
     void assign(BWAPI::Unit unit);
     bool hasScout() const { return scout && scout->exists(); }
 
+
 private:
     enum class State { Search, GasSteal, Harass, Orbit, ReturningCargo, Done };
 
@@ -42,11 +43,24 @@ private:
     bool gasStealDone = false;
     BWAPI::Unit targetGeyser = nullptr;
     int nextGasStealRetryFrame = 0;
+    bool gasStealRequested = false;
+    bool gasStealApproved = false;
+    int gasStealRequestFrame = 0;
+    int nextCheesePollFrame = 0;
 
     // misc
     int lastMoveIssueFrame = 0;
     int lastHP = -1, lastShields = -1;
     int lastThreatFrame = -999999;
+    BWAPI::Position lastPos = BWAPI::Positions::Invalid;
+    int lastProgressFrame = 0;
+    int lastProgressDist = INT_MAX;
+
+    int stuckSinceFrame = 0;
+    int sidestepDir = 1;
+    int sidestepAttempts = 0;
+
+    BWAPI::Position currentMoveGoal = BWAPI::Positions::Invalid;
 
     // orbit
     std::vector<BWAPI::Position> orbitWaypoints;
@@ -63,7 +77,7 @@ private:
     static constexpr int kThreatRearmFrames = 8;
     static constexpr int kCalmFramesToResumeHarass = 72; // ~3 seconds at 24 FPS
 
-    // helpers (your existing functions)
+    // helpers
     void buildStartTargets();
     void issueMoveToward(const BWAPI::Position& p, int reissueDist = 32, bool force = false);
     bool seeAnyEnemyBuildingNear(const BWAPI::Position& p, int radius) const;
@@ -80,6 +94,8 @@ private:
     bool planTerrainPathTo(const BWAPI::Position& goal);
     bool hasPlannedPath() const { return !plannedPath.empty(); }
     BWAPI::Position currentPlannedWaypoint() const;
+    BWAPI::Position computeSidestepTarget(const BWAPI::Position& goal);
+    BWAPI::Unit findAssimilatorOnTargetGeyser() const;
 
     // returning cargo QoL
     void handleReturningCargoState();

@@ -93,7 +93,7 @@ void ScoutingProbe::onFrame() {
         issueMoveToward(goal);
 
         if (scout->getDistance(goal) <= kCloseEnoughToTarget) {
-            if (seeAnyEnemyBuildingNear(goal, 400)) {
+            if (seeAnyEnemyBuildingNear(goal, 800)) {
                 enemyMainTile = tp;
                 enemyMainPos = goal;
                 Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
@@ -202,6 +202,8 @@ void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool for
     Broodwar->drawLineMap(scout->getPosition(), p, Colors::Yellow);
 }
 
+
+
 bool ScoutingProbe::seeAnyEnemyBuildingNear(const Position& p, int radius) const {
     for (auto& u : Broodwar->enemy()->getUnits()) {
         if (!u || !u->exists()) continue;
@@ -222,47 +224,162 @@ bool ScoutingProbe::anyRefineryOn(BWAPI::Unit geyser) const {
     return false;
 }
 
-bool ScoutingProbe::tryGasSteal() {
-    if (gasStealDone) return false;
-    if (!scout || !scout->exists() || !scout->getType().isWorker()) return false;
-    if (!enemyMainPos.isValid()) return false;
-
-    const int now = Broodwar->getFrameCount();
-    if (now < nextGasStealRetryFrame) return false;
-
-    if (!targetGeyser || !targetGeyser->exists()) {
-        BWAPI::Unit best = nullptr; int bestDist = 1e9;
-        for (auto g : Broodwar->getGeysers()) {
-            if (!g || !g->exists()) continue;
-            const int d = enemyMainPos.getDistance(g->getPosition());
-            if (d > 400) continue;
-            if (anyRefineryOn(g)) { gasStealDone = true; return false; }
-            if (d < bestDist) { bestDist = d; best = g; }
-        }
-        targetGeyser = best;
-        if (!targetGeyser) { gasStealDone = true; return false; }
-    }
-    if (anyRefineryOn(targetGeyser)) { gasStealDone = true; return false; }
-    if (Broodwar->self()->getRace() != Races::Protoss) { gasStealDone = true; return false; }
-    if (Broodwar->self()->minerals() < UnitTypes::Protoss_Assimilator.mineralPrice()) {
-        nextGasStealRetryFrame = now + kGasStealRetryCooldown;
+bool ScoutingProbe::tryGasSteal()
+{
+    if (gasStealDone)
+    {
         return false;
     }
-    if (scout->getDistance(targetGeyser) > 96 || !scout->isMoving()) {
+
+    if (!scout || !scout->exists() || !scout->getType().isWorker())
+    {
+        return false;
+    }
+
+    if (!enemyMainPos.isValid())
+    {
+        return false;
+    }
+
+    const int now = Broodwar->getFrameCount();
+
+    if (now < nextGasStealRetryFrame)
+    {
+        return false;
+    }
+
+    if (Broodwar->self()->getRace() != Races::Protoss)
+    {
+        gasStealDone = true;
+        return false;
+    }
+
+    // 1) Strategy permission (for now assume true)
+    const bool allowedByStrategy = commanderRef->shouldGasSteal();
+    if (!allowedByStrategy)
+    {
+        gasStealDone = true;
+        return false;
+    }
+
+    // 2) Find enemy geyser once
+    if (!targetGeyser || !targetGeyser->exists())
+    {
+        BWAPI::Unit best = nullptr;
+        int bestDist = INT_MAX;
+
+        for (auto g : Broodwar->getGeysers())
+        {
+            if (!g || !g->exists())
+            {
+                continue;
+            }
+
+            const int d = enemyMainPos.getDistance(g->getPosition());
+            if (d > 400)
+            {
+                continue;
+            }
+
+            if (anyRefineryOn(g))
+            {
+                gasStealDone = true;
+                return false;
+            }
+
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = g;
+            }
+        }
+
+        targetGeyser = best;
+
+        if (!targetGeyser)
+        {
+            gasStealDone = true;
+            return false;
+        }
+    }
+
+    if (anyRefineryOn(targetGeyser))
+    {
+        gasStealDone = true;
+        return false;
+    }
+
+    // 3) Make the request once
+    if (!gasStealRequested)
+    {
+        if (commanderRef)
+        {
+            commanderRef->requestCheese(UnitTypes::Protoss_Assimilator, scout);
+        }
+
+        gasStealRequested = true;
+        gasStealRequestFrame = now;
+        nextCheesePollFrame = now;
+        Broodwar->printf("[GasSteal] Requested Assimilator cheese (unit=%d).", scout->getID());
+    }
+
+    // 4) Poll approval (throttle to avoid spamming)
+    if (!gasStealApproved && now >= nextCheesePollFrame)
+    {
+        gasStealApproved = commanderRef ? commanderRef->checkCheeseRequest(scout) : true;
+        nextCheesePollFrame = now + 12;
+    }
+
+    if (!gasStealApproved)
+    {
+        // While waiting for approval, keep moving toward the geyser
+        if (scout->getDistance(targetGeyser) > 96 || !scout->isMoving())
+        {
+            scout->move(targetGeyser->getPosition());
+            nextGasStealRetryFrame = now + kGasStealRetryCooldown;
+            return true;
+        }
+
+        return true;
+    }
+
+    // 5) Once approved, ensure we can afford it (your SpenderManager might handle this, but keep local guard)
+    if (Broodwar->self()->minerals() < UnitTypes::Protoss_Assimilator.mineralPrice())
+    {
+        nextGasStealRetryFrame = now + kGasStealRetryCooldown;
+        return true;
+    }
+
+    // 6) Go build it
+    const TilePosition gtp = targetGeyser->getTilePosition();
+
+    if (scout->getDistance(targetGeyser) > 96)
+    {
         scout->move(targetGeyser->getPosition());
         nextGasStealRetryFrame = now + kGasStealRetryCooldown;
         return true;
     }
-    const TilePosition gtp = targetGeyser->getTilePosition();
-    if (scout->build(UnitTypes::Protoss_Assimilator, gtp)) {
-        Broodwar->printf("[GasSteal] Assimilator started at (%d,%d).", gtp.x, gtp.y);
+    // Try to issue the build (may take multiple frames)
+    if (BWAPI::Unit a = findAssimilatorOnTargetGeyser())
+    {
+        BWAPI::Broodwar->printf("[GasSteal] Assimilator started (id=%d).", a->getID());
         gasStealDone = true;
         return true;
     }
+
+    if (scout->build(BWAPI::UnitTypes::Protoss_Assimilator, gtp))
+    {
+        BWAPI::Broodwar->printf("[GasSteal] Build command accepted at (%d,%d). Waiting for start...", gtp.x, gtp.y);
+        nextGasStealRetryFrame = now + 12; // short retry window while we wait for it to appear
+        return true;
+    }
+
+    // If build fails this frame, nudge and retry later
     scout->move(targetGeyser->getPosition());
     nextGasStealRetryFrame = now + kGasStealRetryCooldown;
     return true;
 }
+
 
 bool ScoutingProbe::tryHarassWorker() {
     if (!scout || !scout->exists() || !enemyMainPos.isValid()) return false;
@@ -396,6 +513,69 @@ BWAPI::Position ScoutingProbe::currentPlannedWaypoint() const {
     return plannedPath.front();
 }
 
+BWAPI::Position ScoutingProbe::computeSidestepTarget(const BWAPI::Position& goal)
+{
+    if (!scout || !scout->exists() || !goal.isValid())
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    const BWAPI::Position from = scout->getPosition();
+    const BWAPI::Position d = goal - from;
+
+    if (!d.isValid() || (d.x == 0 && d.y == 0))
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    const double len = std::sqrt(double(d.x) * double(d.x) + double(d.y) * double(d.y));
+    if (len < 1.0)
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    const double nx = double(d.x) / len;
+    const double ny = double(d.y) / len;
+
+    // perpendicular unit vector, flip using sidestepDir
+    const double px = -ny * double(sidestepDir);
+    const double py = nx * double(sidestepDir);
+
+    const int steps[] = { 64, 96, 128, 160 };
+
+    for (int step : steps)
+    {
+        BWAPI::Position raw(from.x + int(px * step), from.y + int(py * step));
+
+        raw = clampToMapPx(raw, 32);
+
+        BWAPI::Position snapped = snapToNearestWalkable(raw, 160);
+        if (snapped.isValid())
+        {
+            return snapped;
+        }
+    }
+
+    // swap direction once and retry
+    sidestepDir = -sidestepDir;
+
+    for (int step : steps)
+    {
+        BWAPI::Position raw(from.x + int(-px * step), from.y + int(-py * step));
+
+        raw = clampToMapPx(raw, 32);
+
+        BWAPI::Position snapped = snapToNearestWalkable(raw, 160);
+        if (snapped.isValid())
+        {
+            return snapped;
+        }
+    }
+
+    return BWAPI::Positions::Invalid;
+}
+
+
 BWAPI::Position ScoutingProbe::clampToMapPx(const Position& p, int marginPx) {
     int x = std::max(marginPx, std::min(p.x, mapWpx() - 1 - marginPx));
     int y = std::max(marginPx, std::min(p.y, mapHpx() - 1 - marginPx));
@@ -426,4 +606,34 @@ BWAPI::Position ScoutingProbe::snapToNearestWalkable(Position p, int maxRadiusPx
     }
     if (best.x != -1) return toPosCenter(best);
     return Positions::Invalid;
+}
+
+BWAPI::Unit ScoutingProbe::findAssimilatorOnTargetGeyser() const
+{
+    if (!targetGeyser || !targetGeyser->exists())
+    {
+        return nullptr;
+    }
+
+    const BWAPI::TilePosition gtp = targetGeyser->getTilePosition();
+
+    for (BWAPI::Unit u : BWAPI::Broodwar->getAllUnits())
+    {
+        if (!u || !u->exists())
+        {
+            continue;
+        }
+
+        if (u->getType() != BWAPI::UnitTypes::Protoss_Assimilator)
+        {
+            continue;
+        }
+
+        if (u->getTilePosition() == gtp)
+        {
+            return u;
+        }
+    }
+
+    return nullptr;
 }
