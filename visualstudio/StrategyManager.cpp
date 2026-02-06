@@ -320,7 +320,7 @@ Action StrategyManager::onFrame()
 	{
 		if (building.type.isResourceDepot())
 		{
-			std::cout << building.type << " at position " << building.lastKnownPosition << "\n";
+			//std::cout << building.type << " at position " << building.lastKnownPosition << "\n";
 
 			BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
 		}
