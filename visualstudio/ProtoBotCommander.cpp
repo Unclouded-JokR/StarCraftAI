@@ -175,7 +175,7 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Economy);
 	economyManager.onFrame();
 	timerManager.stopTimer(TimerManager::Economy);
-
+	
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
 	scoutingManager.onFrame();
