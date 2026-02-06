@@ -39,8 +39,6 @@ void BuildManager::onFrame() {
 
     spenderManager.OnFrame(resourceRequests);
 
-    std::cout << builders.size() << "\n";
-
     for (ResourceRequest& request : resourceRequests)
     {
         if (request.state != ResourceRequest::State::Approved_InProgress)

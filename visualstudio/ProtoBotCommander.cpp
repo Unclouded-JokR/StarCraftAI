@@ -148,7 +148,7 @@ void ProtoBotCommander::onFrame()
 		case ActionType::Action_Scout:
 		{
 			std::cout << "Requesting scout!\n";
-			//getUnitToScout();
+			getUnitToScout();
 			break;
 		}
 		case ActionType::Action_Attack:
