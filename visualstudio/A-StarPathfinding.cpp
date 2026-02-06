@@ -3,20 +3,24 @@
 #include <queue>
 #include <vector>
 
-using namespace std;
+// Generates path from start to end using A* pathfinding algorithm
+// IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
+Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
+	Timer timer = Timer();
+	timer.start();
 
-Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end) {
 	vector<BWAPI::Position> tiles = vector<BWAPI::Position>();
 	// Checks if either the starting or ending tile positions are invalid
 	// If so, returns early with no tiles added to the path
 	if (!_start.isValid() || !_end.isValid()) {
+		std::cout << "ERROR: Starting point or ending point not valid" << endl;
 		return Path();
 	}
 
 	// Flying units can move directly to the end position without pathfinding
 	if (unitType.isFlyer()) {
 		tiles.push_back(_end);
-		const double dist = _start.getDistance(_end);
+		const double dist = _start.getApproxDistance(_end);
 		return Path(tiles, dist);
 	}
 
@@ -66,27 +70,29 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(tiles.begin(), tiles.end());
+			smoothPath(tiles, unitType);
 
+			timer.stop();
+			std::cout << "Total time spent generating path: " << timer.getElapsedTime() << endl;
 			return Path(tiles, distance);
 		}
 
 		// Step through each neighbour of the current node and add to open set if valid and not in closed set yet
-		vector<Node> neighbours = getNeighbours(unitType, currentNode, end);
+		vector<Node> neighbours = getNeighbours(unitType, currentNode, end, isInteractableEndpoint);
 		for (const auto neighbour : neighbours) {
 			// We'll skip the neighbour if:
 			// 1. It's already in the closed set
 			// 2. It's not walkable terrain
-			if (!neighbour.tile.isValid() || !tileWalkable(unitType, neighbour.tile)) {
+			if (!neighbour.tile.isValid() || !tileWalkable(unitType, neighbour.tile, BWAPI::TilePosition(end), isInteractableEndpoint)) {
 				continue;
 			}
 
 			// Check if neighbour is already in closed set
-			bool cs = closedSet[TileToIndex(neighbour.tile)];
-			if (cs == true) {
+			if (closedSet[TileToIndex(neighbour.tile)]) {
 				continue;
 			}
 
-			// If neighbour is not in the closed set, add to open set ONLY IF it has a better gCost than previously recorded
+			// If neighbour has a worse gCost, don't add to openSet
 			if (neighbour.gCost >= gCostMap[TileToIndex(neighbour.tile)]) {
 				continue;
 			}
@@ -102,7 +108,8 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	return Path();
 }
 
-vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end) {
+vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end, bool isInteractableEndpoint) {
+
 	vector<Node> neighbours;
 
 	for (int x = -1; x <= 1; x++) {
@@ -117,18 +124,19 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			if (x != 0 && y != 0) {
 				BWAPI::TilePosition a(currentNode.tile.x + x, currentNode.tile.y);
 				BWAPI::TilePosition b(currentNode.tile.x, currentNode.tile.y + y);
-				if (!tileWalkable(unitType, a) || !tileWalkable(unitType, b))
+				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) || !tileWalkable(unitType, b, end, isInteractableEndpoint))
 					continue;
 			}
 
-			BWAPI::TilePosition neighbourTile = BWAPI::TilePosition(currentNode.tile.x + x, currentNode.tile.y + y);
+			const BWAPI::TilePosition neighbourTile = BWAPI::TilePosition(currentNode.tile.x + x, currentNode.tile.y + y);
 
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
-			if (tileWalkable(unitType, neighbourTile)) {
-				double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0); // Diagonal movement has more cost (Euclidean distance)
-				double hCost = neighbourTile.getDistance(end);
-				double fCost = gCost + hCost;
-				Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
+			if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
+				// Tile cost decided by euclidean distance
+				const double gCost = currentNode.gCost + currentNode.tile.getApproxDistance(neighbourTile);
+				const double hCost = neighbourTile.getApproxDistance(end);
+				const double fCost = gCost + hCost;
+				const Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
 				neighbours.push_back(neighbourNode);
 			}
 		}
@@ -141,47 +149,77 @@ int AStar::TileToIndex(BWAPI::TilePosition tile) {
 	return (tile.y * BWAPI::Broodwar->mapWidth()) + tile.x;
 }
 
-bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile) {
+bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint) {
 	if (!tile.isValid()) {
 		return false;
 	}
 
-	const int unitWidth = unitType.width();
-	const int unitHeight = unitType.height();
-	
-	// When checking for walkable, we check if any of the 4 corners of the unit would be unwalkable if CENTERED on tile
-	// If so, the unit would get stuck on them when trying to move through the tile.
-	const BWAPI::Position center = BWAPI::Position(tile.x * 32 + 16, tile.y * 32 + 16);
-	const int left = center.x - (unitWidth / 2);
-	const int right = center.x + (unitWidth / 2);
-	const int top = center.y - (unitHeight / 2);
-	const int bottom = center.y + (unitHeight / 2);
-
-	// Pixel position -> Walk position
-	const int walkTileLeft = left / 8;
-	const int walkTileRight = right / 8;
-	const int walkTileTop = top / 8;
-	const int walkTileBottom = bottom / 8;
-
-	// BWAPI::Broodwar->isWalkable() only checks static terrain, so we also need to check for buildings on the tile
-	const auto& unitsOnTile = BWAPI::Broodwar->getUnitsInRectangle(left, top, right, bottom);
-	for (const auto& unit : unitsOnTile) {
-		if (unit->getType().isBuilding()) {
-			return false;
-		}
+	// If the tile is the end tile, return true. Further processing will depend on the boolean isInteractableEndpoint set in GeneratePath()
+	if (tile == end && isInteractableEndpoint) {
+		return true;
 	}
 
-	// Iterates through every walk tile the unit would occupy
-	for (int wx = walkTileLeft; wx <= walkTileRight; wx++) {
-		for (int wy = walkTileTop; wy <= walkTileBottom; wy++) {
-			BWAPI::WalkPosition walkPos(wx, wy);
-			if (!BWAPI::Broodwar->isWalkable(walkPos)) {
+	// Get measurements in terms of WalkPositions (8x8)
+	const int unitWidth = unitType.width() / 8;
+	const int unitHeight = unitType.height() / 8;
+
+	// Check all WalkPositions the unit would inhabit if it reached the center of the tile
+	const BWAPI::WalkPosition wpCenter = BWAPI::WalkPosition(tile);
+
+	for (int xOffset = -unitWidth / 2; xOffset < unitWidth / 2; xOffset++) {
+		for (int yOffset = -unitHeight / 2; yOffset < unitHeight / 2; yOffset++) {
+			const BWAPI::WalkPosition pos = BWAPI::WalkPosition(wpCenter.x + xOffset, wpCenter.y + yOffset);
+
+			if (!pos.isValid() || !BWAPI::Broodwar->isWalkable(pos)) {
+				return false;
+			}
+
+			// BWAPI::Broodwar->isWalkable() only checks static terrain so we'll also need to check for buildings
+			const BWAPI::Position topLeft = BWAPI::Position(pos.x * 8 - 4, pos.y * 8 - 4);
+			const BWAPI::Position bottomRight = BWAPI::Position(pos.x * 8 + 4, pos.y * 8 + 4);
+			const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding);
+			if (!unitsInRect.empty()) {
 				return false;
 			}
 		}
 	}
 
 	return true;
+}
+
+void AStar::smoothPath(vector<BWAPI::Position>& vec, BWAPI::UnitType type) {
+	if (vec.size() < 2) {
+		return;
+	}
+
+	BWAPI::Position dir;
+	for (int i = 1; i < vec.size(); i++) {
+		if (i == 1) {
+			dir = vec[i] - vec[i - 1];
+			continue;
+		}
+
+		const BWAPI::Position newDir = vec[i] - vec[i - 1];
+		if (dir == newDir) {
+			vec.erase(vec.begin() + i-1);
+			continue;
+		}
+		else {
+			// Checks for 90 degree change in direction. Positions are 32 pixels apart (TilePosition)
+			if ((abs(newDir.x) == 32 && newDir.y == 0) || (newDir.x == 0 && abs(newDir.y) == 32)){
+				BWAPI::Unitset circle1 = BWAPI::Broodwar->getUnitsInRadius(vec[i], (type.width() / 2) + 5, BWAPI::Filter::IsBuilding);
+				BWAPI::Unitset circle2 = BWAPI::Broodwar->getUnitsInRadius(vec[i - 1], (type.width() / 2) + 5, BWAPI::Filter::IsBuilding);
+				// 90 degree turn occurring around a building
+				if (!circle1.empty() && !circle2.empty()) {
+					vec.erase(vec.begin() + i);
+				}
+			}
+
+			dir = newDir;
+		}
+	}
+
+	return;
 }
 
 void AStar::drawPath(Path path) {
@@ -192,6 +230,8 @@ void AStar::drawPath(Path path) {
 	BWAPI::Position prevPos = path.positions.at(0);
 	for (const BWAPI::Position pos : path.positions) {
 		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
+		BWAPI::Broodwar->drawCircleMap(pos, 3, BWAPI::Colors::Black, true);
+		BWAPI::Broodwar->drawCircleMap(pos, 20, BWAPI::Colors::Grey);
 		prevPos = pos;
 	}
 

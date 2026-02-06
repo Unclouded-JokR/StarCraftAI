@@ -38,7 +38,6 @@ void ProtoBotCommander::onStart()
 
 	m_mapTools.onStart();
 
-
 	/*
 	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
 	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
@@ -149,7 +148,7 @@ void ProtoBotCommander::onFrame()
 		case ActionType::Action_Scout:
 		{
 			std::cout << "Requesting scout!\n";
-			getUnitToScout();
+			//getUnitToScout();
 			break;
 		}
 		case ActionType::Action_Attack:
@@ -281,7 +280,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
-	getUnitToScout();
+	//getUnitToScout();
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }

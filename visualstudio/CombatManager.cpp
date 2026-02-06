@@ -150,12 +150,15 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 }
 
 void CombatManager::handleTextCommand(std::string text) {
-	//PRESET POSITIONS FOR CUSTOM MAP ../pathPlayground.scx
-	const BWAPI::Position leftPos = BWAPI::Position(224, 450);
-	const BWAPI::Position rightPos = BWAPI::Position(1407, 450);
+	//PRESET POSITIONS FOR USE IN CUSTOM MAPS
+	// Changes whenever I wanna use it 
+	const BWAPI::Position leftPos = BWAPI::Position(832, 449);
+	const BWAPI::Position rightPos = BWAPI::Position(3616, 448);
 	const BWAPI::Position upPos = BWAPI::Position(832, 64);
 	const BWAPI::Position downPos = BWAPI::Position(832, 895);
 	const BWAPI::Position centerPos = BWAPI::Position(832, 449);
+	const BWAPI::Position topPos = BWAPI::Position(1041, 177);
+	const BWAPI::Position bottomPos = BWAPI::Position(508, 507);
 
 	for (Squad& squad : Squads) {
 		const BWAPI::Position leaderPos = squad.leader->getPosition();
@@ -179,8 +182,19 @@ void CombatManager::handleTextCommand(std::string text) {
 			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
 		}
 
+		if (text == "top") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, topPos);
+		}
+		if (text == "bottom") {
+			squad.currentPathIdx = 0;
+			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, bottomPos);
+		}
+
 		vector<BWAPI::Position> positions = squad.currentPath.positions;
 		const int dist = squad.currentPath.distance;
-		BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size()-1).x, positions.at(positions.size()-1).y, dist);
+		if (positions.size() > 1) {
+			BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size() - 1).x, positions.at(positions.size() - 1).y, dist);
+		}
 	}
 }
