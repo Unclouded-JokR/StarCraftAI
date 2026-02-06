@@ -349,7 +349,7 @@ bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 
 int BuildManager::checkAvailableSupply()
 {
-    return spenderManager.plannedSupply(resourceRequests);
+    return spenderManager.plannedSupply(resourceRequests, buildings);
 }
 #pragma endregion
 
