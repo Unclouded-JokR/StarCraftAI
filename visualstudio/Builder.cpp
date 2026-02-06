@@ -1,5 +1,6 @@
 #include "Builder.h"
 #include "BuildManager.h"
+#include <cmath>
 
 Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct, BWAPI::Position positionToBuild, Path path) :
 	unitReference(unitReference), 
@@ -33,6 +34,60 @@ void Builder::onFrame()
 {
 	if(referencePath.positions.empty() == false)
 		AStar::drawPath(referencePath);
+
+    // --- Timeout / progress tracking ---
+    framesSinceAssigned++;
+
+    const double dist = unitReference->getDistance(requestedPositionToBuild);
+
+    if (framesSinceAssigned == 1)
+    {
+        lastDistance = dist;
+        lastProgressFrame = 0;
+    }
+    else
+    {
+        if (framesSinceAssigned - lastProgressFrame >= progressCheckWindow)
+        {
+            const double progress = lastDistance - dist; // positive means we got closer
+            if (progress < minProgressPixels)
+            {
+                gaveUp = true;
+                return;
+            }
+            lastDistance = dist;
+            lastProgressFrame = framesSinceAssigned;
+        }
+    }
+
+    if (framesSinceAssigned >= maxFramesToRevealOrReach)
+    {
+        gaveUp = true;
+        return;
+    }
+
+    // --- Reveal fog-of-war if needed (unexplored tiles prevent build commands) ---
+    auto footprintExplored = [&]() -> bool {
+        const int w = buildingToConstruct.tileWidth();
+        const int h = buildingToConstruct.tileHeight();
+        for (int x = 0; x < w; x++)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                const BWAPI::TilePosition t = requestedTileToBuild + BWAPI::TilePosition(x, y);
+                if (!BWAPI::Broodwar->isExplored(t)) return false;
+            }
+        }
+        return true;
+    };
+
+    if (!footprintExplored())
+    {
+        // Move to the center of the build tile to reveal terrain, then try building later.
+        unitReference->move(BWAPI::Position(requestedTileToBuild) + BWAPI::Position(16, 16));
+        return;
+    }
+
 
 	if (buildingToConstruct.isResourceDepot())
 	{

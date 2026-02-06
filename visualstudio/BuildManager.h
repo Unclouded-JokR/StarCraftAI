@@ -27,8 +27,14 @@ struct ResourceRequest
     BWAPI::UnitType unit = BWAPI::UnitTypes::None;
     BWAPI::UpgradeType upgrade = BWAPI::UpgradeTypes::None;
     BWAPI::TechType tech = BWAPI::TechTypes::None;
-    bool useForcedTile = false;
+
+    BWAPI::Unit scoutToPlaceBuilding = nullptr; //Used if a scout requests a gas steal
+    bool isCheese = false;
+
+    // Optional forced placement for building requests (eg. first pylon on natural ramp).
     BWAPI::TilePosition forcedTile = BWAPI::TilePositions::Invalid;
+    bool useForcedTile = false;
+
     //For now buildings will request to make units but we should remove this later
     //The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
     BWAPI::Unit requestedBuilding = nullptr;
@@ -46,7 +52,6 @@ public:
     std::vector<ResourceRequest> resourceRequests;
 
     bool buildOrderCompleted = false;
-    bool useForcedTile = false;
 
     BWAPI::Unitset buildings; //Complete and Incomplete Buildings
 
@@ -65,6 +70,9 @@ public:
     //Spender Manager Request methods
     void buildBuilding(BWAPI::UnitType);
     void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
+    // Build a supply provider at the natural ramp/entrance (Protoss Pylon / Terran Supply Depot).
+    void buildSupplyAtNaturalRamp();
+
     void trainUnit(BWAPI::UnitType, BWAPI::Unit);
     void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
 
@@ -78,15 +86,11 @@ public:
 
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
-    void buildingDoneWarping(BWAPI::Unit unit);
-    
 
-    // Build a supply provider (Pylon) at the natural ramp/entrance using BWEB.
-    void buildSupplyAtNaturalRamp();
-
-    // Helper: find a buildable tile near the natural choke (ramp) for a given building footprint.
+    // Find a buildable tile near the main-side (upper/inner) part of the natural choke/ramp.
     BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
-    BWAPI::TilePosition findFirstPylonBlockSlotNearNaturalRamp() const;
+    int countMyUnits(BWAPI::UnitType type) const;
+    int countPlannedBuildings(BWAPI::UnitType type) const;
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
@@ -95,9 +99,6 @@ public:
     std::vector<Builder> getBuilders();
     void pumpUnit();
 
-    private:
+private:
     bool firstPylonForced = false;
-
-    int countMyUnits(BWAPI::UnitType type) const;
-    int countPlanned(BWAPI::UnitType type) const;
 };
