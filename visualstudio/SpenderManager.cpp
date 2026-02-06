@@ -54,7 +54,7 @@ int SpenderManager::availableSupply()
     return (BWAPI::Broodwar->self()->supplyTotal() - BWAPI::Broodwar->self()->supplyUsed()) / 2;;
 }
 
-int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests)
+int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests, BWAPI::Unitset buildings)
 {
     const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2; //Current supply total StarCraft notes us having.
     const int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2; //Used supply total StarCraft notes us having.
@@ -76,6 +76,15 @@ int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests)
             case ResourceRequest::Type::Building:
                 plannedSupply += request.unit.supplyProvided() / 2;
                 break;
+        }
+    }
+
+    //Consider buildings that are not constructed yet.
+    for (const BWAPI::Unit building : buildings)
+    {
+        if (!building->isCompleted())
+        {
+            plannedSupply += building->getType().supplyProvided() / 2;
         }
     }
 

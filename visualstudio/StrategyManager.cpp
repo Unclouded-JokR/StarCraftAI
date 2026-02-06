@@ -250,25 +250,23 @@ Action StrategyManager::onFrame()
 	Action action;
 	action.type = ActionType::Action_None;
 
-	//In-Game Time bookkeeping
+	//In-Game Time book keeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 
-	//Move this to inside if so we dont scout during build order unless instructed.
-	#pragma region Scout
-	//// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
-	}
-	#pragma endregion
+	//Make supply threshold early game by default.
+	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
 
-	// from here on, build logic etc.
-	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
-	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
+	if ((seconds / 60) >= 5 && (seconds / 60) < 15)
+	{
+		supplyThreshold = SUPPLY_THRESHOLD_MIDGAME;
+	}
+	else if((seconds / 60) >= 15)
+	{
+		supplyThreshold = SUPPLY_THRESHOLD_LATEGAME;
+	}
+
+	//Building logic
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
 
 	//ProtoBot unit information
@@ -312,10 +310,6 @@ Action StrategyManager::onFrame()
 	//4 Gateways per nexus should be built
 	saturatedNexus = (ProtoBot_buildings.gateway / 4);
 
-
-
-
-
 	for (const auto [unit, building] : enemyBuildingInfo)
 	{
 		if (building.type.isResourceDepot())
@@ -326,64 +320,23 @@ Action StrategyManager::onFrame()
 		}
 	}
 
-	/*for (const BWAPI::Unit &unit : enemyUnits)
-	{
-		if (unit->getType() == BWAPI::Broodwar->enemy()->getRace().getResourceDepot())
-		{
-			if (baseLocations.size() == 0)
-			{
-				BaseLocation location;
-				location.unitReference = unit;
-				location.lastKnownPosition = unit->getPosition();
-
-				baseLocations.push_back(location);
-			}
-			else
-			{
-				bool checkIsNewBase = true;
-				for (BaseLocation& location : baseLocations)
-				{
-					if (location.unitReference == unit)
-					{
-						checkIsNewBase = false;
-						break;
-					}
-				}
-
-				if (checkIsNewBase)
-				{
-					BaseLocation location;
-					location.unitReference = unit;
-					location.lastKnownPosition = unit->getPosition();
-
-					baseLocations.push_back(location);
-				}
-			}
-		}
+	//Move this to inside if so we dont scout during build order unless instructed.
+	#pragma region Scout
+	//// ----- emit SCOUT periodically -----
+	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+		frameSinceLastScout = frame;
+		Scout s;
+		action.commanderAction = s;
+		action.type = ActionType::Action_Scout;
+		return action;                 // <-- ensure we actually send the action
 	}
-
-	for (BaseLocation& location : baseLocations)
-	{
-		std::cout << "Base Location at " << location.lastKnownPosition << "\n";
-
-		BWAPI::Broodwar->drawCircleMap(location.lastKnownPosition, 5, BWAPI::Colors::Red, true);
-	}*/
-
-	/*for (const auto& [id, e] : commanderReference->informationManager.getTrackedEnemies())
-	{
-		if (e.type.isResourceDepot())
-		{
-			std::cout << e.type << " at position " << e.lastSeenPos << "\n";
-		}
-	}*/
-
-
+	#pragma endregion
 
 	#pragma region Expand
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon, Change this to be a higher value than 3 as the game goes along.
-		if (commanderReference->checkAvailableSupply() <= 3 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
+		if (commanderReference->checkAvailableSupply() <= supplyThreshold)
 		{
 			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
@@ -395,7 +348,6 @@ Action StrategyManager::onFrame()
 		}
 
 		//Check for assimilators on nexus economies here.
-		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
 		for (const NexusEconomy& nexusEconomy : nexusEconomies)
 		{
 			if (nexusEconomy.vespeneGyser != nullptr
