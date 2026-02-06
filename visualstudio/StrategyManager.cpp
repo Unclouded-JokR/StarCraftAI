@@ -250,20 +250,20 @@ Action StrategyManager::onFrame()
 	Action action;
 	action.type = ActionType::Action_None;
 
-	// time bookkeeping
+	//In-Game Time bookkeeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 	#pragma region Scout
 	//// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+	/*if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;                 // <-- ensure we actually send the action
-	}
+	}*/
 	#pragma endregion
 
 	// from here on, build logic etc.
@@ -278,9 +278,53 @@ Action StrategyManager::onFrame()
 	const FriendlyTechCounter ProtoBot_tech = commanderReference->informationManager.getFriendlyTechCounter();
 	std::vector<Squad> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
-	//BWEM is only able to tell the location when it is in vision :)
-	const std::set<BWAPI::Unit>& enemyUnits = commanderReference->informationManager.getKnownEnemies();
+	//Get Enemy Building information.
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = commanderReference->informationManager.getKnownEnemyBuildings();
+
+	//Check how many of our Nexus Economies are completed and saturated.
+	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+	int completedNexusEconomy = 0;
+	int saturatedNexus = 0;
+
+	for (NexusEconomy nexusEconomy : nexusEconomies)
+	{
+		/*
+		* Nexus Economy considered complete if
+		*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
+		*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
+		*/
+		if (nexusEconomy.lifetime < 500) continue;
+
+		if ((nexusEconomy.vespeneGyser != nullptr && (nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())) ||
+			(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size()))
+		{
+			completedNexusEconomy++;
+		}
+	}
+
+	//This is the normal formula we would use for calculting saturation but we will focus on purely gateways
+	/*
+	saturatedNexus = (ProtoBot_buildings.gateway / 4) +
+		((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) +
+		((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
+	*/
+
+	//4 Gateways per nexus should be built
+	saturatedNexus = (ProtoBot_buildings.gateway / 4);
+
+
+
+
+
+	for (const auto [unit, building] : enemyBuildingInfo)
+	{
+		if (building.type.isResourceDepot())
+		{
+			std::cout << building.type << " at position " << building.lastKnownPosition << "\n";
+
+			BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
+		}
+	}
 
 	/*for (const BWAPI::Unit &unit : enemyUnits)
 	{
@@ -325,7 +369,14 @@ Action StrategyManager::onFrame()
 		BWAPI::Broodwar->drawCircleMap(location.lastKnownPosition, 5, BWAPI::Colors::Red, true);
 	}*/
 
-	//commanderReference->informationManager.printTrackedEnemies();
+	/*for (const auto& [id, e] : commanderReference->informationManager.getTrackedEnemies())
+	{
+		if (e.type.isResourceDepot())
+		{
+			std::cout << e.type << " at position " << e.lastSeenPos << "\n";
+		}
+	}*/
+
 
 
 	#pragma region Expand
@@ -398,24 +449,6 @@ Action StrategyManager::onFrame()
 	#pragma region Build
 	if (buildOrderCompleted)
 	{
-		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-		int completedNexusEconomy = 0;
-
-		for (NexusEconomy nexusEconomy : nexusEconomies)
-		{
-			/*
-			* Nexus Economy considered complete if
-			*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
-			*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
-			*/
-			if (nexusEconomy.lifetime < 500) continue;
-
-			if ((nexusEconomy.vespeneGyser != nullptr && (nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())) ||
-				(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size()))
-			{
-				completedNexusEconomy++;
-			}
-		}
 		/*std::cout << "Completed Nexus Economy amount " << completedNexusEconomy << "\n";
 		std::cout << "Saturated Bases " << sturated_bases << "\n";*/
 

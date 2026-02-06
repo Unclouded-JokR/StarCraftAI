@@ -295,6 +295,7 @@ public:
     // Utility / debug
     const std::set<BWAPI::Unit>& getKnownEnemies() const { return _knownEnemies; }
     const std::map<BWAPI::Unit, EnemyBuildingInfo>& getKnownEnemyBuildings() const { return _knownEnemyBuildings; }
+    const std::map<int, TrackedEnemy>& getTrackedEnemies() const { return trackedEnemies; }
 
     void printKnownEnemies() const;
     void printKnownEnemyBuildings() const;

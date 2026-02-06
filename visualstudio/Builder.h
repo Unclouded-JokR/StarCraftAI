@@ -3,7 +3,7 @@
 #include <vector>
 #include "A-StarPathfinding.h"
 
-#define DISTANCE_THRESHOLD 10
+#define DISTANCE_THRESHOLD 32
 
 class Builder
 {

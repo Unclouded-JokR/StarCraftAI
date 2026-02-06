@@ -39,6 +39,8 @@ void BuildManager::onFrame() {
 
     spenderManager.OnFrame(resourceRequests);
 
+    std::cout << builders.size() << "\n";
+
     for (ResourceRequest& request : resourceRequests)
     {
         if (request.state != ResourceRequest::State::Approved_InProgress)
@@ -74,16 +76,26 @@ void BuildManager::onFrame() {
 
                     if (workerAvalible == nullptr) continue;
 
-                    //Skip path generation for now until bug is fixed.
-                    //const Path pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                    //For now dont use Astar to get path to location
                     Path pathToLocation;
+                    if (request.unit.isResourceDepot())
+                    {
+                        //do nothing for now
+                    }
+                    else if(request.unit.isRefinery())
+                    {
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
+                    }
+                    else
+                    {
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                    }
 
                     Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
                 }
-
                 break;
             }
             case ResourceRequest::Type::Upgrade:
@@ -114,7 +126,7 @@ void BuildManager::onFrame() {
 
     //build order check here
 
-    for (Builder builder : builders)
+    for (Builder& builder : builders)
     {
         builder.onFrame();
     }
