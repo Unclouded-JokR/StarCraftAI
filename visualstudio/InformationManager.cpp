@@ -272,7 +272,7 @@ std::vector<const BWEM::Base*> InformationManager::FindUnownedBases() const
     // Safety: require theMap to be initialized (your code already calls Initialize() in onStart).
     // We consider a base "owned" if any resource-depot (CC / Nexus / Hatchery) or a depot-under-construction
     // is close to the base center. Otherwise we treat it as unowned.
-    const int checkRadius = 96; // pixels ó safe for detecting a town-hall inside/near the base
+    const int checkRadius = 96; // pixels ÅEsafe for detecting a town-hall inside/near the base
 
     for (const BWEM::Area& area : theMap.Areas())
     {

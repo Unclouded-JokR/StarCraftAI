@@ -15,6 +15,7 @@ private:
     std::vector<BWAPI::TilePosition> getPathToConstruct();
 public:
     BWAPI::Position requestedPositionToBuild;
+    BWAPI::TilePosition requestedTileToBuild;
     BWAPI::UnitType buildingToConstruct;
 
     Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToPlace, BWAPI::Position requestedLocation, Path path);

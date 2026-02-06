@@ -27,10 +27,8 @@ struct ResourceRequest
     BWAPI::UnitType unit = BWAPI::UnitTypes::None;
     BWAPI::UpgradeType upgrade = BWAPI::UpgradeTypes::None;
     BWAPI::TechType tech = BWAPI::TechTypes::None;
-
-    BWAPI::Unit scoutToPlaceBuilding = nullptr; //Used if a scout requests a gas steal
-    bool isCheese = false;
-
+    bool useForcedTile = false;
+    BWAPI::TilePosition forcedTile = BWAPI::TilePositions::Invalid;
     //For now buildings will request to make units but we should remove this later
     //The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
     BWAPI::Unit requestedBuilding = nullptr;
@@ -48,6 +46,7 @@ public:
     std::vector<ResourceRequest> resourceRequests;
 
     bool buildOrderCompleted = false;
+    bool useForcedTile = false;
 
     BWAPI::Unitset buildings; //Complete and Incomplete Buildings
 
@@ -79,6 +78,15 @@ public:
 
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
+    void buildingDoneWarping(BWAPI::Unit unit);
+    
+
+    // Build a supply provider (Pylon) at the natural ramp/entrance using BWEB.
+    void buildSupplyAtNaturalRamp();
+
+    // Helper: find a buildable tile near the natural choke (ramp) for a given building footprint.
+    BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
+    BWAPI::TilePosition findFirstPylonBlockSlotNearNaturalRamp() const;
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
@@ -86,4 +94,10 @@ public:
     //Builder helper methods
     std::vector<Builder> getBuilders();
     void pumpUnit();
+
+    private:
+    bool firstPylonForced = false;
+
+    int countMyUnits(BWAPI::UnitType type) const;
+    int countPlanned(BWAPI::UnitType type) const;
 };

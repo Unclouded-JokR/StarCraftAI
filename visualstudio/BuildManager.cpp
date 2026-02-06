@@ -3,6 +3,8 @@
 #include "SpenderManager.h"
 #include "BuildingPlacer.h"
 #include "Builder.h"
+#include <cmath>
+#include <climits>
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -63,14 +65,16 @@ void BuildManager::onFrame() {
             case ResourceRequest::Type::Building:
             {
                 //Should change this to consider distance measure but is fine for now.
-                if (request.isCheese)
-                {
-                    request.state = ResourceRequest::State::Approved_BeingBuilt;
-                }
-                else
-                {
-                    const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
-                    const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
+                BWAPI::Position locationToPlace;
+if (request.useForcedTile && request.forcedTile.isValid())
+{
+    locationToPlace = BWAPI::Position(request.forcedTile);
+}
+else
+{
+    locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
+}
+const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
 
                     if (workerAvalible == nullptr) continue;
 
@@ -255,25 +259,187 @@ void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 /// Using these methods for now to get this working but it should be refactored later.
 /// </summary>
 /// <param name="building"></param>
-void BuildManager::buildBuilding(BWAPI::UnitType building)
+
+//Build first pylon on the BWEB block closest to ramp
+//Note: Currently unused. This sometimes can fail on some map generations where there are no BWEB blocks created near ramp
+BWAPI::TilePosition BuildManager::findFirstPylonBlockSlotNearNaturalRamp() const
 {
+    const auto* choke = BWEB::Map::getNaturalChoke();
+    if (!choke) return BWAPI::TilePositions::Invalid;
+
+    // Anchor on the main side of the natural choke
+    const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
+    const BWAPI::Position chokeNearMainPos = BWEB::Map::getClosestChokeTile(choke, mainPos);
+    const BWAPI::TilePosition chokeNearMainTile(chokeNearMainPos);
+
+    // Get the closest BWEB block to that main side choke tile.
+    BWEB::Block* block = BWEB::Blocks::getClosestBlock(chokeNearMainTile);
+    if (!block) return BWAPI::TilePositions::Invalid;
+
+    // Choose the 2x2 slot in that block closest to the chokeNearMainTile.
+    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
+    int bestDist = INT_MAX;
+
+    auto& smallSlots = block->getSmallTiles(); // 2x2
+    for (const auto& t : smallSlots)
+    {
+        if (!BWEB::Map::isPlaceable(BWAPI::UnitTypes::Protoss_Pylon, t))
+            continue;
+
+        if (BWEB::Map::isUsed(t, 2, 2) != BWAPI::UnitTypes::None)
+            continue;
+
+        const int dist =
+            std::abs(t.x - chokeNearMainTile.x) + std::abs(t.y - chokeNearMainTile.y);
+
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = t;
+        }
+    }
+
+    return best;
+}
+
+
+BWAPI::TilePosition BuildManager::findNaturalRampPlacement(BWAPI::UnitType type) const
+{
+    const auto* choke = BWEB::Map::getNaturalChoke();
+    if (!choke) return BWAPI::TilePositions::Invalid;
+
+    // Anchor using the choke tile closest to our main, then bias further toward main.
+    const BWAPI::TilePosition mainTile = BWEB::Map::getMainTile();
+    const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
+
+    const BWAPI::Position chokePos = BWEB::Map::getClosestChokeTile(choke, mainPos);
+    const BWAPI::TilePosition chokeTile(chokePos);
+
+    const BWAPI::TilePosition chokeCenterTile(choke->Center());
+    const int noBuildRadius = 2;
+
+    const int dirX = (mainTile.x > chokeTile.x) ? 1 : (mainTile.x < chokeTile.x ? -1 : 0);
+    const int dirY = (mainTile.y > chokeTile.y) ? 1 : (mainTile.y < chokeTile.y ? -1 : 0);
+
+    //Step a few tiles into the main side so we land on the upper part of the ramp.
+    const BWAPI::TilePosition anchor = chokeTile + BWAPI::TilePosition(dirX, dirY) * 5;
+
+    const int w = type.tileWidth();
+    const int h = type.tileHeight();
+
+    auto inBounds = [&](const BWAPI::TilePosition& t) {
+        return t.isValid()
+            && t.x >= 0 && t.y >= 0
+            && (t.x + w) <= BWAPI::Broodwar->mapWidth()
+            && (t.y + h) <= BWAPI::Broodwar->mapHeight();
+    };
+
+    // Fall back to natural area if none in main area.
+    const BWEM::Area* mainArea = BWEB::Map::getMainArea();
+    const BWEM::Area* natArea  = BWEB::Map::getNaturalArea();
+
+    auto isInArea = [&](const BWAPI::TilePosition& t, const BWEM::Area* a) {
+        return a && BWEB::Map::mapBWEM.GetArea(t) == a;
+    };
+
+    auto acceptable = [&](const BWAPI::TilePosition& t) {
+        if (!inBounds(t)) return false;
+        if (!BWEB::Map::isPlaceable(type, t)) return false;
+        if (BWEB::Map::isReserved(t, w, h)) return false;
+        if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None) return false;
+        return true;
+    };
+
+    const int maxR = 10;
+
+    // Pass 1: only tiles in main
+    for (int r = 0; r <= maxR; r++) {
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dy = -r; dy <= r; dy++) {
+                if (std::abs(dx) != r && std::abs(dy) != r) continue; // ring only
+                BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
+
+                if (std::abs(t.x - chokeCenterTile.x) <= noBuildRadius &&
+          std::abs(t.y - chokeCenterTile.y) <= noBuildRadius)
+        continue;
+                if (!isInArea(t, mainArea)) continue;
+                if (acceptable(t)) return t;
+            }
+        }
+    }
+
+    // Fallback: tiles in natural area (lower)
+    for (int r = 0; r <= maxR; r++) {
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dy = -r; dy <= r; dy++) {
+                if (std::abs(dx) != r && std::abs(dy) != r) continue;
+                BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
+                if (!isInArea(t, natArea)) continue;
+                if (acceptable(t)) return t;
+            }
+        }
+    }
+
+    return BWAPI::TilePositions::Invalid;
+}
+
+
+void BuildManager::buildSupplyAtNaturalRamp()
+{
+    BWAPI::UnitType supply;
+    if (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss)
+        supply = BWAPI::UnitTypes::Protoss_Pylon;
+    else
+        return;
+
     ResourceRequest request;
     request.type = ResourceRequest::Type::Building;
-    request.unit = building;
+    request.unit = supply;
+
+    const BWAPI::TilePosition t = findNaturalRampPlacement(supply);
+    if (t.isValid())
+    {
+        request.useForcedTile = true;
+        request.forcedTile = t;
+
+        BWEB::Map::addReserve(t, supply.tileWidth(), supply.tileHeight());
+    }
 
     resourceRequests.push_back(request);
 }
 
-void BuildManager::buildBuilding(BWAPI::UnitType building, BWAPI::Unit scout)
+
+
+void BuildManager::buildBuilding(BWAPI::UnitType type)
 {
     ResourceRequest request;
     request.type = ResourceRequest::Type::Building;
-    request.unit = building;
-    request.scoutToPlaceBuilding = scout;
-    request.isCheese = true;
+    request.unit = type;
+
+    // Build the first Protoss Pylon on the natural ramp
+    if (type == BWAPI::UnitTypes::Protoss_Pylon
+        && !firstPylonForced)
+    {
+        const int have = countMyUnits(BWAPI::UnitTypes::Protoss_Pylon);
+        const int planned = countPlanned(BWAPI::UnitTypes::Protoss_Pylon);
+
+        if (have + planned == 0)
+        {
+            BWAPI::TilePosition rampTile = findNaturalRampPlacement(BWAPI::UnitTypes::Protoss_Pylon);
+            if (rampTile.isValid())
+            {
+                request.useForcedTile = true;
+                request.forcedTile = rampTile;
+
+                BWEB::Map::addReserve(rampTile, 2, 2);
+
+                firstPylonForced = true;
+            }
+        }
+    }
 
     resourceRequests.push_back(request);
 }
+
 
 void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
 {
@@ -371,16 +537,40 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit)
     return false;
 }
 
-bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
+void BuildManager::buildingDoneWarping(BWAPI::Unit unit)
 {
-    for (ResourceRequest& request : resourceRequests)
+    
+
+}
+
+int BuildManager::countMyUnits(BWAPI::UnitType type) const
+{
+    int c = 0;
+    for (auto u : BWAPI::Broodwar->self()->getUnits())
+        if (u->getType() == type)
+            c++;
+    return c;
+}
+
+int BuildManager::countPlanned(BWAPI::UnitType type) const
+{
+    int c = 0;
+
+    // Requests that are not completed yet count as planned/in-progress
+    for (const auto& r : resourceRequests)
     {
-        if (request.type != ResourceRequest::Type::Building && request.isCheese) continue;
-        
-        if (request.scoutToPlaceBuilding == unit && request.state == ResourceRequest::State::Approved_BeingBuilt) return true;
+        if (r.type == ResourceRequest::Type::Building && r.unit == type)
+        {
+            if (r.state != ResourceRequest::State::Accepted_Completed)
+                c++;
+        }
     }
 
-    return false;
+    // Builders currently assigned also imply planned buildings
+    // (only if your Builder stores the intended type; if not, you can skip this)
+    // for (const auto& b : builders) if (b.getUnitType() == type) c++;
+
+    return c;
 }
 
 void BuildManager::pumpUnit()

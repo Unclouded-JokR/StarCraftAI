@@ -5,6 +5,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	unitReference(unitReference), 
 	buildingToConstruct(buildingToConstruct),
 	requestedPositionToBuild(positionToBuild),
+	requestedTileToBuild(BWAPI::TilePosition(positionToBuild)),
 	referencePath(path)
 {
 	/*std::cout << unitReference->getID() << "\n";

@@ -55,3 +55,4 @@ bin/visualstudio/SpenderManager.cpp.d
 bin/visualstudio/Squad.cpp.d
 bin/visualstudio/Timer.cpp.d
 bin/visualstudio/TimerManager.cpp.d
+*.gif
