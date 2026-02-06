@@ -109,8 +109,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 }
 
 vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end, bool isInteractableEndpoint) {
-	Timer timer = Timer();
-	timer.start();
 
 	vector<Node> neighbours;
 
@@ -130,22 +128,20 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 					continue;
 			}
 
-			BWAPI::TilePosition neighbourTile = BWAPI::TilePosition(currentNode.tile.x + x, currentNode.tile.y + y);
+			const BWAPI::TilePosition neighbourTile = BWAPI::TilePosition(currentNode.tile.x + x, currentNode.tile.y + y);
 
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 			if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
 				// Tile cost decided by euclidean distance
-				double gCost = currentNode.gCost + currentNode.tile.getApproxDistance(neighbourTile);
-				double hCost = neighbourTile.getApproxDistance(end);
-				double fCost = gCost + hCost;
-				Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
+				const double gCost = currentNode.gCost + currentNode.tile.getApproxDistance(neighbourTile);
+				const double hCost = neighbourTile.getApproxDistance(end);
+				const double fCost = gCost + hCost;
+				const Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
 				neighbours.push_back(neighbourNode);
 			}
 		}
 	}
 
-	timer.stop();
-	cout << "Time spent finding valid neighbours: " << timer.getElapsedTime() << endl;
 	return neighbours;
 }
 
@@ -168,19 +164,19 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 	const int unitHeight = unitType.height() / 8;
 
 	// Check all WalkPositions the unit would inhabit if it reached the center of the tile
-	BWAPI::WalkPosition wpCenter = BWAPI::WalkPosition(tile);
+	const BWAPI::WalkPosition wpCenter = BWAPI::WalkPosition(tile);
 
 	for (int xOffset = -unitWidth / 2; xOffset < unitWidth / 2; xOffset++) {
 		for (int yOffset = -unitHeight / 2; yOffset < unitHeight / 2; yOffset++) {
-			BWAPI::WalkPosition pos = BWAPI::WalkPosition((wpCenter.x + xOffset) * 4, (wpCenter.y + yOffset) * 4);
+			const BWAPI::WalkPosition pos = BWAPI::WalkPosition(wpCenter.x + xOffset, wpCenter.y + yOffset);
 
 			if (!pos.isValid() || !BWAPI::Broodwar->isWalkable(pos)) {
 				return false;
 			}
 
 			// BWAPI::Broodwar->isWalkable() only checks static terrain so we'll also need to check for buildings
-			BWAPI::Position topLeft = BWAPI::Position(pos.x * 4 - 2, pos.y * 4 - 2);
-			BWAPI::Position bottomRight = BWAPI::Position(pos.x * 4 + 2, pos.y * 4 + 2);
+			const BWAPI::Position topLeft = BWAPI::Position(pos.x * 8 - 4, pos.y * 8 - 4);
+			const BWAPI::Position bottomRight = BWAPI::Position(pos.x * 8 + 4, pos.y * 8 + 4);
 			const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding);
 			if (!unitsInRect.empty()) {
 				return false;
@@ -211,8 +207,8 @@ void AStar::smoothPath(vector<BWAPI::Position>& vec, BWAPI::UnitType type) {
 		else {
 			// Checks for 90 degree change in direction. Positions are 32 pixels apart (TilePosition)
 			if ((abs(newDir.x) == 32 && newDir.y == 0) || (newDir.x == 0 && abs(newDir.y) == 32)){
-				BWAPI::Unitset circle1 = BWAPI::Broodwar->getUnitsInRadius(vec[i], type.width() / 2, BWAPI::Filter::IsBuilding);
-				BWAPI::Unitset circle2 = BWAPI::Broodwar->getUnitsInRadius(vec[i - 1], type.width() / 2, BWAPI::Filter::IsBuilding);
+				BWAPI::Unitset circle1 = BWAPI::Broodwar->getUnitsInRadius(vec[i], (type.width() / 2) + 5, BWAPI::Filter::IsBuilding);
+				BWAPI::Unitset circle2 = BWAPI::Broodwar->getUnitsInRadius(vec[i - 1], (type.width() / 2) + 5, BWAPI::Filter::IsBuilding);
 				// 90 degree turn occurring around a building
 				if (!circle1.empty() && !circle2.empty()) {
 					vec.erase(vec.begin() + i);

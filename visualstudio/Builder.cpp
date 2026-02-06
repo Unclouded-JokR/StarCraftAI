@@ -10,14 +10,14 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	std::cout << buildingToConstruct.getName() << "\n";
 	std::cout << positionToBuild.x << ", " << positionToBuild.y << "\n";
 
-	//auto temp = AStar::GeneratePath(unitReference->getPosition(), unitReference->getType(), positionToBuild);
-	//std::cout << temp.size() << "\n";
+	auto temp = AStar::GeneratePath(unitReference->getPosition(), unitReference->getType(), positionToBuild, true);
+	std::cout << temp.positions.size() << "\n";
 
-	////Currently AStar is not providing path.
-	//for (auto position : temp)
-	//{
-	//	std::cout << position.x << "," << position.y << "\n";
-	//}
+	//Currently AStar is not providing path.
+	for (auto position : temp.positions)
+	{
+		std::cout << position.x << "," << position.y << "\n";
+	}
 }
 
 Builder::~Builder() 
