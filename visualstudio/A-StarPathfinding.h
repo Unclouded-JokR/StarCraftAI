@@ -8,6 +8,9 @@
 
 using namespace std;
 
+extern vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
+extern vector<BWAPI::TilePosition> closedTiles;
+
 struct Node {
 	BWAPI::TilePosition tile, parent;
 	double gCost, hCost, fCost;
@@ -26,7 +29,12 @@ struct Node {
 	};
 
 	bool operator <(const Node& rhs) const {
-		return fCost > rhs.fCost;
+		if (this->fCost == rhs.fCost) {
+			return this->hCost > rhs.hCost;
+		}
+		else {
+			return this->fCost > rhs.fCost;
+		}
 	}
 
 	bool operator ==(const Node& rhs) const {
@@ -55,7 +63,6 @@ static class AStar {
 		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static int TileToIndex(BWAPI::TilePosition tile);
 		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
-		static void smoothPath(vector<BWAPI::Position>& vec, BWAPI::UnitType type);
 
 	public:
 		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);

@@ -146,15 +146,23 @@ void Squad::flockingHandler() {
 }
 
 void Squad::pathHandler() {
-	const int distThreshold = 10;
+	const int distThreshold = 1;
 	if (currentPath.positions.empty() == false && currentPathIdx < currentPath.positions.size()) {
 		const BWAPI::Position target = BWAPI::Position(currentPath.positions.at(currentPathIdx));
-		if (leader->getDistance(target) < distThreshold){
+		if (leader->getDistance(target) <= distThreshold){
 			currentPathIdx += 1;
 		}
 		else if (leader->getTargetPosition() != target) {
 			leader->attack(target);
 		}
+	}
+
+	for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
+		BWAPI::Broodwar->drawBoxMap(rect.first, rect.second, BWAPI::Colors::Yellow);
+	}
+	for (BWAPI::TilePosition tile : closedTiles) {
+		// Drawing box around tile
+		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.x * 32 - 16, tile.y * 32 - 16), BWAPI::Position(tile.x * 32 + 16, tile.y * 32 + 16), BWAPI::Colors::Red);
 	}
 
 	AStar::drawPath(currentPath);
