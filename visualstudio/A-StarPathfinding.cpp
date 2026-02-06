@@ -3,11 +3,16 @@
 #include <queue>
 #include <vector>
 
+vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
+vector<BWAPI::TilePosition> closedTiles;
+
 // Generates path from start to end using A* pathfinding algorithm
 // IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
 Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
 	Timer timer = Timer();
 	timer.start();
+	rectCoordinates.clear();
+	closedTiles.clear();
 
 	vector<BWAPI::Position> tiles = vector<BWAPI::Position>();
 	// Checks if either the starting or ending tile positions are invalid
@@ -33,35 +38,67 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	priority_queue<Node> openSet;
 
 	// Optimization using array for closed set
-	// Array to represent closed set for quick lookup (assuming max map size of 256x256)
-	// Tile position will be converted into 1D value for indexing
 	const int mapWidth = BWAPI::Broodwar->mapWidth();
 	const int mapHeight = BWAPI::Broodwar->mapHeight();
 	vector<bool> closedSet(mapWidth * mapHeight, false); // Default: no closed tiles
-	vector<double> gCostMap(mapWidth * mapHeight, DBL_MAX); // Default: all gCosts are as large as possible
+	vector<double> fCostMap(mapWidth * mapHeight, DBL_MAX); // Default: all fCosts are as large as possible
 
 	// Store parents in an unordered_map for reconstructing path later
 	unordered_map<int, BWAPI::TilePosition> parent;
 
 	// Very first node to be added is the starting tile position
 	openSet.push(Node(start, start, 0, 0, 0));
-	gCostMap[TileToIndex(start)] = 0;
+	fCostMap[TileToIndex(start)] = 0;
 
 	while (openSet.size() > 0) {
 		Node currentNode = openSet.top();
 		openSet.pop();
 		closedSet[TileToIndex(currentNode.tile)] = true;
+		closedTiles.push_back(currentNode.tile);
 
 		// Check if path is finished
 		if (currentNode.tile == end) {
 			int distance = 0;
 			BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
+			BWAPI::Position dir;
+
 			while (currentNode.tile != start) {
 				tiles.push_back(BWAPI::Position(currentNode.tile));
-				currentNode.tile = parent[TileToIndex(currentNode.tile)];
 
-				BWAPI::Position currentPos = BWAPI::Position(currentNode.tile);
-				distance += prevPos.getApproxDistance(currentPos);
+				currentNode.tile = parent[TileToIndex(currentNode.tile)];
+				const BWAPI::Position currentPos = BWAPI::Position(currentNode.tile);
+
+				if (tiles.size() == 1) {
+					dir = BWAPI::Position(currentNode.tile) - prevPos;
+					distance += prevPos.getApproxDistance(currentPos);
+				}
+				else{
+					BWAPI::Position newDir = currentPos - prevPos;
+					BWAPI::Broodwar->printf("Current direction: (%d, %d), New direction: (%d, %d)", dir.x, dir.y, newDir.x, newDir.y);
+
+					if (((abs(newDir.x) == 32 && newDir.y == 0) || (newDir.x == 0 && abs(newDir.y) == 32))) {
+						BWAPI::Unitset circle1 = BWAPI::Broodwar->getUnitsInRadius(currentPos, (unitType.width() / 2) + 10, BWAPI::Filter::IsBuilding);
+						BWAPI::Unitset circle2 = BWAPI::Broodwar->getUnitsInRadius(prevPos, (unitType.width() / 2) + 10, BWAPI::Filter::IsBuilding);
+						// Orthogonal movement alongside a building
+						// If the direction doesn't change, we check whether the current and previous tile are near buildings
+						// If the current tile is near a building but the previous tile isn't and vice versa, then path is going around a building
+						// If both are near buildings, keep the first waypoint but remove future waypoints until direction changes
+						if (dir == newDir) {
+							if (!circle1.empty() && !circle2.empty()) {
+								tiles.pop_back();
+								distance -= prevPos.getApproxDistance(currentPos);
+							}
+						}
+						else {
+							if ((!circle1.empty() && circle2.empty()) || (circle1.empty() && !circle2.empty())) {
+								tiles.erase(tiles.end() - 2);
+								distance -= prevPos.getApproxDistance(currentPos);
+							}
+						}
+					}
+
+					dir = newDir;
+				}
 				prevPos = currentPos;
 			}
 
@@ -70,7 +107,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(tiles.begin(), tiles.end());
-			smoothPath(tiles, unitType);
 
 			timer.stop();
 			std::cout << "Total time spent generating path: " << timer.getElapsedTime() << endl;
@@ -92,14 +128,14 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				continue;
 			}
 
-			// If neighbour has a worse gCost, don't add to openSet
-			if (neighbour.gCost >= gCostMap[TileToIndex(neighbour.tile)]) {
+			// If current path to neighbour has a more expensive fCost than previously recorded, don't add this path
+			if (fCostMap[TileToIndex(neighbour.tile)] < neighbour.fCost) {
 				continue;
 			}
 			else {
 				openSet.push(neighbour);
 				parent[TileToIndex(neighbour.tile)] = currentNode.tile;
-				gCostMap[TileToIndex(neighbour.tile)] = neighbour.gCost;
+				fCostMap[TileToIndex(neighbour.tile)] = neighbour.fCost;
 			}
 
 		}
@@ -177,6 +213,9 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 			// BWAPI::Broodwar->isWalkable() only checks static terrain so we'll also need to check for buildings
 			const BWAPI::Position topLeft = BWAPI::Position(pos.x * 8 - 4, pos.y * 8 - 4);
 			const BWAPI::Position bottomRight = BWAPI::Position(pos.x * 8 + 4, pos.y * 8 + 4);
+			if (rectCoordinates.size() < 10000) {
+				rectCoordinates.push_back(std::make_pair(topLeft, bottomRight));
+			}
 			const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding);
 			if (!unitsInRect.empty()) {
 				return false;
@@ -185,41 +224,6 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 	}
 
 	return true;
-}
-
-void AStar::smoothPath(vector<BWAPI::Position>& vec, BWAPI::UnitType type) {
-	if (vec.size() < 2) {
-		return;
-	}
-
-	BWAPI::Position dir;
-	for (int i = 1; i < vec.size(); i++) {
-		if (i == 1) {
-			dir = vec[i] - vec[i - 1];
-			continue;
-		}
-
-		const BWAPI::Position newDir = vec[i] - vec[i - 1];
-		if (dir == newDir) {
-			vec.erase(vec.begin() + i-1);
-			continue;
-		}
-		else {
-			// Checks for 90 degree change in direction. Positions are 32 pixels apart (TilePosition)
-			if ((abs(newDir.x) == 32 && newDir.y == 0) || (newDir.x == 0 && abs(newDir.y) == 32)){
-				BWAPI::Unitset circle1 = BWAPI::Broodwar->getUnitsInRadius(vec[i], (type.width() / 2) + 5, BWAPI::Filter::IsBuilding);
-				BWAPI::Unitset circle2 = BWAPI::Broodwar->getUnitsInRadius(vec[i - 1], (type.width() / 2) + 5, BWAPI::Filter::IsBuilding);
-				// 90 degree turn occurring around a building
-				if (!circle1.empty() && !circle2.empty()) {
-					vec.erase(vec.begin() + i);
-				}
-			}
-
-			dir = newDir;
-		}
-	}
-
-	return;
 }
 
 void AStar::drawPath(Path path) {
