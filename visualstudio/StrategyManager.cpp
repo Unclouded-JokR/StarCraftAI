@@ -341,7 +341,6 @@ Action StrategyManager::onFrame()
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
-		}
 
 		//Check for assimilators on nexus economies here.
 		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
@@ -377,7 +376,7 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
-			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
+			else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
 				std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
@@ -390,7 +389,7 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}*/
+			}
 		}
 	}
 	#pragma endregion
@@ -498,7 +497,7 @@ Action StrategyManager::onFrame()
 			action.commanderAction = actiontotake;
 			action.type = ActionType::Action_Build;
 			return action;
-		}
+		} 
 
 		//Will focus on Zealots, Dragoons, and Observers for first iteration of BASIL upload.
 		/*if (checkalreadyrequested(bwapi::unittypes::protoss_citadel_of_adun) && citadelcount < 3 && cyberneticscount == 1 && citadelcount != completednexuseconomy)
