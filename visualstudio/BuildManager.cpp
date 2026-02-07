@@ -420,7 +420,7 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
     request.type = ResourceRequest::Type::Building;
     request.unit = building;
 
-    // Force the FIRST Protoss Pylon to be placed on the main-side of the natural ramp.
+    // Force the pylon to be placed on the main-side of the natural ramp.
     if (building == BWAPI::UnitTypes::Protoss_Pylon
         && BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss
         && !firstPylonForced)
@@ -688,6 +688,44 @@ BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
 {
     return commanderReference->getUnitToBuild(position);
 }
+
+BWAPI::TilePosition BuildManager::getNaturalRampTile(bool preferMainSide) const
+{
+    const auto* choke = BWEB::Map::getNaturalChoke();
+    if (!choke) return BWAPI::TilePositions::Invalid;
+
+    const BWAPI::Position refPos = preferMainSide
+        ? BWEB::Map::getMainPosition()
+        : BWEB::Map::getNaturalPosition();
+
+    const BWAPI::Position chokePos = BWEB::Map::getClosestChokeTile(choke, refPos);
+    return BWAPI::TilePosition(chokePos);
+}
+
+BWAPI::TilePosition BuildManager::getNaturalRampTileTowardMain(int tilesTowardMain) const
+{
+    const auto* choke = BWEB::Map::getNaturalChoke();
+    if (!choke) return BWAPI::TilePositions::Invalid;
+
+    const BWAPI::TilePosition mainTile = BWEB::Map::getMainTile();
+    const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
+
+    // A ramp tile closest to main
+    const BWAPI::TilePosition rampTile(BWEB::Map::getClosestChokeTile(choke, mainPos));
+
+    // Direction from ramp toward main
+    const int dx = (mainTile.x > rampTile.x) ? 1 : (mainTile.x < rampTile.x ? -1 : 0);
+    const int dy = (mainTile.y > rampTile.y) ? 1 : (mainTile.y < rampTile.y ? -1 : 0);
+
+    BWAPI::TilePosition anchor = rampTile + BWAPI::TilePosition(dx, dy) * tilesTowardMain;
+
+    // Clamp to map bounds
+    anchor.x = std::max(0, std::min(anchor.x, BWAPI::Broodwar->mapWidth() - 1));
+    anchor.y = std::max(0, std::min(anchor.y, BWAPI::Broodwar->mapHeight() - 1));
+
+    return anchor;
+}
+
 
 std::vector<NexusEconomy> BuildManager::getNexusEconomies()
 {

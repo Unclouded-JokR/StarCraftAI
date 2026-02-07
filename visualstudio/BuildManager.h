@@ -70,7 +70,7 @@ public:
     //Spender Manager Request methods
     void buildBuilding(BWAPI::UnitType);
     void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
-    // Build a supply provider at the natural ramp/entrance (Protoss Pylon / Terran Supply Depot).
+    // Build a supply provider at the natural ramp
     void buildSupplyAtNaturalRamp();
 
     void trainUnit(BWAPI::UnitType, BWAPI::Unit);
@@ -87,8 +87,13 @@ public:
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
 
-    // Find a buildable tile near the main-side (upper/inner) part of the natural choke/ramp.
+    // Find a buildable tile near the main-side part of the natural choke/ramp
     BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
+    // Returns a tile on the natural ramp closest to main or natural
+    BWAPI::TilePosition getNaturalRampTile(bool preferMainSide = true) const;
+    // Returns a tile near the natural ramp, biased toward main, offset by `tilesTowardMain` tiles for building to avoid blocking choke
+    BWAPI::TilePosition getNaturalRampTileTowardMain(int tilesTowardMain = 6) const;
+
     int countMyUnits(BWAPI::UnitType type) const;
     int countPlannedBuildings(BWAPI::UnitType type) const;
 
