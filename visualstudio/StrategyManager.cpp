@@ -332,6 +332,7 @@ Action StrategyManager::onFrame()
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon, Change this to be a higher value than 3 as the game goes along.
+		//We are not making pylons in advance quick enough
 		if (commanderReference->checkAvailableSupply() <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != 200))
 		{
 			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";

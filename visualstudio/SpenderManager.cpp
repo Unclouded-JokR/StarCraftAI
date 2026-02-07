@@ -123,8 +123,8 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
     int gasPrice = 0;
     bool canAffordRequest = false;
 
-    std::cout << "Current mineral count: " << currentMineralCount << "\n";
-    std::cout << "Current gas count: " << currentGasCount << "\n";
+    //std::cout << "Current mineral count: " << currentMineralCount << "\n";
+    //std::cout << "Current gas count: " << currentGasCount << "\n";
 
     //spend money until we cant anymore.
     for (ResourceRequest& request : requests)

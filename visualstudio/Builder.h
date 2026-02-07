@@ -3,7 +3,7 @@
 #include <vector>
 #include "A-StarPathfinding.h"
 
-#define DISTANCE_THRESHOLD 32
+#define DISTANCE_THRESHOLD 24
 
 class Builder
 {
@@ -11,6 +11,7 @@ private:
     BWAPI::Unit unitReference;
     Path referencePath;
     size_t pathIndex = 0;
+    bool debug = true;
 
     std::vector<BWAPI::TilePosition> getPathToConstruct();
 public:

@@ -82,11 +82,11 @@ void BuildManager::onFrame() {
                     }
                     else if(request.unit.isRefinery())
                     {
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
+                        //pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
                     }
                     else
                     {
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                        //pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }
 
                     Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
@@ -385,58 +385,27 @@ bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
 
 void BuildManager::pumpUnit()
 {
-    /*BWAPI::Unit firstTemplar = nullptr;
+    FriendlyUnitCounter ProtoBot_Units = commanderReference->informationManager.getFriendlyUnitCounter();
+    FriendlyBuildingCounter ProtoBot_Buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
+    FriendlyUpgradeCounter ProtoBot_Upgrades = commanderReference->informationManager.getFriendlyUpgradeCounter();
 
-    for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
-    {
-        if (unit->getType() == BWAPI::UnitTypes::Protoss_High_Templar && firstTemplar == nullptr && unit->getOrder() != BWAPI::Orders::ArchonWarp)
-        {
-            firstTemplar = unit;
-        }
-        else if (unit->getType() == BWAPI::UnitTypes::Protoss_High_Templar && firstTemplar != nullptr && unit->getOrder() != BWAPI::Orders::ArchonWarp)
-        {
-            firstTemplar->useTech(BWAPI::TechTypes::Archon_Warp, unit);
-            std::cout << firstTemplar->getOrder() << "\n";
-
-            firstTemplar = nullptr;
-        }
-    }*/
-
-    for (auto& unit : buildings)
+    for (BWAPI::Unit unit : buildings)
     {
         BWAPI::UnitType type = unit->getType();
         if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            if (unit->canTrain(BWAPI::UnitTypes::Protoss_High_Templar))
-            {
-                trainUnit(BWAPI::UnitTypes::Protoss_High_Templar, unit);
-            }
-            else if (unit->canTrain(BWAPI::UnitTypes::Protoss_Dragoon))
+            if (ProtoBot_Buildings.cyberneticsCore >= 1)
             {
                 trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
-                //cout << "Training Dragoon\n";
             }
             else
             {
                 trainUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
             }
         }
-        /*else if (type == Protoss_Stargate && !unit->isTraining() && !alreadySentRequest(unit->getID()))
-        {
-            if (unit->canTrain(Protoss_Corsair))
-            {
-                trainUnit(Protoss_Corsair, unit);
-            }
-        }*/
         else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
         {
-            int observerCount = 0;
-            for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
-            {
-                if (unit->getType() == BWAPI::UnitTypes::Protoss_Observer) observerCount++;
-            }
-
-            if (observerCount < 4)
+            if (ProtoBot_Units.observer < 4)
             {
                 trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
             }
@@ -493,14 +462,14 @@ void BuildManager::pumpUnit()
         }
         else if (type == BWAPI::UnitTypes::Protoss_Observatory)
         {
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
+            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
             }
             else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
-            }
+            }*/
         }
     }
 }

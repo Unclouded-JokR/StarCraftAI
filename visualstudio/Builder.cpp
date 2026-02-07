@@ -21,6 +21,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	}*/
 
 	//std::cout << path.positions.size() << "\n";
+	unitReference->stop();
 }
 
 Builder::~Builder() 
@@ -30,10 +31,10 @@ Builder::~Builder()
 
 void Builder::onFrame()
 {
-	if(referencePath.positions.empty() == false)
+	if(referencePath.positions.empty() == false && !debug)
 		AStar::drawPath(referencePath);
 
-	if (buildingToConstruct.isResourceDepot())
+	if (buildingToConstruct.isResourceDepot() || debug)
 	{
 		if (unitReference->isIdle())
 		{

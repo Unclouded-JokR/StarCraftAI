@@ -104,7 +104,7 @@ void ProtoBotCommander::onFrame()
 
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
-	m_mapTools.onFrame();
+	//m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
 
 	/*for (const Area& area : theMap.Areas())
