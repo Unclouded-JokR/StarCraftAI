@@ -20,7 +20,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 		path = referencePath.positions;
 	}*/
 
-	std::cout << path.positions.size() << "\n";
+	//std::cout << path.positions.size() << "\n";
 }
 
 Builder::~Builder() 
