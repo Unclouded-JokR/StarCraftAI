@@ -193,7 +193,7 @@ void NexusEconomy::onFrame()
 		}
 		*/
 
-
+		//Mineral Locking Logic
 		if ((assignedResource[worker] != vespeneGyser && worker->getDistance(assignedResource[worker]) < 50 && assignedResource[worker]) && moveTimer >= 5)
 		{
 			//std::cout << "gathering Mineral " << "\n";
@@ -254,10 +254,10 @@ void NexusEconomy::onFrame()
 	}
 
 
-	if (BWAPI::Broodwar->getFrameCount() % 500 == 0)
-	{
-		std::cout << BWAPI::Broodwar->getFrameCount() << " test: " << BWAPI::Broodwar->self()->gatheredMinerals() << "\n";
-	}
+	//if (BWAPI::Broodwar->getFrameCount() % 500 == 0)
+	//{
+	//	std::cout << BWAPI::Broodwar->getFrameCount() << " test: " << BWAPI::Broodwar->self()->gatheredMinerals() << "\n";
+	//}
 
 
 
