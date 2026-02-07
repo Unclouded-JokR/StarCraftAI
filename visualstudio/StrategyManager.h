@@ -119,6 +119,13 @@ public:
 class ProtoBotCommander;
 struct Action;
 
+struct BaseLocation
+{
+	BWAPI::Unit unitReference;
+	BWAPI::Position lastKnownPosition;
+};
+
+
 class StrategyManager
 {
 public:
@@ -131,10 +138,14 @@ public:
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
 
+	std::vector<BaseLocation> baseLocations;
+
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 	std::string onStart();
 	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
+	bool shouldGasSteal();
+
 	void printBoredomMeter();
 	void printAngerMeter();
 	void changeState(StrategyState*);

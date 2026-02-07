@@ -1,20 +1,25 @@
 #pragma once
 #include <BWAPI.h>
 #include <vector>
+#include "A-StarPathfinding.h"
+
+#define DISTANCE_THRESHOLD 10
 
 class Builder
 {
 private:
     BWAPI::Unit unitReference;
-    std::vector<BWAPI::TilePosition> path;
+    Path referencePath;
+    size_t pathIndex = 0;
 
     std::vector<BWAPI::TilePosition> getPathToConstruct();
 public:
-    BWAPI::Position positionToBuild;
+    BWAPI::Position requestedPositionToBuild;
     BWAPI::UnitType buildingToConstruct;
 
-    Builder(BWAPI::Unit, BWAPI::UnitType, BWAPI::Position);
+    Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToPlace, BWAPI::Position requestedLocation, Path path);
     ~Builder();
+
     void onFrame();
     BWAPI::Unit getUnitReference();
     void setUnitReference(BWAPI::Unit);

@@ -26,6 +26,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         int distance = INT_MAX;
         BWAPI::TilePosition closestDistance;
 
+        //To Avoid expanding to bases father than expected and generating paths for every base. Create a sorted list.
         for (const BWEM::Area& area : theMap.Areas())
         {
             for (const BWEM::Base& base : area.Bases())
@@ -41,7 +42,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         }
 
         //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
-        BWEB::Map::addReserve(closestDistance, BWAPI::UnitTypes::Protoss_Nexus.tileWidth(), BWAPI::UnitTypes::Protoss_Nexus.tileHeight());
+        //BWEB::Map::addReserve(closestDistance, BWAPI::UnitTypes::Protoss_Nexus.tileWidth(), BWAPI::UnitTypes::Protoss_Nexus.tileHeight());
         return BWAPI::Position(closestDistance);
     }
     else if (type == BWAPI::UnitTypes::Protoss_Assimilator)
@@ -70,6 +71,8 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                     }
                 }
 
+                if (nexusOnLocation == false) continue;
+
                 bool gyserAvalible = false;
                 auto gysers = base.Geysers();
 
@@ -83,7 +86,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                         if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
                         {
                             gyserAvalible = true;
-                            BWEB::Map::addReserve(gyser->TopLeft(), BWAPI::UnitTypes::Resource_Vespene_Geyser.tileWidth(), BWAPI::UnitTypes::Resource_Vespene_Geyser.tileHeight());
+                            //BWEB::Map::addReserve(gyser->TopLeft(), BWAPI::UnitTypes::Resource_Vespene_Geyser.tileWidth(), BWAPI::UnitTypes::Resource_Vespene_Geyser.tileHeight());
                             return BWAPI::Position(gyser->TopLeft());
                             break;
                         }
@@ -110,16 +113,36 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                     && distanceToPlacement < distance
                     && !alreadyUsingTiles(placement, type.tileWidth(), type.tileHeight()))
                 {
-                    std::cout << "Found position to place\n";
+                    //std::cout << "Found position to place\n";
                     distance = distanceToPlacement;
                     closestDistance = placement;
                 }
             }
         }
 
-        BWEB::Map::addReserve(closestDistance, type.tileWidth(), type.tileHeight());
+        //BWEB::Map::addReserve(closestDistance, type.tileWidth(), type.tileHeight());
         return BWAPI::Position(closestDistance);
     }
 
     return BWAPI::Position(0, 0);
+}
+
+void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
+{
+    BWEB::Map::addUsed(unit->getTilePosition(), unit->getType());
+}
+
+void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitDestroy(unit);
+}
+
+void BuildingPlacer::onUnitMorph(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitMorph(unit);
+}
+
+void BuildingPlacer::onUnitDiscover(BWAPI::Unit unit)
+{
+    BWEB::Map::onUnitDiscover(unit);
 }

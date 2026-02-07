@@ -38,7 +38,6 @@ void ProtoBotCommander::onStart()
 
 	m_mapTools.onStart();
 
-
 	/*
 	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
 	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
@@ -178,7 +177,7 @@ void ProtoBotCommander::onFrame()
 	
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
-	scoutingManager.onFrame();
+	//scoutingManager.onFrame();
 	timerManager.stopTimer(TimerManager::Scouting);
 
 	timerManager.startTimer(TimerManager::Combat);
@@ -256,8 +255,6 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-	buildManager.buildingDoneWarping(unit);
-
 	const BWAPI::UnitType unit_type = unit->getType();
 
 	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
@@ -283,7 +280,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
-	getUnitToScout();
+	//getUnitToScout();
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }
@@ -348,6 +345,16 @@ const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
 const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemyBuildings()
 {
 	return informationManager.getKnownEnemyBuildings();
+}
+
+void ProtoBotCommander::requestCheese(BWAPI::UnitType building, BWAPI::Unit unit)
+{
+	buildManager.buildBuilding(building, unit);
+}
+
+bool ProtoBotCommander::checkCheeseRequest(BWAPI::Unit unit)
+{
+	return buildManager.cheeseIsApproved(unit);
 }
 
 bool ProtoBotCommander::buildOrderCompleted()

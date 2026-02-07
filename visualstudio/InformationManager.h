@@ -83,8 +83,9 @@ struct FriendlyTechCounter
 	bool mindControl = false;
 	bool stasisField = false;
 	bool recall = false;
+    bool feedback = false;
 	bool archonWarp = false;
-	bool darkArchonMeld = false;
+    bool darkArchonMeld = false;
 };
 
 struct EnemyBuildingInfo
@@ -107,6 +108,147 @@ struct ThreatQueryResult {
     int detectorThreat = 0;     // 0
 };
 
+struct EnemyBuildingCounter
+{
+    int arbiterTribunal = 0;
+    int assimilator = 0;
+    int citadelOfAdun = 0;
+    int cyberneticsCore = 0;
+    int fleetBeacon = 0;
+    int forge = 0;
+    int gateway = 0;
+    int nexus = 0;
+    int observatory = 0;
+    int photonCannon = 0;
+    int pylon = 0;
+    int roboticsFacility = 0;
+    int roboticsSupportBay = 0;
+    int shieldBattery = 0;
+    int stargate = 0;
+    int templarArchives = 0;
+    int terranAcademy = 0;
+    int terranArmory = 0;
+    int terranBarracks = 0;
+    int terranBunker = 0;
+    int terranCommandCenter = 0;
+    int terranEngineeringBay = 0;
+    int terranFactory = 0;
+    int terranMissileTurret = 0;
+    int terranRefinery = 0;
+    int terranScienceFacility = 0;
+    int terranStarport = 0;
+    int terranSupplyDepot = 0;
+    int zergCreepColony = 0;
+    int zergDefilerMound = 0;
+    int zergEvolutionChamber = 0;
+    int zergExtractor = 0;
+    int zergGreaterSpire = 0;
+    int zergHatchery = 0;
+    int zergHive = 0;
+    int zergHydraliskDen = 0;
+    int zergInfestedCommandCenter = 0;
+    int zergLair = 0;
+    int zergNydusCanal = 0;
+    int zergQueensNest = 0;
+    int zergSpawningPool = 0;
+    int zergSpire = 0;
+    int zergSporeColony = 0;
+    int zergSunkenColony = 0;
+    int zergUltraliskCavern = 0;
+};
+
+struct enemyTechCounter
+{
+	bool stimPacks = false;
+	bool lockdown = false;
+	bool EMPShockwave = false;
+	bool spiderMines = false;
+	bool scannerSweep = false;
+	bool tankSiegeMode = false;
+	bool defensiveMatrix = false;
+	bool irradiate = false;
+	bool yamatoGun = false;
+	bool cloakingField = false;
+	bool personnelCloaking = false;
+	bool restoration = false;
+	bool opticalFlare = false;
+	bool healing = false;
+	bool nuclearStrike = false;
+	bool burrowing = false;
+	bool infestation = false;
+	bool spawnBroodlings = false;
+	bool darkSwarm = false;
+	bool plague = false;
+	bool consume = false;
+	bool ensnare = false;
+	bool parasite = false;
+	bool lurkerAspect = false;
+    bool disruptionWeb = false;
+    bool psionicStorm = false;
+    bool hallucination = false;
+    bool maelstrom = false;
+    bool mindControl = false;
+    bool stasisField = false;
+    bool recall = false;
+    bool feedback = false;
+    bool archonWarp = false;
+    bool darkArchonMeld = false;
+};
+
+struct enemyUpgradeCounter
+{
+    int infantryArmor = 0;
+    int infantryWeapons = 0;
+    int vehicleArmor = 0;
+    int vehicleWeapons = 0;
+    int shipArmor = 0;
+    int shipWeapons = 0;
+	bool U238Shells = false;
+	bool ionThrusters = false;
+	bool titanReactor = false;
+	bool ocularImplants = false;
+	bool MoebiusReactor = false;
+	bool apolloReactor = false;
+	bool colossusReactor = false;
+	bool caduceusReactor = false;
+	bool charonBoosters = false;
+	int zergCarapace = 0;
+	int zergMeleeAttacks = 0;
+	int zergMissileAttacks = 0;
+	int zergFlyerAttacks = 0;
+	int zergFlyerCarapace = 0;
+	bool ventralSacs = false;
+	bool antennae = false;
+	bool pneumatizedCarapace = false;
+	bool metabolicBoost = false;
+	bool adrenalGlands = false;
+	bool muscularAugments = false;
+	bool grooveSpines = false;
+	bool gameteMeiosis = false;
+	bool metasynapticNodes = false;
+	bool chitinousPlating = false;
+	bool anabolicSynthesis = false;
+    int airArmor = 0;
+    int airWeapons = 0;
+    int groundArmor = 0;
+    int groundWeapons = 0;
+    int plasmaShields = 0;
+    bool singularityCharge = false;
+    bool legEnhancements = false;
+    bool scarabDamage = false;
+    bool reaverCapacity = false;
+    bool graviticDrive = false;
+    bool sensorArray = false;
+    bool graviticBoosters = false;
+    bool khaydarinAmulet = false;
+    bool apialSensors = false;
+    bool graviticThrusters = false;
+    bool carrierCapacity = false;
+    bool khaydarinCore = false;
+    bool argusJewel = false;
+    bool argusTalisman = false;
+};
+
 class InformationManager
 {
 private:
@@ -120,12 +262,17 @@ private:
 	FriendlyBuildingCounter friendlyBuildingCounter;
 	FriendlyTechCounter friendlyTechCounter;
     FriendlyUpgradeCounter friendlyUpgradeCounter;
+	EnemyBuildingCounter enemyBuildingCounter;
+    enemyTechCounter enemyTechCounter;
+    enemyUpgradeCounter enemyUpgradeCounter;
     void incrementFriendlyUnit(FriendlyUnitCounter& counter, BWAPI::UnitType type);
 	void incrementFriendlyBuilding(FriendlyBuildingCounter& counter, BWAPI::UnitType type);
 	void decrementFriendlyUnit(FriendlyUnitCounter& counter, BWAPI::UnitType type);
 	void decrementFriendlyBuilding(FriendlyBuildingCounter& counter, BWAPI::UnitType type);
 	void checkResearch();
 	void checkUpgrades();
+	void checkEnemyResearch();
+	void checkEnemyUpgrades();
     void printFriendlyUnit();
 	void printFriendlyBuilding();
 	void printFriendlyResearch();
@@ -133,6 +280,8 @@ private:
 
 public:
     ProtoBotCommander* commanderReference;
+
+    std::vector<BWAPI::Position> EnemyBaseLocations;
 
     InformationManager(ProtoBotCommander* commanderReference);
     void onStart();
@@ -149,6 +298,10 @@ public:
 
     void printKnownEnemies() const;
     void printKnownEnemyBuildings() const;
+    void printEnemyBuildingCounter() const;
+    void updateEnemyBuildingCounter();
+    void printEnemyResearch() const;
+    void printEnemyUpgrades() const;
     void printTrackedEnemies() const;
 
 	FriendlyUnitCounter getFriendlyUnitCounter() const { return friendlyUnitCounter; }
@@ -175,6 +328,10 @@ public:
     // Test / debug helpers
     void TestPrintBaseOwnership() const;
     void TestDrawBaseOwnership() const;
+
+    // Enemy capability queries
+    bool enemyHasAirTech() const;
+    bool enemyHasCloakTech() const;
 
     // Communication to ThreatGrid
     int getEnemyGroundThreatAt(BWAPI::Position p) const;

@@ -4,6 +4,7 @@
 #include "../visualstudio/BWEB/Source/BWEB.h"
 #include <vector>
 #include <bwem.h>
+#include "Timer.h";
 
 using namespace std;
 
@@ -49,15 +50,14 @@ class Path {
 		};
 };
 
-static class AStar {
+class AStar {
 	private:
-		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end);
-
+		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static int TileToIndex(BWAPI::TilePosition tile);
-
-		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile);
+		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
+		static void smoothPath(vector<BWAPI::Position>& vec, BWAPI::UnitType type);
 
 	public:
-		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end);
+		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);
 		static void drawPath(Path path);
 };
