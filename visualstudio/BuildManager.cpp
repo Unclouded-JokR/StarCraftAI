@@ -79,6 +79,7 @@ void BuildManager::onFrame() {
                     if (request.unit.isResourceDepot())
                     {
                         //do nothing for now
+                        if (locationToPlace == BWAPI::Positions::Invalid) continue;
                     }
                     else if(request.unit.isRefinery())
                     {

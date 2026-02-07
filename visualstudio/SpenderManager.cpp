@@ -90,7 +90,8 @@ int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests, BWAPI:
 
     /*std::cout << "Total supply (with planned building considerations) = " << (totalSupply + plannedSupply) << "\n";
     std::cout << "Used supply (with planned unit considerations) = " << usedSupply << "\n";
-    std::cout << "StarCraft Supply avalible = " << (totalSupply - usedSupply) << "\n";*/
+    std::cout << "StarCraft Supply Avalible = " << (totalSupply - usedSupply) << "\n";
+    std::cout << "Spender Manager Supply Avalible " << ((totalSupply + plannedSupply) - (usedSupply + plannedUsedSuply)) << "\n";*/
     return ((totalSupply + plannedSupply) - (usedSupply + plannedUsedSuply));
 }
 

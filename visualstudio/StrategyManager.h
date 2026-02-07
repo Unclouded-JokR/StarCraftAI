@@ -126,6 +126,7 @@ class StrategyManager
 {
 public:
 	ProtoBotCommander* commanderReference;
+	BWAPI::Position startingChoke;
 	float boredomMeter = 0.0f; //Value between 0-1
 	float angerMeter = 0.0f; //Value between 0-1;
 	float egoMeter = 0.0f; //Value between 0-1;

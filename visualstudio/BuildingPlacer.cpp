@@ -23,6 +23,9 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 {
     if (type == BWAPI::UnitTypes::Protoss_Nexus)
     {
+        const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
+        const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+
         int distance = INT_MAX;
         BWAPI::TilePosition closestDistance;
 
@@ -31,11 +34,16 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         {
             for (const BWEM::Base& base : area.Bases())
             {
-                if (BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location()) < distance
-                    && base.Location() != BWAPI::Broodwar->self()->getStartLocation()
-                    && BWAPI::Broodwar->canBuildHere(base.Location(), type))
+                if (base.Location() == BWAPI::Broodwar->self()->getStartLocation()) continue;
+
+                int distanceToNewBase = 0;
+                const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
+
+                if (distanceToNewBase == -1) continue;
+
+                if (distanceToNewBase < distance)
                 {
-                    distance = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
+                    distance = distanceToNewBase;
                     closestDistance = base.Location();
                 }
             }

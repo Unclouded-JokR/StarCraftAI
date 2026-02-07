@@ -4,7 +4,7 @@
 #include <BWAPI.h>
 
 int expansionTimes[9] = { 1, 2, 3, 5, 8, 13, 21, 34, 55 };
-int mineralsToExpand = 1000;
+int mineralsToExpand = 500;
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
 int frameSinceLastBuild = 0;
@@ -230,8 +230,40 @@ std::string StrategyManager::onStart()
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
 	frameSinceLastBuild = 0;
-	mineralsToExpand = 1000;
+	mineralsToExpand = 500;
 
+	//Get main base informaiton
+	const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
+	const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+
+	//Calculate position we will tell squads to wait before attacking if enemy base is unknown or not.
+	int shortestDistance = INT_MAX;
+	int secondShortestDistance = INT_MAX;
+
+	for (auto area : mainArea->AccessibleNeighbours())
+	{
+		for (auto choke : area->ChokePoints())
+		{
+			const std::pair<const BWEM::Area*, const BWEM::Area*> chokeAreas = choke->GetAreas();
+
+			if (chokeAreas.first->Id() == mainArea->Id() || chokeAreas.second->Id() == mainArea->Id()) continue;
+
+			int distance = 0;
+			const BWEM::CPPath pathToChoke = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(choke->Center()), &distance);
+
+			if (distance == -1) continue;
+
+			std::cout << "Path distance: " << (distance) << "\n";
+
+			if (distance < shortestDistance)
+			{
+				shortestDistance = distance;
+				startingChoke = BWAPI::Position(choke->Center());
+			}
+		}
+	}
+
+	std::cout << "Starting choke located at " << startingChoke << "\n";
 
 	//return empty string
 	return "";
@@ -250,12 +282,15 @@ Action StrategyManager::onFrame()
 	Action action;
 	action.type = ActionType::Action_None;
 
+	BWAPI::Broodwar->drawCircleMap(startingChoke, 5, BWAPI::Colors::Blue, true);
+
 	//In-Game Time book keeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 
 	//Supply threshold is how close we want to get to the supply cap before building a pylon to cover supply costs.
 	//Make supply threshold early game by default.
+	//Modify these times
 	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
 
 	if ((seconds / 60) >= 5 && (seconds / 60) < 15)
@@ -319,13 +354,13 @@ Action StrategyManager::onFrame()
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
-/*if (frame - frameSinceLastScout >= 24 * 20) {
-	frameSinceLastScout = frame;
-	Scout s;
-	action.commanderAction = s;
-	action.type = ActionType::Action_Scout;
-	return action;
-}*/
+	/*if (frame - frameSinceLastScout >= 24 * 20) {
+		frameSinceLastScout = frame;
+		Scout s;
+		action.commanderAction = s;
+		action.type = ActionType::Action_Scout;
+		return action;
+	}*/
 #pragma endregion
 
 #pragma region Expand
@@ -513,7 +548,17 @@ Action StrategyManager::onFrame()
 #pragma endregion
 
 #pragma region Defend
+	/*if (ProtoBot_Squads.size() != 0)
+	{
+		std::cout << "Defend Action: telling squad to defend base.\n";
 
+		Defend actionToTake;
+		actionToTake.position = startingChoke;
+		
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Defend;
+		return action;
+	}*/
 #pragma endregion
 
 
