@@ -254,6 +254,7 @@ Action StrategyManager::onFrame()
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 
+	//Supply threshold is how close we want to get to the supply cap before building a pylon to cover supply costs.
 	//Make supply threshold early game by default.
 	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
 
@@ -301,11 +302,7 @@ Action StrategyManager::onFrame()
 	}
 
 	//This is the normal formula we would use for calculting saturation but we will focus on purely gateways
-	/*
-	saturatedNexus = (ProtoBot_buildings.gateway / 4) +
-		((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) +
-		((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
-	*/
+	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
 
 	//4 Gateways per nexus should be built
 	saturatedNexus = (ProtoBot_buildings.gateway / 4);
@@ -322,13 +319,12 @@ Action StrategyManager::onFrame()
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 	#pragma region Scout
-	//// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
+	if (frame - frameSinceLastScout >= 24 * 20) {
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
+		return action;  
 	}
 	#pragma endregion
 
@@ -336,7 +332,7 @@ Action StrategyManager::onFrame()
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon, Change this to be a higher value than 3 as the game goes along.
-		if (commanderReference->checkAvailableSupply() <= supplyThreshold)
+		if (commanderReference->checkAvailableSupply() <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != 200))
 		{
 			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
@@ -347,7 +343,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		//Check for assimilators on nexus economies here.
+		//If a nexus economy has an gyser to place an assimlator at, place one when we have more than: numbers of minerals + 3 workers.
 		for (const NexusEconomy& nexusEconomy : nexusEconomies)
 		{
 			if (nexusEconomy.vespeneGyser != nullptr
@@ -476,7 +472,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility == 1)
 		{
-			std::cout << "build action: requesting to warp observatory\n";
+			std::cout << "Build Action: requesting to warp observatory\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Observatory;
 

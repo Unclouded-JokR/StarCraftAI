@@ -79,7 +79,7 @@ int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests, BWAPI:
         }
     }
 
-    //Consider buildings that are not constructed yet.
+    //Consider buildings that are not constructed yet for potential supply.
     for (const BWAPI::Unit building : buildings)
     {
         if (!building->isCompleted())
@@ -174,6 +174,8 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
                 }
                 break;
         }
+
+        break;
     }
 }
 #pragma endregion
