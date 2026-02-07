@@ -10,11 +10,22 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 }
 
 void Squad::onFrame() {
-	/*if (state == POSITIONING) {
+	if (state == POSITIONING) {
 		flockingHandler();
 	}
-	
-	pathHandler();*/
+
+	//static bool wasRightClicked = false;
+	//bool isRightClicked = BWAPI::Broodwar->getMouseState(BWAPI::MouseButton::M_RIGHT);
+
+	//// Detect just the click (rising edge)
+	//if (isRightClicked && !wasRightClicked) {
+	//	/*currentPathIdx = 0;
+	//	currentPath = AStar::GeneratePath(leader->getPosition(), leader->getType(), BWAPI::Broodwar->getMousePosition());*/
+	//}
+
+	//wasRightClicked = isRightClicked;
+
+	pathHandler();
 }
 
 void Squad::simpleFlock() {
@@ -157,12 +168,14 @@ void Squad::pathHandler() {
 		}
 	}
 
-	for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
+	/*for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
 		BWAPI::Broodwar->drawBoxMap(rect.first, rect.second, BWAPI::Colors::Yellow);
-	}
-	for (BWAPI::TilePosition tile : closedTiles) {
+	}*/
+	for (pair<BWAPI::TilePosition, double> pair : closedTiles) {
 		// Drawing box around tile
-		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.x * 32 - 16, tile.y * 32 - 16), BWAPI::Position(tile.x * 32 + 16, tile.y * 32 + 16), BWAPI::Colors::Red);
+		BWAPI::Position pos = BWAPI::Position(pair.first);
+		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(pos.x - 16, pos.y - 16), BWAPI::Position(pos.x + 16, pos.y + 16), BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawTextMap(pos, "F = %.2f", pair.second);
 	}
 
 	AStar::drawPath(currentPath);

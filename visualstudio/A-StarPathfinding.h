@@ -9,7 +9,7 @@
 using namespace std;
 
 extern vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
-extern vector<BWAPI::TilePosition> closedTiles;
+extern vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
 
 struct Node {
 	BWAPI::TilePosition tile, parent;
