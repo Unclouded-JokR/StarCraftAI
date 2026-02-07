@@ -230,7 +230,7 @@ std::string StrategyManager::onStart()
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
 	frameSinceLastBuild = 0;
-	mineralsToExpand = 500;
+	mineralsToExpand = 1000;
 
 	//Get main base informaiton
 	const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
@@ -342,6 +342,7 @@ Action StrategyManager::onFrame()
 	//4 Gateways per nexus should be built
 	saturatedNexus = (ProtoBot_buildings.gateway / 4);
 
+	std::vector<BWAPI::Position> enemyBaselocations;
 	for (const auto [unit, building] : enemyBuildingInfo)
 	{
 		if (building.type.isResourceDepot())
@@ -349,18 +350,20 @@ Action StrategyManager::onFrame()
 			//std::cout << building.type << " at position " << building.lastKnownPosition << "\n";
 
 			BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
+
+			enemyBaselocations.push_back(building.lastKnownPosition);
 		}
 	}
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
-	/*if (frame - frameSinceLastScout >= 24 * 20) {
+	if (frame - frameSinceLastScout >= 24 * 20) {
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;
-	}*/
+	}
 #pragma endregion
 
 #pragma region Expand
@@ -544,11 +547,27 @@ Action StrategyManager::onFrame()
 
 
 #pragma region Attack
+	//If we have more than two full squads attack. 
+	int fullSquads = 0;
+	if (ProtoBot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
+	{
+		for (Squad squad : ProtoBot_Squads)
+		{
+			if (squad.units.size() == squad.unitSize) fullSquads++;
+		}
 
+		Attack actionToTake;
+		//Attack the first enemy base location for now.
+		actionToTake.position = enemyBaselocations.at(0);
+
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Attack;
+		return action;
+	}
 #pragma endregion
 
 #pragma region Defend
-	/*if (ProtoBot_Squads.size() != 0)
+	if (ProtoBot_Squads.size() != 0)
 	{
 		std::cout << "Defend Action: telling squad to defend base.\n";
 
@@ -558,7 +577,7 @@ Action StrategyManager::onFrame()
 		action.commanderAction = actionToTake;
 		action.type = ActionType::Action_Defend;
 		return action;
-	}*/
+	}
 #pragma endregion
 
 

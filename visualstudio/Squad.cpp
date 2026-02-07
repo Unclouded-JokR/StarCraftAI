@@ -199,7 +199,13 @@ void Squad::removeUnit(BWAPI::Unit unit){
 
 void Squad::move(BWAPI::Position position) {
 	state = POSITIONING;
-	leader->attack(position);
+	//leader->attack(position);
+
+	for (auto& unit : units) {
+		if (unit->getPosition() == position || unit->getDistance(position) < 32) continue;
+
+		unit->move(position);
+	}
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {

@@ -147,14 +147,14 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Scout:
 		{
-			std::cout << "Requesting scout!\n";
+			//std::cout << "Requesting scout!\n";
 			getUnitToScout();
 			break;
 		}
 		case ActionType::Action_Attack:
 		{
 			const Attack attack = get<Attack>(action.commanderAction);
-			combatManager.move(attack.position);
+			combatManager.attack(attack.position);
 			break;
 		}
 		case ActionType::Action_Defend:
@@ -181,7 +181,7 @@ void ProtoBotCommander::onFrame()
 	
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
-	//scoutingManager.onFrame();
+	scoutingManager.onFrame();
 	timerManager.stopTimer(TimerManager::Scouting);
 
 	timerManager.startTimer(TimerManager::Combat);
