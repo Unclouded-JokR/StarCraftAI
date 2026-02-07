@@ -175,7 +175,7 @@ void Squad::pathHandler() {
 		// Drawing box around tile
 		BWAPI::Position pos = BWAPI::Position(pair.first);
 		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(pos.x - 16, pos.y - 16), BWAPI::Position(pos.x + 16, pos.y + 16), BWAPI::Colors::Red);
-		BWAPI::Broodwar->drawTextMap(pos, "F = %.2f", pair.second);
+		BWAPI::Broodwar->drawTextMap(BWAPI::Position(pos.x - 16, pos.y), "%.2f", pair.second);
 	}
 
 	AStar::drawPath(currentPath);

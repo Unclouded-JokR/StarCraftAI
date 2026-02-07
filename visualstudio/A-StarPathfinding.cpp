@@ -35,7 +35,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	// Optimization using priority_queue for open set
 	// The priority_queue will always have the node with the lowest fCost at the top
 	// Comparator is overloaded ih the Node struct in A-StarPathfinding.h
-	priority_queue<Node> openSet;
+	priority_queue<Node, vector<Node>, greater<Node>> openSet;
 
 	// Optimization using array for closed set
 	const int mapWidth = BWAPI::Broodwar->mapWidth();
@@ -44,7 +44,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	vector<double> gCostMap(mapWidth * mapHeight, DBL_MAX); // Default: all gCosts are as large as possible
 
 	// Store parents in an unordered_map for reconstructing path later
-	vector<BWAPI::TilePosition> parent(mapWidth * mapHeight, BWAPI::TilePosition(-1, -1));
+	unordered_map<int, BWAPI::TilePosition> parent;
 
 	// Very first node to be added is the starting tile position
 	openSet.push(Node(start, start, 0, 0, 0));
@@ -130,11 +130,9 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			}
 
 			// Check if neighbour is already in closed set
-			if (closedSet[TileToIndex(neighbour.tile)]) {
+			if (closedSet[TileToIndex(neighbour.tile)]){
 				continue;
 			}
-
-			// If current path to neighbour has a more expensive gCost than previously recorded, don't add this path
 			if (gCostMap[TileToIndex(neighbour.tile)] < neighbour.gCost) {
 				continue;
 			}
@@ -166,7 +164,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			if (x != 0 && y != 0) {
 				BWAPI::TilePosition a(currentNode.tile.x + x, currentNode.tile.y);
 				BWAPI::TilePosition b(currentNode.tile.x, currentNode.tile.y + y);
-				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) || !tileWalkable(unitType, b, end, isInteractableEndpoint))
+				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) && !tileWalkable(unitType, b, end, isInteractableEndpoint))
 					continue;
 			}
 
@@ -175,9 +173,10 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 			if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
 				// Tile cost decided by euclidean distance (32 pixels orthogonally since TilePositions are 32x32)
-				const double gCost = currentNode.gCost + (x != 0 && y != 0) ? 45.255 : 32.0;
-				const double hCost = neighbourTile.getDistance(end);
+				const double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 1.414 : 1);
+				const double hCost = squaredDistance(BWAPI::Position(neighbourTile), BWAPI::Position(end)) / 32;
 				const double fCost = gCost + hCost;
+				cout << "Tile costs: " << gCost << " " << hCost << " " << fCost << endl;
 				const Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
 				neighbours.push_back(neighbourNode);
 			}
@@ -247,4 +246,8 @@ void AStar::drawPath(Path path) {
 
 	BWAPI::Broodwar->drawCircleMap(path.positions.at(0), 5, BWAPI::Colors::Green, true);
 	BWAPI::Broodwar->drawCircleMap(path.positions.at(path.positions.size() - 1), 5, BWAPI::Colors::Red, true);
+}
+
+double AStar::squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
+	return ((pos2.x - pos1.x) * (pos2.x - pos1.x)) + ((pos2.y - pos1.y) * (pos2.y - pos1.y));
 }
