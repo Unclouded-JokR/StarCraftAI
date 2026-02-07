@@ -250,25 +250,24 @@ Action StrategyManager::onFrame()
 	Action action;
 	action.type = ActionType::Action_None;
 
-	// time bookkeeping
+	//In-Game Time book keeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 
-	//Move this to inside if so we dont scout during build order unless instructed.
-	#pragma region Scout
-	//// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
-	}
-	#pragma endregion
+	//Supply threshold is how close we want to get to the supply cap before building a pylon to cover supply costs.
+	//Make supply threshold early game by default.
+	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
 
-	// from here on, build logic etc.
-	const int supplyUsed = (BWAPI::Broodwar->self()->supplyUsed()) / 2;
-	const int totalSupply = (BWAPI::Broodwar->self()->supplyTotal()) / 2;
+	if ((seconds / 60) >= 5 && (seconds / 60) < 15)
+	{
+		supplyThreshold = SUPPLY_THRESHOLD_MIDGAME;
+	}
+	else if ((seconds / 60) >= 15)
+	{
+		supplyThreshold = SUPPLY_THRESHOLD_LATEGAME;
+	}
+
+	//Building logic
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
 
 	//ProtoBot unit information
@@ -278,61 +277,62 @@ Action StrategyManager::onFrame()
 	const FriendlyTechCounter ProtoBot_tech = commanderReference->informationManager.getFriendlyTechCounter();
 	std::vector<Squad> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
-	//BWEM is only able to tell the location when it is in vision :)
-	const std::set<BWAPI::Unit>& enemyUnits = commanderReference->informationManager.getKnownEnemies();
+	//Get Enemy Building information.
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = commanderReference->informationManager.getKnownEnemyBuildings();
 
-	/*for (const BWAPI::Unit &unit : enemyUnits)
+	//Check how many of our Nexus Economies are completed and saturated.
+	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+	int completedNexusEconomy = 0;
+	int saturatedNexus = 0;
+
+	for (NexusEconomy nexusEconomy : nexusEconomies)
 	{
-		if (unit->getType() == BWAPI::Broodwar->enemy()->getRace().getResourceDepot())
+		/*
+		* Nexus Economy considered complete if
+		*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
+		*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
+		*/
+		if (nexusEconomy.lifetime < 500) continue;
+
+		if ((nexusEconomy.vespeneGyser != nullptr && (nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())) ||
+			(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size()))
 		{
-			if (baseLocations.size() == 0)
-			{
-				BaseLocation location;
-				location.unitReference = unit;
-				location.lastKnownPosition = unit->getPosition();
-
-				baseLocations.push_back(location);
-			}
-			else
-			{
-				bool checkIsNewBase = true;
-				for (BaseLocation& location : baseLocations)
-				{
-					if (location.unitReference == unit)
-					{
-						checkIsNewBase = false;
-						break;
-					}
-				}
-
-				if (checkIsNewBase)
-				{
-					BaseLocation location;
-					location.unitReference = unit;
-					location.lastKnownPosition = unit->getPosition();
-
-					baseLocations.push_back(location);
-				}
-			}
+			completedNexusEconomy++;
 		}
 	}
 
-	for (BaseLocation& location : baseLocations)
+	//This is the normal formula we would use for calculting saturation but we will focus on purely gateways
+	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
+
+	//4 Gateways per nexus should be built
+	saturatedNexus = (ProtoBot_buildings.gateway / 4);
+
+	for (const auto [unit, building] : enemyBuildingInfo)
 	{
-		std::cout << "Base Location at " << location.lastKnownPosition << "\n";
+		if (building.type.isResourceDepot())
+		{
+			//std::cout << building.type << " at position " << building.lastKnownPosition << "\n";
 
-		BWAPI::Broodwar->drawCircleMap(location.lastKnownPosition, 5, BWAPI::Colors::Red, true);
-	}*/
+			BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
+		}
+	}
 
-	//commanderReference->informationManager.printTrackedEnemies();
+	//Move this to inside if so we dont scout during build order unless instructed.
+#pragma region Scout
+/*if (frame - frameSinceLastScout >= 24 * 20) {
+	frameSinceLastScout = frame;
+	Scout s;
+	action.commanderAction = s;
+	action.type = ActionType::Action_Scout;
+	return action;
+}*/
+#pragma endregion
 
-
-	#pragma region Expand
+#pragma region Expand
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon, Change this to be a higher value than 3 as the game goes along.
-		if (commanderReference->checkAvailableSupply() <= 3 && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Pylon))
+		if (commanderReference->checkAvailableSupply() <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != 200))
 		{
 			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
@@ -341,9 +341,9 @@ Action StrategyManager::onFrame()
 			action.commanderAction = actionToTake;
 			action.type = ActionType::Action_Expand;
 			return action;
+		}
 
-		//Check for assimilators on nexus economies here.
-		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+		//If a nexus economy has an gyser to place an assimlator at, place one when we have more than: numbers of minerals + 3 workers.
 		for (const NexusEconomy& nexusEconomy : nexusEconomies)
 		{
 			if (nexusEconomy.vespeneGyser != nullptr
@@ -376,7 +376,7 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
-			else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
+			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
 				std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes[minutesPassedIndex] << ")\n";
@@ -389,32 +389,14 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}
+			}*/
 		}
 	}
-	#pragma endregion
+#pragma endregion
 
-	#pragma region Build
+#pragma region Build
 	if (buildOrderCompleted)
 	{
-		std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-		int completedNexusEconomy = 0;
-
-		for (NexusEconomy nexusEconomy : nexusEconomies)
-		{
-			/*
-			* Nexus Economy considered complete if
-			*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
-			*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
-			*/
-			if (nexusEconomy.lifetime < 500) continue;
-
-			if ((nexusEconomy.vespeneGyser != nullptr && (nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())) ||
-				(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size()))
-			{
-				completedNexusEconomy++;
-			}
-		}
 		/*std::cout << "Completed Nexus Economy amount " << completedNexusEconomy << "\n";
 		std::cout << "Saturated Bases " << sturated_bases << "\n";*/
 
@@ -490,14 +472,14 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility == 1)
 		{
-			std::cout << "build action: requesting to warp observatory\n";
+			std::cout << "Build Action: requesting to warp observatory\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Observatory;
 
 			action.commanderAction = actiontotake;
 			action.type = ActionType::Action_Build;
 			return action;
-		} 
+		}
 
 		//Will focus on Zealots, Dragoons, and Observers for first iteration of BASIL upload.
 		/*if (checkalreadyrequested(bwapi::unittypes::protoss_citadel_of_adun) && citadelcount < 3 && cyberneticscount == 1 && citadelcount != completednexuseconomy)
@@ -522,16 +504,16 @@ Action StrategyManager::onFrame()
 			return action;
 		}*/
 	}
-	#pragma endregion
+#pragma endregion
 
 
-	#pragma region Attack
+#pragma region Attack
 
-	#pragma endregion
+#pragma endregion
 
-	#pragma region Defend
+#pragma region Defend
 
-	#pragma endregion
+#pragma endregion
 
 
 	//StrategyManager::printBoredomMeter();

@@ -2,6 +2,9 @@
 #include <BWAPI.h>
 #include <variant>
 #define FRAMES_PER_SECOND 24
+#define SUPPLY_THRESHOLD_EARLYGAME 2
+#define SUPPLY_THRESHOLD_MIDGAME 5
+#define SUPPLY_THRESHOLD_LATEGAME 8
 
 class StrategyManager;
 
@@ -119,13 +122,6 @@ public:
 class ProtoBotCommander;
 struct Action;
 
-struct BaseLocation
-{
-	BWAPI::Unit unitReference;
-	BWAPI::Position lastKnownPosition;
-};
-
-
 class StrategyManager
 {
 public:
@@ -137,8 +133,6 @@ public:
 	float boredomPerSecond = 0.05f;
 	float angerFromUnitDeath = .005f;
 	float egoFromEnemyUnitDeath = .01f;
-
-	std::vector<BaseLocation> baseLocations;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 	std::string onStart();

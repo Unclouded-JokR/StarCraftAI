@@ -54,7 +54,7 @@ int SpenderManager::availableSupply()
     return (BWAPI::Broodwar->self()->supplyTotal() - BWAPI::Broodwar->self()->supplyUsed()) / 2;;
 }
 
-int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests)
+int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests, BWAPI::Unitset buildings)
 {
     const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2; //Current supply total StarCraft notes us having.
     const int usedSupply = BWAPI::Broodwar->self()->supplyUsed() / 2; //Used supply total StarCraft notes us having.
@@ -76,6 +76,15 @@ int SpenderManager::plannedSupply(std::vector<ResourceRequest> &requests)
             case ResourceRequest::Type::Building:
                 plannedSupply += request.unit.supplyProvided() / 2;
                 break;
+        }
+    }
+
+    //Consider buildings that are not constructed yet for potential supply.
+    for (const BWAPI::Unit building : buildings)
+    {
+        if (!building->isCompleted())
+        {
+            plannedSupply += building->getType().supplyProvided() / 2;
         }
     }
 
@@ -110,10 +119,14 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
 
     //Need to modify spender manager to be able to consider supply usage.
     int currentSupply = availableSupply();
-
     int mineralPrice = 0;
     int gasPrice = 0;
+    bool canAffordRequest = false;
 
+    std::cout << "Current mineral count: " << currentMineralCount << "\n";
+    std::cout << "Current gas count: " << currentGasCount << "\n";
+
+    //spend money until we cant anymore.
     for (ResourceRequest& request : requests)
     {
         if (request.state != ResourceRequest::State::PendingApproval) continue;
@@ -121,49 +134,31 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
         switch (request.type)
         {
             case ResourceRequest::Type::Unit:
-                mineralPrice = request.unit.mineralPrice();
-                gasPrice = request.unit.gasPrice();
-
-                if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
-                {
-                    request.state = ResourceRequest::State::Approved_InProgress;
-                    currentMineralCount -= mineralPrice;
-                    currentGasCount -= gasPrice;
-                }
-                break;
             case ResourceRequest::Type::Building:
                 mineralPrice = request.unit.mineralPrice();
                 gasPrice = request.unit.gasPrice();
-
-                if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
-                {
-                    request.state = ResourceRequest::State::Approved_InProgress;
-                    currentMineralCount -= mineralPrice;
-                    currentGasCount -= gasPrice;
-                }
                 break;
             case ResourceRequest::Type::Upgrade:
                 mineralPrice = request.upgrade.mineralPrice();
                 gasPrice = request.upgrade.gasPrice();
-
-                if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
-                {
-                    request.state = ResourceRequest::State::Approved_InProgress;
-                    currentMineralCount -= mineralPrice;
-                    currentGasCount -= gasPrice;
-                }
                 break;
             case ResourceRequest::Type::Tech:
                 mineralPrice = request.tech.mineralPrice();
                 gasPrice = request.tech.gasPrice();
-
-                if (canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount))
-                {
-                    request.state = ResourceRequest::State::Approved_InProgress;
-                    currentMineralCount -= mineralPrice;
-                    currentGasCount -= gasPrice;
-                }
                 break;
+        }
+
+        canAffordRequest = canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount);
+
+        if (canAffordRequest)
+        {
+            request.state = ResourceRequest::State::Approved_InProgress;
+            currentMineralCount -= mineralPrice;
+            currentGasCount -= gasPrice;
+        }
+        else
+        {
+            break;
         }
     }
 }
