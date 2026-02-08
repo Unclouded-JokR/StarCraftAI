@@ -389,6 +389,8 @@ void BuildManager::pumpUnit()
     FriendlyUnitCounter ProtoBot_Units = commanderReference->informationManager.getFriendlyUnitCounter();
     FriendlyBuildingCounter ProtoBot_Buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
     FriendlyUpgradeCounter ProtoBot_Upgrades = commanderReference->informationManager.getFriendlyUpgradeCounter();
+    const int totalMinerals = BWAPI::Broodwar->self()->minerals();
+    const int totalGas = BWAPI::Broodwar->self()->gas();
 
     for (BWAPI::Unit unit : buildings)
     {
@@ -411,12 +413,12 @@ void BuildManager::pumpUnit()
                 trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
             }
         }
-        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
+        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading() && totalMinerals >= 500)
         {
-            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit))
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Singularity_Charge);
-            }*/
+            }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
         {
@@ -426,9 +428,9 @@ void BuildManager::pumpUnit()
             }*/
 
         }
-        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
+        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading() && totalMinerals >= 500)
         {
-            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
             }
@@ -439,7 +441,7 @@ void BuildManager::pumpUnit()
             else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
-            }*/
+            }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
         {

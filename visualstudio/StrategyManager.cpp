@@ -459,7 +459,7 @@ Action StrategyManager::onFrame()
 			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
 			//4 Gateways per nexus economy
-			if (ProtoBot_buildings.gateway < completedNexusEconomy * 4)
+			if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
 			{
 				std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
 				Build actionToTake;
@@ -510,7 +510,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.observatory == 1)
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore == 1)
 		{
 			std::cout << "build action: requesting to warp robotics facility\n";
 			Build actiontotake;
@@ -568,13 +568,16 @@ Action StrategyManager::onFrame()
 			if (squad.units.size() == squad.unitSize) fullSquads++;
 		}
 
-		Attack actionToTake;
-		//Attack the first enemy base location for now.
-		actionToTake.position = enemyBaselocations.at(0);
+		if (fullSquads == 3)
+		{
+			Attack actionToTake;
+			//Attack the first enemy base location for now.
+			actionToTake.position = enemyBaselocations.at(0);
 
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Attack;
-		return action;
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Attack;
+			return action;
+		}
 	}
 #pragma endregion
 
