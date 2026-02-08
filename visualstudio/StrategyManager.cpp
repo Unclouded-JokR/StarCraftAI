@@ -238,7 +238,6 @@ std::string StrategyManager::onStart()
 
 	//Calculate position we will tell squads to wait before attacking if enemy base is unknown or not.
 	int shortestDistance = INT_MAX;
-	int secondShortestDistance = INT_MAX;
 
 	for (auto area : mainArea->AccessibleNeighbours())
 	{
@@ -357,13 +356,13 @@ Action StrategyManager::onFrame()
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
-	if (frame - frameSinceLastScout >= 24 * 20) {
+	/*if (frame - frameSinceLastScout >= 24 * 20) {
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;
-	}
+	}*/
 #pragma endregion
 
 #pragma region Expand
@@ -403,7 +402,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
-			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
+			if (ProtoBot_buildings.nexus == saturatedNexus)
 			{
 				mineralsToExpand * 2.5;
 				std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
@@ -415,6 +414,19 @@ Action StrategyManager::onFrame()
 				action.type = ActionType::Action_Expand;
 				return action;
 			}
+
+			/*if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
+			{
+				mineralsToExpand * 2.5;
+				std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}*/
 			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
@@ -569,7 +581,7 @@ Action StrategyManager::onFrame()
 #pragma region Defend
 	if (ProtoBot_Squads.size() != 0)
 	{
-		std::cout << "Defend Action: telling squad to defend base.\n";
+		//std::cout << "Defend Action: telling squad to defend base.\n";
 
 		Defend actionToTake;
 		actionToTake.position = startingChoke;
@@ -626,6 +638,44 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 
 	//Reset boredom to 0 since we had a confrontation
 	StrategyManager::boredomMeter = 0.0f;
+}
+
+void StrategyManager::onUnitCreate(BWAPI::Unit unit)
+{
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+	const FriendlyBuildingCounter ProtoBot_buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
+
+	//Calculaute new location for squads to sit while we wait to attack.
+	//Helps prevent us from flooding our inside base with units.
+
+	/*
+	int shortestDistance = INT_MAX;
+
+	for (auto area : mainArea->AccessibleNeighbours())
+	{
+		for (auto choke : area->ChokePoints())
+		{
+			const std::pair<const BWEM::Area*, const BWEM::Area*> chokeAreas = choke->GetAreas();
+
+			if (chokeAreas.first->Id() == mainArea->Id() || chokeAreas.second->Id() == mainArea->Id()) continue;
+
+			int distance = 0;
+			const BWEM::CPPath pathToChoke = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(choke->Center()), &distance);
+
+			if (distance == -1) continue;
+
+			std::cout << "Path distance: " << (distance) << "\n";
+
+			if (distance < shortestDistance)
+			{
+				shortestDistance = distance;
+				startingChoke = BWAPI::Position(choke->Center());
+			}
+		}
+	}
+	*/
+
 }
 
 void StrategyManager::changeState(StrategyState* state)

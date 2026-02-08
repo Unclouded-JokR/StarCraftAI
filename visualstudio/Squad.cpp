@@ -15,6 +15,19 @@ void Squad::onFrame() {
 	}
 	
 	pathHandler();*/
+
+	for (BWAPI::Unit& squadMate : units)
+	{
+		if (squadMate == leader) continue;
+
+		if (squadMate->isIdle() && !(squadMate->getDistance(leader) < 500))
+		{
+			squadMate->attack(leader->getPosition());
+		}
+
+	}
+
+	BWAPI::Broodwar->drawTextMap(BWAPI::Position(leader->getPosition().x - 25, leader->getPosition().y - 25), "Leader");
 }
 
 void Squad::simpleFlock() {
@@ -199,13 +212,9 @@ void Squad::removeUnit(BWAPI::Unit unit){
 
 void Squad::move(BWAPI::Position position) {
 	state = POSITIONING;
+
+	if (leader->isIdle() || !(leader->getDistance(position) < 200)) leader->attack(position);
 	//leader->attack(position);
-
-	for (auto& unit : units) {
-		if (unit->getPosition() == position || unit->getDistance(position) < 32) continue;
-
-		unit->move(position);
-	}
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {

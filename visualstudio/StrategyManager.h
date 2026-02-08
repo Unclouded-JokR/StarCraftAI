@@ -139,6 +139,7 @@ public:
 	std::string onStart();
 	Action onFrame();
 	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
+	void onUnitCreate(BWAPI::Unit unit);
 	bool shouldGasSteal();
 
 	void printBoredomMeter();

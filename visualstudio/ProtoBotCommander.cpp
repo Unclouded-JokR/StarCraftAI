@@ -249,6 +249,7 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
 	informationManager.onUnitCreate(unit);
+	strategyManager.onUnitCreate(unit);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
