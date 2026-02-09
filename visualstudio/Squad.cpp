@@ -6,7 +6,6 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 	this->squadId = squadId;
 	this->squadColor = squadColor;
 	this->unitSize = unitSize;
-	this->state = IDLE;
 }
 
 void Squad::onFrame() {
@@ -24,7 +23,6 @@ void Squad::onFrame() {
 		{
 			squadMate->attack(leader->getPosition());
 		}
-
 	}
 
 	BWAPI::Broodwar->drawTextMap(BWAPI::Position(leader->getPosition().x - 25, leader->getPosition().y - 25), "Leader");
@@ -221,7 +219,6 @@ void Squad::removeUnit(BWAPI::Unit unit){
 }
 
 void Squad::move(BWAPI::Position position) {
-	state = POSITIONING;
 
 	if (leader->isIdle() || !(leader->getDistance(position) < 200)) leader->attack(position);
 	//leader->attack(position);
