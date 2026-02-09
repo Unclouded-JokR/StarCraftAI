@@ -86,13 +86,13 @@ void Builder::onFrame()
 				if ((pathIndex + 1) != referencePath.positions.size())
 				{
 					pathIndex++;
-					unitReference->move(referencePath.positions.at(pathIndex));
+					unitReference->rightClick(referencePath.positions.at(pathIndex));
 				}
 			}
 		}
 
 		//Incase unit gets stuck
-		if(unitReference->isIdle()) unitReference->move(referencePath.positions.at(pathIndex));
+		if(unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
 }
 
 BWAPI::Unit Builder::getUnitReference()

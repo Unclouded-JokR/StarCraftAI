@@ -1,5 +1,4 @@
 #include "A-StarPathfinding.h"
-#include "../src/starterbot/MapTools.h"
 #include <queue>
 #include <vector>
 
@@ -66,7 +65,13 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			BWAPI::Position dir;
 
 			while (currentNode.tile != start) {
-				tiles.push_back(BWAPI::Position(currentNode.tile) + BWAPI::Position(16, 16));
+				// FIX (Units stuck on assimilator) : If endpoint is interactable, do not center the tile
+				if (isInteractableEndpoint && currentNode.tile == end) {
+					tiles.push_back(BWAPI::Position(currentNode.tile));
+				}
+				else {
+					tiles.push_back(BWAPI::Position(currentNode.tile) + BWAPI::Position(16, 16));
+				}
 
 				currentNode.tile = parent[TileToIndex(currentNode.tile)];
 				const BWAPI::Position currentPos = BWAPI::Position(currentNode.tile);
