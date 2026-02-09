@@ -72,22 +72,21 @@ void BuildManager::onFrame() {
                     const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
                     const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
 
-                    if (workerAvalible == nullptr) continue;
+                    if (workerAvalible == nullptr || locationToPlace == BWAPI::Positions::Invalid) continue;
 
                     //For now dont use Astar to get path to location
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
-                        //do nothing for now
-                        if (locationToPlace == BWAPI::Positions::Invalid) continue;
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }
                     else if(request.unit.isRefinery())
                     {
-                        //pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
                     }
                     else
                     {
-                        //pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }
 
                     Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);

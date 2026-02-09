@@ -21,7 +21,14 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	}*/
 
 	//std::cout << path.positions.size() << "\n";
-	unitReference->stop();
+	if (buildingToConstruct.isResourceDepot())
+	{
+		unitReference->move(referencePath.positions.at(pathIndex));
+	}
+	else
+	{
+		unitReference->stop();
+	}
 }
 
 Builder::~Builder() 
@@ -31,10 +38,10 @@ Builder::~Builder()
 
 void Builder::onFrame()
 {
-	if(referencePath.positions.empty() == false && !debug)
-		AStar::drawPath(referencePath);
+	/*if(referencePath.positions.empty() == false)
+		AStar::drawPath(referencePath);*/
 
-	if (buildingToConstruct.isResourceDepot() || debug)
+	/*if (buildingToConstruct.isResourceDepot())
 	{
 		if (unitReference->isIdle())
 		{
@@ -47,13 +54,13 @@ void Builder::onFrame()
 	}
 	else
 	{
-		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < DISTANCE_THRESHOLD)
+		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 		}
 		else
 		{
-			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < DISTANCE_THRESHOLD)
+			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
 			{
 				if ((pathIndex + 1) != referencePath.positions.size())
 				{
@@ -62,7 +69,30 @@ void Builder::onFrame()
 				}
 			}
 		}
-	}
+
+		//Incase unit gets stuck
+		if(unitReference->isIdle()) unitReference->move(referencePath.positions.at(pathIndex));
+
+	}*/
+
+	if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
+		{
+			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+		}
+		else
+		{
+			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
+			{
+				if ((pathIndex + 1) != referencePath.positions.size())
+				{
+					pathIndex++;
+					unitReference->move(referencePath.positions.at(pathIndex));
+				}
+			}
+		}
+
+		//Incase unit gets stuck
+		if(unitReference->isIdle()) unitReference->move(referencePath.positions.at(pathIndex));
 }
 
 BWAPI::Unit Builder::getUnitReference()

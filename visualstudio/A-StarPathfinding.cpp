@@ -14,8 +14,8 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	rectCoordinates.clear();
 	closedTiles.clear();
 
-	cout << "Actual distance: " << _start.getDistance(_end) << endl;
-	cout << "Heuristic distance: " << chebyshevDistance(_start, _end) << endl;
+	//cout << "Actual distance: " << _start.getDistance(_end) << endl;
+	//cout << "Heuristic distance: " << chebyshevDistance(_start, _end) << endl;
 
 	vector<BWAPI::Position> tiles = vector<BWAPI::Position>();
 	// Checks if either the starting or ending tile positions are invalid
@@ -203,7 +203,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 				// Heuristic done using squaredDistance to avoid expensive sqrt() in euclidean distance across large distances
 				const double hCost = chebyshevDistance(BWAPI::Position(neighbourTile), BWAPI::Position(end));
 				const double fCost = gCost + hCost;
-				cout << "Tile costs: " << gCost << " | " << hCost << " | " << fCost << endl;
+				//cout << "Tile costs: " << gCost << " | " << hCost << " | " << fCost << endl;
 				const Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
 				neighbours.push_back(neighbourNode);
 			}

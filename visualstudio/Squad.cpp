@@ -10,7 +10,7 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 }
 
 void Squad::onFrame() {
-	if (state == POSITIONING) {
+	/*if (state == POSITIONING) {
 		flockingHandler();
 	}
 	

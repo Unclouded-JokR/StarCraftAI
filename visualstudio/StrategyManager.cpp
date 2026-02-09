@@ -402,10 +402,11 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
+			//Not expanding properlly after having enough gateways
 			if (ProtoBot_buildings.nexus == saturatedNexus)
 			{
 				mineralsToExpand * 2.5;
-				std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+				std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
 
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
@@ -448,11 +449,6 @@ Action StrategyManager::onFrame()
 #pragma region Build
 	if (buildOrderCompleted)
 	{
-		/*std::cout << "Completed Nexus Economy amount " << completedNexusEconomy << "\n";
-		std::cout << "Saturated Bases " << sturated_bases << "\n";*/
-
-		//const int sturated_bases = (completedNexusEconomy > 0) ? (ProtoBot_buildings.gateway + (2 * ProtoBot_buildings.roboticsFacility) + (2 * ProtoBot_buildings.stargate)) / (completedNexusEconomy * 4) : 0;
-
 		//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && completedNexusEconomy >= 1)
 		{
