@@ -10,7 +10,7 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitS
 }
 
 void Squad::onFrame() {
-	/*if (state == POSITIONING) {
+	if (state == POSITIONING) {
 		flockingHandler();
 	}
 	
@@ -159,15 +159,25 @@ void Squad::flockingHandler() {
 }
 
 void Squad::pathHandler() {
-	const int distThreshold = 10;
+	const int distThreshold = 1;
 	if (currentPath.positions.empty() == false && currentPathIdx < currentPath.positions.size()) {
 		const BWAPI::Position target = BWAPI::Position(currentPath.positions.at(currentPathIdx));
-		if (leader->getDistance(target) < distThreshold){
+		if (leader->getDistance(target) <= distThreshold){
 			currentPathIdx += 1;
 		}
 		else if (leader->getTargetPosition() != target) {
 			leader->attack(target);
 		}
+	}
+
+	for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
+		BWAPI::Broodwar->drawBoxMap(rect.first, rect.second, BWAPI::Colors::Yellow);
+	}
+	for (pair<BWAPI::TilePosition, double> pair : closedTiles) {
+		// Drawing box around tile
+		BWAPI::Position pos = BWAPI::Position(pair.first);
+		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(pos.x, pos.y), BWAPI::Position(pos.x + 32, pos.y + 32), BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawTextMap(BWAPI::Position(pos.x + 8, pos.y + 8), "%.2f", pair.second);
 	}
 
 	AStar::drawPath(currentPath);

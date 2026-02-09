@@ -151,14 +151,26 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 
 void CombatManager::handleTextCommand(std::string text) {
 	//PRESET POSITIONS FOR USE IN CUSTOM MAPS
-	// Changes whenever I wanna use it 
-	const BWAPI::Position leftPos = BWAPI::Position(832, 449);
-	const BWAPI::Position rightPos = BWAPI::Position(3616, 448);
-	const BWAPI::Position upPos = BWAPI::Position(832, 64);
-	const BWAPI::Position downPos = BWAPI::Position(832, 895);
-	const BWAPI::Position centerPos = BWAPI::Position(832, 449);
-	const BWAPI::Position topPos = BWAPI::Position(1041, 177);
-	const BWAPI::Position bottomPos = BWAPI::Position(508, 507);
+	BWAPI::Position leftPos = BWAPI::Position(0, 0);
+	BWAPI::Position rightPos = BWAPI::Position(0, 0);
+	BWAPI::Position upPos = BWAPI::Position(0, 0);
+	BWAPI::Position downPos = BWAPI::Position(0, 0);
+	BWAPI::Position centerPos = BWAPI::Position(0, 0);
+
+	if (BWAPI::Broodwar->mapName() == "pathMaze") {
+		leftPos = BWAPI::Position(705, 2626);
+		rightPos = BWAPI::Position(3000, 383);
+		upPos = BWAPI::Position(831, 450);
+		downPos = BWAPI::Position(2944, 2569);
+		centerPos = BWAPI::Position(1600, 1505);
+	}
+	if (BWAPI::Broodwar->mapName() == "pathBuildingTest") {
+		leftPos = BWAPI::Position(513, 508);
+		rightPos = BWAPI::Position(1056, 192);
+		centerPos = BWAPI::Position(690, 362);
+	}
+
+	cout << "Map name: " << BWAPI::Broodwar->mapName() << endl;
 
 	for (Squad& squad : Squads) {
 		const BWAPI::Position leaderPos = squad.leader->getPosition();
@@ -180,15 +192,6 @@ void CombatManager::handleTextCommand(std::string text) {
 		}if (text == "center") {
 			squad.currentPathIdx = 0;
 			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
-		}
-
-		if (text == "top") {
-			squad.currentPathIdx = 0;
-			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, topPos);
-		}
-		if (text == "bottom") {
-			squad.currentPathIdx = 0;
-			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, bottomPos);
 		}
 
 		vector<BWAPI::Position> positions = squad.currentPath.positions;
