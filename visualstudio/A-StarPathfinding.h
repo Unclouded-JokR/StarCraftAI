@@ -29,13 +29,25 @@ struct Node {
 	};
 
 	bool operator <(const Node& rhs) const {
+		if (this->fCost == rhs.fCost) {
+			return this->hCost < rhs.hCost;
+		}
 		return this->fCost < rhs.fCost;
 	}
 	bool operator >(const Node& rhs) const {
+		if (this->fCost == rhs.fCost) {
+			return this->hCost > rhs.hCost;
+		}
 		return this->fCost > rhs.fCost;
 	}
 	bool operator ==(const Node& rhs) const {
 		return tile == rhs.tile;
+	}
+};
+
+struct NodeHash {
+	std::size_t operator()(const Node& node) const {
+		return std::hash<int>()(0.5 * (node.tile.x + node.tile.y) * (node.tile.x + node.tile.y + 1) + node.tile.y);
 	}
 };
 
@@ -60,7 +72,10 @@ class AStar {
 		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static int TileToIndex(BWAPI::TilePosition tile);
 		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
+		static bool isOrthogonal(BWAPI::Position pos);
 		static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+		static double chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+		static double octileDistance(BWAPI::Position pos1, BWAPI::Position pos2);
 
 	public:
 		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);

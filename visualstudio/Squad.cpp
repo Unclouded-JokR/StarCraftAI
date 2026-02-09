@@ -168,14 +168,14 @@ void Squad::pathHandler() {
 		}
 	}
 
-	/*for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
+	for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
 		BWAPI::Broodwar->drawBoxMap(rect.first, rect.second, BWAPI::Colors::Yellow);
-	}*/
+	}
 	for (pair<BWAPI::TilePosition, double> pair : closedTiles) {
 		// Drawing box around tile
 		BWAPI::Position pos = BWAPI::Position(pair.first);
-		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(pos.x - 16, pos.y - 16), BWAPI::Position(pos.x + 16, pos.y + 16), BWAPI::Colors::Red);
-		BWAPI::Broodwar->drawTextMap(BWAPI::Position(pos.x - 16, pos.y), "%.2f", pair.second);
+		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(pos.x, pos.y), BWAPI::Position(pos.x + 32, pos.y + 32), BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawTextMap(BWAPI::Position(pos.x + 8, pos.y + 8), "%.2f", pair.second);
 	}
 
 	AStar::drawPath(currentPath);
@@ -219,8 +219,9 @@ void Squad::removeUnit(BWAPI::Unit unit){
 }
 
 void Squad::move(BWAPI::Position position) {
-	state = POSITIONING;
-	leader->attack(position);
+	for (auto& unit : units) {
+		unit->move(position);
+	}
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {

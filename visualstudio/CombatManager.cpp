@@ -156,16 +156,18 @@ void CombatManager::handleTextCommand(std::string text) {
 	BWAPI::Position upPos = BWAPI::Position(0, 0);
 	BWAPI::Position downPos = BWAPI::Position(0, 0);
 	BWAPI::Position centerPos = BWAPI::Position(0, 0);
-	BWAPI::Position topPos = BWAPI::Position(0, 0);
-	BWAPI::Position bottomPos = BWAPI::Position(0, 0);
 
 	if (BWAPI::Broodwar->mapName() == "pathMaze") {
-		leftPos = BWAPI::Position(833, 452);
-		rightPos = BWAPI::Position(3200, 480);
+		leftPos = BWAPI::Position(705, 2626);
+		rightPos = BWAPI::Position(3000, 383);
+		upPos = BWAPI::Position(831, 450);
+		downPos = BWAPI::Position(2944, 2569);
+		centerPos = BWAPI::Position(1600, 1505);
 	}
 	if (BWAPI::Broodwar->mapName() == "pathBuildingTest") {
 		leftPos = BWAPI::Position(513, 508);
 		rightPos = BWAPI::Position(1056, 192);
+		centerPos = BWAPI::Position(690, 362);
 	}
 
 	cout << "Map name: " << BWAPI::Broodwar->mapName() << endl;
@@ -190,15 +192,6 @@ void CombatManager::handleTextCommand(std::string text) {
 		}if (text == "center") {
 			squad.currentPathIdx = 0;
 			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
-		}
-
-		if (text == "top") {
-			squad.currentPathIdx = 0;
-			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, topPos);
-		}
-		if (text == "bottom") {
-			squad.currentPathIdx = 0;
-			squad.currentPath = AStar::GeneratePath(leaderPos, leaderType, bottomPos);
 		}
 
 		vector<BWAPI::Position> positions = squad.currentPath.positions;
