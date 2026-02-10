@@ -1,6 +1,5 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
-#include "../src/starterbot/Tools.h"
 #include "Squad.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
@@ -132,7 +131,6 @@ BWAPI::Unit CombatManager::getAvailableUnit() {
 
 BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> filter) {
 	for (auto& squad : Squads) {
-		if (squad.state == ATTACK) continue;
 		for (auto it = squad.units.begin(); it != squad.units.end(); ++it) {
 			BWAPI::Unit unit = *it;
 			if (!unit || !unit->exists()) continue;

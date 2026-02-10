@@ -1,9 +1,5 @@
 #pragma once
-
 #include <BWAPI.h>
-#include "../visualstudio/BWEB/Source/BWEB.h"
-#include <vector>
-#include <bwem.h>
 #include "Timer.h";
 
 using namespace std;

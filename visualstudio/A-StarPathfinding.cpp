@@ -1,6 +1,5 @@
 #include "A-StarPathfinding.h"
 #include <queue>
-#include <vector>
 
 vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
@@ -206,7 +205,8 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 				const double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0);
 
 				// Heuristic done using squaredDistance to avoid expensive sqrt() in euclidean distance across large distances
-				const double hCost = chebyshevDistance(BWAPI::Position(neighbourTile), BWAPI::Position(end));
+				// TODO: Fix heuristic causing units to hug walls all the time
+				const double hCost = octileDistance(BWAPI::Position(neighbourTile), BWAPI::Position(end));
 				const double fCost = gCost + hCost;
 				//cout << "Tile costs: " << gCost << " | " << hCost << " | " << fCost << endl;
 				const Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);

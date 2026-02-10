@@ -3,10 +3,10 @@
 
 class Squad;
 
-class SquadStateAbstract {
+class SquadState {
 public:
 	virtual void Enter(Squad* squad) = 0;
 	virtual void Update(Squad* squad) = 0;
 	virtual void Exit(Squad* squad) = 0;
-	virtual ~SquadStateAbstract() {};
+	virtual ~SquadState() {};
 };

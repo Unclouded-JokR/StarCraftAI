@@ -1,8 +1,9 @@
 #pragma once
 #include <BWAPI.h>
+#include "SquadState.h"
 #include "A-StarPathfinding.h"
-#include "../src/starterbot/Tools.h"
 #include "math.h"
+#include "VectorPos.h"
 
 class Squad {
 public:
@@ -11,7 +12,6 @@ public:
 	int unitSize;
 	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
-	SquadState state;
 	Path currentPath;
 	int currentPathIdx = 0;
 	double minNDistance = 80;
@@ -41,38 +41,4 @@ public:
 	double getMagnitude(BWAPI::Position vector);
 	VectorPos normalize(VectorPos vector);
 	void drawDebugInfo();
-};
-
-class VectorPos : public BWAPI::Point<double, 1> {
-public:
-	VectorPos(double _x, double _y) : BWAPI::Point<double, 1>(_x, _y) {}
-
-	VectorPos& operator=(const VectorPos& other) noexcept(true) {
-		this->x = other.x;
-		this->y = other.y;
-		return *this;
-	}
-	VectorPos& operator=(const BWAPI::Point<int, 1> other) noexcept(true) {
-		this->x = (double)other.x;
-		this->y = (double)other.y;
-		return *this;
-	}
-	VectorPos& operator=(const BWAPI::Point<double, 1> other) noexcept(true) {
-		this->x = (double)other.x;
-		this->y = (double)other.y;
-		return *this;
-	}
-
-	VectorPos operator-(const VectorPos& rhs) const {
-		return VectorPos(this->x - rhs.x, this->y - rhs.y);
-	}
-	VectorPos operator+(const VectorPos& rhs) const {
-		return VectorPos(this->x + rhs.x, this->y + rhs.y);
-	}
-	VectorPos operator*(const double& scalar) const {
-		return VectorPos(this->x * scalar, this->y * scalar);
-	}
-	VectorPos operator*(const int& scalar) const {
-		return VectorPos(this->x * scalar, this->y * scalar);
-	}
 };
