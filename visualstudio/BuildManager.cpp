@@ -83,12 +83,12 @@ void BuildManager::onFrame() {
                     }
                     else if(request.unit.isRefinery())
                     {
-                        std::cout << "Trying to build assimlator\n";
+                        //std::cout << "Trying to build assimlator\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
                     }
                     else
                     {
-                        std::cout << "Trying to build regular building\n";
+                        //std::cout << "Trying to build regular building\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }
 

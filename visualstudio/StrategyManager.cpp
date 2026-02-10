@@ -554,42 +554,42 @@ Action StrategyManager::onFrame()
 #pragma endregion
 
 
-#pragma region Attack
-	//If we have more than two full squads attack. 
-	int fullSquads = 0;
-	if (ProtoBot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
-	{
-		for (Squad squad : ProtoBot_Squads)
-		{
-			if (squad.units.size() == squad.unitSize) fullSquads++;
-		}
-
-		if (fullSquads == 3)
-		{
-			Attack actionToTake;
-			//Attack the first enemy base location for now.
-			actionToTake.position = enemyBaselocations.at(0);
-
-			action.commanderAction = actionToTake;
-			action.type = ActionType::Action_Attack;
-			return action;
-		}
-	}
-#pragma endregion
-
-#pragma region Defend
-	if (ProtoBot_Squads.size() != 0)
-	{
-		//std::cout << "Defend Action: telling squad to defend base.\n";
-
-		Defend actionToTake;
-		actionToTake.position = startingChoke;
-		
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Defend;
-		return action;
-	}
-#pragma endregion
+//#pragma region Attack
+//	//If we have more than two full squads attack. 
+//	int fullSquads = 0;
+//	if (ProtoBot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
+//	{
+//		for (Squad squad : ProtoBot_Squads)
+//		{
+//			if (squad.units.size() == squad.unitSize) fullSquads++;
+//		}
+//
+//		if (fullSquads == 3)
+//		{
+//			Attack actionToTake;
+//			//Attack the first enemy base location for now.
+//			actionToTake.position = enemyBaselocations.at(0);
+//
+//			action.commanderAction = actionToTake;
+//			action.type = ActionType::Action_Attack;
+//			return action;
+//		}
+//	}
+//#pragma endregion
+//
+//#pragma region Defend
+//	if (ProtoBot_Squads.size() != 0)
+//	{
+//		//std::cout << "Defend Action: telling squad to defend base.\n";
+//
+//		Defend actionToTake;
+//		actionToTake.position = startingChoke;
+//		
+//		action.commanderAction = actionToTake;
+//		action.type = ActionType::Action_Defend;
+//		return action;
+//	}
+//#pragma endregion
 
 
 	//StrategyManager::printBoredomMeter();

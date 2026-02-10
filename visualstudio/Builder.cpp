@@ -21,62 +21,18 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	}*/
 
 	//std::cout << path.positions.size() << "\n";
-	if (buildingToConstruct.isResourceDepot())
-	{
-		unitReference->move(referencePath.positions.at(pathIndex));
-	}
-	else
-	{
-		unitReference->stop();
-	}
+	unitReference->rightClick(referencePath.positions.at(pathIndex));
 }
 
 Builder::~Builder() 
 {
-	//path.clear();
+	
 }
 
 void Builder::onFrame()
 {
 	if(referencePath.positions.empty() == false)
 		AStar::drawPath(referencePath);
-
-	if (unitReference->isStuck())
-		BWAPI::Broodwar->drawCircleMap(unitReference->getPosition(), 8, BWAPI::Colors::Red, true);
-
-	/*if (buildingToConstruct.isResourceDepot())
-	{
-		if (unitReference->isIdle())
-		{
-			unitReference->move(requestedPositionToBuild);
-		}
-		else if (unitReference->getDistance(requestedPositionToBuild) < 200)
-		{
-			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-		}
-	}
-	else
-	{
-		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
-		{
-			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-		}
-		else
-		{
-			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
-			{
-				if ((pathIndex + 1) != referencePath.positions.size())
-				{
-					pathIndex++;
-					unitReference->move(referencePath.positions.at(pathIndex));
-				}
-			}
-		}
-
-		//Incase unit gets stuck
-		if(unitReference->isIdle()) unitReference->move(referencePath.positions.at(pathIndex));
-
-	}*/
 
 	if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 	{
@@ -94,8 +50,8 @@ void Builder::onFrame()
 		}
 	}
 
-	//Incase unit gets stuck
-	if(unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
+	////Incase unit gets stuck
+	//if(unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
 }
 
 BWAPI::Unit Builder::getUnitReference()

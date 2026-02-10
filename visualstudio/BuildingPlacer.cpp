@@ -120,8 +120,6 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 
             for (const BWAPI::TilePosition placement : placements)
             {
-
-
                 const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
 
                 if (BWAPI::Broodwar->canBuildHere(placement, type)
