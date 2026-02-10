@@ -63,6 +63,8 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			int distance = 0;
 			BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
 			BWAPI::Position dir;
+			BWAPI::Position currentWaypoint;
+			BWAPI::Position prevWaypoint;
 
 			while (currentNode.tile != start) {
 				// FIX (Units stuck on assimilator) : If endpoint is interactable, do not center the tile
@@ -81,49 +83,45 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 					distance += tiles.at(1).getApproxDistance(tiles.at(0));
 				}
 				else if (tiles.size() > 2) {
-					const BWAPI::Position currentWaypoint = tiles.at(tiles.size() - 1);
-					const BWAPI::Position prevWaypoint = tiles.at(tiles.size() - 2);
+					BWAPI::Position currentWaypoint = tiles.at(tiles.size() - 1);
+					BWAPI::Position prevWaypoint = tiles.at(tiles.size() - 2);
 					const BWAPI::Position newDir = currentWaypoint - prevWaypoint;
 					const double currentDistance = currentWaypoint.getApproxDistance(prevWaypoint);
-					distance += currentDistance;
-					const BWAPI::Unit closestBuilding = BWAPI::Broodwar->getClosestUnit(currentWaypoint, BWAPI::Filter::IsBuilding, unitType.width() / 2 + 1);
 
 					if (dir == newDir) {
+						distance += currentWaypoint.getApproxDistance(tiles.at(tiles.size() - 3));
 						tiles.erase(tiles.end() - 2);
-					}
-					else if (isOrthogonal(newDir)) {
-						if (closestBuilding != nullptr && closestBuilding->exists()) {
-							tiles.erase(tiles.end() - 2);
-						}
-						dir = newDir;
 					}
 					else {
 						dir = newDir;
+						distance += currentDistance;
 					}
-		
-					if (closestBuilding != nullptr && closestBuilding->exists()) {
-						const BWAPI::Position buildingDir = closestBuilding->getPosition() - currentWaypoint;
-						int xOffset = 0;
-						int yOffset = 0;
+				}
 
-						if (buildingDir.x < 0) {
-							xOffset += 5;
-						}
-						if (buildingDir.y < 0) {
-							yOffset += 5;
-						}
+				const BWAPI::Unit closestObstacle = BWAPI::Broodwar->getClosestUnit(currentWaypoint, (BWAPI::Filter::IsBuilding || BWAPI::Filter::IsResourceContainer), unitType.width() / 2 + 5);
+				if (closestObstacle != nullptr && closestObstacle->exists()) {
+					const BWAPI::Position buildingDir = closestObstacle->getPosition() - currentWaypoint;
+					int xOffset = 0;
+					int yOffset = 0;
 
-						if (buildingDir.x > 0) {
-							xOffset -= 5;
-						}
-						if (buildingDir.y > 0) {
-							yOffset -= 5;
-						}
-
-						const BWAPI::Position newWaypoint = BWAPI::Position(currentWaypoint.x + xOffset, currentWaypoint.y + yOffset);
-						tiles.erase(tiles.end() - 1);
-						tiles.push_back(newWaypoint);
+					if (buildingDir.x < 0) {
+						xOffset += 5;
 					}
+					if (buildingDir.y < 0) {
+						yOffset += 5;
+					}
+
+					if (buildingDir.x > 0) {
+						xOffset -= 5;
+					}
+					if (buildingDir.y > 0) {
+						yOffset -= 5;
+					}
+
+					const BWAPI::Position newWaypoint = BWAPI::Position(currentWaypoint.x + xOffset, currentWaypoint.y + yOffset);
+					dir = newWaypoint - prevWaypoint;
+					tiles.erase(tiles.end() - 1);
+					tiles.push_back(newWaypoint);
 				}
 		
 				prevPos = currentPos;
@@ -275,20 +273,11 @@ void AStar::drawPath(Path path) {
 	for (const BWAPI::Position pos : path.positions) {
 		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
 		BWAPI::Broodwar->drawCircleMap(pos, 3, BWAPI::Colors::Black, true);
-		BWAPI::Broodwar->drawCircleMap(pos, 20, BWAPI::Colors::Grey);
 		prevPos = pos;
 	}
 
 	BWAPI::Broodwar->drawCircleMap(path.positions.at(0), 5, BWAPI::Colors::Green, true);
 	BWAPI::Broodwar->drawCircleMap(path.positions.at(path.positions.size() - 1), 5, BWAPI::Colors::Red, true);
-}
-
-bool AStar::isOrthogonal(BWAPI::Position pos) {
-	if ((abs(pos.x) == 32 && pos.y == 0) || (pos.x == 0 && abs(pos.y) == 32)) {
-		return true;
-	}
-
-	return false;
 }
 
 double AStar::squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
