@@ -164,7 +164,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				openSet.push(neighbour);
 				openSetNodes.insert(neighbour);
 			}
-			else if (gCostMap[TileToIndex(neighbour.tile)] >= neighbour.gCost) {
+			else if (gCostMap[TileToIndex(neighbour.tile)] < neighbour.gCost) {
 				continue;
 			}
 
@@ -201,7 +201,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 			if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
 				// For gcost, I assume an orthogonal cost of 1 (1 pixel movement). I approximate diagonal movement to 1.414 (square root of 2).
-				const double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0);
+				const double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 45.255 : 32.0);
 
 				// Heuristic done using squaredDistance to avoid expensive sqrt() in euclidean distance across large distances
 				const double hCost = chebyshevDistance(BWAPI::Position(neighbourTile), BWAPI::Position(end));
@@ -284,7 +284,12 @@ double AStar::squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
 	return pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2);
 }
 double AStar::chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
-	return max(abs(pos2.x - pos1.x), abs(pos2.y - pos1.y));
+	int val = max(abs(pos2.x - pos1.x), abs(pos2.y - pos1.y));
+	/*if (pos1.x != pos2.x && pos1.y != pos2.y) {
+		return 1.414 * val;
+	}*/
+	
+	return val;
 }
 double AStar::octileDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
 	int dx = pos2.x - pos1.x;
