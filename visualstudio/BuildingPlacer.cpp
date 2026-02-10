@@ -38,10 +38,15 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 
                 int distanceToNewBase = 0;
                 const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
+             
 
-                if (distanceToNewBase == -1) continue;
 
-                if (distanceToNewBase < distance)
+                if (distanceToNewBase == -1)
+                {
+                    continue;
+                }
+
+                if (distanceToNewBase < distance && !alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight()))
                 {
                     distance = distanceToNewBase;
                     closestDistance = base.Location();
@@ -49,7 +54,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
         }
 
-        //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
         //BWEB::Map::addReserve(closestDistance, BWAPI::UnitTypes::Protoss_Nexus.tileWidth(), BWAPI::UnitTypes::Protoss_Nexus.tileHeight());
         return BWAPI::Position(closestDistance);
     }
@@ -115,6 +120,8 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 
             for (const BWAPI::TilePosition placement : placements)
             {
+
+
                 const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
 
                 if (BWAPI::Broodwar->canBuildHere(placement, type)

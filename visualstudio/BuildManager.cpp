@@ -78,14 +78,17 @@ void BuildManager::onFrame() {
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
+                        std::cout << "Trying to build Nexus\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }
                     else if(request.unit.isRefinery())
                     {
+                        std::cout << "Trying to build assimlator\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
                     }
                     else
                     {
+                        std::cout << "Trying to build regular building\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }
 

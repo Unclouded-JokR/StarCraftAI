@@ -38,8 +38,11 @@ Builder::~Builder()
 
 void Builder::onFrame()
 {
-	/*if(referencePath.positions.empty() == false)
-		AStar::drawPath(referencePath);*/
+	if(referencePath.positions.empty() == false)
+		AStar::drawPath(referencePath);
+
+	if (unitReference->isStuck())
+		BWAPI::Broodwar->drawCircleMap(unitReference->getPosition(), 8, BWAPI::Colors::Red, true);
 
 	/*if (buildingToConstruct.isResourceDepot())
 	{
@@ -76,23 +79,23 @@ void Builder::onFrame()
 	}*/
 
 	if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
+	{
+		unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+	}
+	else
+	{
+		if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
 		{
-			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-		}
-		else
-		{
-			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
+			if ((pathIndex + 1) != referencePath.positions.size())
 			{
-				if ((pathIndex + 1) != referencePath.positions.size())
-				{
-					pathIndex++;
-					unitReference->rightClick(referencePath.positions.at(pathIndex));
-				}
+				pathIndex++;
+				unitReference->rightClick(referencePath.positions.at(pathIndex));
 			}
 		}
+	}
 
-		//Incase unit gets stuck
-		if(unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
+	//Incase unit gets stuck
+	if(unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
 }
 
 BWAPI::Unit Builder::getUnitReference()
