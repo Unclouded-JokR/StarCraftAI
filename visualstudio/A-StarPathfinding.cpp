@@ -192,7 +192,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			if (x != 0 && y != 0) {
 				BWAPI::TilePosition a(currentNode.tile.x + x, currentNode.tile.y);
 				BWAPI::TilePosition b(currentNode.tile.x, currentNode.tile.y + y);
-				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) && !tileWalkable(unitType, b, end, isInteractableEndpoint))
+				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) || !tileWalkable(unitType, b, end, isInteractableEndpoint))
 					continue;
 			}
 
