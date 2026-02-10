@@ -34,7 +34,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         {
             for (const BWEM::Base& base : area.Bases())
             {
-                if (base.Location() == BWAPI::Broodwar->self()->getStartLocation()) continue;
+                if (base.Location() == BWAPI::Broodwar->self()->getStartLocation() || alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight())) continue;
 
                 int distanceToNewBase = 0;
                 const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
@@ -46,7 +46,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                     continue;
                 }
 
-                if (distanceToNewBase < distance && !alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight()))
+                if (distanceToNewBase < distance)
                 {
                     distance = distanceToNewBase;
                     closestDistance = base.Location();
