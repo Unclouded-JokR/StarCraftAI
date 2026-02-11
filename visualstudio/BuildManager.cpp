@@ -28,6 +28,7 @@ void BuildManager::onStart()
     std::cout << "Builder Manager Initialized" << "\n";
     buildOrderCompleted = true;
     spenderManager.onStart();
+    buildingPlacer.onStart();
     builders.clear();
 }
 
@@ -38,6 +39,7 @@ void BuildManager::onFrame() {
     }
 
     spenderManager.OnFrame(resourceRequests);
+    buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -70,9 +72,12 @@ void BuildManager::onFrame() {
                 else
                 {
                     const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
+
+                    if (locationToPlace == BWAPI::Positions::Invalid) continue;
+
                     const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
 
-                    if (workerAvalible == nullptr || locationToPlace == BWAPI::Positions::Invalid) continue;
+                    if (workerAvalible == nullptr) continue;
 
                     //For now dont use Astar to get path to location
                     Path pathToLocation;
@@ -244,7 +249,7 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
 
 void BuildManager::onUnitComplete(BWAPI::Unit unit)
 {
-
+    buildingPlacer.onUnitComplete(unit);
 }
 
 void BuildManager::onUnitDiscover(BWAPI::Unit unit)
@@ -487,10 +492,4 @@ BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
 std::vector<NexusEconomy> BuildManager::getNexusEconomies()
 {
     return commanderReference->getNexusEconomies();
-}
-
-std::vector<Builder> BuildManager::getBuilders()
-{
-    //Need to check if this is not passing back a reference.
-    return builders;
 }
