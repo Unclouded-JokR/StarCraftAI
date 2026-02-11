@@ -34,7 +34,7 @@ void BuildingPlacer::drawPoweredTiles()
     {
         for (int column = 0; column < poweredTiles[row].size(); column++)
         {
-            if (poweredTiles[row][column] == 1) BWAPI::Broodwar->drawCircleMap((column * 32) + 16, (row * 32) + 16, 5, BWAPI::Colors::Blue, true);
+            if (poweredTiles[row][column] >= 1) BWAPI::Broodwar->drawCircleMap((column * 32) + 16, (row * 32) + 16, 5, BWAPI::Colors::Blue, true);
         }
     }
 }
@@ -195,7 +195,7 @@ void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
         {
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
-            poweredTiles[poweredRow_index][poweredColumn_index] = 1;
+            poweredTiles[poweredRow_index][poweredColumn_index] += 1;
         }
     }
 }
@@ -224,7 +224,11 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
         {
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
-            poweredTiles[poweredRow_index][poweredColumn_index] = 0;
+            poweredTiles[poweredRow_index][poweredColumn_index] -= 1;
+
+            //Sanity check
+            if(poweredTiles[poweredRow_index][poweredColumn_index] < 0)
+                poweredTiles[poweredRow_index][poweredColumn_index] = 0;
         }
     }
 }
