@@ -19,8 +19,12 @@ bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, 
     return false;
 }
 
-bool BuildingPlacer::isPowered(BWAPI::TilePosition location)
+bool BuildingPlacer::checkPSI(BWAPI::TilePosition location)
 {
+    const int x_location = location.x;
+    const int y_location = location.y;
+
+
     return false;
 }
 

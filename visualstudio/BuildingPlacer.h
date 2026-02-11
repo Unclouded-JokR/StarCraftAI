@@ -17,7 +17,7 @@ public:
 	BuildingPlacer();
 	BWAPI::Position getPositionToBuild(BWAPI::UnitType);
 	bool alreadyUsingTiles(BWAPI::TilePosition, int, int);
-	bool isPowered(BWAPI::TilePosition);
+	bool checkPSI(BWAPI::TilePosition);
 	void drawPoweredTiles();
 
 	void onStart();
