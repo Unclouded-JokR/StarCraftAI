@@ -83,7 +83,5 @@ public:
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
 
-    //Builder helper methods
-    std::vector<Builder> getBuilders();
     void pumpUnit();
 };

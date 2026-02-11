@@ -21,61 +21,35 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	}*/
 
 	//std::cout << path.positions.size() << "\n";
-	if (buildingToConstruct.isResourceDepot())
-	{
-		unitReference->move(referencePath.positions.at(pathIndex));
-	}
-	else
-	{
-		unitReference->stop();
-	}
+	//unitReference->rightClick(referencePath.positions.at(0));
+
+	if (referencePath.positions.empty()) std::cout << "Path is empty to place " << buildingToConstruct << " at " << positionToBuild << "\n";
+
+	unitReference->stop();
 }
 
 Builder::~Builder() 
 {
-	//path.clear();
+	
 }
 
 void Builder::onFrame()
 {
-	/*if(referencePath.positions.empty() == false)
-		AStar::drawPath(referencePath);*/
+	if(referencePath.positions.empty() == false)
+		AStar::drawPath(referencePath);
 
-	/*if (buildingToConstruct.isResourceDepot())
+	if (referencePath.positions.empty())
 	{
-		if (unitReference->isIdle())
-		{
-			unitReference->move(requestedPositionToBuild);
-		}
-		else if (unitReference->getDistance(requestedPositionToBuild) < 200)
+		if (unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 		}
+
+		if (unitReference->isIdle()) unitReference->rightClick(requestedPositionToBuild);
 	}
 	else
 	{
 		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
-		{
-			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-		}
-		else
-		{
-			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
-			{
-				if ((pathIndex + 1) != referencePath.positions.size())
-				{
-					pathIndex++;
-					unitReference->move(referencePath.positions.at(pathIndex));
-				}
-			}
-		}
-
-		//Incase unit gets stuck
-		if(unitReference->isIdle()) unitReference->move(referencePath.positions.at(pathIndex));
-
-	}*/
-
-	if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 		}
@@ -92,7 +66,8 @@ void Builder::onFrame()
 		}
 
 		//Incase unit gets stuck
-		if(unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
+		if (unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
+	}
 }
 
 BWAPI::Unit Builder::getUnitReference()

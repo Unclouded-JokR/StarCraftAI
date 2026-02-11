@@ -62,6 +62,8 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			int distance = 0;
 			BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
 			BWAPI::Position dir;
+			BWAPI::Position currentWaypoint;
+			BWAPI::Position prevWaypoint;
 
 			while (currentNode.tile != start) {
 				// FIX (Units stuck on assimilator) : If endpoint is interactable, do not center the tile
@@ -80,49 +82,45 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 					distance += tiles.at(1).getApproxDistance(tiles.at(0));
 				}
 				else if (tiles.size() > 2) {
-					const BWAPI::Position currentWaypoint = tiles.at(tiles.size() - 1);
-					const BWAPI::Position prevWaypoint = tiles.at(tiles.size() - 2);
+					BWAPI::Position currentWaypoint = tiles.at(tiles.size() - 1);
+					BWAPI::Position prevWaypoint = tiles.at(tiles.size() - 2);
 					const BWAPI::Position newDir = currentWaypoint - prevWaypoint;
 					const double currentDistance = currentWaypoint.getApproxDistance(prevWaypoint);
-					distance += currentDistance;
-					const BWAPI::Unit closestBuilding = BWAPI::Broodwar->getClosestUnit(currentWaypoint, BWAPI::Filter::IsBuilding, unitType.width() / 2 + 1);
 
 					if (dir == newDir) {
+						distance += currentWaypoint.getApproxDistance(tiles.at(tiles.size() - 3));
 						tiles.erase(tiles.end() - 2);
-					}
-					else if (isOrthogonal(newDir)) {
-						if (closestBuilding != nullptr && closestBuilding->exists()) {
-							tiles.erase(tiles.end() - 2);
-						}
-						dir = newDir;
 					}
 					else {
 						dir = newDir;
+						distance += currentDistance;
 					}
-		
-					if (closestBuilding != nullptr && closestBuilding->exists()) {
-						const BWAPI::Position buildingDir = closestBuilding->getPosition() - currentWaypoint;
-						int xOffset = 0;
-						int yOffset = 0;
+				}
 
-						if (buildingDir.x < 0) {
-							xOffset += 5;
-						}
-						if (buildingDir.y < 0) {
-							yOffset += 5;
-						}
+				const BWAPI::Unit closestObstacle = BWAPI::Broodwar->getClosestUnit(currentWaypoint, (BWAPI::Filter::IsBuilding || BWAPI::Filter::IsResourceContainer), unitType.width() / 2 + 5);
+				if (closestObstacle != nullptr && closestObstacle->exists()) {
+					const BWAPI::Position buildingDir = closestObstacle->getPosition() - currentWaypoint;
+					int xOffset = 0;
+					int yOffset = 0;
 
-						if (buildingDir.x > 0) {
-							xOffset -= 5;
-						}
-						if (buildingDir.y > 0) {
-							yOffset -= 5;
-						}
-
-						const BWAPI::Position newWaypoint = BWAPI::Position(currentWaypoint.x + xOffset, currentWaypoint.y + yOffset);
-						tiles.erase(tiles.end() - 1);
-						tiles.push_back(newWaypoint);
+					if (buildingDir.x < 0) {
+						xOffset += 5;
 					}
+					if (buildingDir.y < 0) {
+						yOffset += 5;
+					}
+
+					if (buildingDir.x > 0) {
+						xOffset -= 5;
+					}
+					if (buildingDir.y > 0) {
+						yOffset -= 5;
+					}
+
+					const BWAPI::Position newWaypoint = BWAPI::Position(currentWaypoint.x + xOffset, currentWaypoint.y + yOffset);
+					dir = newWaypoint - prevWaypoint;
+					tiles.erase(tiles.end() - 1);
+					tiles.push_back(newWaypoint);
 				}
 		
 				prevPos = currentPos;
@@ -137,7 +135,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			reverse(tiles.begin(), tiles.end());
 
 			timer.stop();
-			std::cout << "Milliseconds spent generating path: " << timer.getElapsedTimeInMilliSec() << endl;
+			//std::cout << "Milliseconds spent generating path: " << timer.getElapsedTimeInMilliSec() << endl;
 			return Path(tiles, distance);
 		}
 
@@ -165,7 +163,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				openSet.push(neighbour);
 				openSetNodes.insert(neighbour);
 			}
-			else if (gCostMap[TileToIndex(neighbour.tile)] >= neighbour.gCost) {
+			else if (gCostMap[TileToIndex(neighbour.tile)] < neighbour.gCost) {
 				continue;
 			}
 
@@ -193,7 +191,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			if (x != 0 && y != 0) {
 				BWAPI::TilePosition a(currentNode.tile.x + x, currentNode.tile.y);
 				BWAPI::TilePosition b(currentNode.tile.x, currentNode.tile.y + y);
-				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) && !tileWalkable(unitType, b, end, isInteractableEndpoint))
+				if (!tileWalkable(unitType, a, end, isInteractableEndpoint) || !tileWalkable(unitType, b, end, isInteractableEndpoint))
 					continue;
 			}
 
@@ -202,7 +200,7 @@ vector<Node> AStar::getNeighbours(BWAPI::UnitType unitType, const Node& currentN
 			// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 			if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
 				// For gcost, I assume an orthogonal cost of 1 (1 pixel movement). I approximate diagonal movement to 1.414 (square root of 2).
-				const double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 1.414 : 1.0);
+				const double gCost = currentNode.gCost + ((x != 0 && y != 0) ? 45.255 : 32.0);
 
 				// Heuristic done using squaredDistance to avoid expensive sqrt() in euclidean distance across large distances
 				// TODO: Fix heuristic causing units to hug walls all the time
@@ -275,7 +273,6 @@ void AStar::drawPath(Path path) {
 	for (const BWAPI::Position pos : path.positions) {
 		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
 		BWAPI::Broodwar->drawCircleMap(pos, 3, BWAPI::Colors::Black, true);
-		BWAPI::Broodwar->drawCircleMap(pos, 20, BWAPI::Colors::Grey);
 		prevPos = pos;
 	}
 
@@ -283,19 +280,16 @@ void AStar::drawPath(Path path) {
 	BWAPI::Broodwar->drawCircleMap(path.positions.at(path.positions.size() - 1), 5, BWAPI::Colors::Red, true);
 }
 
-bool AStar::isOrthogonal(BWAPI::Position pos) {
-	if ((abs(pos.x) == 32 && pos.y == 0) || (pos.x == 0 && abs(pos.y) == 32)) {
-		return true;
-	}
-
-	return false;
-}
-
 double AStar::squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
 	return pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2);
 }
 double AStar::chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
-	return max(abs(pos2.x - pos1.x), abs(pos2.y - pos1.y));
+	int val = max(abs(pos2.x - pos1.x), abs(pos2.y - pos1.y));
+	/*if (pos1.x != pos2.x && pos1.y != pos2.y) {
+		return 1.414 * val;
+	}*/
+	
+	return val;
 }
 double AStar::octileDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
 	int dx = pos2.x - pos1.x;
