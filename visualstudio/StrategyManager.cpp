@@ -339,7 +339,7 @@ Action StrategyManager::onFrame()
 	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
 
 	//4 Gateways per nexus should be built
-	saturatedNexus = (ProtoBot_buildings.gateway / 4);
+	saturatedNexus = (ProtoBot_buildings.gateway / 2);
 
 	std::vector<BWAPI::Position> enemyBaselocations;
 	for (const auto [unit, building] : enemyBuildingInfo)
@@ -356,13 +356,13 @@ Action StrategyManager::onFrame()
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
-	/*if (frame - frameSinceLastScout >= 24 * 20) {
+	if (frame - frameSinceLastScout >= 24 * 20) {
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;
-	}*/
+	}
 #pragma endregion
 
 #pragma region Expand
@@ -372,7 +372,7 @@ Action StrategyManager::onFrame()
 		//We are not making pylons in advance quick enough
 		if (commanderReference->checkAvailableSupply() <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != 200))
 		{
-			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
+			//std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
@@ -390,7 +390,7 @@ Action StrategyManager::onFrame()
 				&& nexusEconomy.lifetime >= 500
 				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 			{
-				std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
+				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 
@@ -457,7 +457,7 @@ Action StrategyManager::onFrame()
 			//4 Gateways per nexus economy
 			if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
 			{
-				std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
+				//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
 				Build actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
 
@@ -472,7 +472,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1)
 		{
-			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+			//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Build actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Forge;
 
@@ -497,7 +497,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
 		{
-			std::cout << "build action: requesting to warp forge\n";
+			//std::cout << "build action: requesting to warp forge\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
 
@@ -508,7 +508,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore == 1)
 		{
-			std::cout << "build action: requesting to warp robotics facility\n";
+			//std::cout << "build action: requesting to warp robotics facility\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
 
@@ -519,7 +519,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility == 1)
 		{
-			std::cout << "Build Action: requesting to warp observatory\n";
+			//std::cout << "Build Action: requesting to warp observatory\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Observatory;
 
@@ -554,42 +554,42 @@ Action StrategyManager::onFrame()
 #pragma endregion
 
 
-#pragma region Attack
-	//If we have more than two full squads attack. 
-	int fullSquads = 0;
-	if (ProtoBot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
-	{
-		for (Squad squad : ProtoBot_Squads)
-		{
-			if (squad.units.size() == squad.unitSize) fullSquads++;
-		}
-
-		if (fullSquads == 3)
-		{
-			Attack actionToTake;
-			//Attack the first enemy base location for now.
-			actionToTake.position = enemyBaselocations.at(0);
-
-			action.commanderAction = actionToTake;
-			action.type = ActionType::Action_Attack;
-			return action;
-		}
-	}
-#pragma endregion
-
-#pragma region Defend
-	if (ProtoBot_Squads.size() != 0)
-	{
-		//std::cout << "Defend Action: telling squad to defend base.\n";
-
-		Defend actionToTake;
-		actionToTake.position = startingChoke;
-		
-		action.commanderAction = actionToTake;
-		action.type = ActionType::Action_Defend;
-		return action;
-	}
-#pragma endregion
+//#pragma region Attack
+//	//If we have more than two full squads attack. 
+//	int fullSquads = 0;
+//	if (ProtoBot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
+//	{
+//		for (Squad squad : ProtoBot_Squads)
+//		{
+//			if (squad.units.size() == squad.unitSize) fullSquads++;
+//		}
+//
+//		if (fullSquads == 3)
+//		{
+//			Attack actionToTake;
+//			//Attack the first enemy base location for now.
+//			actionToTake.position = enemyBaselocations.at(0);
+//
+//			action.commanderAction = actionToTake;
+//			action.type = ActionType::Action_Attack;
+//			return action;
+//		}
+//	}
+//#pragma endregion
+//
+//#pragma region Defend
+//	if (ProtoBot_Squads.size() != 0)
+//	{
+//		//std::cout << "Defend Action: telling squad to defend base.\n";
+//
+//		Defend actionToTake;
+//		actionToTake.position = startingChoke;
+//		
+//		action.commanderAction = actionToTake;
+//		action.type = ActionType::Action_Defend;
+//		return action;
+//	}
+//#pragma endregion
 
 
 	//StrategyManager::printBoredomMeter();
