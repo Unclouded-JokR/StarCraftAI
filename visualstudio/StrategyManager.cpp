@@ -561,7 +561,7 @@ Action StrategyManager::onFrame()
 	{
 		for (Squad squad : ProtoBot_Squads)
 		{
-			if (squad.units.size() == squad.unitSize) fullSquads++;
+			if (squad.units.size() == MAX_SQUAD_SIZE) fullSquads++;
 		}
 
 		if (fullSquads == 3)

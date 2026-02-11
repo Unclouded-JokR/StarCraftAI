@@ -24,7 +24,15 @@ void DefendingState::Enter(Squad* squad) {
 
 }
 void DefendingState::Update(Squad* squad) {
+	for (BWAPI::Unit& squadMate : squad->units)
+	{
+		if (squadMate == squad->leader) continue;
 
+		if (squadMate->isIdle() && !(squadMate->getDistance(squad->leader) < 500))
+		{
+			squadMate->attack(squad->leader->getPosition());
+		}
+	}
 }
 void DefendingState::Exit(Squad* squad) {
 

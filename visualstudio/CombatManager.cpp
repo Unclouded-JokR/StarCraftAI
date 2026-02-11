@@ -63,9 +63,8 @@ Squad& CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 	const BWAPI::Color randomColor(r, g, b);
 
 	const int id = Squads.size() + 1;
-	const int unitSize = 12;
 
-	Squad newSquad(leaderUnit, id, randomColor, unitSize);
+	Squad newSquad(leaderUnit, id, randomColor);
 	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
 	Squads.push_back(newSquad);
 
@@ -87,7 +86,7 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 	}
 
 	for (auto& squad : Squads) {
-		if (squad.units.size() < squad.unitSize) {
+		if (squad.units.size() < MAX_SQUAD_SIZE) {
 			squad.addUnit(unit);
 			combatUnits.insert(unit);
 			unitSquadIdMap[unit] = squad.squadId;

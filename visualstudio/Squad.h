@@ -1,44 +1,51 @@
 #pragma once
 #include <BWAPI.h>
+#include "SquadStateTypes.h"
 #include "SquadState.h"
 #include "A-StarPathfinding.h"
 #include "math.h"
 #include "VectorPos.h"
 
+#define MAX_SQUAD_SIZE 12
+#define MIN_NEIGHBOUR_DISTANCE 80
+#define MIN_SEPARATION_DISTANCE 30
+
+class SquadState;
+
 class Squad {
 public:
 	int squadId;
 	BWAPI::Color squadColor;
-	int unitSize;
 	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
-	Path currentPath;
+	Path currentPath = Path();
 	int currentPathIdx = 0;
-	double minNDistance = 80;
-	double minSepDistance = 30;
 
-	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize);
+	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor);
 
-	bool operator==(const Squad& other) noexcept(true){
+	void onFrame();
+	void setState(SquadState& newState);
+	void removeUnit(BWAPI::Unit unit);
+	void move(BWAPI::Position position);
+	void addUnit(BWAPI::Unit unit);
+	void drawDebugInfo();
+
+	bool operator==(const Squad& other) noexcept(true) {
 		return this->squadId == other.squadId;
 	}
 	bool operator!=(const Squad& other) noexcept(true) {
 		return !(*this == other);
 	}
 
-	void onFrame();
+private:
+	SquadState* currentState = nullptr;
+
 	void simpleFlock();
 	void flockingHandler();
 	void pathHandler();
-	void removeUnit(BWAPI::Unit unit);
-	void move(BWAPI::Position position);
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
 	void attackUnit(BWAPI::Unit unit, BWAPI::Unit target);
 	void kitingAttack(BWAPI::Unit unit, BWAPI::Unit target);
-	void addUnit(BWAPI::Unit unit);
-
-	// Utility functions
 	double getMagnitude(BWAPI::Position vector);
 	VectorPos normalize(VectorPos vector);
-	void drawDebugInfo();
 };
