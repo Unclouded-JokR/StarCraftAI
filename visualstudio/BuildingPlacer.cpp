@@ -174,6 +174,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         }
 
         //BWEB::Map::addReserve(closestDistance, type.tileWidth(), type.tileHeight());
+
         return BWAPI::Position(closestDistance);
     }
 
@@ -218,23 +219,23 @@ void BuildingPlacer::onStart()
         block_info.Power_Placements = smallPlacements;
         block_info.Block_AreaLocation = theMap.GetArea(block.getTilePosition());
 
-        std::cout << "Large Placements " << block_info.Large_Placements << "\n";
-        std::cout << "Medium Placements " << block_info.Medium_Placements << "\n";
-        std::cout << "Small/Power Placements " << block_info.Power_Placements << "\n";
+        //std::cout << "Large Placements " << block_info.Large_Placements << "\n";
+        //std::cout << "Medium Placements " << block_info.Medium_Placements << "\n";
+        //std::cout << "Small/Power Placements " << block_info.Power_Placements << "\n";
 
         //Might have a bug with corners using this approach but hopefully it will be okay using reserving system
         Block_Information.emplace(block.getTilePosition(), block_info);
     }
 
-    std::cout << "=================================\n";
+    //std::cout << "=================================\n";
     
     for (BWEB::Block block : blocks)
     {
         auto data = Block_Information.find(block.getTilePosition());
 
-        std::cout << "Large Placements " << data->second.Large_Placements << "\n";
-        std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
-        std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
+        //std::cout << "Large Placements " << data->second.Large_Placements << "\n";
+        //std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
+        //std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
     }
 
 }
