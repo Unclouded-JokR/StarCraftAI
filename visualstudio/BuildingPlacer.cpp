@@ -51,6 +51,12 @@ void BuildingPlacer::drawPoweredTiles()
             if (poweredTiles[row][column] >= 1) BWAPI::Broodwar->drawCircleMap((column * 32) + 16, (row * 32) + 16, 5, BWAPI::Colors::Blue, true);
         }
     }
+
+    /*for (BWEB::Block block : tempBlocks)
+    {
+        block.draw();
+    }*/
+    
 }
 
 BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
@@ -184,7 +190,17 @@ void BuildingPlacer::onStart()
     poweredBlocks.clear();
 
 
+    /*std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+    for (BWEB::Block block : blocks)
+    {
+        std::set<BWAPI::TilePosition> temp = block.getPlacements(BWAPI::UnitTypes::Protoss_Gateway);
 
+        if (temp.size() != 0)
+        {
+            std::cout << "Block has width of " << block.width() << " and height of " << block.height() << "\n";
+            tempBlocks.push_back(block);
+        }
+    }*/
 }
 
 void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
@@ -208,7 +224,7 @@ void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
 
     for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
     {
-        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_DIAMETER); poweredColumn_index++)
+        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
         {
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
@@ -235,7 +251,7 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
 
     for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
     {
-        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_DIAMETER); poweredColumn_index++)
+        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
         {
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
