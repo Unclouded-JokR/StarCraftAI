@@ -187,20 +187,37 @@ void BuildingPlacer::onStart()
     mapHeight = BWAPI::Broodwar->mapHeight();
 
     poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
-    poweredBlocks.clear();
+    largeBlocks.clear();
+    mediumBlocks.clear();
+    smallBlocks.clear();
+    Block_Information.clear();
 
+    std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+    int largePlacements = 0;
+    int mediumPlacements = 0;
+    int smallPlacements = 0;
 
-    /*std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
     for (BWEB::Block block : blocks)
-    {
-        std::set<BWAPI::TilePosition> temp = block.getPlacements(BWAPI::UnitTypes::Protoss_Gateway);
+    {   
+        //Get information that the BWEB provides about a block
+        largePlacements = block.getLargeTiles().size();
+        mediumPlacements = block.getMediumTiles().size();
+        smallPlacements = block.getSmallTiles().size();
 
-        if (temp.size() != 0)
-        {
-            std::cout << "Block has width of " << block.width() << " and height of " << block.height() << "\n";
-            tempBlocks.push_back(block);
-        }
-    }*/
+        //Store this information for later use and save it.
+        BlockData block_info;
+        block_info.Large_Placements = largePlacements;
+        block_info.Medium_Placements = mediumPlacements;
+        block_info.Power_Placements = smallPlacements;
+        block_info.Block_AreaLocation = theMap.GetArea(block.getTilePosition());
+
+        std::cout << "LP " << block_info.Large_Placements << "\n";
+        std::cout << "MP " << block_info.Medium_Placements << "\n";
+        std::cout << "SP/PP " << block_info.Power_Placements << "\n";
+
+        //Block_Information.insert({ &block, &block_info });
+    }
+
 }
 
 void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)

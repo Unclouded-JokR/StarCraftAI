@@ -1,29 +1,41 @@
 #pragma once
 #include <BWAPI.h>
 #include <vector>
-#include <set>
+#include <unordered_map>
+#include <map>
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
 #define PYLON_POWER_WIDTH 16
 #define PYLON_POWER_HEIGHT 10
 
+//Need to keep track of different blocks sizes somehow
+//Large Blocks have atleast 2 more large placements
+//Medium Blocks have 1 large placement or 1/2 medium placements.
+//Small Blocks are anything otherwise.
+
 struct BlockData {
-	int largeBuildingLocations = 0; //Building locations that support 4x3 tiles
-	int mediumBuildingLocations = 0; //Locations that support 3x2 tiles
-	int powerBlocks; //Blocks used to power other medium and large building locations 2x2 tiles
+
+	int Large_Placements = 0;
+	int Medium_Placements = 0; 
+	int Power_Placements = 0; //Blocks used to power other medium and large building locations, 2x2 blocks will use this as a counter.
+
+	int Large_UsedPlacements = 0;
+	int Medium_UsedPlacements = 0;
+	int Power_UsedPlacements = 0;
+
+	//BWEM Area a block is located in.
+	const BWEM::Area* Block_AreaLocation; 
 };
 
 class BuildingPlacer
 {
 private:
 	std::vector<std::vector<int>> poweredTiles;
-	std::vector<BWEB::Block> poweredBlocks;
 	std::vector<BWEB::Block> largeBlocks;
 	std::vector<BWEB::Block> mediumBlocks;
 	std::vector<BWEB::Block> smallBlocks;
-	std::vector<BWEB::Block> tinyBlocks;
+	std::map<BWEB::Block*, BlockData*> Block_Information;
 
-	std::vector<BWEB::Block> tempBlocks;
 	int mapWidth = 0;
 	int mapHeight = 0;
 
