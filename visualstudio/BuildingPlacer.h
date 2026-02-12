@@ -2,7 +2,6 @@
 #include <BWAPI.h>
 #include <vector>
 #include <unordered_map>
-#include <map>
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
 #define PYLON_POWER_WIDTH 16
@@ -34,15 +33,15 @@ private:
 	std::vector<BWEB::Block> largeBlocks;
 	std::vector<BWEB::Block> mediumBlocks;
 	std::vector<BWEB::Block> smallBlocks;
-	std::map<BWEB::Block*, BlockData*> Block_Information;
+	std::map<BWAPI::TilePosition, BlockData> Block_Information;
 
 	int mapWidth = 0;
 	int mapHeight = 0;
 
 public:
-	int largeBuildingLocations = 0;
-	int mediumBuildingLocations = 0
-		;
+	int Used_LargeBuildingPlacements;
+	int Used_MediumBuildingPlacements;
+
 	BuildingPlacer();
 	BWAPI::Position getPositionToBuild(BWAPI::UnitType);
 	bool alreadyUsingTiles(BWAPI::TilePosition, int, int);

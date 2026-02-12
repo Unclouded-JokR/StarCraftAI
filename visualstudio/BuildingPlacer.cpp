@@ -204,6 +204,13 @@ void BuildingPlacer::onStart()
         mediumPlacements = block.getMediumTiles().size();
         smallPlacements = block.getSmallTiles().size();
 
+        if (largePlacements >= 2)
+            largeBlocks.push_back(block);
+        else if (largePlacements == 1)
+            mediumBlocks.push_back(block);
+        else
+            smallBlocks.push_back(block);
+
         //Store this information for later use and save it.
         BlockData block_info;
         block_info.Large_Placements = largePlacements;
@@ -211,11 +218,23 @@ void BuildingPlacer::onStart()
         block_info.Power_Placements = smallPlacements;
         block_info.Block_AreaLocation = theMap.GetArea(block.getTilePosition());
 
-        std::cout << "LP " << block_info.Large_Placements << "\n";
-        std::cout << "MP " << block_info.Medium_Placements << "\n";
-        std::cout << "SP/PP " << block_info.Power_Placements << "\n";
+        std::cout << "Large Placements " << block_info.Large_Placements << "\n";
+        std::cout << "Medium Placements " << block_info.Medium_Placements << "\n";
+        std::cout << "Small/Power Placements " << block_info.Power_Placements << "\n";
 
-        //Block_Information.insert({ &block, &block_info });
+        //Might have a bug with corners using this approach but hopefully it will be okay using reserving system
+        Block_Information.emplace(block.getTilePosition(), block_info);
+    }
+
+    std::cout << "=================================\n";
+    
+    for (BWEB::Block block : blocks)
+    {
+        auto data = Block_Information.find(block.getTilePosition());
+
+        std::cout << "Large Placements " << data->second.Large_Placements << "\n";
+        std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
+        std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
     }
 
 }
