@@ -1,12 +1,11 @@
 #include "Squad.h"
 
-Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor, int unitSize)
+Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor)
 {
 	this->leader = leader;
 	this->squadId = squadId;
 	this->squadColor = squadColor;
-	this->unitSize = unitSize;
-	this->state = IDLE;
+	this->currentState = &IdleState::getInstance();
 }
 
 void Squad::onFrame() {
@@ -16,18 +15,16 @@ void Squad::onFrame() {
 	
 	pathHandler();*/
 
-	for (BWAPI::Unit& squadMate : units)
-	{
-		if (squadMate == leader) continue;
-
-		if (squadMate->isIdle() && !(squadMate->getDistance(leader) < 500))
-		{
-			squadMate->attack(leader->getPosition());
-		}
-
-	}
+	// Process current squad state
+	currentState->Update(this);
 
 	BWAPI::Broodwar->drawTextMap(BWAPI::Position(leader->getPosition().x - 25, leader->getPosition().y - 25), "Leader");
+}
+
+void Squad::setState(SquadState& newState) {
+	currentState->Exit(this);
+	currentState = &newState;
+	currentState->Enter(this);
 }
 
 void Squad::simpleFlock() {
@@ -72,9 +69,9 @@ void Squad::flockingHandler() {
 		leaderVec = leaderPos - unitPos;
 
 		// Grab all neighbors that are too close
-		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, minNDistance);
-		BWAPI::Broodwar->drawCircleMap(unitPos, minNDistance, BWAPI::Colors::Grey);
-		BWAPI::Broodwar->drawCircleMap(unitPos, minSepDistance, BWAPI::Colors::Red);
+		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_NEIGHBOUR_DISTANCE);
+		BWAPI::Broodwar->drawCircleMap(unitPos, MIN_NEIGHBOUR_DISTANCE, BWAPI::Colors::Grey);
+		BWAPI::Broodwar->drawCircleMap(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Colors::Red);
 
 		// Cohesion Vector
 		const VectorPos neighborAvgPos = VectorPos(neighbors.getPosition().x, neighbors.getPosition().y);
@@ -89,7 +86,7 @@ void Squad::flockingHandler() {
 
 			// Separation Vector
 			const double distance = unitPos.getApproxDistance(neighborPos);
-			if (distance < minSepDistance) {
+			if (distance < MIN_SEPARATION_DISTANCE) {
 				separationVec += unitPos - neighborPos;
 			}
 
@@ -218,13 +215,6 @@ void Squad::removeUnit(BWAPI::Unit unit){
 	else {
 		units.erase(std::remove(units.begin(), units.end(), unit), units.end());
 	}
-}
-
-void Squad::move(BWAPI::Position position) {
-	state = POSITIONING;
-
-	if (leader->isIdle() || !(leader->getDistance(position) < 200)) leader->attack(position);
-	//leader->attack(position);
 }
 
 void Squad::addUnit(BWAPI::Unit unit) {

@@ -51,6 +51,7 @@
     <ClCompile Include="BuildingPlacer.cpp" />
     <ClCompile Include="Builder.cpp" />
     <ClCompile Include="ThreatGrid.cpp" />
+    <ClCompile Include="SquadStateTypes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -103,5 +104,8 @@
     <ClInclude Include="BuildingPlacer.h" />
     <ClInclude Include="Builder.h" />
     <ClInclude Include="ThreatGrid.h" />
+    <ClInclude Include="SquadState.h" />
+	<ClInclude Include="SquadStateTypes.h" />
+	<ClInclude Include="VectorPos.h" />
   </ItemGroup>
 </Project>
