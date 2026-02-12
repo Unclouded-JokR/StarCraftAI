@@ -239,7 +239,10 @@ std::string StrategyManager::onStart()
 	//Calculate position we will tell squads to wait before attacking if enemy base is unknown or not.
 	int shortestDistance = INT_MAX;
 
-	for (auto area : mainArea->AccessibleNeighbours())
+	startingChoke = BWAPI::Position(BWEB::Map::getNaturalChoke()->Center());
+
+
+	/*for (auto area : mainArea->AccessibleNeighbours())
 	{
 		for (auto choke : area->ChokePoints())
 		{
@@ -260,7 +263,7 @@ std::string StrategyManager::onStart()
 				startingChoke = BWAPI::Position(choke->Center());
 			}
 		}
-	}
+	}*/
 
 	std::cout << "Starting choke located at " << startingChoke << "\n";
 
@@ -356,13 +359,13 @@ Action StrategyManager::onFrame()
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
-	if (frame - frameSinceLastScout >= 24 * 20) {
+	/*if (frame - frameSinceLastScout >= 24 * 20) {
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;
-	}
+	}*/
 #pragma endregion
 
 #pragma region Expand

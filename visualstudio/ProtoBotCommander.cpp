@@ -104,21 +104,8 @@ void ProtoBotCommander::onFrame()
 
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
-	m_mapTools.onFrame();
+	//m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
-
-	/*for (const Area& area : theMap.Areas())
-	{
-		for (const Base& base : area.Bases())
-		{
-			if (BWEM::utils::MapDrawer::showBases && BWAPI::Broodwar->canBuildHere(base.Location(), BWAPI::UnitTypes::Protoss_Nexus))
-			{
-				BWAPI::Broodwar->drawBoxMap(BWAPI::Position(base.Location()),
-					BWAPI::Position(base.Location() + BWAPI::UnitType(BWAPI::UnitTypes::Protoss_Nexus).tileSize()),
-					BWEM::utils::MapDrawer::Color::bases);
-			}
-		}
-	}*/
 
 	/*
 	* Protobot Modules

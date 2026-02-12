@@ -19,11 +19,25 @@ bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, 
     return false;
 }
 
-bool BuildingPlacer::checkPSI(BWAPI::TilePosition location)
+bool BuildingPlacer::checkPower(BWAPI::TilePosition location, BWAPI::UnitType buildingType)
 {
     const int x_location = location.x;
     const int y_location = location.y;
 
+    float tilesPowered = 0.0;
+
+    for (int row = y_location; row < x_location + buildingType.tileHeight(); row++)
+    {
+        for (int column = x_location; column < x_location + buildingType.tileWidth(); column++)
+        {
+            if (poweredTiles[row][column] >= 1) tilesPowered++;
+        }
+    }
+
+    const float totalTiles = float(buildingType.tileWidth() * buildingType.tileHeight());
+
+    //BWEB should have us covered for block placement, since it seems like powering units isnt consistent with the amount of tiles a unit has.
+    if (tilesPowered / totalTiles > .5) return true;
 
     return false;
 }
@@ -160,12 +174,14 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
     return BWAPI::Position(0, 0);
 }
 
+//Update values at the start of a game
 void BuildingPlacer::onStart()
 {
     mapWidth = BWAPI::Broodwar->mapWidth();
     mapHeight = BWAPI::Broodwar->mapHeight();
 
     poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
+    poweredBlocks.clear();
 }
 
 void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
