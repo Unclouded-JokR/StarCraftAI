@@ -159,8 +159,8 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Defend:
 		{
-			const Defend attack = get<Defend>(action.commanderAction);
-			combatManager.move(attack.position);
+			const Defend defend = get<Defend>(action.commanderAction);
+			combatManager.defend(defend.position);
 			break;
 		}
 		default:

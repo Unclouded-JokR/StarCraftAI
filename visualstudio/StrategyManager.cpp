@@ -309,7 +309,8 @@ Action StrategyManager::onFrame()
 	const FriendlyUnitCounter ProtoBot_units = commanderReference->informationManager.getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter ProtoBot_upgrade = commanderReference->informationManager.getFriendlyUpgradeCounter();
 	const FriendlyTechCounter ProtoBot_tech = commanderReference->informationManager.getFriendlyTechCounter();
-	std::vector<Squad> ProtoBot_Squads = commanderReference->combatManager.Squads;
+	std::vector<Squad*> Protobot_IdleSquads = commanderReference->combatManager.IdleSquads;
+	std::vector<Squad*> Protobot_Squads = commanderReference->combatManager.Squads;
 
 	//Get Enemy Building information.
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = commanderReference->informationManager.getKnownEnemyBuildings();
@@ -355,15 +356,15 @@ Action StrategyManager::onFrame()
 	}
 
 	//Move this to inside if so we dont scout during build order unless instructed.
-#pragma region Scout
-	if (frame - frameSinceLastScout >= 24 * 20) {
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;
-	}
-#pragma endregion
+//#pragma region Scout
+//	if (frame - frameSinceLastScout >= 24 * 20) {
+//		frameSinceLastScout = frame;
+//		Scout s;
+//		action.commanderAction = s;
+//		action.type = ActionType::Action_Scout;
+//		return action;
+//	}
+//#pragma endregion
 
 #pragma region Expand
 	if (buildOrderCompleted)
@@ -553,43 +554,37 @@ Action StrategyManager::onFrame()
 	}
 #pragma endregion
 
+#pragma region Attack
+	//If we have more than two full squads attack. 
+	if (Protobot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
+	{
+		if (commanderReference->combatManager.totalCombatUnits.size() >= (MAX_SQUAD_SIZE * 2))
+		{
+			std::cout << "ATTACK ACTION: Attacking enemy base\n";
+			Attack actionToTake;
+			//Attack the first enemy base location for now.
+			actionToTake.position = enemyBaselocations.at(0);
 
-//#pragma region Attack
-//	//If we have more than two full squads attack. 
-//	int fullSquads = 0;
-//	if (ProtoBot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
-//	{
-//		for (Squad squad : ProtoBot_Squads)
-//		{
-//			if (squad.units.size() == squad.unitSize) fullSquads++;
-//		}
-//
-//		if (fullSquads == 3)
-//		{
-//			Attack actionToTake;
-//			//Attack the first enemy base location for now.
-//			actionToTake.position = enemyBaselocations.at(0);
-//
-//			action.commanderAction = actionToTake;
-//			action.type = ActionType::Action_Attack;
-//			return action;
-//		}
-//	}
-//#pragma endregion
-//
-//#pragma region Defend
-//	if (ProtoBot_Squads.size() != 0)
-//	{
-//		//std::cout << "Defend Action: telling squad to defend base.\n";
-//
-//		Defend actionToTake;
-//		actionToTake.position = startingChoke;
-//		
-//		action.commanderAction = actionToTake;
-//		action.type = ActionType::Action_Defend;
-//		return action;
-//	}
-//#pragma endregion
+			action.commanderAction = actionToTake;
+			action.type = ActionType::Action_Attack;
+			return action;
+		}
+	}
+#pragma endregion
+
+#pragma region Defend
+	if (Protobot_IdleSquads.size() != 0)
+	{
+		std::cout << "Defend Action: telling squad to defend base.\n";
+
+		Defend actionToTake;
+		actionToTake.position = startingChoke;
+		
+		action.commanderAction = actionToTake;
+		action.type = ActionType::Action_Defend;
+		return action;
+	}
+#pragma endregion
 
 
 	//StrategyManager::printBoredomMeter();

@@ -217,12 +217,6 @@ void Squad::removeUnit(BWAPI::Unit unit){
 	}
 }
 
-void Squad::move(BWAPI::Position position) {
-
-	if (leader->isIdle() || !(leader->getDistance(position) < 200)) leader->attack(position);
-	//leader->attack(position);
-}
-
 void Squad::addUnit(BWAPI::Unit unit) {
 	if (unit == nullptr) {
 		return;

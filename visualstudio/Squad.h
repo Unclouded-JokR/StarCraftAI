@@ -18,6 +18,8 @@ public:
 	BWAPI::Color squadColor;
 	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
+	BWAPI::Position commandPos;
+	BWAPI::Position kitePos;
 	Path currentPath = Path();
 	int currentPathIdx = 0;
 
@@ -26,7 +28,6 @@ public:
 	void onFrame();
 	void setState(SquadState& newState);
 	void removeUnit(BWAPI::Unit unit);
-	void move(BWAPI::Position position);
 	void addUnit(BWAPI::Unit unit);
 	void drawDebugInfo();
 
