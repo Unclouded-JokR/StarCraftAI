@@ -182,6 +182,9 @@ void BuildingPlacer::onStart()
 
     poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
     poweredBlocks.clear();
+
+
+
 }
 
 void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
@@ -205,9 +208,7 @@ void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
 
     for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
     {
-        int offset_index = poweredRow_index - topLeft_y;
-
-        for (int poweredColumn_index = topLeft_x + offsets[offset_index]; poweredColumn_index < (topLeft_x + PYLON_POWER_DIAMETER) - offsets[offset_index]; poweredColumn_index++)
+        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_DIAMETER); poweredColumn_index++)
         {
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
@@ -234,9 +235,7 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
 
     for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
     {
-        int offset_index = poweredRow_index - topLeft_y;
-
-        for (int poweredColumn_index = topLeft_x + offsets[offset_index]; poweredColumn_index < (topLeft_x + PYLON_POWER_DIAMETER) - offsets[offset_index]; poweredColumn_index++)
+        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_DIAMETER); poweredColumn_index++)
         {
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
