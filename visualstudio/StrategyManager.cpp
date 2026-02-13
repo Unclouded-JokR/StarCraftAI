@@ -409,7 +409,7 @@ Action StrategyManager::onFrame()
 			//Not expanding properlly after having enough gateways
 			if (ProtoBot_buildings.nexus == saturatedNexus)
 			{
-				mineralsToExpand * 2.5;
+				mineralsToExpand *= 2.5;
 				std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
 
 				Expand actionToTake;

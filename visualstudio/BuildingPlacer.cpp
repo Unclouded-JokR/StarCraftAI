@@ -52,10 +52,10 @@ void BuildingPlacer::drawPoweredTiles()
         }
     }
 
-    /*for (BWEB::Block block : tempBlocks)
+    for (BWEB::Block block : ProtoBot_Blocks)
     {
         block.draw();
-    }*/
+    }
     
 }
 
@@ -150,8 +150,32 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
     }
     else
     {
+        /*//List of blocks that are availible in Areas we "own".
+        std::vector<BWEB::Block> ProtoBot_Blocks;
+        std::vector<BWEB::Block> BWEB_Blocks = BWEB::Blocks::getBlocks();
+
+        //Have this been done for us already when a nexus is completed.
+        for (BWEB::Block block : BWEB_Blocks)
+        {
+            const BWEM::Area* blockArea = theMap.GetNearestArea(block.getTilePosition());
+
+            //Dont know why it would be null pointer but okay.
+            if (blockArea == nullptr) continue;
+
+            auto iterator = AreasOccupied.find(blockArea);
+
+            //Not in an Area we own.
+            if (iterator == AreasOccupied.end()) continue; 
+
+            ProtoBot_Blocks.push_back(block);
+        }*/
+
+
+
+
         int distance = INT_MAX;
         BWAPI::TilePosition closestDistance;
+
         std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
 
         for (BWEB::Block block : blocks)
@@ -192,6 +216,14 @@ void BuildingPlacer::onStart()
     mediumBlocks.clear();
     smallBlocks.clear();
     Block_Information.clear();
+    AreasOccupied.clear();
+    ProtoBot_Blocks.clear();
+    Area_Blocks.clear();
+
+    //Assign main area since we will always own this area at the start of the game
+    const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
+    const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+    AreasOccupied.insert(mainArea);
 
     std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
     int largePlacements = 0;
@@ -223,20 +255,34 @@ void BuildingPlacer::onStart()
         //std::cout << "Medium Placements " << block_info.Medium_Placements << "\n";
         //std::cout << "Small/Power Placements " << block_info.Power_Placements << "\n";
 
+        const BWEM::Area* blockArea = theMap.GetNearestArea(block.getTilePosition());
+
+        if (blockArea != nullptr)
+        {
+            Area_Blocks[blockArea].push_back(block);
+        }
+        else
+        {
+            //This should happen but just in case.
+            std::cout << "Uh Oh couldnt find Area\n";
+        }
+
         //Might have a bug with corners using this approach but hopefully it will be okay using reserving system
         Block_Information.emplace(block.getTilePosition(), block_info);
     }
 
+    ProtoBot_Blocks.insert(ProtoBot_Blocks.end(), Area_Blocks[mainArea].begin(), Area_Blocks[mainArea].end());
+
     //std::cout << "=================================\n";
     
-    for (BWEB::Block block : blocks)
+    /*for (BWEB::Block block : blocks)
     {
         auto data = Block_Information.find(block.getTilePosition());
 
-        //std::cout << "Large Placements " << data->second.Large_Placements << "\n";
-        //std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
-        //std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
-    }
+        std::cout << "Large Placements " << data->second.Large_Placements << "\n";
+        std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
+        std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
+    }*/
 
 }
 

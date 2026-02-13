@@ -2,6 +2,7 @@
 #include <BWAPI.h>
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
 #define PYLON_POWER_WIDTH 16
@@ -29,11 +30,25 @@ struct BlockData {
 class BuildingPlacer
 {
 private:
+	//Might not need these and just want to store the info in BlockData
 	std::vector<std::vector<int>> poweredTiles;
 	std::vector<BWEB::Block> largeBlocks;
 	std::vector<BWEB::Block> mediumBlocks;
 	std::vector<BWEB::Block> smallBlocks;
+
+
 	std::map<BWAPI::TilePosition, BlockData> Block_Information;
+
+	//Might need this to make getting blocks in Areas we own easier.
+	std::unordered_set<const BWEM::Area *> AreasOccupied;
+
+	//List of all the blocks from the areas we own.
+	std::vector<BWEB::Block> ProtoBot_Blocks;
+
+	//All the Areas the BWEM has and the blocks that are assigned to them. For the purpose of expanding our base we will only place in areas we own.
+	//This should not apply to Walls, Proxy, and Cheeses.
+	std::unordered_map<const BWEM::Area*, std::vector<BWEB::Block>> Area_Blocks;
+
 
 	int mapWidth = 0;
 	int mapHeight = 0;

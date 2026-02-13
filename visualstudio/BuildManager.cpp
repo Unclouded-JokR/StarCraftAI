@@ -144,7 +144,7 @@ void BuildManager::onFrame() {
         BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
     }
 
-    pumpUnit();
+    //pumpUnit();
 
     ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
     //for (BWAPI::Unit building : buildingWarps)
