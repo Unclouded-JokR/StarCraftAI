@@ -111,6 +111,7 @@ namespace BWEB::Map
 
     void onStart()
     {
+        onEnd();
         // Initializes usedGrid and walkGridFull
         for (int x = 0; x < Broodwar->mapWidth(); x++) {
             for (int y = 0; y < Broodwar->mapHeight(); y++) {
@@ -478,6 +479,38 @@ namespace BWEB::Map
         auto direction1 = Position(-dy1, dx1) + ((n1 + n2) / 2);
         auto direction2 = Position(-dy2, dx2) + ((n1 + n2) / 2);
         return make_pair(direction1, direction2);
+    }
+
+    void onEnd()
+    {
+        // Clear all cached state on game restart
+        mainStation = nullptr;
+        natStation = nullptr;
+        drawReserveOverlap = false;
+        drawUsed = false;
+        drawWalk = false;
+        drawArea = false;
+
+        lastKeyState.clear();
+        chokeTiles.clear();
+        chokeLines.clear();
+
+        // Clear grids for the current map dimensions
+        for (int x = 0; x < 256; x++) {
+            for (int y = 0; y < 256; y++) {
+                reserveGrid[x][y] = 0;
+                usedGrid[x][y] = UnitTypes::None;
+                walkGridLarge[x][y] = false;
+                walkGridMedium[x][y] = false;
+                walkGridSmall[x][y] = false;
+                walkGridFull[x][y] = false;
+            }
+        }
+
+        Walls::onEnd();
+        Blocks::onEnd();
+        Stations::onEnd();
+        Pathfinding::clearCacheFully();
     }
 
     const BWEM::Area * getNaturalArea() { return natStation->getBase()->GetArea(); }

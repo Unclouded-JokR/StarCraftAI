@@ -189,6 +189,9 @@ void ProtoBotCommander::onFrame()
 void ProtoBotCommander::onEnd(bool isWinner)
 {
 	std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
+
+    // Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
+    BWEB::Map::onEnd();
 }
 
 /*
