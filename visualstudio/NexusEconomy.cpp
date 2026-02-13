@@ -142,6 +142,10 @@ void NexusEconomy::onFrame()
 	for (BWAPI::Unit worker : workers)
 	{
 		if (worker->isIdle()) workerOrder[worker] = 0;
+
+		// If this worker is assigned as a scout, do not issue economy commands to it.
+		if (workerOrder.find(worker) != workerOrder.end() && workerOrder[worker] == 3)
+			continue;
 		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
 
 		if (minerals.size() == 0) break;
@@ -600,7 +604,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	if (unitToReturn != nullptr)
 	{
 		workerOrder[unitToReturn] = 3;
-		//workers.erase(unitToReturn);
+		workers.erase(unitToReturn);
 		std::cout << "Reuqesting Worker scouts!\n";
 		return unitToReturn;
 	}
@@ -663,6 +667,9 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	{
 		if (economyReference->workerIsConstructing(unit)) continue;
 
+		// Never select a scout worker for building
+		if (workerOrder.find(unit) != workerOrder.end() && workerOrder[unit] == 3) continue;
+
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 
 		if (unit->isIdle() && distance < minDistance)
@@ -697,6 +704,9 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	{
 		if (economyReference->workerIsConstructing(unit)) continue;
 
+		// Never select a scout worker for building
+		if (workerOrder.find(unit) != workerOrder.end() && workerOrder[unit] == 3) continue;
+
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 
 		if (unit->isCarryingMinerals() && distance < minDistance)
@@ -718,6 +728,9 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	for (const BWAPI::Unit unit : workers)
 	{
 		if (economyReference->workerIsConstructing(unit)) continue;
+
+		// Never select a scout worker for building
+		if (workerOrder.find(unit) != workerOrder.end() && workerOrder[unit] == 3) continue;
 
 		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
 

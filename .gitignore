@@ -56,3 +56,8 @@ bin/visualstudio/Squad.cpp.d
 bin/visualstudio/Timer.cpp.d
 bin/visualstudio/TimerManager.cpp.d
 *.gif
+visualstudio/EconomyManager.h
+visualstudio/InfluenceMap.cpp
+visualstudio/InfluenceMap.h
+visualstudio/InformationManager.cpp
+visualstudio/InformationManager.h

@@ -239,6 +239,7 @@ BWAPI::Unit EconomyManager::getUnitScout()
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
+    return nullptr;
 }
 
 std::vector<NexusEconomy> EconomyManager::getNexusEconomies()

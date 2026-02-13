@@ -3,6 +3,11 @@
 #include "SpenderManager.h"
 #include "BuildingPlacer.h"
 #include "Builder.h"
+#include <random>
+#include <ctime>
+#include <algorithm>
+#include <climits>
+#include <cmath>
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -30,6 +35,10 @@ void BuildManager::onStart()
     spenderManager.onStart();
     buildingPlacer.onStart();
     builders.clear();
+
+    // Build orders: define and select one at game start
+    initBuildOrdersOnStart();
+    selectRandomBuildOrder();
 }
 
 void BuildManager::onFrame() {
@@ -37,6 +46,9 @@ void BuildManager::onFrame() {
     {
         (it->state == ResourceRequest::State::Accepted_Completed) ? it = resourceRequests.erase(it) : it++;
     }
+
+    // Allow build order to enqueue new requests before budgeting/approval
+    processBuildOrderSteps();
 
     spenderManager.OnFrame(resourceRequests);
     buildingPlacer.drawPoweredTiles();
@@ -71,7 +83,11 @@ void BuildManager::onFrame() {
                 }
                 else
                 {
-                    const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
+                    BWAPI::Position locationToPlace;
+                    if (request.useForcedTile && request.forcedTile.isValid())
+                        locationToPlace = BWAPI::Position(request.forcedTile);
+                    else
+                        locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
 
                     if (locationToPlace == BWAPI::Positions::Invalid) continue;
 
@@ -493,3 +509,391 @@ std::vector<NexusEconomy> BuildManager::getNexusEconomies()
 {
     return commanderReference->getNexusEconomies();
 }
+#pragma region BUILD ORDER SYSTEM
+
+int BuildManager::countMyUnits(BWAPI::UnitType type) const
+{
+    int c = 0;
+    for (auto u : BWAPI::Broodwar->self()->getUnits())
+        if (u && u->exists() && u->getType() == type)
+            c++;
+    return c;
+}
+
+int BuildManager::countPlanned(BWAPI::UnitType type) const
+{
+    int c = 0;
+    for (const auto& r : resourceRequests)
+    {
+        if ((r.type == ResourceRequest::Type::Building || r.type == ResourceRequest::Type::Unit) && r.unit == type)
+        {
+            if (r.state != ResourceRequest::State::Accepted_Completed)
+                c++;
+        }
+    }
+    return c;
+}
+
+bool BuildManager::isTriggerMet(const BuildTrigger& t) const
+{
+    switch (t.type)
+    {
+    case BuildTriggerType::Immediately:
+        return true;
+    case BuildTriggerType::AtSupply:
+        return (BWAPI::Broodwar->self()->supplyUsed() / 2) >= t.supply;
+    default:
+        return true;
+    }
+}
+
+void BuildManager::initBuildOrdersOnStart()
+{
+    buildOrders.clear();
+
+    BWAPI::Race enemyRace = BWAPI::Broodwar->enemy() ? BWAPI::Broodwar->enemy()->getRace() : BWAPI::Races::Unknown;
+
+    // --- 2 Gateway Observer vs Terran ---
+    {
+        BuildOrder bo;
+        bo.name = 200;
+        bo.id = 1;
+        bo.vsRace = BWAPI::Races::Terran;
+        bo.debugName = "2 Gateway Observer (vs Terran)";
+
+        bo.steps = {
+            { BuildStepType::SupplyRampNatural, { BuildTriggerType::AtSupply, 9  }, BWAPI::UnitTypes::Protoss_Pylon },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 12 }, BWAPI::UnitTypes::Protoss_Gateway },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 13 }, BWAPI::UnitTypes::Protoss_Assimilator },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 15 }, BWAPI::UnitTypes::Protoss_Gateway },
+            { BuildStepType::ScoutWorker,       { BuildTriggerType::AtSupply, 15 }, BWAPI::UnitTypes::None },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 16 }, BWAPI::UnitTypes::Protoss_Cybernetics_Core },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 20 }, BWAPI::UnitTypes::Protoss_Robotics_Facility },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 22 }, BWAPI::UnitTypes::Protoss_Observatory },
+            { BuildStepType::NaturalWall,             { BuildTriggerType::AtSupply, 23 }, BWAPI::UnitTypes::None } //Debug
+        };
+        buildOrders.push_back(std::move(bo));
+    }
+
+    // --- 3 Gate Robo vs Protoss ---
+    {
+        BuildOrder bo;
+        bo.name = 100;
+        bo.id = 2;
+        bo.vsRace = BWAPI::Races::Protoss;
+        bo.debugName = "3 Gate Robo (vs Protoss)";
+
+        bo.steps = {
+            { BuildStepType::SupplyRampNatural, { BuildTriggerType::AtSupply, 9  }, BWAPI::UnitTypes::Protoss_Pylon },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 12 }, BWAPI::UnitTypes::Protoss_Gateway },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 13 }, BWAPI::UnitTypes::Protoss_Assimilator },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 15 }, BWAPI::UnitTypes::Protoss_Gateway },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 16 }, BWAPI::UnitTypes::Protoss_Cybernetics_Core },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 20 }, BWAPI::UnitTypes::Protoss_Gateway },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 22 }, BWAPI::UnitTypes::Protoss_Robotics_Facility },
+            { BuildStepType::ScoutWorker,       { BuildTriggerType::AtSupply, 18 }, BWAPI::UnitTypes::None }
+        };
+        buildOrders.push_back(std::move(bo));
+    }
+
+    // --- Corsair/Dragoon vs Zerg ---
+    {
+        BuildOrder bo;
+        bo.name = 300;
+        bo.id = 3;
+        bo.vsRace = BWAPI::Races::Zerg;
+        bo.debugName = "Corsair/Dragoon (vs Zerg)";
+
+        bo.steps = {
+            { BuildStepType::SupplyRampNatural, { BuildTriggerType::AtSupply, 9  }, BWAPI::UnitTypes::Protoss_Pylon },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 12 }, BWAPI::UnitTypes::Protoss_Gateway },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 13 }, BWAPI::UnitTypes::Protoss_Assimilator },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 16 }, BWAPI::UnitTypes::Protoss_Cybernetics_Core },
+            { BuildStepType::Build,             { BuildTriggerType::AtSupply, 18 }, BWAPI::UnitTypes::Protoss_Stargate },
+            { BuildStepType::ScoutWorker,       { BuildTriggerType::AtSupply, 15 }, BWAPI::UnitTypes::None }
+        };
+        buildOrders.push_back(std::move(bo));
+    }
+
+}
+
+void BuildManager::selectRandomBuildOrder()
+{
+    activeBuildOrder = nullptr;
+    activeStepIndex = 0;
+    activeBuildOrderName.clear();
+
+    if (buildOrders.empty())
+        return;
+
+    BWAPI::Race enemyRace = BWAPI::Broodwar->enemy() ? BWAPI::Broodwar->enemy()->getRace() : BWAPI::Races::Unknown;
+
+    // Prefer build orders matching the enemy race; if none match, pick from all.
+    std::vector<const BuildOrder*> candidates;
+    for (const auto& bo : buildOrders)
+        if (bo.vsRace == enemyRace)
+            candidates.push_back(&bo);
+
+    if (candidates.empty())
+        for (const auto& bo : buildOrders)
+            candidates.push_back(&bo);
+
+    std::mt19937 rng((unsigned)BWAPI::Broodwar->getFrameCount() ^ (unsigned)time(nullptr));
+    std::uniform_int_distribution<size_t> dist(0, candidates.size() - 1);
+    activeBuildOrder = candidates[dist(rng)];
+    activeStepIndex = 0;
+    activeBuildOrderName = activeBuildOrder->debugName;
+
+    if (commanderReference)
+        commanderReference->buildOrderSelected = activeBuildOrderName;
+
+    std::cout << "Selected Build Order: " << activeBuildOrderName << "\n";
+}
+
+void BuildManager::overrideBuildOrder(int buildOrderId)
+{
+    // Clear queued (not-yet-building) requests and switch active build order.
+    clearBuildOrderAndQueue(true);
+
+    for (const auto& bo : buildOrders)
+    {
+        if (bo.id == buildOrderId)
+        {
+            activeBuildOrder = &bo;
+            activeStepIndex = 0;
+            activeBuildOrderName = bo.debugName;
+
+            if (commanderReference)
+                commanderReference->buildOrderSelected = activeBuildOrderName;
+
+            std::cout << "Overrode Build Order: " << activeBuildOrderName << "\n";
+            return;
+        }
+    }
+
+    // If not found, keep current and log
+    std::cout << "overrideBuildOrder: buildOrderId not found: " << buildOrderId << "\n";
+}
+
+void BuildManager::clearBuildOrderAndQueue(bool keepActiveBuilders)
+{
+    // Reset the script pointer/index. Does not clear buildOrders definitions.
+    activeBuildOrder = nullptr;
+    activeStepIndex = 0;
+    activeBuildOrderName.clear();
+
+    // Clear pending requests that haven't started a worker assignment yet.
+    for (auto it = resourceRequests.begin(); it != resourceRequests.end(); )
+    {
+        const bool isBuildingInProgress = (it->state == ResourceRequest::State::Approved_BeingBuilt);
+        if (keepActiveBuilders && isBuildingInProgress) { ++it; continue; }
+
+        it = resourceRequests.erase(it);
+    }
+}
+
+void BuildManager::processBuildOrderSteps()
+{
+    if (!activeBuildOrder) return;
+    if (activeStepIndex >= activeBuildOrder->steps.size()) return;
+
+    while (activeStepIndex < activeBuildOrder->steps.size())
+    {
+        const auto& step = activeBuildOrder->steps[activeStepIndex];
+        if (!isTriggerMet(step.trigger))
+            break;
+
+        enqueueStep(step);
+        activeStepIndex++;
+    }
+}
+
+void BuildManager::enqueueStep(const BuildOrderStep& s)
+{
+    switch (s.stepType)
+    {
+    case BuildStepType::Build:
+        if (s.unit != BWAPI::UnitTypes::None)
+            buildBuilding(s.unit);
+        break;
+
+    case BuildStepType::ScoutWorker:
+        if (commanderReference)
+            commanderReference->getUnitToScout();
+        break;
+
+    case BuildStepType::SupplyRampNatural:
+        enqueueSupplyRamp(s.unit == BWAPI::UnitTypes::None ? BWAPI::UnitTypes::Protoss_Pylon : s.unit);
+        break;
+
+    case BuildStepType::NaturalWall:
+        enqueueNaturalWallProtoss();
+        break;
+
+    default:
+        break;
+    }
+}
+
+/// Select a BWEB 2x2 block slot in MAIN (upper ramp) nearest the natural choke.
+BWAPI::TilePosition BuildManager::findSupplyRampBlockSlotMain() const
+{
+    const auto* choke = BWEB::Map::getNaturalChoke();
+    if (!choke) return BWAPI::TilePositions::Invalid;
+
+    const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
+    const BWAPI::TilePosition chokeNearMainTile(BWEB::Map::getClosestChokeTile(choke, mainPos));
+
+    const BWEM::Area* mainArea = BWEB::Map::getMainArea();
+    if (!mainArea) return BWAPI::TilePositions::Invalid;
+
+    BWEB::Block* bestBlock = nullptr;
+    int bestBlockDist = INT_MAX;
+
+    for (auto& block : BWEB::Blocks::getBlocks())
+    {
+        const BWAPI::TilePosition bt = block.getTilePosition();
+        if (BWEB::Map::mapBWEM.GetArea(bt) != mainArea)
+            continue;
+
+        const int d = std::abs(bt.x - chokeNearMainTile.x) + std::abs(bt.y - chokeNearMainTile.y);
+
+        if (d > 25)
+            continue;
+
+        if (d < bestBlockDist)
+        {
+            bestBlockDist = d;
+            bestBlock = &block;
+        }
+    }
+
+    if (!bestBlock) return BWAPI::TilePositions::Invalid;
+
+    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
+    int bestDist = INT_MAX;
+
+    for (const auto& t : bestBlock->getSmallTiles())
+    {
+        if (BWEB::Map::mapBWEM.GetArea(t) != mainArea)
+            continue;
+
+        // IMPORTANT: block slots are expected to be reserved by BWEB; don't reject reserved tiles.
+        if (!BWEB::Map::isPlaceable(BWAPI::UnitTypes::Protoss_Pylon, t))
+            continue;
+
+        if (BWEB::Map::isUsed(t, 2, 2) != BWAPI::UnitTypes::None)
+            continue;
+
+        const int d = std::abs(t.x - chokeNearMainTile.x) + std::abs(t.y - chokeNearMainTile.y);
+        if (d < bestDist)
+        {
+            bestDist = d;
+            best = t;
+        }
+    }
+
+    return best;
+}
+
+void BuildManager::enqueueSupplyRamp(BWAPI::UnitType supplyType)
+{
+    // Only Protoss/Terran have building-based supply.
+    if (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss)
+        supplyType = BWAPI::UnitTypes::Protoss_Pylon;
+    else if (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Terran)
+        supplyType = BWAPI::UnitTypes::Terran_Supply_Depot;
+    else
+        return;
+
+    ResourceRequest request;
+    request.type = ResourceRequest::Type::Building;
+    request.unit = supplyType;
+
+    // Force supply onto a BWEB block slot near the natural ramp on the MAIN side.
+    if (supplyType == BWAPI::UnitTypes::Protoss_Pylon)
+    {
+        BWAPI::TilePosition t = findSupplyRampBlockSlotMain();
+        if (t.isValid())
+        {
+            request.useForcedTile = true;
+            request.forcedTile = t;
+            // Block slot is usually already reserved by BWEB Blocks.
+        }
+    }
+
+    resourceRequests.push_back(request);
+}
+
+bool BuildManager::enqueueWallFromLayout(BWEB::Wall* wall, const std::vector<BWAPI::UnitType>& buildings)
+{
+    if (!wall) return false;
+
+    // Copy tile sets for assignment
+    auto& small = wall->getSmallTiles();
+    auto& medium = wall->getMediumTiles();
+    auto& large = wall->getLargeTiles();
+
+    std::set<BWAPI::TilePosition> smallAvail = small;
+    std::set<BWAPI::TilePosition> medAvail = medium;
+    std::set<BWAPI::TilePosition> largeAvail = large;
+
+    auto popClosest = [](std::set<BWAPI::TilePosition>& avail, BWAPI::TilePosition anchor) -> BWAPI::TilePosition {
+        if (avail.empty()) return BWAPI::TilePositions::Invalid;
+        auto bestIt = avail.begin();
+        int bestDist = INT_MAX;
+        for (auto it = avail.begin(); it != avail.end(); ++it)
+        {
+            const int d = std::abs(it->x - anchor.x) + std::abs(it->y - anchor.y);
+            if (d < bestDist) { bestDist = d; bestIt = it; }
+        }
+        BWAPI::TilePosition out = *bestIt;
+        avail.erase(bestIt);
+        return out;
+    };
+
+    BWAPI::TilePosition anchor((BWAPI::Position)wall->getCentroid());
+
+    for (auto ut : buildings)
+    {
+        BWAPI::TilePosition t = BWAPI::TilePositions::Invalid;
+        if (ut.tileWidth() >= 4) t = popClosest(largeAvail, anchor);
+        else if (ut.tileWidth() >= 3) t = popClosest(medAvail, anchor);
+        else t = popClosest(smallAvail, anchor);
+
+        if (!t.isValid())
+            continue;
+
+        ResourceRequest req;
+        req.type = ResourceRequest::Type::Building;
+        req.unit = ut;
+        req.useForcedTile = true;
+        req.forcedTile = t;
+        resourceRequests.push_back(req);
+    }
+
+    return true;
+}
+
+void BuildManager::enqueueNaturalWallProtoss()
+{
+    if (BWAPI::Broodwar->self()->getRace() != BWAPI::Races::Protoss)
+        return;
+
+    const BWEM::Area* natArea = BWEB::Map::getNaturalArea();
+    const BWEM::ChokePoint* natChoke = BWEB::Map::getNaturalChoke();
+    if (!natArea || !natChoke) return;
+
+    std::vector<BWAPI::UnitType> buildings = {
+        BWAPI::UnitTypes::Protoss_Pylon,
+        BWAPI::UnitTypes::Protoss_Gateway,
+        BWAPI::UnitTypes::Protoss_Forge
+    };
+
+    BWEB::Wall* wall = BWEB::Walls::createWall(buildings, natArea, natChoke, BWAPI::UnitTypes::None, {}, true, false);
+    if (!wall) return;
+
+    enqueueWallFromLayout(wall, buildings);
+}
+
+#pragma endregion
