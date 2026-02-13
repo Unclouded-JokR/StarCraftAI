@@ -2,6 +2,8 @@
 #include <BWAPI.h>
 #include <vector>
 #include <unordered_map>
+#include "../visualstudio/BWEB/Source/BWEB.h"
+#include <unordered_map>
 #include <map>
 #include "../visualstudio/BWEB/Source/BWEB.h"
 

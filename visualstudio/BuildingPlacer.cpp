@@ -52,10 +52,10 @@ void BuildingPlacer::drawPoweredTiles()
         }
     }
 
-    for (BWEB::Block block : ProtoBot_Blocks)
+    /*for (BWEB::Block block : tempBlocks)
     {
         block.draw();
-    }
+    }*/
     
 }
 
@@ -216,14 +216,6 @@ void BuildingPlacer::onStart()
     mediumBlocks.clear();
     smallBlocks.clear();
     Block_Information.clear();
-    AreasOccupied.clear();
-    ProtoBot_Blocks.clear();
-    Area_Blocks.clear();
-
-    //Assign main area since we will always own this area at the start of the game
-    const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
-    const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
-    AreasOccupied.insert(mainArea);
 
     std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
     int largePlacements = 0;
@@ -255,34 +247,20 @@ void BuildingPlacer::onStart()
         //std::cout << "Medium Placements " << block_info.Medium_Placements << "\n";
         //std::cout << "Small/Power Placements " << block_info.Power_Placements << "\n";
 
-        const BWEM::Area* blockArea = theMap.GetNearestArea(block.getTilePosition());
-
-        if (blockArea != nullptr)
-        {
-            Area_Blocks[blockArea].push_back(block);
-        }
-        else
-        {
-            //This should happen but just in case.
-            std::cout << "Uh Oh couldnt find Area\n";
-        }
-
         //Might have a bug with corners using this approach but hopefully it will be okay using reserving system
         Block_Information.emplace(block.getTilePosition(), block_info);
     }
 
-    ProtoBot_Blocks.insert(ProtoBot_Blocks.end(), Area_Blocks[mainArea].begin(), Area_Blocks[mainArea].end());
-
     //std::cout << "=================================\n";
     
-    /*for (BWEB::Block block : blocks)
+    for (BWEB::Block block : blocks)
     {
         auto data = Block_Information.find(block.getTilePosition());
 
-        std::cout << "Large Placements " << data->second.Large_Placements << "\n";
-        std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
-        std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
-    }*/
+        //std::cout << "Large Placements " << data->second.Large_Placements << "\n";
+        //std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
+        //std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
+    }
 
 }
 

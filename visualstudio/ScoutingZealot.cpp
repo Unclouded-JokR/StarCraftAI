@@ -20,6 +20,37 @@ namespace {
     }
 
     static BWAPI::Position g_myMainPos = BWAPI::Positions::Invalid;
+
+    // Pathing fixes
+
+    bool isWalkablePx(const BWAPI::Position& p)
+    {
+        if (!p.isValid())
+        {
+            return false;
+        }
+
+        const int tx = p.x / 32;
+        const int ty = p.y / 32;
+
+        if (!BWAPI::TilePosition(tx, ty).isValid())
+        {
+            return false;
+        }
+
+        return BWAPI::Broodwar->isWalkable(tx * 4, ty * 4);
+    }
+
+    bool hasGroundPath(const BWAPI::Position& from, const BWAPI::Position& to)
+    {
+        if (!from.isValid() || !to.isValid())
+        {
+            return false;
+        }
+
+        const auto& path = BWEM::Map::Instance().GetPath(from, to, nullptr);
+        return !path.empty();
+    }
 }
 
 void ScoutingZealot::onStart() {
@@ -32,16 +63,32 @@ void ScoutingZealot::onStart() {
 }
 
 void ScoutingZealot::assign(BWAPI::Unit unit) {
+
     if (!unit || !unit->exists()) return;
+
     zealot = unit;
     BWAPI::Broodwar->printf("[ZealotScout] assign id=%d type=%s",
         zealot->getID(), zealot->getType().c_str());
+
+    if (isProxyPatroller)
+    {
+        rebuildProxyPoints();
+        state = State::ProxyPatrol;
+        return;
+    }
     state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;
 }
 
 void ScoutingZealot::setEnemyMain(const TilePosition& tp) {
     enemyMainTile = tp;
     enemyMainPos = Position(tp);
+
+    // If this zealot is the proxy patrol zealot,
+    // do NOT switch state into enemy natural logic.
+    if (state == State::ProxyPatrol)
+    {
+        return;
+    }
 
     computeEnemyNatural();
     state = enemyNaturalPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;
@@ -63,11 +110,12 @@ void ScoutingZealot::onFrame() {
     if (!zealot || !zealot->exists() || state == State::Done) return;
     BWAPI::Broodwar->drawTextMap(zealot->getPosition(),
         "\x11Zealot[%d] %s", zealot->getID(),
-        (state == State::Idle ? "Idle" :
-            state == State::WaitEnemyMain ? "WaitEnemyMain" :
-            state == State::MoveToNatural ? "MoveToNatural" :
-            state == State::HoldEdge ? "HoldEdge" :
-            state == State::Reposition ? "Reposition" : "Done"));
+           (state == State::Idle ?              "Idle" :
+            state == State::ProxyPatrol ?       "ProxyPatrol" :
+            state == State::WaitEnemyMain ?     "WaitEnemyMain" :
+            state == State::MoveToNatural ?     "MoveToNatural" :
+            state == State::HoldEdge ?          "HoldEdge" :
+            state == State::Reposition ?        "Reposition" : "Done"));
 
     // --- hard avoid enemy main every frame ---
     if (enemyMainTile.has_value() && zealot && zealot->exists()) {
@@ -83,7 +131,15 @@ void ScoutingZealot::onFrame() {
     switch (state) {
     case State::Idle:
         // wait until we know the main
-        state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;
+        if (isProxyPatroller)
+        {
+            rebuildProxyPoints();
+            state = State::ProxyPatrol;
+        }
+        else
+        {
+            state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;
+        }
         break;
 
     case State::WaitEnemyMain:
@@ -157,6 +213,42 @@ void ScoutingZealot::onFrame() {
         if (!zealot->isMoving() && !zealot->isAttacking()) {
             zealot->holdPosition();
         }
+        break;
+    }
+    case State::ProxyPatrol:
+    {
+        const int now = Broodwar->getFrameCount();
+
+        // If zealot is missing points, rebuild here.
+        if (proxyPoints.empty())
+        {
+            rebuildProxyPoints();
+        }
+
+        if (proxyPoints.empty())
+        {
+            // fallback: just stand
+            if (!zealot->isMoving() && !zealot->isAttacking())
+            {
+                zealot->holdPosition();
+            }
+            break;
+        }
+
+        // advance target when reached
+        if (!proxyCurTarget.isValid() || zealot->getDistance(proxyCurTarget) <= 96)
+        {
+            if (proxyNextIdx >= (int)proxyPoints.size())
+            {
+                proxyNextIdx = 0;
+            }
+
+            proxyCurTarget = proxyPoints[proxyNextIdx++];
+        }
+
+        // throttle move commands using existing issueMove cooldown
+        issueMove(proxyCurTarget, /*force*/false, /*reissueDist*/64);
+
         break;
     }
 
@@ -336,4 +428,275 @@ BWAPI::Position ScoutingZealot::clampToMapPx(const BWAPI::Position& p, int margi
     const int x = (std::max)(marginPx, (std::min)(p.x, mapWpx() - 1 - marginPx));
     const int y = (std::max)(marginPx, (std::min)(p.y, mapHpx() - 1 - marginPx));
     return BWAPI::Position(x, y);
+}
+
+
+bool ScoutingZealot::isNear(const BWAPI::Position& a, const BWAPI::Position& b, int distPx) const
+{
+    return a.getApproxDistance(b) <= distPx;
+}
+
+void ScoutingZealot::rebuildProxyPoints()
+{
+    proxyPoints.clear();
+    proxyNextIdx = 0;
+    proxyCurTarget = BWAPI::Positions::Invalid;
+
+    if (!zealot || !zealot->exists())
+    {
+        return;
+    }
+
+
+    
+
+    const BWAPI::TilePosition myMainTp = BWAPI::Broodwar->self()->getStartLocation();
+    const BWEM::Area* myMainArea = BWEM::Map::Instance().GetArea(myMainTp);
+    if (!myMainArea)
+    {
+        return;
+    }
+
+    const BWAPI::Position myMainCenter = BWAPI::Position(myMainTp) + BWAPI::Position(16, 16);
+
+    auto isInArea = [&](const BWEM::Area* area, const BWAPI::TilePosition& t) -> bool
+    {
+        if (!t.isValid() || !area)
+        {
+            return false;
+        }
+
+        const BWEM::Area* a = BWEM::Map::Instance().GetArea(t);
+        return a == area;
+    };
+
+    auto addPoint = [&](BWAPI::Position p)
+        {
+            if (!p.isValid())
+            {
+                return;
+            }
+
+            p = clampToMapPx(p, 16);
+
+            if (!isWalkablePx(p))
+            {
+                return;
+            }
+
+            if (!hasGroundPath(myMainCenter, p))
+            {
+                return;
+            }
+
+            for (const auto& existing : proxyPoints)
+            {
+                if (isNear(existing, p, 5 * 32))
+                {
+                    return;
+                }
+            }
+
+            proxyPoints.push_back(p);
+        };
+
+    // 1) Main-area chokes
+    for (const BWEM::ChokePoint* cp : myMainArea->ChokePoints())
+    {
+        if (!cp)
+        {
+            continue;
+        }
+        addPoint(BWAPI::Position(cp->Center()));
+    }
+
+    // 2) Neighbor-area chokes (typical proxy routes)
+    for (const BWEM::Area* n : myMainArea->AccessibleNeighbours())
+    {
+        if (!n)
+        {
+            continue;
+        }
+
+        for (const BWEM::ChokePoint* cp : n->ChokePoints())
+        {
+            if (!cp)
+            {
+                continue;
+            }
+            addPoint(BWAPI::Position(cp->Center()));
+        }
+    }
+
+    // 3) Add our natural base center (closest non-starting base not in main area)
+    
+
+    double bestDist = 1e30;
+    BWAPI::Position bestNat = BWAPI::Positions::Invalid;
+
+    for (const BWEM::Area& area : BWEM::Map::Instance().Areas())
+    {
+        for (const BWEM::Base& base : area.Bases())
+        {
+            if (base.Starting())
+            {
+                continue;
+            }
+
+            const BWEM::Area* bArea = BWEM::Map::Instance().GetArea(base.Location());
+            if (bArea == myMainArea)
+            {
+                continue;
+            }
+
+            BWAPI::Position basePos = base.Center();
+            if (!basePos.isValid())
+            {
+                basePos = BWAPI::Position(base.Location()) + BWAPI::Position(16, 16);
+            }
+
+            const auto& path = BWEM::Map::Instance().GetPath(myMainCenter, basePos, nullptr);
+            if (path.empty())
+            {
+                continue;
+            }
+
+            const double d = groundPathLengthPx(myMainCenter, basePos);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                bestNat = basePos;
+            }
+        }
+    }
+
+    if (bestNat.isValid())
+    {
+        addPoint(bestNat);
+    }
+
+    // If we somehow got nothing, at least patrol home
+    if (proxyPoints.empty())
+    {
+        addPoint(g_myMainPos);
+    }
+
+    
+
+    // 4) Perimeter ring: boundary tiles of our main area (proxy pylons tucked around edges)
+    {
+        const int stepTiles = 4; // lower = more points;
+        const BWAPI::TilePosition topLeft = myMainArea->TopLeft();
+        const BWAPI::TilePosition bottomRight = myMainArea->BottomRight();
+
+        for (int y = topLeft.y; y <= bottomRight.y; y += stepTiles)
+        {
+            for (int x = topLeft.x; x <= bottomRight.x; x += stepTiles)
+            {
+                BWAPI::TilePosition t(x, y);
+                if (!isInArea(myMainArea, t))
+                {
+                    continue;
+                }
+
+                // If any 4-neighbor is NOT in our main area, this is a boundary-ish tile
+                const BWAPI::TilePosition n1(x + 1, y);
+                const BWAPI::TilePosition n2(x - 1, y);
+                const BWAPI::TilePosition n3(x, y + 1);
+                const BWAPI::TilePosition n4(x, y - 1);
+
+                if (isInArea(myMainArea, n1) && isInArea(myMainArea, n2) && isInArea(myMainArea, n3) && isInArea(myMainArea, n4))
+                {
+                    continue;
+                }
+
+                addPoint(BWAPI::Position(t) + BWAPI::Position(16, 16));
+            }
+        }
+    }
+
+    // 5) Air-close but ground-far points (cliff/maze-y proxy spots near us)
+    {
+        const double kMinRatio = 1.8;
+        const int kMaxAirDist = 28 * 32;
+        const int sampleStepTiles = 6;
+        const double kMaxGroundDist = 90.0 * 32.0;
+
+        const int margin = 12;
+        const BWAPI::TilePosition topLeft = myMainArea->TopLeft();
+        const BWAPI::TilePosition bottomRight = myMainArea->BottomRight();
+
+        for (int y = topLeft.y - margin; y <= bottomRight.y + margin; y += sampleStepTiles)
+        {
+            for (int x = topLeft.x - margin; x <= bottomRight.x + margin; x += sampleStepTiles)
+            {
+                BWAPI::TilePosition t(x, y);
+                if (!t.isValid())
+                {
+                    continue;
+                }
+
+                BWAPI::Position p = BWAPI::Position(t) + BWAPI::Position(16, 16);
+                p = clampToMapPx(p, 16);
+
+                const int air = myMainCenter.getApproxDistance(p);
+                if (air > kMaxAirDist)
+                {
+                    continue;
+                }
+
+                const auto& path = BWEM::Map::Instance().GetPath(myMainCenter, p, nullptr);
+                if (path.empty())
+                {
+                    continue;
+                }
+
+                const double ground = groundPathLengthPx(myMainCenter, p);
+                if (ground <= 1.0)
+                {
+                    continue;
+                }
+
+                if (ground > kMaxGroundDist)
+                {
+                    continue;
+                }
+
+                if (ground >= double(air) * kMinRatio)
+                {
+                    addPoint(p);
+                }
+            }
+        }
+    }
+
+    // Order: nearest-neighbor greedy starting from zealot
+    std::vector<BWAPI::Position> ordered;
+    ordered.reserve(proxyPoints.size());
+
+    BWAPI::Position cur = zealot->getPosition();
+
+    while (!proxyPoints.empty())
+    {
+        int bestIdx = 0;
+        int bestD = INT_MAX;
+
+        for (int i = 0; i < (int)proxyPoints.size(); ++i)
+        {
+            const int d = cur.getApproxDistance(proxyPoints[i]);
+            if (d < bestD)
+            {
+                bestD = d;
+                bestIdx = i;
+            }
+        }
+
+        ordered.push_back(proxyPoints[bestIdx]);
+        cur = proxyPoints[bestIdx];
+        proxyPoints.erase(proxyPoints.begin() + bestIdx);
+    }
+
+    
+
+    proxyPoints = std::move(ordered);
 }

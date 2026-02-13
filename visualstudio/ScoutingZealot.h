@@ -7,10 +7,13 @@
 class ProtoBotCommander;
 class ScoutingManager;
 
-class ScoutingZealot {
+class ScoutingZealot
+{
 public:
     explicit ScoutingZealot(ProtoBotCommander* commander, ScoutingManager* manager)
-        : commanderRef(commander), manager(manager) {}
+        : commanderRef(commander), manager(manager)
+    {
+    }
 
     void onStart();
     void onFrame();
@@ -20,9 +23,22 @@ public:
     void assign(BWAPI::Unit unit);
     bool hasScout() const { return zealot && zealot->exists(); }
 
+    void setProxyPatroller(bool v)
+    {
+        isProxyPatroller = v;
+    }
+
 private:
-    // --- state ---
-    enum class State { Idle, WaitEnemyMain, MoveToNatural, HoldEdge, Reposition, Done };
+    enum class State
+    {
+        Idle,
+        WaitEnemyMain,
+        ProxyPatrol,
+        MoveToNatural,
+        HoldEdge,
+        Reposition,
+        Done
+    };
 
     ProtoBotCommander* commanderRef = nullptr;
     ScoutingManager* manager = nullptr;
@@ -36,23 +52,38 @@ private:
     State state = State::Idle;
     int lastMoveIssueFrame = 0;
 
-    // --- tuning ---
     static constexpr int kMoveCooldownFrames = 8;
-    static constexpr int kEdgeMarginPx = 24;    // how conservative to sit back from sight edge
-    static constexpr int kThreatRadiusPx = 256;   // if hostile nearby, step back and re-hold
+    static constexpr int kEdgeMarginPx = 24;
+    static constexpr int kThreatRadiusPx = 256;
     static constexpr int kRepositionStepPx = 160;
     static constexpr int kCalmFramesToReturn = 72;
     int lastThreatFrame = -100000;
 
+    // --- proxy patrol tuning ---
+    static constexpr int kProxyRebuildEveryFrames = 24 * 10; // 10s
+    static constexpr int kProxyArriveDist = 96;
+    static constexpr int kProxyMinBetweenMoves = 12;
+    static constexpr double kMaxGroundDist = 90 * 32;
+
+    std::vector<BWAPI::Position> proxyPoints;
+    int proxyNextIdx = 0;
+    int proxyNextRebuildFrame = 0;
+    int proxyNextMoveFrame = 0;
+    BWAPI::Position proxyCurTarget = BWAPI::Positions::Invalid;
+    bool isProxyPatroller = false;
+
     // --- helpers ---
     BWAPI::Position homeRetreatPoint() const;
-    void computeEnemyNatural();                 // sets enemyNaturalTile/Pos once main is known
-    BWAPI::Position pickEdgeOfVisionSpot() const; // a “just outside” perch near natural choke
+    void computeEnemyNatural();
+    BWAPI::Position pickEdgeOfVisionSpot() const;
     bool threatenedNow() const;
     void issueMove(const BWAPI::Position& p, bool force = false, int reissueDist = 32);
 
+    void rebuildProxyPoints();
+    bool isNear(const BWAPI::Position& a, const BWAPI::Position& b, int distPx) const;
+
     static double groundPathLengthPx(const BWAPI::Position& from, const BWAPI::Position& to);
-
-
     static BWAPI::Position clampToMapPx(const BWAPI::Position& p, int marginPx = 32);
+
+    
 };

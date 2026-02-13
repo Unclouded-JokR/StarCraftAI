@@ -92,6 +92,18 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
     // build a behavior instance for THIS unit and store by id
     BehaviorVariant sb = constructBehaviorFor(unit);
     
+    if (t == BWAPI::UnitTypes::Protoss_Zealot)
+    {
+        if (proxyPatrolZealotId_ == -1)
+        {
+            proxyPatrolZealotId_ = unit->getID();
+        }
+
+        if (auto* z = std::get_if<ScoutingZealot>(&sb))
+        {
+            z->setProxyPatroller(unit->getID() == proxyPatrolZealotId_);
+        }
+    }
 
     if (t == BWAPI::UnitTypes::Protoss_Observer) 
     {
@@ -170,6 +182,13 @@ void ScoutingManager::onUnitDestroy(BWAPI::Unit unit)
 {
     unmarkScout(unit);
     const int id = unit ? unit->getID() : -1;
+
+    // If proxy patrol dies, reset
+    if (id != -1 && id == proxyPatrolZealotId_)
+    {
+        proxyPatrolZealotId_ = -1;
+    }
+
     if (id != -1) 
     {
         auto it = behaviors_.find(id);
