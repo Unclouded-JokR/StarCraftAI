@@ -4,7 +4,7 @@
 #include <BWAPI.h>
 
 int expansionTimes[9] = { 1, 2, 3, 5, 8, 13, 21, 34, 55 };
-int mineralsToExpand = 1000;
+int mineralsToExpand = 500;
 int minutesPassedIndex = 0;
 int frameSinceLastScout = 0;
 int frameSinceLastBuild = 0;
@@ -232,6 +232,40 @@ std::string StrategyManager::onStart()
 	frameSinceLastBuild = 0;
 	mineralsToExpand = 1000;
 
+	//Get main base informaiton
+	const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
+	const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+
+	//Calculate position we will tell squads to wait before attacking if enemy base is unknown or not.
+	int shortestDistance = INT_MAX;
+
+	startingChoke = BWAPI::Position(BWEB::Map::getNaturalChoke()->Center());
+
+
+	/*for (auto area : mainArea->AccessibleNeighbours())
+	{
+		for (auto choke : area->ChokePoints())
+		{
+			const std::pair<const BWEM::Area*, const BWEM::Area*> chokeAreas = choke->GetAreas();
+
+			if (chokeAreas.first->Id() == mainArea->Id() || chokeAreas.second->Id() == mainArea->Id()) continue;
+
+			int distance = 0;
+			const BWEM::CPPath pathToChoke = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(choke->Center()), &distance);
+
+			if (distance == -1) continue;
+
+			std::cout << "Path distance: " << (distance) << "\n";
+
+			if (distance < shortestDistance)
+			{
+				shortestDistance = distance;
+				startingChoke = BWAPI::Position(choke->Center());
+			}
+		}
+	}*/
+
+	std::cout << "Starting choke located at " << startingChoke << "\n";
 
 	//return empty string
 	return "";
@@ -250,18 +284,22 @@ Action StrategyManager::onFrame()
 	Action action;
 	action.type = ActionType::Action_None;
 
+	BWAPI::Broodwar->drawCircleMap(startingChoke, 5, BWAPI::Colors::Blue, true);
+
 	//In-Game Time book keeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 
+	//Supply threshold is how close we want to get to the supply cap before building a pylon to cover supply costs.
 	//Make supply threshold early game by default.
+	//Modify these times
 	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
 
 	if ((seconds / 60) >= 5 && (seconds / 60) < 15)
 	{
 		supplyThreshold = SUPPLY_THRESHOLD_MIDGAME;
 	}
-	else if((seconds / 60) >= 15)
+	else if ((seconds / 60) >= 15)
 	{
 		supplyThreshold = SUPPLY_THRESHOLD_LATEGAME;
 	}
@@ -274,7 +312,8 @@ Action StrategyManager::onFrame()
 	const FriendlyUnitCounter ProtoBot_units = commanderReference->informationManager.getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter ProtoBot_upgrade = commanderReference->informationManager.getFriendlyUpgradeCounter();
 	const FriendlyTechCounter ProtoBot_tech = commanderReference->informationManager.getFriendlyTechCounter();
-	std::vector<Squad> ProtoBot_Squads = commanderReference->combatManager.Squads;
+	std::vector<Squad*> Protobot_IdleSquads = commanderReference->combatManager.IdleSquads;
+	std::vector<Squad*> Protobot_Squads = commanderReference->combatManager.Squads;
 
 	//Get Enemy Building information.
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = commanderReference->informationManager.getKnownEnemyBuildings();
@@ -301,15 +340,12 @@ Action StrategyManager::onFrame()
 	}
 
 	//This is the normal formula we would use for calculting saturation but we will focus on purely gateways
-	/*
-	saturatedNexus = (ProtoBot_buildings.gateway / 4) +
-		((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) +
-		((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
-	*/
+	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
 
 	//4 Gateways per nexus should be built
-	saturatedNexus = (ProtoBot_buildings.gateway / 4);
+	saturatedNexus = (ProtoBot_buildings.gateway / 2);
 
+	std::vector<BWAPI::Position> enemyBaselocations;
 	for (const auto [unit, building] : enemyBuildingInfo)
 	{
 		if (building.type.isResourceDepot())
@@ -317,28 +353,30 @@ Action StrategyManager::onFrame()
 			//std::cout << building.type << " at position " << building.lastKnownPosition << "\n";
 
 			BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
+
+			enemyBaselocations.push_back(building.lastKnownPosition);
 		}
 	}
 
 	//Move this to inside if so we dont scout during build order unless instructed.
-	#pragma region Scout
-	//// ----- emit SCOUT periodically -----
-	if (frame - frameSinceLastScout >= 24 * 20) { // every ~20s;
-		frameSinceLastScout = frame;
-		Scout s;
-		action.commanderAction = s;
-		action.type = ActionType::Action_Scout;
-		return action;                 // <-- ensure we actually send the action
-	}
-	#pragma endregion
+//#pragma region Scout
+//	if (frame - frameSinceLastScout >= 24 * 20) {
+//		frameSinceLastScout = frame;
+//		Scout s;
+//		action.commanderAction = s;
+//		action.type = ActionType::Action_Scout;
+//		return action;
+//	}
+//#pragma endregion
 
-	#pragma region Expand
+#pragma region Expand
 	if (buildOrderCompleted)
 	{
 		//Check if we should build a pylon, Change this to be a higher value than 3 as the game goes along.
-		if (commanderReference->checkAvailableSupply() <= supplyThreshold)
+		//We are not making pylons in advance quick enough
+		if (commanderReference->checkAvailableSupply() <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != 200))
 		{
-			std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
+			//std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 			Expand actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Pylon;
 
@@ -347,7 +385,7 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		//Check for assimilators on nexus economies here.
+		//If a nexus economy has an gyser to place an assimlator at, place one when we have more than: numbers of minerals + 3 workers.
 		for (const NexusEconomy& nexusEconomy : nexusEconomies)
 		{
 			if (nexusEconomy.vespeneGyser != nullptr
@@ -356,7 +394,7 @@ Action StrategyManager::onFrame()
 				&& nexusEconomy.lifetime >= 500
 				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 			{
-				std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
+				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
 				Expand actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Assimilator;
 
@@ -368,7 +406,21 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
-			if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
+			//Not expanding properlly after having enough gateways
+			if (ProtoBot_buildings.nexus == saturatedNexus)
+			{
+				mineralsToExpand * 2.5;
+				std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
+
+				Expand actionToTake;
+				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Nexus;
+
+				action.commanderAction = actionToTake;
+				action.type = ActionType::Action_Expand;
+				return action;
+			}
+
+			/*if (BWAPI::Broodwar->self()->minerals() > mineralsToExpand)
 			{
 				mineralsToExpand * 2.5;
 				std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
@@ -379,7 +431,7 @@ Action StrategyManager::onFrame()
 				action.commanderAction = actionToTake;
 				action.type = ActionType::Action_Expand;
 				return action;
-			}
+			}*/
 			/*else if (minutesPassedIndex < sizeof(expansionTimes) / sizeof(expansionTimes[0])
 				&& expansionTimes[minutesPassedIndex] <= (seconds / 60))
 			{
@@ -396,25 +448,20 @@ Action StrategyManager::onFrame()
 			}*/
 		}
 	}
-	#pragma endregion
+#pragma endregion
 
-	#pragma region Build
+#pragma region Build
 	if (buildOrderCompleted)
 	{
-		/*std::cout << "Completed Nexus Economy amount " << completedNexusEconomy << "\n";
-		std::cout << "Saturated Bases " << sturated_bases << "\n";*/
-
-		//const int sturated_bases = (completedNexusEconomy > 0) ? (ProtoBot_buildings.gateway + (2 * ProtoBot_buildings.roboticsFacility) + (2 * ProtoBot_buildings.stargate)) / (completedNexusEconomy * 4) : 0;
-
 		//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && completedNexusEconomy >= 1)
 		{
 			//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
 			//4 Gateways per nexus economy
-			if (ProtoBot_buildings.gateway < completedNexusEconomy * 4)
+			if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
 			{
-				std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
+				//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
 				Build actionToTake;
 				actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Gateway;
 
@@ -429,7 +476,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1)
 		{
-			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+			//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Build actionToTake;
 			actionToTake.unitToBuild = BWAPI::UnitTypes::Protoss_Forge;
 
@@ -454,7 +501,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
 		{
-			std::cout << "build action: requesting to warp forge\n";
+			//std::cout << "build action: requesting to warp forge\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
 
@@ -463,9 +510,9 @@ Action StrategyManager::onFrame()
 			return action;
 		}
 
-		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.observatory == 1)
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore == 1)
 		{
-			std::cout << "build action: requesting to warp robotics facility\n";
+			//std::cout << "build action: requesting to warp robotics facility\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Robotics_Facility;
 
@@ -476,7 +523,7 @@ Action StrategyManager::onFrame()
 
 		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility == 1)
 		{
-			std::cout << "build action: requesting to warp observatory\n";
+			//std::cout << "Build Action: requesting to warp observatory\n";
 			Build actiontotake;
 			actiontotake.unitToBuild = BWAPI::UnitTypes::Protoss_Observatory;
 
@@ -508,16 +555,39 @@ Action StrategyManager::onFrame()
 			return action;
 		}*/
 	}
-	#pragma endregion
+#pragma endregion
 
-
-	#pragma region Attack
-
-	#pragma endregion
-
-	#pragma region Defend
-
-	#pragma endregion
+//#pragma region Attack
+//	//If we have more than two full squads attack. 
+//	if (Protobot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
+//	{
+//		if (commanderReference->combatManager.totalCombatUnits.size() >= (MAX_SQUAD_SIZE * 2))
+//		{
+//			std::cout << "ATTACK ACTION: Attacking enemy base\n";
+//			Attack actionToTake;
+//			//Attack the first enemy base location for now.
+//			actionToTake.position = enemyBaselocations.at(0);
+//
+//			action.commanderAction = actionToTake;
+//			action.type = ActionType::Action_Attack;
+//			return action;
+//		}
+//	}
+//#pragma endregion
+//
+//#pragma region Defend
+//	if (Protobot_IdleSquads.size() != 0)
+//	{
+//		std::cout << "Defend Action: telling squad to defend base.\n";
+//
+//		Defend actionToTake;
+//		actionToTake.position = startingChoke;
+//		
+//		action.commanderAction = actionToTake;
+//		action.type = ActionType::Action_Defend;
+//		return action;
+//	}
+//#pragma endregion
 
 
 	//StrategyManager::printBoredomMeter();
@@ -565,6 +635,44 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 
 	//Reset boredom to 0 since we had a confrontation
 	StrategyManager::boredomMeter = 0.0f;
+}
+
+void StrategyManager::onUnitCreate(BWAPI::Unit unit)
+{
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+	const FriendlyBuildingCounter ProtoBot_buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
+
+	//Calculaute new location for squads to sit while we wait to attack.
+	//Helps prevent us from flooding our inside base with units.
+
+	/*
+	int shortestDistance = INT_MAX;
+
+	for (auto area : mainArea->AccessibleNeighbours())
+	{
+		for (auto choke : area->ChokePoints())
+		{
+			const std::pair<const BWEM::Area*, const BWEM::Area*> chokeAreas = choke->GetAreas();
+
+			if (chokeAreas.first->Id() == mainArea->Id() || chokeAreas.second->Id() == mainArea->Id()) continue;
+
+			int distance = 0;
+			const BWEM::CPPath pathToChoke = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(choke->Center()), &distance);
+
+			if (distance == -1) continue;
+
+			std::cout << "Path distance: " << (distance) << "\n";
+
+			if (distance < shortestDistance)
+			{
+				shortestDistance = distance;
+				startingChoke = BWAPI::Position(choke->Center());
+			}
+		}
+	}
+	*/
+
 }
 
 void StrategyManager::changeState(StrategyState* state)

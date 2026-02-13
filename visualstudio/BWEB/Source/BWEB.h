@@ -18,6 +18,9 @@ namespace BWEB::Map
     /// <summary> Called on game start to initialize the BWEB::Map. </summary>
     void onStart();
 
+    /// <summary> Called on game restart </summary>
+    void onEnd();
+
     /// <summary> Stores used tiles if it is a building. Increments defense counters for any stations where the placed building is a static defense unit. </summary>
     void onUnitDiscover(BWAPI::Unit);
 

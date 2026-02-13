@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <cmath>
+#include "A-StarPathfinding.h"
 
 #define WORKERS_PER_ASSIMILATOR 3
 #define OPTIMAL_WORKERS_PER_MINERAL 2
@@ -24,7 +25,7 @@ public:
 	double intercept;
 	int spot_to_move;
 	int offset;
-	int moveTimer;
+	int moveTimer = 5;
 
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
@@ -34,6 +35,8 @@ public:
 	std::unordered_map<BWAPI::Unit, int> resourceWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
 	std::unordered_map<BWAPI::Unit, int> workerOrder;
+	std::unordered_map<BWAPI::Unit, Path> workerPaths;
+
 
 
 	//Calculated maximums based on number of minerals.

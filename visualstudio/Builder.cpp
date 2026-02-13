@@ -1,12 +1,10 @@
 #include "Builder.h"
 #include "BuildManager.h"
-#include <cmath>
 
 Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct, BWAPI::Position positionToBuild, Path path) :
 	unitReference(unitReference), 
 	buildingToConstruct(buildingToConstruct),
 	requestedPositionToBuild(positionToBuild),
-	requestedTileToBuild(BWAPI::TilePosition(positionToBuild)),
 	referencePath(path)
 {
 	/*std::cout << unitReference->getID() << "\n";
@@ -22,12 +20,17 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 		path = referencePath.positions;
 	}*/
 
-	std::cout << path.positions.size() << "\n";
+	//std::cout << path.positions.size() << "\n";
+	//unitReference->rightClick(referencePath.positions.at(0));
+
+	if (referencePath.positions.empty()) std::cout << "Path is empty to place " << buildingToConstruct << " at " << positionToBuild << "\n";
+
+	unitReference->stop();
 }
 
 Builder::~Builder() 
 {
-	//path.clear();
+	
 }
 
 void Builder::onFrame()
@@ -35,88 +38,35 @@ void Builder::onFrame()
 	if(referencePath.positions.empty() == false)
 		AStar::drawPath(referencePath);
 
-    // --- Timeout / progress tracking ---
-    framesSinceAssigned++;
-
-    const double dist = unitReference->getDistance(requestedPositionToBuild);
-
-    if (framesSinceAssigned == 1)
-    {
-        lastDistance = dist;
-        lastProgressFrame = 0;
-    }
-    else
-    {
-        if (framesSinceAssigned - lastProgressFrame >= progressCheckWindow)
-        {
-            const double progress = lastDistance - dist; // positive means we got closer
-            if (progress < minProgressPixels)
-            {
-                gaveUp = true;
-                return;
-            }
-            lastDistance = dist;
-            lastProgressFrame = framesSinceAssigned;
-        }
-    }
-
-    if (framesSinceAssigned >= maxFramesToRevealOrReach)
-    {
-        gaveUp = true;
-        return;
-    }
-
-    // --- Reveal fog-of-war if needed (unexplored tiles prevent build commands) ---
-    auto footprintExplored = [&]() -> bool {
-        const int w = buildingToConstruct.tileWidth();
-        const int h = buildingToConstruct.tileHeight();
-        for (int x = 0; x < w; x++)
-        {
-            for (int y = 0; y < h; y++)
-            {
-                const BWAPI::TilePosition t = requestedTileToBuild + BWAPI::TilePosition(x, y);
-                if (!BWAPI::Broodwar->isExplored(t)) return false;
-            }
-        }
-        return true;
-    };
-
-    if (!footprintExplored())
-    {
-        // Move to the center of the build tile to reveal terrain, then try building later.
-        unitReference->move(BWAPI::Position(requestedTileToBuild) + BWAPI::Position(16, 16));
-        return;
-    }
-
-
-	if (buildingToConstruct.isResourceDepot())
+	if (referencePath.positions.empty())
 	{
-		if (unitReference->isIdle())
-		{
-			unitReference->move(requestedPositionToBuild);
-		}
-		else if (unitReference->getDistance(requestedPositionToBuild) < 200)
+		if (unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 		}
+
+		if (unitReference->isIdle()) unitReference->rightClick(requestedPositionToBuild);
 	}
 	else
 	{
-		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < DISTANCE_THRESHOLD)
+		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 		}
 		else
 		{
-			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < DISTANCE_THRESHOLD)
+			if (unitReference->getDistance(referencePath.positions.at(pathIndex)) < PATH_DISTANCE_THRESHOLD)
 			{
 				if ((pathIndex + 1) != referencePath.positions.size())
 				{
 					pathIndex++;
-					unitReference->move(referencePath.positions.at(pathIndex));
+					unitReference->rightClick(referencePath.positions.at(pathIndex));
 				}
 			}
 		}
+
+		//Incase unit gets stuck
+		if (unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
 	}
 }
 

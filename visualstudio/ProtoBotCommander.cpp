@@ -104,21 +104,8 @@ void ProtoBotCommander::onFrame()
 
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
-	m_mapTools.onFrame();
+	//m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
-
-	/*for (const Area& area : theMap.Areas())
-	{
-		for (const Base& base : area.Bases())
-		{
-			if (BWEM::utils::MapDrawer::showBases && BWAPI::Broodwar->canBuildHere(base.Location(), BWAPI::UnitTypes::Protoss_Nexus))
-			{
-				BWAPI::Broodwar->drawBoxMap(BWAPI::Position(base.Location()),
-					BWAPI::Position(base.Location() + BWAPI::UnitType(BWAPI::UnitTypes::Protoss_Nexus).tileSize()),
-					BWEM::utils::MapDrawer::Color::bases);
-			}
-		}
-	}*/
 
 	/*
 	* Protobot Modules
@@ -147,20 +134,20 @@ void ProtoBotCommander::onFrame()
 		}
 		case ActionType::Action_Scout:
 		{
-			std::cout << "Requesting scout!\n";
+			//std::cout << "Requesting scout!\n";
 			getUnitToScout();
 			break;
 		}
 		case ActionType::Action_Attack:
 		{
 			const Attack attack = get<Attack>(action.commanderAction);
-			combatManager.move(BWAPI::Position(attack.position));
+			combatManager.attack(attack.position);
 			break;
 		}
 		case ActionType::Action_Defend:
 		{
-			const Defend attack = get<Defend>(action.commanderAction);
-			combatManager.move(BWAPI::Position(attack.position));
+			const Defend defend = get<Defend>(action.commanderAction);
+			combatManager.defend(defend.position);
 			break;
 		}
 		default:
@@ -178,7 +165,7 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Economy);
 	economyManager.onFrame();
 	timerManager.stopTimer(TimerManager::Economy);
-
+	
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
 	scoutingManager.onFrame();
@@ -202,6 +189,9 @@ void ProtoBotCommander::onFrame()
 void ProtoBotCommander::onEnd(bool isWinner)
 {
 	std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
+
+    // Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
+    BWEB::Map::onEnd();
 }
 
 /*
@@ -249,6 +239,7 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
 	informationManager.onUnitCreate(unit);
+	strategyManager.onUnitCreate(unit);
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)

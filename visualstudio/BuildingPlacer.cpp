@@ -19,10 +19,53 @@ bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, 
     return false;
 }
 
+bool BuildingPlacer::checkPower(BWAPI::TilePosition location, BWAPI::UnitType buildingType)
+{
+    const int x_location = location.x;
+    const int y_location = location.y;
+
+    float tilesPowered = 0.0;
+
+    for (int row = y_location; row < x_location + buildingType.tileHeight(); row++)
+    {
+        for (int column = x_location; column < x_location + buildingType.tileWidth(); column++)
+        {
+            if (poweredTiles[row][column] >= 1) tilesPowered++;
+        }
+    }
+
+    const float totalTiles = float(buildingType.tileWidth() * buildingType.tileHeight());
+
+    //BWEB should have us covered for block placement, since it seems like powering units isnt consistent with the amount of tiles a unit has.
+    if (tilesPowered / totalTiles > .5) return true;
+
+    return false;
+}
+
+void BuildingPlacer::drawPoweredTiles()
+{
+    for (int row = 0; row < poweredTiles.size(); row++)
+    {
+        for (int column = 0; column < poweredTiles[row].size(); column++)
+        {
+            if (poweredTiles[row][column] >= 1) BWAPI::Broodwar->drawCircleMap((column * 32) + 16, (row * 32) + 16, 5, BWAPI::Colors::Blue, true);
+        }
+    }
+
+    /*for (BWEB::Block block : tempBlocks)
+    {
+        block.draw();
+    }*/
+    
+}
+
 BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 {
     if (type == BWAPI::UnitTypes::Protoss_Nexus)
     {
+        const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
+        const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+
         int distance = INT_MAX;
         BWAPI::TilePosition closestDistance;
 
@@ -31,17 +74,25 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         {
             for (const BWEM::Base& base : area.Bases())
             {
-                if (BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location()) < distance
-                    && base.Location() != BWAPI::Broodwar->self()->getStartLocation()
-                    && BWAPI::Broodwar->canBuildHere(base.Location(), type))
+                if (base.Location() == BWAPI::Broodwar->self()->getStartLocation() || alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight())) continue;
+
+                int distanceToNewBase = 0;
+                const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
+
+                if (distanceToNewBase == -1)
                 {
-                    distance = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(base.Location());
+                    continue;
+                }
+
+                if (distanceToNewBase < distance)
+                {
+                    distance = distanceToNewBase;
                     closestDistance = base.Location();
                 }
             }
         }
 
-        //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
+        std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
         //BWEB::Map::addReserve(closestDistance, BWAPI::UnitTypes::Protoss_Nexus.tileWidth(), BWAPI::UnitTypes::Protoss_Nexus.tileHeight());
         return BWAPI::Position(closestDistance);
     }
@@ -51,6 +102,8 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         {
             for (const BWEM::Base& base : area.Bases())
             {
+                if (base.Geysers().size() == 0) continue;
+
                 BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(base.Location()), 
                     BWAPI::Position(32 * (base.Location().x + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth())), 32 * (base.Location().y + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight()))));
                 bool nexusOnLocation = false;
@@ -121,10 +174,70 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         }
 
         //BWEB::Map::addReserve(closestDistance, type.tileWidth(), type.tileHeight());
+
         return BWAPI::Position(closestDistance);
     }
 
     return BWAPI::Position(0, 0);
+}
+
+//Update values at the start of a game
+void BuildingPlacer::onStart()
+{
+    mapWidth = BWAPI::Broodwar->mapWidth();
+    mapHeight = BWAPI::Broodwar->mapHeight();
+
+    poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
+    largeBlocks.clear();
+    mediumBlocks.clear();
+    smallBlocks.clear();
+    Block_Information.clear();
+
+    std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
+    int largePlacements = 0;
+    int mediumPlacements = 0;
+    int smallPlacements = 0;
+
+    for (BWEB::Block block : blocks)
+    {   
+        //Get information that the BWEB provides about a block
+        largePlacements = block.getLargeTiles().size();
+        mediumPlacements = block.getMediumTiles().size();
+        smallPlacements = block.getSmallTiles().size();
+
+        if (largePlacements >= 2)
+            largeBlocks.push_back(block);
+        else if (largePlacements == 1)
+            mediumBlocks.push_back(block);
+        else
+            smallBlocks.push_back(block);
+
+        //Store this information for later use and save it.
+        BlockData block_info;
+        block_info.Large_Placements = largePlacements;
+        block_info.Medium_Placements = mediumPlacements;
+        block_info.Power_Placements = smallPlacements;
+        block_info.Block_AreaLocation = theMap.GetArea(block.getTilePosition());
+
+        //std::cout << "Large Placements " << block_info.Large_Placements << "\n";
+        //std::cout << "Medium Placements " << block_info.Medium_Placements << "\n";
+        //std::cout << "Small/Power Placements " << block_info.Power_Placements << "\n";
+
+        //Might have a bug with corners using this approach but hopefully it will be okay using reserving system
+        Block_Information.emplace(block.getTilePosition(), block_info);
+    }
+
+    //std::cout << "=================================\n";
+    
+    for (BWEB::Block block : blocks)
+    {
+        auto data = Block_Information.find(block.getTilePosition());
+
+        //std::cout << "Large Placements " << data->second.Large_Placements << "\n";
+        //std::cout << "Medium Placements " << data->second.Medium_Placements << "\n";
+        //std::cout << "Small/Power Placements " << data->second.Power_Placements << "\n";
+    }
+
 }
 
 void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
@@ -132,9 +245,60 @@ void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
     BWEB::Map::addUsed(unit->getTilePosition(), unit->getType());
 }
 
+void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
+{
+    if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+    std::cout << "Pylon placed at location: " << unit->getTilePosition() << "\n";
+
+    const BWAPI::TilePosition location = unit->getTilePosition();
+    const int mapX_location = location.x;
+    const int mapY_location = location.y;
+
+    //Make looping easier we will think of the area a pylon powers as a square. We will then factor in an offset to then get the proper "circle" shape.
+    const int topLeft_x = mapX_location - 7;
+    const int topLeft_y = mapY_location - 4;
+
+    for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
+    {
+        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
+        {
+            if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
+
+            poweredTiles[poweredRow_index][poweredColumn_index] += 1;
+        }
+    }
+}
+
 void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
 {
     BWEB::Map::onUnitDestroy(unit);
+
+    if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+    std::cout << "Pylon destroyed at location: " << unit->getTilePosition() << "\n";
+
+    const BWAPI::TilePosition location = unit->getTilePosition();
+    const int mapX_location = location.x;
+    const int mapY_location = location.y;
+
+    //Make looping easier we will think of the area a pylon powers as a square. We will then factor in an offset to then get the proper "circle" shape.
+    const int topLeft_x = mapX_location - 7;
+    const int topLeft_y = mapY_location - 4;
+
+    for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
+    {
+        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
+        {
+            if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
+
+            poweredTiles[poweredRow_index][poweredColumn_index] -= 1;
+
+            //Sanity check
+            if(poweredTiles[poweredRow_index][poweredColumn_index] < 0)
+                poweredTiles[poweredRow_index][poweredColumn_index] = 0;
+        }
+    }
 }
 
 void BuildingPlacer::onUnitMorph(BWAPI::Unit unit)

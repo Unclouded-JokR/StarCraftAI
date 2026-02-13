@@ -19,11 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Builder.cpp" />
-    <ClCompile Include="BuildingPlacer.cpp" />
-    <ClCompile Include="ThreatGrid.cpp" />
-    <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TimerManager.cpp" />
+    <ClInclude Include="SquadStateTypes.h" />
+	<ClInclude Include="SquadState.h" />
+    <ClInclude Include="VectorPos.h" />
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
     <ClInclude Include="..\src\starterbot\MapTools.h" />
     <ClInclude Include="..\src\starterbot\ReplayParser.h" />
@@ -38,7 +36,7 @@
     <ClInclude Include="BWEB\Source\PathFind.h" />
     <ClInclude Include="BWEB\Source\Station.h" />
     <ClInclude Include="BWEB\Source\Wall.h" />
-    <ClCompile Include="A-StarPathfinding.h" />
+    <ClInclude Include="A-StarPathfinding.h" />
     <ClInclude Include="CombatManager.h" />
     <ClInclude Include="EconomyManager.h" />
     <ClInclude Include="InfluenceMap.h" />
@@ -53,7 +51,7 @@
     <ClInclude Include="ScoutPolicy.h" />
     <ClInclude Include="SpenderManager.h" />
     <ClInclude Include="StrategyManager.h" />
-    <ClInclude Include="Squad.h" />
+	<ClInclude Include="Squad.h" />
     <ClInclude Include="..\BWEM\EasyBMP_1.06\EasyBMP.h" />
     <ClInclude Include="..\BWEM\src\area.h" />
     <ClInclude Include="..\BWEM\src\base.h" />
@@ -77,6 +75,11 @@
     <ClInclude Include="TimerManager.h" />
   </ItemGroup>
   <ItemGroup>
+	<ClCompile Include="Builder.cpp" />
+	<ClCompile Include="BuildingPlacer.cpp" />
+    <ClCompile Include="ThreatGrid.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="TimerManager.cpp" />
     <ClCompile Include="..\src\starterbot\main.cpp" />
     <ClCompile Include="..\src\starterbot\MapTools.cpp" />
     <ClCompile Include="..\src\starterbot\ReplayParser.cpp" />
@@ -103,7 +106,8 @@
     <ClCompile Include="SpenderManager.cpp" />
     <ClCompile Include="StrategyManager.cpp" />
     <ClCompile Include="Squad.cpp" />
-    <CLCompile Include="..\BWEM\EasyBMP_1.06\EasyBMP.cpp" />
+	<ClCompile Include="SquadStateTypes.cpp" />
+    <ClCompile Include="..\BWEM\EasyBMP_1.06\EasyBMP.cpp" />
     <ClCompile Include="..\BWEM\src\area.cpp" />
     <ClCompile Include="..\BWEM\src\base.cpp" />
     <ClCompile Include="..\BWEM\src\bwapiExt.cpp" />

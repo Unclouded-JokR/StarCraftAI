@@ -675,6 +675,18 @@ namespace BWEB::Blocks
         }
     }
 
+    void onEnd()
+    {
+        allBlocks.clear();
+        piecePerArea.clear();
+        for (int x = 0; x < 256; x++) {
+            for (int y = 0; y < 256; y++) {
+                blockGrid[x][y] = 0;
+                testGrid[x][y] = 0;
+            }
+        }
+    }
+
     void findBlocks()
     {
         initialize();
