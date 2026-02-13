@@ -33,6 +33,8 @@ void ScoutingProbe::onStart() {
     orbitWaypoints.clear();
     orbitIdx = 0;
     dwellUntilFrame = 0;
+    gasStealHoldingForMinerals = false;
+    nextMineralCheckFrame = 0;
     state = startTargets.empty() ? State::Done : State::Search;
 }
 
@@ -122,8 +124,10 @@ void ScoutingProbe::onFrame() {
         }
 
         // If we've been calm long enough and know their main, resume harassment
-        if (enemyMainPos.isValid() && (now - lastThreatFrame) >= kCalmFramesToResumeHarass) {
-            plannedPath.clear();        // drop orbit path so we don't keep following it
+        if (enemyMainPos.isValid() && gasStealDone
+            && (now - lastThreatFrame) >= kCalmFramesToResumeHarass)
+        {
+            plannedPath.clear();
             state = State::Harass;
             break;
         }
@@ -262,6 +266,23 @@ bool ScoutingProbe::tryGasSteal()
         return false;
     }
 
+    // If approved but we don't have minerals yet, orbit and wait
+    if (gasStealApproved && Broodwar->self()->minerals() < UnitTypes::Protoss_Assimilator.mineralPrice())
+    {
+        gasStealHoldingForMinerals = true;
+
+        // Keep the scout near enemy main, but don't harass while waiting
+        ensureOrbitWaypoints();
+        issueMoveToward(currentOrbitPoint(), 64, false);
+        advanceOrbitIfArrived();
+
+        // Don't spam retry every frame
+        nextGasStealRetryFrame = now + 12;
+
+        return true; // stay in GasSteal state
+    }
+
+    gasStealHoldingForMinerals = false;
     // 2) Find enemy geyser once
     if (!targetGeyser || !targetGeyser->exists())
     {
@@ -343,7 +364,7 @@ bool ScoutingProbe::tryGasSteal()
         return true;
     }
 
-    // 5) Once approved, ensure we can afford it (your SpenderManager might handle this, but keep local guard)
+    // 5) Once approved, ensure we can afford it
     if (Broodwar->self()->minerals() < UnitTypes::Protoss_Assimilator.mineralPrice())
     {
         nextGasStealRetryFrame = now + kGasStealRetryCooldown;

@@ -359,15 +359,15 @@ Action StrategyManager::onFrame()
 	}
 
 	//Move this to inside if so we dont scout during build order unless instructed.
-//#pragma region Scout
-//	if (frame - frameSinceLastScout >= 24 * 20) {
-//		frameSinceLastScout = frame;
-//		Scout s;
-//		action.commanderAction = s;
-//		action.type = ActionType::Action_Scout;
-//		return action;
-//	}
-//#pragma endregion
+#pragma region Scout
+	if (frame - frameSinceLastScout >= 24 * 20) {
+		frameSinceLastScout = frame;
+		Scout s;
+		action.commanderAction = s;
+		action.type = ActionType::Action_Scout;
+		return action;
+	}
+#pragma endregion
 
 #pragma region Expand
 	if (buildOrderCompleted)

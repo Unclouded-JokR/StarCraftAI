@@ -217,6 +217,7 @@ void ScoutingZealot::computeEnemyNatural() {
         Broodwar->drawCircleMap(enemyNaturalPos, 10, Colors::Cyan, true);
         Broodwar->drawTextMap(enemyNaturalPos, "nat");
     }
+
 }
 
 BWAPI::Position ScoutingZealot::pickEdgeOfVisionSpot() const {

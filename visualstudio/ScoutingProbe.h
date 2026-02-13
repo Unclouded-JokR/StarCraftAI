@@ -47,6 +47,8 @@ private:
     bool gasStealApproved = false;
     int gasStealRequestFrame = 0;
     int nextCheesePollFrame = 0;
+    bool gasStealHoldingForMinerals = false;
+    int nextMineralCheckFrame = 0;
 
     // misc
     int lastMoveIssueFrame = 0;
