@@ -37,7 +37,7 @@ void ProtoBotCommander::onStart()
 	BWEB::Blocks::findBlocks();
 
 	m_mapTools.onStart();
-
+	
 	/*
 	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
 	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
@@ -193,7 +193,7 @@ void ProtoBotCommander::onFrame()
 	// Draw unit health bars, which brood war unfortunately does not do
 	Tools::DrawUnitHealthBars();
 
-	BWEB::Map::draw();
+	//BWEB::Map::draw();
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();

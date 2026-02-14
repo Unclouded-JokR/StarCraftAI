@@ -15,6 +15,10 @@ void CombatManager::onFrame() {
 		squad->onFrame();
 	}
 
+	for (const auto& coord : rectCoordinates) {
+		BWAPI::Broodwar->drawBoxMap(coord.first, coord.second, BWAPI::Colors::Red);
+	}
+
 	drawDebugInfo();
 }
 
