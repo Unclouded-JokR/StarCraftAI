@@ -26,6 +26,7 @@ public:
 	int spot_to_move;
 	int offset;
 	int moveTimer = 5;
+	int workerNums;
 
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
@@ -45,7 +46,7 @@ public:
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();
-	void addMissedResources();
+	int addMissedResources();
 	void onFrame();
 	void printMineralWorkerCounts();
 	void moveToMineral(BWAPI::Unit worker, BWAPI::Unit mineral);
