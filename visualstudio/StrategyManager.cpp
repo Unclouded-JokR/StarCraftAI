@@ -241,30 +241,6 @@ std::string StrategyManager::onStart()
 
 	startingChoke = BWAPI::Position(BWEB::Map::getNaturalChoke()->Center());
 
-
-	/*for (auto area : mainArea->AccessibleNeighbours())
-	{
-		for (auto choke : area->ChokePoints())
-		{
-			const std::pair<const BWEM::Area*, const BWEM::Area*> chokeAreas = choke->GetAreas();
-
-			if (chokeAreas.first->Id() == mainArea->Id() || chokeAreas.second->Id() == mainArea->Id()) continue;
-
-			int distance = 0;
-			const BWEM::CPPath pathToChoke = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(choke->Center()), &distance);
-
-			if (distance == -1) continue;
-
-			std::cout << "Path distance: " << (distance) << "\n";
-
-			if (distance < shortestDistance)
-			{
-				shortestDistance = distance;
-				startingChoke = BWAPI::Position(choke->Center());
-			}
-		}
-	}*/
-
 	std::cout << "Starting choke located at " << startingChoke << "\n";
 
 	//return empty string
@@ -360,13 +336,13 @@ Action StrategyManager::onFrame()
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
-	if (frame - frameSinceLastScout >= 24 * 20) {
+	/*if (frame - frameSinceLastScout >= 24 * 20) {
 		frameSinceLastScout = frame;
 		Scout s;
 		action.commanderAction = s;
 		action.type = ActionType::Action_Scout;
 		return action;
-	}
+	}*/
 #pragma endregion
 
 #pragma region Expand

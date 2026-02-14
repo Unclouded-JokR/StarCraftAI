@@ -44,17 +44,36 @@ bool BuildingPlacer::checkPower(BWAPI::TilePosition location, BWAPI::UnitType bu
 
 void BuildingPlacer::drawPoweredTiles()
 {
-    for (int row = 0; row < poweredTiles.size(); row++)
+    /*for (int row = 0; row < poweredTiles.size(); row++)
     {
         for (int column = 0; column < poweredTiles[row].size(); column++)
         {
             if (poweredTiles[row][column] >= 1) BWAPI::Broodwar->drawCircleMap((column * 32) + 16, (row * 32) + 16, 5, BWAPI::Colors::Blue, true);
         }
-    }
+    }*/
 
     for (BWEB::Block block : ProtoBot_Blocks)
     {
         block.draw();
+
+        BlockData data = Block_Information[block.getTilePosition()];
+
+        if (data.Blocksize != BlockData::SUPPLY)
+        {
+            for (const BWAPI::TilePosition PowerTilePosition : data.PowerTiles)
+            {
+                BWAPI::Broodwar->drawTextMap(BWAPI::Position((PowerTilePosition.x * 32) + 10, (PowerTilePosition.y * 32) + 16), "Power\nPlacement");
+            }
+        }
+        else
+        {
+            BWAPI::Broodwar->drawTextMap(BWAPI::Position((block.getTilePosition().x * 32) + 16, (block.getTilePosition().y * 32) + 16), "Supply\nReserve");
+        }
+
+        if (data.Power_State == BlockData::FULLY_POWERED) //BWAPI::Broodwar->drawBoxMap(BWAPI::Position(block.getTilePosition()), BWAPI::Position((block.getTilePosition().x + block.width()), (block.getTilePosition().y + block.height())), BWAPI::Colors::Blue, false);
+        {
+            BWAPI::Broodwar->drawBoxMap(BWAPI::Position(block.getTilePosition()), BWAPI::Position((block.getTilePosition().x + block.width()) * 32 + 1, (block.getTilePosition().y + block.height()) * 32 + 1), BWAPI::Colors::Blue, false);
+        }
     }
 
 }
@@ -148,8 +167,72 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
         }
     }
+    else if (type == BWAPI::UnitTypes::Protoss_Pylon)
+    {
+        int distanceToPowerBlock = INT_MAX;
+        BWAPI::TilePosition powerTilePosition = BWAPI::TilePositions::Invalid;
+        BWEB::Block blockSelected;
+
+        for (BWEB::Block block : ProtoBot_Blocks)
+        {
+            BlockData data = Block_Information[block.getTilePosition()];
+
+            if (data.Blocksize != BlockData::SUPPLY && data.Power_State != BlockData::FULLY_POWERED)
+            {
+                //Loop through all power tiles. Blocks can have more than 1 power tile.
+                for (const BWAPI::TilePosition powerPlacements : data.PowerTiles)
+                {
+                    if (BWEB::Map::isUsed(powerPlacements) != BWAPI::UnitTypes::None) continue;
+
+                    int distance = 0;
+                    theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(powerPlacements), &distance);
+
+                    if (distance == -1) continue;
+
+                    if (distance < distanceToPowerBlock)
+                    {
+                        distanceToPowerBlock = distance;
+                        powerTilePosition = powerPlacements;
+                        blockSelected = block;
+                    }
+                }
+            }
+        }
+
+        if (powerTilePosition != BWAPI::TilePositions::Invalid)
+        {
+            std::cout << "Found block that is not powered\n";
+            return BWAPI::Position(powerTilePosition);
+        }
+
+        /*//If there are no more blocks to power use supply reserve.
+        for (BWEB::Block block : ProtoBot_Blocks)
+        {
+            BlockData data = Block_Information[block.getTilePosition()];
+
+            if (data.Blocksize == BlockData::SUPPLY)
+            {
+                if (BWEB::Map::isUsed(block.getTilePosition()) != BWAPI::UnitTypes::None) continue;
+
+                int distance = 0;
+                theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(block.getTilePosition()), &distance);
+
+                if (distance == -1) continue;
+
+                if (distance < distanceToPowerBlock)
+                {
+                    distanceToPowerBlock = distance;
+                    powerTilePosition = block.getTilePosition();
+                    blockSelected = block;
+                }
+            }
+        }*/
+
+    }
     else
     {
+        std::cout << "There\n";
+
         /*//List of blocks that are availible in Areas we "own".
         std::vector<BWEB::Block> ProtoBot_Blocks;
         std::vector<BWEB::Block> BWEB_Blocks = BWEB::Blocks::getBlocks();
@@ -170,7 +253,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             ProtoBot_Blocks.push_back(block);
         }*/
 
-
+        
 
 
         int distance = INT_MAX;
@@ -200,6 +283,7 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         //BWEB::Map::addReserve(closestDistance, type.tileWidth(), type.tileHeight());
 
         return BWAPI::Position(closestDistance);
+        
     }
 
     return BWAPI::Position(0, 0);
@@ -212,9 +296,6 @@ void BuildingPlacer::onStart()
     mapHeight = BWAPI::Broodwar->mapHeight();
 
     poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
-    largeBlocks.clear();
-    mediumBlocks.clear();
-    smallBlocks.clear();
     Block_Information.clear();
     AreasOccupied.clear();
     ProtoBot_Blocks.clear();
@@ -232,20 +313,41 @@ void BuildingPlacer::onStart()
 
     for (BWEB::Block block : blocks)
     {
-        //Get information that the BWEB provides about a block
+        //Store this information for later use and save it.
+        BlockData block_info;
+
         largePlacements = block.getLargeTiles().size();
         mediumPlacements = block.getMediumTiles().size();
         smallPlacements = block.getSmallTiles().size();
 
-        if (largePlacements >= 2)
-            largeBlocks.push_back(block);
-        else if (largePlacements == 1)
-            mediumBlocks.push_back(block);
-        else
-            smallBlocks.push_back(block);
+        //std::cout << "Large Placements = " << largePlacements << "\n";
+        //std::cout << "Medium Placements = " << mediumPlacements << "\n";
+        //std::cout << "Supply Placements = " << smallPlacements << "\n";
 
-        //Store this information for later use and save it.
-        BlockData block_info;
+        if (largePlacements >= 2)
+        {
+            block_info.Blocksize = BlockData::LARGE;
+
+            //std::cout << "Adding Large Block\n";
+            std::set<BWAPI::TilePosition> powerTiles = block.getSmallTiles();
+            block_info.PowerTiles = powerTiles;
+            //std::cout << "Block power tiles = " << block_info.PowerTiles.size() << "\n";
+        }
+        else if (mediumPlacements != 0 || largePlacements == 1)
+        {
+            block_info.Blocksize = BlockData::MEDIUM;
+
+            //std::cout << "Adding Medium Block\n";
+            std::set<BWAPI::TilePosition> powerTiles = block.getSmallTiles();
+            block_info.PowerTiles = powerTiles;
+            //std::cout << "Block power tiles = " << block_info.PowerTiles.size() << "\n";
+        }
+        else if (mediumPlacements == 0 && largePlacements == 0 && smallPlacements == 1)
+        {
+            //std::cout << "Adding Supply block\n";
+            block_info.Blocksize = BlockData::SUPPLY;
+        }
+
         block_info.Large_Placements = largePlacements;
         block_info.Medium_Placements = mediumPlacements;
         block_info.Power_Placements = smallPlacements;
@@ -288,6 +390,8 @@ void BuildingPlacer::onStart()
 
 void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
 {
+    if (!unit->getType().isBuilding()) return;
+
     BWEB::Map::addUsed(unit->getTilePosition(), unit->getType());
 }
 
@@ -312,6 +416,28 @@ void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
             if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
             poweredTiles[poweredRow_index][poweredColumn_index] += 1;
+        }
+    }
+
+    for (const BWEB::Block block : ProtoBot_Blocks)
+    {
+        BlockData& data = Block_Information[block.getTilePosition()];
+
+        for (const BWAPI::TilePosition powerTile : data.PowerTiles)
+        {
+            if (unit->getTilePosition() == powerTile)
+            {
+                data.Used_Power_Placements++;
+
+                if (data.Used_Power_Placements == data.PowerTiles.size())
+                {
+                    data.Power_State = BlockData::FULLY_POWERED;
+                }
+                else
+                {
+                    data.Power_State = BlockData::HALF_POWERED;
+                }
+            }
         }
     }
 }
