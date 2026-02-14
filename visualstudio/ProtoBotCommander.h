@@ -80,7 +80,6 @@ public:
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
 	std::vector<NexusEconomy> getNexusEconomies();
-	//BWAPI::Unitset getAllUnitsAssignedToNexus();
 
 	//Information Manager Methods
 	const std::set<BWAPI::Unit>& getKnownEnemyUnits();

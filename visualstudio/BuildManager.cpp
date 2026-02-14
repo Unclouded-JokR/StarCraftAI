@@ -139,10 +139,10 @@ void BuildManager::onFrame() {
 
     //Debug
     //Will most likely need to add a building data class to make this easier to be able to keep track of buildings and what units they are creating.
-    for (BWAPI::Unit building : buildings)
+    /*for (BWAPI::Unit building : buildings)
     {
         BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }
+    }*/
 
     pumpUnit();
 
@@ -156,8 +156,6 @@ void BuildManager::onFrame() {
 void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
     if (unit == nullptr) return;
-
-    //std::cout << "Created " << unit->getType() << "\n";
 
     buildingPlacer.onUnitCreate(unit);
 
@@ -230,7 +228,22 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
     buildingPlacer.onUnitMorph(unit);
 
-    std::cout << "Created " << unit->getType() << "\n";
+    std::cout << "Created " << unit->getType() << " (On Morph)\n";
+
+    //Need to check this for tech and upgrades;
+    for (ResourceRequest& request : resourceRequests)
+    {
+        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+            request.unit == unit->getType())
+        {
+            request.state = ResourceRequest::State::Accepted_Completed;
+        }
+        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+            request.unit == unit->getType())
+        {
+            request.state = ResourceRequest::State::Accepted_Completed;
+        }
+    }
 
     if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit->getPlayer() == BWAPI::Broodwar->self())
     {

@@ -42,6 +42,67 @@ bool BuildingPlacer::checkPower(BWAPI::TilePosition location, BWAPI::UnitType bu
     return false;
 }
 
+BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
+{
+    //Power up blocks that are not power reserve blocks.
+    int distanceToPowerBlock = INT_MAX;
+    BWAPI::TilePosition powerTilePosition = BWAPI::TilePositions::Invalid;
+
+    for (BWEB::Block block : ProtoBot_Blocks)
+    {
+        BlockData data = Block_Information[block.getTilePosition()];
+
+        if (data.Blocksize != BlockData::SUPPLY && data.Power_State != BlockData::FULLY_POWERED)
+        {
+            //Loop through all power tiles. Blocks can have more than 1 power tile.
+            for (const BWAPI::TilePosition powerPlacements : data.PowerTiles)
+            {
+                if (BWEB::Map::isUsed(powerPlacements) != BWAPI::UnitTypes::None) continue;
+
+                int distance = 0;
+                theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(powerPlacements), &distance);
+
+                if (distance == -1) continue;
+
+                if (distance < distanceToPowerBlock)
+                {
+                    distanceToPowerBlock = distance;
+                    powerTilePosition = powerPlacements;
+                }
+            }
+        }
+    }
+
+    return powerTilePosition;
+}
+
+BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
+{
+    int distanceToPowerBlock = INT_MAX;
+    BWAPI::TilePosition supplyReservePosition = BWAPI::TilePositions::Invalid;
+
+    for (BWEB::Block block : ProtoBot_Blocks)
+    {
+        BlockData data = Block_Information[block.getTilePosition()];
+
+        if (data.Blocksize == BlockData::SUPPLY && BWEB::Map::isUsed(block.getTilePosition()) == BWAPI::UnitTypes::None)
+        {
+            int distance = 0;
+            theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(block.getTilePosition()), &distance);
+
+            if (distance == -1) continue;
+
+            if (distance < distanceToPowerBlock)
+            {
+                distanceToPowerBlock = distance;
+                supplyReservePosition = block.getTilePosition();
+            }
+        }
+    }
+
+    return supplyReservePosition;
+}
+
 void BuildingPlacer::drawPoweredTiles()
 {
     /*for (int row = 0; row < poweredTiles.size(); row++)
@@ -169,69 +230,27 @@ BWAPI::Position BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
     }
     else if (type == BWAPI::UnitTypes::Protoss_Pylon)
     {
-        int distanceToPowerBlock = INT_MAX;
-        BWAPI::TilePosition powerTilePosition = BWAPI::TilePositions::Invalid;
-        BWEB::Block blockSelected;
-
-        for (BWEB::Block block : ProtoBot_Blocks)
-        {
-            BlockData data = Block_Information[block.getTilePosition()];
-
-            if (data.Blocksize != BlockData::SUPPLY && data.Power_State != BlockData::FULLY_POWERED)
-            {
-                //Loop through all power tiles. Blocks can have more than 1 power tile.
-                for (const BWAPI::TilePosition powerPlacements : data.PowerTiles)
-                {
-                    if (BWEB::Map::isUsed(powerPlacements) != BWAPI::UnitTypes::None) continue;
-
-                    int distance = 0;
-                    theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(powerPlacements), &distance);
-
-                    if (distance == -1) continue;
-
-                    if (distance < distanceToPowerBlock)
-                    {
-                        distanceToPowerBlock = distance;
-                        powerTilePosition = powerPlacements;
-                        blockSelected = block;
-                    }
-                }
-            }
-        }
+        
+        BWAPI::TilePosition powerTilePosition = checkBuildingBlocks();
 
         if (powerTilePosition != BWAPI::TilePositions::Invalid)
         {
-            std::cout << "Found block that is not powered\n";
             return BWAPI::Position(powerTilePosition);
         }
 
-        /*//If there are no more blocks to power use supply reserve.
-        for (BWEB::Block block : ProtoBot_Blocks)
+        powerTilePosition = checkPowerReserveBlocks();
+
+        if (powerTilePosition != BWAPI::TilePositions::Invalid)
         {
-            BlockData data = Block_Information[block.getTilePosition()];
+            std::cout << "No more blocks to power using supply reserve\n";
+            return BWAPI::Position(powerTilePosition);
+        }
 
-            if (data.Blocksize == BlockData::SUPPLY)
-            {
-                if (BWEB::Map::isUsed(block.getTilePosition()) != BWAPI::UnitTypes::None) continue;
-
-                int distance = 0;
-                theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(block.getTilePosition()), &distance);
-
-                if (distance == -1) continue;
-
-                if (distance < distanceToPowerBlock)
-                {
-                    distanceToPowerBlock = distance;
-                    powerTilePosition = block.getTilePosition();
-                    blockSelected = block;
-                }
-            }
-        }*/
-
+        //No more blocks positions avalible we need to cancel the request.
     }
     else
     {
-        std::cout << "There\n";
+        //std::cout << "There\n";
 
         /*//List of blocks that are availible in Areas we "own".
         std::vector<BWEB::Block> ProtoBot_Blocks;
@@ -397,45 +416,57 @@ void BuildingPlacer::onUnitCreate(BWAPI::Unit unit)
 
 void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
 {
-    if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() != BWAPI::Broodwar->self()) return;
-
-    std::cout << "Pylon placed at location: " << unit->getTilePosition() << "\n";
-
-    const BWAPI::TilePosition location = unit->getTilePosition();
-    const int mapX_location = location.x;
-    const int mapY_location = location.y;
-
-    //Make looping easier we will think of the area a pylon powers as a square. We will then factor in an offset to then get the proper "circle" shape.
-    const int topLeft_x = mapX_location - 7;
-    const int topLeft_y = mapY_location - 4;
-
-    for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
+    if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
     {
-        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
-        {
-            if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
+        const BWEM::Area* expandedArea = theMap.GetArea(unit->getTilePosition());
 
-            poweredTiles[poweredRow_index][poweredColumn_index] += 1;
-        }
+        //If the area is the same no new blocks should be added
+        if (AreasOccupied.find(expandedArea) != AreasOccupied.end()) return;
+
+        AreasOccupied.insert(expandedArea);
+
+        ProtoBot_Blocks.insert(ProtoBot_Blocks.end(), Area_Blocks[expandedArea].begin(), Area_Blocks[expandedArea].end());
     }
-
-    for (const BWEB::Block block : ProtoBot_Blocks)
+    else if (unit->getType() == BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() == BWAPI::Broodwar->self())
     {
-        BlockData& data = Block_Information[block.getTilePosition()];
+        /*const BWAPI::TilePosition location = unit->getTilePosition();
+        const int mapX_location = location.x;
+        const int mapY_location = location.y;
 
-        for (const BWAPI::TilePosition powerTile : data.PowerTiles)
+        //Make looping easier we will think of the area a pylon powers as a square. We will then factor in an offset to then get the proper "circle" shape.
+        const int topLeft_x = mapX_location - 7;
+        const int topLeft_y = mapY_location - 4;
+
+        for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
         {
-            if (unit->getTilePosition() == powerTile)
+            for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
             {
-                data.Used_Power_Placements++;
+                if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
 
-                if (data.Used_Power_Placements == data.PowerTiles.size())
+                poweredTiles[poweredRow_index][poweredColumn_index] += 1;
+            }
+        }*/
+
+        for (BWEB::Block block : ProtoBot_Blocks)
+        {
+            BlockData& data = Block_Information[block.getTilePosition()];
+
+            for (const BWAPI::TilePosition powerTile : data.PowerTiles)
+            {
+                if (unit->getTilePosition() == powerTile)
                 {
-                    data.Power_State = BlockData::FULLY_POWERED;
-                }
-                else
-                {
-                    data.Power_State = BlockData::HALF_POWERED;
+                    data.Used_Power_Placements++;
+
+                    if (data.Used_Power_Placements == data.PowerTiles.size())
+                    {
+                        data.Power_State = BlockData::FULLY_POWERED;
+                    }
+                    else
+                    {
+                        data.Power_State = BlockData::HALF_POWERED;
+                    }
+
+                    break;
                 }
             }
         }
@@ -446,29 +477,82 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
 {
     BWEB::Map::onUnitDestroy(unit);
 
-    if (unit->getType() != BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() != BWAPI::Broodwar->self()) return;
-
-    std::cout << "Pylon destroyed at location: " << unit->getTilePosition() << "\n";
-
-    const BWAPI::TilePosition location = unit->getTilePosition();
-    const int mapX_location = location.x;
-    const int mapY_location = location.y;
-
-    //Make looping easier we will think of the area a pylon powers as a square. We will then factor in an offset to then get the proper "circle" shape.
-    const int topLeft_x = mapX_location - 7;
-    const int topLeft_y = mapY_location - 4;
-
-    for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
+    if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
     {
-        for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
+        const BWEM::Area* destroyedNexusArea = theMap.GetArea(unit->getTilePosition());
+
+        //Sanity Check
+        if (AreasOccupied.find(destroyedNexusArea) == AreasOccupied.end()) return;
+
+        AreasOccupied.erase(destroyedNexusArea);
+
+        //Make sure this is working correctly.
+        for (std::vector<BWEB::Block>::iterator it = ProtoBot_Blocks.begin(); it != ProtoBot_Blocks.end();)
         {
-            if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
+            const BlockData& data = Block_Information[it->getTilePosition()];
 
-            poweredTiles[poweredRow_index][poweredColumn_index] -= 1;
+            if (data.Block_AreaLocation == destroyedNexusArea)
+            {
+                it = ProtoBot_Blocks.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
+    }
+    else if (unit->getType() == BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() == BWAPI::Broodwar->self())
+    {
+        std::cout << "Pylon destroyed at location: " << unit->getTilePosition() << "\n";
 
-            //Sanity check
-            if (poweredTiles[poweredRow_index][poweredColumn_index] < 0)
-                poweredTiles[poweredRow_index][poweredColumn_index] = 0;
+        const BWAPI::TilePosition location = unit->getTilePosition();
+        const int mapX_location = location.x;
+        const int mapY_location = location.y;
+
+        //Make looping easier we will think of the area a pylon powers as a square. We will then factor in an offset to then get the proper "circle" shape.
+        const int topLeft_x = mapX_location - 7;
+        const int topLeft_y = mapY_location - 4;
+
+        for (int poweredRow_index = topLeft_y; poweredRow_index < topLeft_y + PYLON_POWER_HEIGHT; poweredRow_index++)
+        {
+            for (int poweredColumn_index = topLeft_x; poweredColumn_index < (topLeft_x + PYLON_POWER_WIDTH); poweredColumn_index++)
+            {
+                if (poweredColumn_index >= mapWidth || poweredColumn_index < 0 || poweredRow_index < 0 || poweredRow_index >= mapHeight) continue;
+
+                poweredTiles[poweredRow_index][poweredColumn_index] -= 1;
+
+                //Sanity check
+                if (poweredTiles[poweredRow_index][poweredColumn_index] < 0)
+                    poweredTiles[poweredRow_index][poweredColumn_index] = 0;
+            }
+        }
+
+        for (BWEB::Block block : ProtoBot_Blocks)
+        {
+            BlockData& data = Block_Information[block.getTilePosition()];
+
+            for (const BWAPI::TilePosition powerTile : data.PowerTiles)
+            {
+                if (unit->getTilePosition() == powerTile)
+                {
+                    data.Used_Power_Placements--;
+
+                    if (data.Used_Power_Placements == data.PowerTiles.size())
+                    {
+                        data.Power_State = BlockData::FULLY_POWERED;
+                    }
+                    else if(data.Used_Power_Placements == data.PowerTiles.size() / 2)
+                    {
+                        data.Power_State = BlockData::HALF_POWERED;
+                    }
+                    else
+                    {
+                        data.Power_State = BlockData::NOT_POWERED;
+                    }
+
+                    break;
+                }
+            }
         }
     }
 }

@@ -20,6 +20,7 @@ struct BlockData {
 	enum BlockSize {LARGE, MEDIUM, SUPPLY, UNDEFINED};
 	BlockSize Blocksize = BlockSize::UNDEFINED;
 
+	//Only matters for Medium and Large Blocks
 	enum PowerState {FULLY_POWERED, HALF_POWERED, NOT_POWERED};
 	PowerState Power_State = PowerState::NOT_POWERED;
 
@@ -66,6 +67,9 @@ public:
 	BWAPI::Position getPositionToBuild(BWAPI::UnitType);
 	bool alreadyUsingTiles(BWAPI::TilePosition, int, int);
 	bool checkPower(BWAPI::TilePosition, BWAPI::UnitType);
+	BWAPI::TilePosition checkBuildingBlocks();
+	BWAPI::TilePosition checkPowerReserveBlocks();
+
 	void drawPoweredTiles();
 
 	void onStart();

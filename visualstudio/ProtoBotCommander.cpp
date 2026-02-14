@@ -215,8 +215,6 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
 {
 	buildManager.onUnitDiscover(unit);
-
-	//add information manager here.
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
@@ -244,8 +242,8 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
-	buildManager.onUnitCreate(unit);
+	//std::cout << "ProtoBot onUnitComplete: " << unit->getType() << "\n";
+
 	informationManager.onUnitComplete(unit);
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
@@ -255,12 +253,15 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
 	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator || unit_type == BWAPI::UnitTypes::Protoss_Probe)
 	{
+		//std::cout << "Calling onComplete for " << unit_type << " " << unit->getID() << "\n";
 		economyManager.assignUnit(unit);
+		buildManager.onUnitComplete(unit);
 		return;
 	}
 
 	if (unit_type.isBuilding())
 	{
+		//std::cout << "Calling onComplete for " << unit_type << " " << unit->getID() << "\n";
 		buildManager.onUnitComplete(unit);
 		return;
 	}
@@ -270,12 +271,11 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		if (scoutingManager.canAcceptObserverScout())
 		{
 			scoutingManager.assignScout(unit);
-			BWAPI::Broodwar->printf("[Commander] Assigned Observer %d to Scouting", unit->getID());
+			//BWAPI::Broodwar->printf("[Commander] Assigned Observer %d to Scouting", unit->getID());
 			return;
 		}
 	}
 
-	//getUnitToScout();
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }
