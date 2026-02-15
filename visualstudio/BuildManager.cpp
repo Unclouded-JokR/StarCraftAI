@@ -39,7 +39,7 @@ void BuildManager::onFrame() {
     }
 
     spenderManager.OnFrame(resourceRequests);
-    buildingPlacer.drawPoweredTiles();
+    //buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {

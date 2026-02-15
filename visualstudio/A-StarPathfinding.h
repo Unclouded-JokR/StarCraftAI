@@ -5,6 +5,7 @@
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
 #define DEBUG_DRAW_GENERATION true
+#define HEURISTIC_WEIGHT 2
 
 using namespace std;
 namespace {
@@ -13,12 +14,13 @@ namespace {
 
 extern vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 extern vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
+extern vector<BWAPI::TilePosition> earlyExpansionTiles;
 
 struct Node {
 	BWAPI::TilePosition tile, parent;
 	double gCost, hCost, fCost;
 
-	Node(BWAPI::TilePosition tile, BWAPI::TilePosition parent, double gCost, double hCost, double fCost) {
+	Node(BWAPI::TilePosition tile, BWAPI::TilePosition parent, int gCost, int hCost, double fCost) {
 		this->tile = tile;
 		this->parent = parent;
 		this->gCost = gCost;
@@ -32,6 +34,7 @@ struct Node {
 	};
 
 	bool operator <(const Node& rhs) const {
+		// Tie-breaker
 		if (this->fCost == rhs.fCost) {
 			return this->hCost < rhs.hCost;
 		}
@@ -45,12 +48,6 @@ struct Node {
 	}
 	bool operator ==(const Node& rhs) const {
 		return tile == rhs.tile;
-	}
-};
-
-struct NodeHash {
-	std::size_t operator()(const Node& node) const {
-		return std::hash<double>()(0.5 * (node.tile.x + node.tile.y) * (node.tile.x + node.tile.y + 1) + node.tile.y);
 	}
 };
 
@@ -72,7 +69,6 @@ class Path {
 
 class AStar {
 	private:
-		static vector<Node> getNeighbours(BWAPI::UnitType unitType, const Node& currentNode, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static int TileToIndex(BWAPI::TilePosition tile);
 		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);

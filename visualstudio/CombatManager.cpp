@@ -15,8 +15,12 @@ void CombatManager::onFrame() {
 		squad->onFrame();
 	}
 
-	for (const auto& coord : rectCoordinates) {
-		BWAPI::Broodwar->drawBoxMap(coord.first, coord.second, BWAPI::Colors::Red);
+	for (auto& tile : closedTiles) {
+		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.first), BWAPI::Position(tile.first) + BWAPI::Position(32, 32), BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first) + BWAPI::Position(0, 16), "%.2f", tile.second);
+	}
+	for (auto& tile : earlyExpansionTiles) {
+		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile), BWAPI::Position(tile) + BWAPI::Position(32, 32), BWAPI::Colors::Yellow);
 	}
 
 	drawDebugInfo();
