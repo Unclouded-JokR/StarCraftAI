@@ -51,6 +51,12 @@ struct Node {
 	}
 };
 
+struct NodeHash {
+	std::size_t operator()(const BWAPI::TilePosition& tile) const {
+		return std::hash<int>()(0.5 * (tile.x + tile.y) * (tile.x + tile.y + 1) + tile.y);
+	}
+};
+
 class Path {
 	public:
 		vector<BWAPI::Position> positions = vector<BWAPI::Position>();
