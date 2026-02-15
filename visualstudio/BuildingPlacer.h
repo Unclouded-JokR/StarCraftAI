@@ -17,7 +17,7 @@
 
 struct PlacementInfo
 {
-	enum PlacementFlag { SUCCESS, NO_POWER, NO_BLOCKS, NO_GYSERS, NO_PLACEMENTS, DEFAULT };
+	enum PlacementFlag { SUCCESS, NO_POWER, NO_BLOCKS, NO_GYSERS, NO_PLACEMENTS, NO_EXPANSIONS, DEFAULT };
 	PlacementFlag flag = PlacementFlag::DEFAULT;
 
 	BWAPI::Position position = BWAPI::Positions::Invalid;
@@ -73,10 +73,13 @@ public:
 
 	BuildingPlacer();
 	PlacementInfo getPositionToBuild(BWAPI::UnitType);
-	bool alreadyUsingTiles(BWAPI::TilePosition, int, int);
+	bool alreadyUsingTiles(BWAPI::TilePosition, int, int, bool assimilator);
 	bool checkPower(BWAPI::TilePosition, BWAPI::UnitType);
 	BWAPI::TilePosition checkBuildingBlocks();
 	BWAPI::TilePosition checkPowerReserveBlocks();
+	BWAPI::TilePosition findAvailableExpansion();
+	BWAPI::TilePosition findAvailableGyser();
+	BWAPI::TilePosition findAvaliblePlacement(BWAPI::UnitType);
 
 	void drawPoweredTiles();
 

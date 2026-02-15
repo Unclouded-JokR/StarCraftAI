@@ -7,13 +7,20 @@ BuildingPlacer::BuildingPlacer()
 }
 
 //[TODO] Add a reserve system into the BuildingPlacer since the BWEB's reserve system does not properlly have a reserving system for tiles.
-bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, int height)
+bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, int height, bool assimilator = false)
 {
     const BWAPI::UnitType typeFound = BWEB::Map::isUsed(position, width, height);
 
-    if (BWAPI::UnitTypes::None != typeFound)
+    if (!assimilator)
     {
-        return true;
+        if (BWAPI::UnitTypes::None != typeFound) return true;
+    }
+    else
+    {
+        if (typeFound == BWAPI::UnitTypes::Protoss_Assimilator || typeFound == BWAPI::UnitTypes::Terran_Refinery || typeFound == BWAPI::UnitTypes::Zerg_Extractor)
+        {
+            return true;
+        }
     }
 
     return false;
@@ -103,6 +110,110 @@ BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
     return supplyReservePosition;
 }
 
+BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
+{
+    const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
+    const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+
+    int distance = INT_MAX;
+    BWAPI::TilePosition closestDistance = BWAPI::TilePositions::Invalid;
+    const BWAPI::UnitType type = BWAPI::UnitTypes::Protoss_Nexus;
+
+    //This does not cover the case of a building being place on a tile but it should be good enough for now.
+    for (const BWEM::Area& area : theMap.Areas())
+    {
+        for (const BWEM::Base& base : area.Bases())
+        {
+            if (base.Location() == BWAPI::Broodwar->self()->getStartLocation() || alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight())) continue;
+
+            int distanceToNewBase = 0;
+            const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
+
+            if (distanceToNewBase == -1) continue;
+
+            if (distanceToNewBase < distance)
+            {
+                distance = distanceToNewBase;
+                closestDistance = base.Location();
+            }
+        }
+    }
+
+    return closestDistance;
+}
+
+BWAPI::TilePosition BuildingPlacer::findAvailableGyser()
+{
+    std::cout << "Checking for open gysers\n";
+    BWAPI::TilePosition availableGyser = BWAPI::TilePositions::Invalid;
+
+    for (const BWEM::Area& area : theMap.Areas())
+    {
+        for (const BWEM::Base& base : area.Bases())
+        {
+            if (base.Geysers().size() == 0) continue;
+
+            BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(base.Location()),
+                BWAPI::Position(32 * (base.Location().x + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth())), 32 * (base.Location().y + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight()))));
+
+            bool nexusOnLocation = false;
+
+            for (const BWAPI::Unit unit : units)
+            {
+                if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
+                {
+                    nexusOnLocation = true;
+                    break;
+                }
+            }
+
+            //We do not own the base.
+            if (nexusOnLocation == false) continue;
+
+            std::vector<BWEM::Geyser*> gysers = base.Geysers();
+
+            for (const BWEM::Geyser* gyser : gysers)
+            {
+                const BWAPI::Unit unit = gyser->Unit();
+
+                if (unit && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser && 
+                    !alreadyUsingTiles(gyser->TopLeft(), unit->getType().tileWidth(), unit->getType().tileHeight(), true))
+                {
+                    return gyser->TopLeft();
+                }
+            }
+        }
+    }
+
+    return availableGyser;
+}
+
+BWAPI::TilePosition BuildingPlacer::findAvaliblePlacement(BWAPI::UnitType type)
+{
+    int distance = INT_MAX;
+    BWAPI::TilePosition closestDistance = BWAPI::TilePositions::Invalid;
+
+    for (BWEB::Block block : ProtoBot_Blocks)
+    {
+        std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
+
+        for (const BWAPI::TilePosition placement : placements)
+        {
+            const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
+
+            if (BWAPI::Broodwar->canBuildHere(placement, type)
+                && distanceToPlacement < distance
+                && !alreadyUsingTiles(placement, type.tileWidth(), type.tileHeight()))
+            {
+                distance = distanceToPlacement;
+                closestDistance = placement;
+            }
+        }
+    }
+
+    return closestDistance;
+}
+
 void BuildingPlacer::drawPoweredTiles()
 {
     /*for (int row = 0; row < poweredTiles.size(); row++)
@@ -147,143 +258,75 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
     {
         case BWAPI::UnitTypes::Protoss_Nexus:
         {
-            const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
-            const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
+            const BWAPI::TilePosition pos = findAvailableExpansion();
 
-            int distance = INT_MAX;
-            BWAPI::TilePosition closestDistance;
-
-            //This does not cover the case of a building being place on a tile but it should be good enough for now.
-            for (const BWEM::Area& area : theMap.Areas())
+            if (pos == BWAPI::TilePositions::Invalid)
             {
-                for (const BWEM::Base& base : area.Bases())
-                {
-                    if (base.Location() == BWAPI::Broodwar->self()->getStartLocation() || alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight())) continue;
-
-                    int distanceToNewBase = 0;
-                    const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
-
-                    if (distanceToNewBase == -1) continue;
-
-                    if (distanceToNewBase < distance)
-                    {
-                        distance = distanceToNewBase;
-                        closestDistance = base.Location();
-                    }
-                }
+                information.flag = PlacementInfo::NO_EXPANSIONS;
             }
-
-            //std::cout << "Closest Location at " << closestDistance.x << ", " << closestDistance.y << "\n";
-
-            information.position = BWAPI::Position(closestDistance);
-            information.flag = PlacementInfo::SUCCESS;
-            break;
+            else
+            {
+                information.flag = PlacementInfo::SUCCESS;
+                information.position = BWAPI::Position(pos);
+            }
         }
+        break;
         case BWAPI::UnitTypes::Protoss_Assimilator:
         {
-            for (const BWEM::Area& area : theMap.Areas())
+            const BWAPI::TilePosition pos = findAvailableGyser();
+
+            if (pos == BWAPI::TilePositions::Invalid)
             {
-                for (const BWEM::Base& base : area.Bases())
-                {
-                    if (base.Geysers().size() == 0) continue;
-
-                    BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(base.Location()),
-                        BWAPI::Position(32 * (base.Location().x + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth())), 32 * (base.Location().y + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight()))));
-
-                    bool nexusOnLocation = false;
-
-                    for (BWAPI::Unit unit : units)
-                    {
-                        if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
-                        {
-                            nexusOnLocation = true;
-                            break;
-                        }
-                    }
-
-                    //We do not own the base.
-                    if (nexusOnLocation == false) continue;
-
-                    bool gyserAvalible = false;
-                    std::vector<BWEM::Geyser *> gysers = base.Geysers();
-
-                    for (BWEM::Geyser* gyser : gysers)
-                    {
-                        BWAPI::Unit unit = gyser->Unit();
-
-                        if (unit && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
-                        {
-                            gyserAvalible = true;
-
-                            information.flag = PlacementInfo::SUCCESS;
-                            information.position = BWAPI::Position(gyser->TopLeft());
-                            return information;
-                            break;
-                        }
-                    }
-                }
+                information.flag = PlacementInfo::NO_GYSERS;
             }
-
-            information.flag = PlacementInfo::NO_GYSERS;
-            return information;
-            break;
+            else
+            {
+                information.flag = PlacementInfo::SUCCESS;
+                information.position = BWAPI::Position(pos);
+            }
         }
+        break;
         case BWAPI::UnitTypes::Protoss_Pylon:
         {
             BWAPI::TilePosition powerTilePosition = checkBuildingBlocks();
 
-            if (powerTilePosition != BWAPI::TilePositions::Invalid)
-            {
-                information.position = BWAPI::Position(powerTilePosition);
-                information.flag = PlacementInfo::SUCCESS;
-            }
-            else
+            if (powerTilePosition == BWAPI::TilePositions::Invalid)
             {
                 powerTilePosition = checkPowerReserveBlocks();
 
-                if (powerTilePosition != BWAPI::TilePositions::Invalid)
+                if (powerTilePosition == BWAPI::TilePositions::Invalid)
+                {
+                    information.flag = PlacementInfo::NO_BLOCKS;
+                }
+                else
                 {
                     information.position = BWAPI::Position(powerTilePosition);
                     information.flag = PlacementInfo::SUCCESS;
                 }
-                else
-                {
-                    information.flag = PlacementInfo::NO_BLOCKS;
-                }
             }
-
-            break;
+            else
+            {
+                information.position = BWAPI::Position(powerTilePosition);
+                information.flag = PlacementInfo::SUCCESS;
+            }
         }
+        break;
         default:
         {
-            int distance = INT_MAX;
-            BWAPI::TilePosition closestDistance;
+            const BWAPI::TilePosition pos = findAvaliblePlacement(type);
 
-            std::vector<BWEB::Block> blocks = BWEB::Blocks::getBlocks();
-
-            for (BWEB::Block block : blocks)
+            if (pos == BWAPI::TilePositions::Invalid)
             {
-                std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
+                information.flag = PlacementInfo::NO_PLACEMENTS;
 
-                for (const BWAPI::TilePosition placement : placements)
-                {
-                    const int distanceToPlacement = BWAPI::Broodwar->self()->getStartLocation().getApproxDistance(placement);
-
-                    if (BWAPI::Broodwar->canBuildHere(placement, type)
-                        && distanceToPlacement < distance
-                        && !alreadyUsingTiles(placement, type.tileWidth(), type.tileHeight()))
-                    {
-                        //std::cout << "Found position to place\n";
-                        distance = distanceToPlacement;
-                        closestDistance = placement;
-                    }
-                }
             }
-
-            information.flag = PlacementInfo::SUCCESS;
-            information.position = BWAPI::Position(closestDistance);
-            break;
+            else
+            {
+                information.flag = PlacementInfo::SUCCESS;
+                information.position = BWAPI::Position(pos);
+            }
         }
+        break;
     }
 
     return information;
