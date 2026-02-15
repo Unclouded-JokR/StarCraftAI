@@ -138,6 +138,8 @@ void BuildManager::onFrame() {
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
                     }
 
+                    if (pathToLocation.positions.empty()) continue;
+
                     Builder temp = Builder(workerAvalible, request.unit, placementInfo.position, pathToLocation);
                     builders.push_back(temp);
 
@@ -241,13 +243,15 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
         if (it->getUnitReference()->getID() == unit->getID())
         {
             const BWAPI::Unit unitAvalible = getUnitToBuild(it->requestedPositionToBuild);
-            it->setUnitReference(unitAvalible);
-            break;
+
+            if (unitAvalible != nullptr)
+            {
+                it->setUnitReference(unitAvalible);
+                break;
+            }
         }
-        else
-        {
-            it++;
-        }
+
+        it++;
     }
 
     if (unit->getPlayer() != BWAPI::Broodwar->self())
@@ -258,7 +262,7 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
     if (!unitType.isBuilding()) return;
 
     //Check if a building has been killed
-    for (BWAPI::Unit building : buildings)
+    for (const BWAPI::Unit building : buildings)
     {
         if (building == unit)
         {
