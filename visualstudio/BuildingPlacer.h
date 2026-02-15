@@ -15,6 +15,14 @@
 //Medium Blocks have 1 large placement or 1/2 medium placements.
 //Small Blocks are anything otherwise.
 
+struct PlacementInfo
+{
+	enum PlacementFlag { SUCCESS, NO_POWER, NO_BLOCKS, NO_GYSERS, NO_PLACEMENTS, DEFAULT };
+	PlacementFlag flag = PlacementFlag::DEFAULT;
+
+	BWAPI::Position position = BWAPI::Positions::Invalid;
+};
+
 struct BlockData {
 
 	enum BlockSize {LARGE, MEDIUM, SUPPLY, UNDEFINED};
@@ -64,7 +72,7 @@ public:
 	int Used_MediumBuildingPlacements;
 
 	BuildingPlacer();
-	BWAPI::Position getPositionToBuild(BWAPI::UnitType);
+	PlacementInfo getPositionToBuild(BWAPI::UnitType);
 	bool alreadyUsingTiles(BWAPI::TilePosition, int, int);
 	bool checkPower(BWAPI::TilePosition, BWAPI::UnitType);
 	BWAPI::TilePosition checkBuildingBlocks();

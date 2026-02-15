@@ -71,11 +71,11 @@ void BuildManager::onFrame() {
                 }
                 else
                 {
-                    const BWAPI::Position locationToPlace = buildingPlacer.getPositionToBuild(request.unit);
+                    const PlacementInfo placementInfo = buildingPlacer.getPositionToBuild(request.unit);
 
-                    if (locationToPlace == BWAPI::Positions::Invalid) continue;
+                    if (placementInfo.position == BWAPI::Positions::Invalid) continue;
 
-                    const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
+                    const BWAPI::Unit workerAvalible = getUnitToBuild(placementInfo.position);
 
                     if (workerAvalible == nullptr) continue;
 
@@ -84,23 +84,24 @@ void BuildManager::onFrame() {
                     if (request.unit.isResourceDepot())
                     {
                         std::cout << "Trying to build Nexus\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
                     }
                     else if(request.unit.isRefinery())
                     {
                         //std::cout << "Trying to build assimlator\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position, true);
                     }
                     else
                     {
                         //std::cout << "Trying to build regular building\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
                     }
 
-                    Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
+                    Builder temp = Builder(workerAvalible, request.unit, placementInfo.position, pathToLocation);
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
+                    
                 }
                 break;
             }
