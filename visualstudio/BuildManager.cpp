@@ -35,7 +35,17 @@ void BuildManager::onStart()
 void BuildManager::onFrame() {
     for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
     {
-        (it->state == ResourceRequest::State::Accepted_Completed) ? it = resourceRequests.erase(it) : it++;
+        if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
+        {
+            if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
+            if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+
+            it = resourceRequests.erase(it);
+        }
+        else
+        {
+            it++;
+        }
     }
 
     spenderManager.OnFrame(resourceRequests);
@@ -54,7 +64,8 @@ void BuildManager::onFrame() {
             {
                 if (request.requestedBuilding->canTrain(request.unit) &&
                     !request.requestedBuilding->isTraining() &&
-                    request.requestedBuilding->isCompleted())
+                    request.requestedBuilding->isCompleted() &&
+                    request.requestedBuilding->isPowered())
                 {
                     request.requestedBuilding->train(request.unit);
                     request.state = ResourceRequest::State::Accepted_Completed;
@@ -73,17 +84,47 @@ void BuildManager::onFrame() {
                 {
                     const PlacementInfo placementInfo = buildingPlacer.getPositionToBuild(request.unit);
 
-                    if (placementInfo.position == BWAPI::Positions::Invalid) continue;
+                    if (placementInfo.position == BWAPI::Positions::Invalid)
+                    {
+                        const PlacementInfo::PlacementFlag flag_info = placementInfo.flag;
+
+                        switch (flag_info)
+                        {
+                            case PlacementInfo::NO_POWER:
+                                //should create a new pylon request
+                                std::cout << "FAILED: NO POWER\n";
+                                break;
+                            case PlacementInfo::NO_BLOCKS:
+                                //Wait for a bit and kill the request if no blocks are added
+                                std::cout << "FAILED: NO BLOCKS\n";
+                                break;
+                            case PlacementInfo::NO_GYSERS:
+                                //Shouldnt happen but okay
+                                std::cout << "FAILED: NO GYSERS\n";
+                                break;
+                            case PlacementInfo::NO_PLACEMENTS:
+                                //Wait for a bit and kill the request if no placements are added.
+                                std::cout << "FAILED: NO PLACEMENTS\n";
+                                break;
+                            case PlacementInfo::NO_EXPANSIONS:
+                                //kill the expansion request.
+                                std::cout << "FAILED: NO EXPANSION\n";
+                                break;
+                        }
+
+                        request.attempts++;
+
+                        continue;
+                    }
 
                     const BWAPI::Unit workerAvalible = getUnitToBuild(placementInfo.position);
 
                     if (workerAvalible == nullptr) continue;
 
-                    //For now dont use Astar to get path to location
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
-                        std::cout << "Trying to build Nexus\n";
+                        //std::cout << "Trying to build Nexus\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
                     }
                     else if(request.unit.isRefinery())
@@ -109,7 +150,8 @@ void BuildManager::onFrame() {
             {
                 if (request.requestedBuilding->canUpgrade(request.upgrade) &&
                     !request.requestedBuilding->isUpgrading() &&
-                    request.requestedBuilding->isCompleted())
+                    request.requestedBuilding->isCompleted() &&
+                    request.requestedBuilding->isPowered())
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
@@ -120,7 +162,8 @@ void BuildManager::onFrame() {
             {
                 if (request.requestedBuilding->canResearch(request.upgrade) &&
                     !request.requestedBuilding->isResearching() &&
-                    request.requestedBuilding->isCompleted())
+                    request.requestedBuilding->isCompleted() &&
+                    request.requestedBuilding->isPowered())
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;

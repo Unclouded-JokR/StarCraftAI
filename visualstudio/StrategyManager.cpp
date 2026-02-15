@@ -319,7 +319,7 @@ Action StrategyManager::onFrame()
 	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
 
 	//4 Gateways per nexus should be built
-	saturatedNexus = (ProtoBot_buildings.gateway / 2);
+	saturatedNexus = (ProtoBot_buildings.gateway / 4);
 
 	std::vector<BWAPI::Position> enemyBaselocations;
 	for (const auto [unit, building] : enemyBuildingInfo)

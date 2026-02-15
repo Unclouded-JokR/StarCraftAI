@@ -48,7 +48,7 @@ class BuildingPlacer
 {
 private:
 	//Might not need these and just want to store the info in BlockData
-	std::vector<std::vector<int>> poweredTiles;
+	//std::vector<std::vector<int>> poweredTiles;
 
 	std::map<BWAPI::TilePosition, BlockData> Block_Information;
 

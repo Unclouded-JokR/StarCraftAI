@@ -26,25 +26,26 @@ bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, 
     return false;
 }
 
+//Shouldnt really need this since we are only checking blocks that are powered.
 bool BuildingPlacer::checkPower(BWAPI::TilePosition location, BWAPI::UnitType buildingType)
 {
-    const int x_location = location.x;
-    const int y_location = location.y;
+    //const int x_location = location.x;
+    //const int y_location = location.y;
 
-    float tilesPowered = 0.0;
+    //float tilesPowered = 0.0;
 
-    for (int row = y_location; row < x_location + buildingType.tileHeight(); row++)
-    {
-        for (int column = x_location; column < x_location + buildingType.tileWidth(); column++)
-        {
-            if (poweredTiles[row][column] >= 1) tilesPowered++;
-        }
-    }
+    //for (int row = y_location; row < x_location + buildingType.tileHeight(); row++)
+    //{
+    //    for (int column = x_location; column < x_location + buildingType.tileWidth(); column++)
+    //    {
+    //        if (poweredTiles[row][column] >= 1) tilesPowered++;
+    //    }
+    //}
 
-    const float totalTiles = float(buildingType.tileWidth() * buildingType.tileHeight());
+    //const float totalTiles = float(buildingType.tileWidth() * buildingType.tileHeight());
 
-    //BWEB should have us covered for block placement, since it seems like powering units isnt consistent with the amount of tiles a unit has.
-    if (tilesPowered / totalTiles > .5) return true;
+    ////BWEB should have us covered for block placement, since it seems like powering units isnt consistent with the amount of tiles a unit has.
+    //if (tilesPowered / totalTiles > .5) return true;
 
     return false;
 }
@@ -188,6 +189,7 @@ BWAPI::TilePosition BuildingPlacer::findAvailableGyser()
     return availableGyser;
 }
 
+//Need to possibly consider case when we have placements but we just dont have power there.
 BWAPI::TilePosition BuildingPlacer::findAvaliblePlacement(BWAPI::UnitType type)
 {
     int distance = INT_MAX;
@@ -195,6 +197,10 @@ BWAPI::TilePosition BuildingPlacer::findAvaliblePlacement(BWAPI::UnitType type)
 
     for (BWEB::Block block : ProtoBot_Blocks)
     {
+        BlockData& data = Block_Information[block.getTilePosition()];
+
+        if (data.Power_State != BlockData::FULLY_POWERED) continue;
+
         std::set<BWAPI::TilePosition> placements = block.getPlacements(type);
 
         for (const BWAPI::TilePosition placement : placements)
@@ -242,7 +248,7 @@ void BuildingPlacer::drawPoweredTiles()
             BWAPI::Broodwar->drawTextMap(BWAPI::Position((block.getTilePosition().x * 32) + 16, (block.getTilePosition().y * 32) + 16), "Supply\nReserve");
         }
 
-        if (data.Power_State == BlockData::FULLY_POWERED) //BWAPI::Broodwar->drawBoxMap(BWAPI::Position(block.getTilePosition()), BWAPI::Position((block.getTilePosition().x + block.width()), (block.getTilePosition().y + block.height())), BWAPI::Colors::Blue, false);
+        if (data.Power_State == BlockData::FULLY_POWERED)
         {
             BWAPI::Broodwar->drawBoxMap(BWAPI::Position(block.getTilePosition()), BWAPI::Position((block.getTilePosition().x + block.width()) * 32 + 1, (block.getTilePosition().y + block.height()) * 32 + 1), BWAPI::Colors::Blue, false);
         }
@@ -338,7 +344,7 @@ void BuildingPlacer::onStart()
     mapWidth = BWAPI::Broodwar->mapWidth();
     mapHeight = BWAPI::Broodwar->mapHeight();
 
-    poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
+    //poweredTiles.assign(mapHeight, std::vector<int>(mapWidth, 0));
     Block_Information.clear();
     AreasOccupied.clear();
     ProtoBot_Blocks.clear();
@@ -517,7 +523,7 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
     {
         std::cout << "Pylon destroyed at location: " << unit->getTilePosition() << "\n";
 
-        const BWAPI::TilePosition location = unit->getTilePosition();
+        /*const BWAPI::TilePosition location = unit->getTilePosition();
         const int mapX_location = location.x;
         const int mapY_location = location.y;
 
@@ -537,7 +543,7 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
                 if (poweredTiles[poweredRow_index][poweredColumn_index] < 0)
                     poweredTiles[poweredRow_index][poweredColumn_index] = 0;
             }
-        }
+        }*/
 
         for (BWEB::Block block : ProtoBot_Blocks)
         {
