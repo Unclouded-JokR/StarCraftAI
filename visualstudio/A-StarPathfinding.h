@@ -51,9 +51,18 @@ struct Node {
 	}
 };
 
-struct NodeHash {
+// Hash for storing BWAPI::TilePositions in an unordered_set 
+struct TilePositionHash {
 	std::size_t operator()(const BWAPI::TilePosition& tile) const {
 		return std::hash<int>()(0.5 * (tile.x + tile.y) * (tile.x + tile.y + 1) + tile.y);
+	}
+};
+
+// Hash for storing AreaId pairs as keys in an unordered_map
+// Using a regular std::map for now due to a linker errors thats happening with the unordered_map
+struct AreaIdHash {
+	std::size_t operator()(const std::pair<BWEM::Area::id, BWEM::Area::id>& v) const {
+		return std::hash<int>{}(v.first) ^ std::hash<int>{}(v.second);
 	}
 };
 
@@ -71,10 +80,15 @@ class Path {
 			this->positions = vector<BWAPI::Position>();
 			this->distance = 0;
 		};
+
+		bool operator ==(const Path& path) {
+			return this->positions == path.positions;
+		}
 };
 
 class AStar {
 	private:
+		static map<pair<BWEM::Area::id, BWEM::Area::id>, Path> AreaPathCache;
 		static int TileToIndex(BWAPI::TilePosition tile);
 		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);
@@ -85,4 +99,5 @@ class AStar {
 	public:
 		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint=false);
 		static void drawPath(Path path);
+		static void fillAreaPathCache();
 };

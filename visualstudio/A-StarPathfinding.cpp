@@ -1,9 +1,13 @@
 #include "A-StarPathfinding.h"
 #include <queue>
 
+// Global variables used to debug path generation
 vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
 vector<BWAPI::TilePosition> earlyExpansionTiles;
+
+// Initializing static variable AreaPathCache
+map<pair<BWEM::Area::id, BWEM::Area::id>, Path> AStar::AreaPathCache;
 
 // Generates path from start to end using A* pathfinding algorithm
 // IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
@@ -37,56 +41,12 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	BWAPI::TilePosition start = BWAPI::TilePosition(_start);
 	const BWAPI::TilePosition end = BWAPI::TilePosition(_end);
 
-	// Optimization using subpath generation with BWEM
-	// Checks BWEM for optimal path of chokepoints from start's area to end's area
-	// Path generation is done to find subpaths between each chokepoint
-	// Reduces search space for efficiency :)
-	const BWEM::Area* area1 = nullptr;
-	const BWEM::Area* area2 = nullptr;
-	bool subPathFound = false;
-	BWEM::CPPath optimalChokepointPath;
-
-	if (!bwem_map.Areas().empty()) {
-		area1 = bwem_map.GetNearestArea(start);
-		area2 = bwem_map.GetNearestArea(end);
-	}
-	if ((area1 != nullptr && area2 != nullptr) && area1 != area2) {
-		cout << "Subpath found. Generating subpaths between chokepoints" << endl;
-		subPathFound = true;
-		optimalChokepointPath = bwem_map.GetPath(_start, _end);
-
-		// Start -> first chokepoint
-		Path firstPath = generateSubPath(_start, unitType, BWAPI::Position(optimalChokepointPath[0]->Center()));
-		subPathPositions.insert(subPathPositions.end(), firstPath.positions.begin(), firstPath.positions.end());
-		if (firstPath.positions.empty()) {
-			cout << "No Path Found : " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
-			return Path();
-		}
-
-		// Chokepoints -> chokepoints
-		for (int i = 0; i < optimalChokepointPath.size() - 1; i++) {
-			const BWAPI::Position pos1 = BWAPI::Position(optimalChokepointPath[i]->Center());
-			const BWAPI::Position pos2 = BWAPI::Position(optimalChokepointPath[i + 1]->Center());
-
-			Path subPath = generateSubPath(pos1, unitType, pos2);
-			if (subPath.positions.empty()) {
-				cout << "No Path Found : " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
-				return Path();
-			}
-
-			finalDistance += subPath.distance;
-			subPathPositions.insert(subPathPositions.end(), subPath.positions.begin(), subPath.positions.end());
-		}
-
-		start = BWAPI::TilePosition(subPathPositions.back());
-	}
-
 	// Optimization using priority_queue for open set
 	// The priority_queue will always have the node with the lowest fCost at the top
 	// No need for O(N) lookup time :)
 	priority_queue<Node, vector<Node>, greater<Node>> openSet;
 
-	unordered_set<BWAPI::TilePosition, NodeHash> openSetNodes;
+	unordered_set<BWAPI::TilePosition, TilePositionHash> openSetNodes;
 
 	// Optimization using array for closed set
 	// O(1) lookup time :)
@@ -183,19 +143,9 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				prevPos = currentPos;
 			}
 
-			if (!subPathFound && positions.size() > 1) {
-				positions.push_back(_start);
-				finalDistance += prevPos.getApproxDistance(_start);
-			}
 
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(positions.begin(), positions.end());
-			if (subPathFound) {
-				subPathPositions.insert(subPathPositions.end(), positions.begin(), positions.end());
-				totalTimer.stop();
-				cout << "Milliseconds spent generating path: " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
-				return Path(subPathPositions, finalDistance);
-			}
 
 			endTimer.stop();
 			cout << "Time spent backtracking + smoothing path: " << endTimer.getElapsedTimeInMilliSec() << endl;
@@ -302,7 +252,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 	// No need for O(N) lookup time :)
 	priority_queue<Node, vector<Node>, greater<Node>> openSet;
 
-	unordered_set<BWAPI::TilePosition, NodeHash> openSetNodes;
+	unordered_set<BWAPI::TilePosition, TilePositionHash> openSetNodes;
 
 	// Optimization using array for closed set
 	// O(1) lookup time :)
@@ -467,6 +417,32 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 	}
 
 	return Path();
+}
+
+void AStar::fillAreaPathCache() {
+	AreaPathCache.clear();
+
+	vector<pair<BWEM::Area::id, BWEM::Area::id>> pairs;
+	//Finding possible combinations of areas
+	for (int i = 0; i < bwem_map.Areas().size(); i++) {
+		for (int j = i+1; j < bwem_map.Areas().size()-1; j++) {
+			const BWEM::Area& area1 = bwem_map.Areas().at(i);
+			const BWEM::Area& area2 = bwem_map.Areas().at(j);
+
+			if (!area1.AccessibleFrom(&area2)){
+				continue;
+			}
+			
+			if (area1.Id() < area2.Id()) {
+				cout << "Area pair: " << "(" << area1.Id() << "," << area2.Id() << ")" << endl;
+				pairs.push_back(make_pair(area1.Id(), area2.Id()));
+			}
+			else {
+				cout << "Area pair: " << "(" << area2.Id() << "," << area1.Id() << ")" << endl;
+				pairs.push_back(make_pair(area2.Id(), area1.Id()));
+			}
+		}
+	}
 }
 
 int AStar::TileToIndex(BWAPI::TilePosition tile) {

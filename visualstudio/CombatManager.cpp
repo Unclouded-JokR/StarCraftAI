@@ -7,7 +7,7 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-
+	AStar::fillAreaPathCache();
 }
 
 void CombatManager::onFrame() {
