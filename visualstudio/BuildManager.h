@@ -28,57 +28,52 @@ struct ResourceRequest
     BWAPI::UpgradeType upgrade = BWAPI::UpgradeTypes::None;
     BWAPI::TechType tech = BWAPI::TechTypes::None;
 
-    // Optional: force a building to be placed at a specific TilePosition (eg. ramp pylon / wall pieces)
-    BWAPI::TilePosition forcedTile = BWAPI::TilePositions::Invalid;
-    bool useForcedTile = false;
-
     BWAPI::Unit scoutToPlaceBuilding = nullptr; //Used if a scout requests a gas steal
     bool isCheese = false;
 
     //For now buildings will request to make units but we should remove this later
     //The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
     BWAPI::Unit requestedBuilding = nullptr;
+
+    // Build order / placement helpers
+    bool fromBuildOrder = false;
+    BWAPI::TilePosition forcedTile = BWAPI::TilePositions::Invalid;
+    bool useForcedTile = false;
+
     int priority;
 };
 
-/// Build Order data structures
-enum class BuildStepType
-{
-    Build,
-    ScoutWorker,
-    SupplyRampNatural,   // place a supply building on the natural ramp using BWEB
-    NaturalWall          // create/enqueue a natural wall using BWEB
-};
 
-enum class BuildTriggerType
-{
-    Immediately,
-    AtSupply
-};
+enum class BuildTriggerType { Immediately, AtSupply };
 
 struct BuildTrigger
 {
     BuildTriggerType type = BuildTriggerType::Immediately;
-    int supply = 0; // only used for AtSupply
+    int value = 0; // supply for AtSupply
+};
+
+enum class BuildStepType
+{
+    Build,               // build a building (unit field)
+    ScoutWorker,         // call commanderReference->getUnitToScout()
+    SupplyRampNatural,   // place a pylon on/near natural ramp using findNaturalRampPlacement
+    NaturalWall          // create a wall at natural choke using BWEB
 };
 
 struct BuildOrderStep
 {
-    BuildStepType stepType = BuildStepType::Build;
+    BuildStepType type = BuildStepType::Build;
+    BWAPI::UnitType unit = BWAPI::UnitTypes::None; // used for Build
+    int count = 1;                                 // used for Build
     BuildTrigger trigger;
-
-    BWAPI::UnitType unit = BWAPI::UnitTypes::None; // for Build steps
 };
 
 struct BuildOrder
 {
-    // Note: user requested these fields to exist in the struct.
     int name = 0;
     int id = 0;
 
-    // Extra metadata for usability
     BWAPI::Race vsRace = BWAPI::Races::Unknown;
-    std::string debugName;
 
     std::vector<BuildOrderStep> steps;
 };
@@ -110,8 +105,26 @@ public:
     void onUnitDiscover(BWAPI::Unit);
 
     //Spender Manager Request methods
+    // External requests from StrategyManager / commander
     void buildBuilding(BWAPI::UnitType);
     void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
+
+    // Build order lifecycle
+    void initBuildOrdersOnStart();
+    void selectBuildOrderAgainstRace(BWAPI::Race enemyRace);
+    void selectRandomBuildOrder();
+
+    void runBuildOrderOnFrame();
+    bool isBuildOrderActive() const;
+    void overrideBuildOrder(int buildOrderId);
+    void clearBuildOrder(bool clearPendingRequests = true);
+
+    // Placement helpers
+    BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
+    bool enqueueSupplyAtNaturalRamp();
+    bool enqueueNaturalWallAtChoke();
+    BWAPI::TilePosition findNaturalChokePylonTile() const;
+    void resetNaturalWallPlan();
     void trainUnit(BWAPI::UnitType, BWAPI::Unit);
     void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
 
@@ -129,30 +142,22 @@ public:
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
 
-    // Build Orders
-    void initBuildOrdersOnStart();
-    void selectRandomBuildOrder();
-    void overrideBuildOrder(int buildOrderId); // clear remaining steps + switch
-    void clearBuildOrderAndQueue(bool keepActiveBuilders = true);
-    std::string getActiveBuildOrderName() const { return activeBuildOrderName; }
-
     void pumpUnit();
-
 private:
-    // Build order state
     std::vector<BuildOrder> buildOrders;
-    const BuildOrder* activeBuildOrder = nullptr;
-    size_t activeStepIndex = 0;
-    std::string activeBuildOrderName;
+    int activeBuildOrderIndex = -1;
+    size_t activeBuildOrderStep = 0;
+    bool buildOrderActive = false;
 
-    // Helpers
-    bool isTriggerMet(const BuildTrigger& t) const;
-    void processBuildOrderSteps();
-    void enqueueStep(const BuildOrderStep& s);
-    int countMyUnits(BWAPI::UnitType type) const;
-    int countPlanned(BWAPI::UnitType type) const;
-    BWAPI::TilePosition findSupplyRampBlockSlotMain() const;
-    void enqueueSupplyRamp(BWAPI::UnitType supplyType);
-    void enqueueNaturalWallProtoss();
-    bool enqueueWallFromLayout(BWEB::Wall* wall, const std::vector<BWAPI::UnitType>& buildings);
+    // Natural wall planning cache
+    bool naturalWallPlanned = false;
+    bool naturalWallPylonEnqueued = false;
+    bool naturalWallGatewaysEnqueued = false;
+    BWAPI::TilePosition naturalWallPylonTile = BWAPI::TilePositions::Invalid;
+    std::vector<BWAPI::TilePosition> naturalWallGatewayTiles;
+
+    bool isRestrictedTechBuilding(BWAPI::UnitType type) const;
+    std::string buildOrderNameToString(int name) const;
+    bool enqueueBuildOrderBuilding(BWAPI::UnitType type, int count);
+
 };

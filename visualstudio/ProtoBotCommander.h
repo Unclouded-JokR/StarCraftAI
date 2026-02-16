@@ -108,8 +108,11 @@ public:
 	bool checkWorkerIsConstructing(BWAPI::Unit);
 	int checkAvailableSupply();
 
-	//Scouting
+	// Scouting Manager Methods
 	BWAPI::Unit getUnitToScout();
+
+	// Strategy Manager Methods
+	bool shouldGasSteal();
 
 private:
 	EnemyLocations enemy_;

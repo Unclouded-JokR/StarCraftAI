@@ -97,6 +97,7 @@ private:
     int  maxZealotScouts_{ 2 };
     int  maxDragoonScouts_{ 3 };
     int  maxObserverScouts_{ 4 };
+    int proxyPatrolZealotId_ = -1;
 
     std::vector<BWAPI::Unit> combatZealots_;
     std::vector<BWAPI::Unit> combatDragoons_;

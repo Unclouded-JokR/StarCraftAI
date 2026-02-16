@@ -517,3 +517,9 @@ bool ProtoBotCommander::isDetectorThreatened(const BWAPI::Position& pos) const
 	return r.detectorThreat > 0;
 }
 
+bool ProtoBotCommander::shouldGasSteal()
+{
+	bool const enable = strategyManager.shouldGasSteal();
+
+	return enable;
+}
