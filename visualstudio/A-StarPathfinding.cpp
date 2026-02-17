@@ -431,13 +431,10 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 void AStar::fillAreaPathCache() {
 	AreaPathCache.clear();
 
-	unordered_map<const BWEM::Area::id, const BWEM::Area&, AreaIdHash> areaMap;
 	//Finding possible combinations of areas
-	const vector<BWEM::Area> areas = bwem_map.Areas();
+	const vector<BWEM::Area>& areas = bwem_map.Areas();
 
 	for (int i = 0; i < areas.size(); i++) {
-		areaMap.insert(make_pair(areas.at(i).Id(), areas.at(i)));
-
 		for (int j = i + 1; j < areas.size(); j++) {
 			const BWEM::Area& area1 = areas.at(i);
 			const BWEM::Area& area2 = areas.at(j);
@@ -448,14 +445,45 @@ void AStar::fillAreaPathCache() {
 			if (!area1.AccessibleFrom(&area2) || find(neighbours.begin(), neighbours.end(), &area2) != neighbours.end()) {
 				continue;
 			}
+
+			const vector<const BWEM::ChokePoint*> chokepoints1 = area1.ChokePoints();
+			const vector<const BWEM::ChokePoint*> chokepoints2 = area2.ChokePoints();
+
+			int closest = INT_MAX;
+			pair< BWAPI::WalkPosition, BWAPI::WalkPosition> closestPair;
+
+			for (const BWEM::ChokePoint* cp1 : chokepoints1) {
+				for (const BWEM::ChokePoint* cp2 : chokepoints2) {
+					const BWAPI::WalkPosition cp1_center = cp1->Center();
+					const BWAPI::WalkPosition cp2_center = cp2->Center();
+
+					int dist = cp1_center.getApproxDistance(cp2_center);
+					if (dist < closest) {
+						closest = dist;
+						closestPair = make_pair(cp1_center, cp2_center);
+					}
+				}
+			}
+
+			// After grabbing the closest chokepoint positions between both areas, create path taking shortest path
+			const BWEM::CPPath smallestCPPath = bwem_map.GetPath(BWAPI::Position(closestPair.first), BWAPI::Position(closestPair.second));
+
+			vector<BWAPI::Position> finalPositions;
+			int finalDistance = 0;
+			for (int k = 0; k < smallestCPPath.size()-1; k++) {
+				Path subPath = GeneratePath(BWAPI::Position(smallestCPPath.at(k)->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(smallestCPPath.at(k + 1)->Center()));
+				finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
+				finalDistance += subPath.distance;
+			}
 			
+			Path finalPath = Path(finalPositions, finalDistance);
+
+			cout << "Area pair " << "(" << area2.Id() << "," << area1.Id() << ")" << " generated with path size: " << finalPath.positions.size() << endl;
 			if (area1.Id() < area2.Id()) {
-				cout << "Area pair: " << "(" << area1.Id() << "," << area2.Id() << ")" << endl;
-				
+				AreaPathCache.at(make_pair(area1.Id(), area2.Id())) = finalPath;
 			}
 			else {
-				cout << "Area pair: " << "(" << area2.Id() << "," << area1.Id() << ")" << endl;
-				
+				AreaPathCache.at(make_pair(area2.Id(), area1.Id())) = finalPath;
 			}
 		}
 	}
