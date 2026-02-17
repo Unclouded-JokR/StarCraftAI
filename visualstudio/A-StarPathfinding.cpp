@@ -67,6 +67,11 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 	bool earlyExpansion = false;
 	while (openSet.size() > 0) {
+		// Time limit for path generations
+		if (totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+			return Path();
+		}
+
 		if (!earlyExpansion) {
 			currentNode = openSet.top();
 			openSet.pop();
@@ -273,6 +278,10 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 
 	bool earlyExpansion = false;
 	while (openSet.size() > 0) {
+		if (subPathTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+			return Path();
+		}
+
 		if (!earlyExpansion) {
 			currentNode = openSet.top();
 			openSet.pop();
@@ -422,24 +431,31 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 void AStar::fillAreaPathCache() {
 	AreaPathCache.clear();
 
-	vector<pair<BWEM::Area::id, BWEM::Area::id>> pairs;
+	unordered_map<const BWEM::Area::id, const BWEM::Area&, AreaIdHash> areaMap;
 	//Finding possible combinations of areas
-	for (int i = 0; i < bwem_map.Areas().size(); i++) {
-		for (int j = i+1; j < bwem_map.Areas().size()-1; j++) {
-			const BWEM::Area& area1 = bwem_map.Areas().at(i);
-			const BWEM::Area& area2 = bwem_map.Areas().at(j);
+	const vector<BWEM::Area> areas = bwem_map.Areas();
 
-			if (!area1.AccessibleFrom(&area2)){
+	for (int i = 0; i < areas.size(); i++) {
+		areaMap.insert(make_pair(areas.at(i).Id(), areas.at(i)));
+
+		for (int j = i + 1; j < areas.size(); j++) {
+			const BWEM::Area& area1 = areas.at(i);
+			const BWEM::Area& area2 = areas.at(j);
+
+			const vector<const BWEM::Area*> neighbours = area1.AccessibleNeighbours();
+
+			// Avoid areas that cannot reach each other or areas that are already next to each other
+			if (!area1.AccessibleFrom(&area2) || find(neighbours.begin(), neighbours.end(), &area2) != neighbours.end()) {
 				continue;
 			}
 			
 			if (area1.Id() < area2.Id()) {
 				cout << "Area pair: " << "(" << area1.Id() << "," << area2.Id() << ")" << endl;
-				pairs.push_back(make_pair(area1.Id(), area2.Id()));
+				
 			}
 			else {
 				cout << "Area pair: " << "(" << area2.Id() << "," << area1.Id() << ")" << endl;
-				pairs.push_back(make_pair(area2.Id(), area1.Id()));
+				
 			}
 		}
 	}

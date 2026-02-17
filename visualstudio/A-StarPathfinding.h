@@ -5,7 +5,8 @@
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
 #define DEBUG_DRAW_GENERATION true
-#define HEURISTIC_WEIGHT 2
+#define HEURISTIC_WEIGHT 2.0
+#define TIME_LIMIT_MS 50.0
 
 using namespace std;
 namespace {
@@ -60,9 +61,16 @@ struct TilePositionHash {
 
 // Hash for storing AreaId pairs as keys in an unordered_map
 // Using a regular std::map for now due to a linker errors thats happening with the unordered_map
-struct AreaIdHash {
+struct AreaIdPairHash {
 	std::size_t operator()(const std::pair<BWEM::Area::id, BWEM::Area::id>& v) const {
 		return std::hash<int>{}(v.first) ^ std::hash<int>{}(v.second);
+	}
+};
+
+// Hash used for storing AreaId, Area pairs
+struct AreaIdHash {
+	std::size_t operator()(const BWEM::Area::id v) const {
+		return std::hash<int>{}(v);
 	}
 };
 

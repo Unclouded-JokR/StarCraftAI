@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////
 //
 // This file is part of the BWEM Library.
 // BWEM is free software, licensed under the MIT/X11 License. 
@@ -132,6 +132,7 @@ public:
 	Map *							GetMap() const;
 
 	Area &							operator=(const Area &) = delete;
+	bool							operator==(const Area& other){ return this->Id() == other.Id(); }
 
 ////////////////////////////////////////////////////////////////////////////
 //	Details: The functions below are used by the BWEM's internals
