@@ -11,6 +11,8 @@
 #include "BuildingPlacer.h"
 #include "Builder.h"
 #include "SpenderManager.h"
+#define FRAMES_BEFORE_TRYAGAIN 72
+#define MAX_ATTEMPTS 3
 
 class ProtoBotCommander;
 class NexusEconomy;
@@ -35,6 +37,9 @@ struct ResourceRequest
     //The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
     BWAPI::Unit requestedBuilding = nullptr;
 
+    //Use this to try requests again and see if we need to kill it.
+    int framesSinceLastCheck = 0;
+    int attempts = 0;
     // Build order / placement helpers
     bool fromBuildOrder = false;
     BWAPI::TilePosition forcedTile = BWAPI::TilePositions::Invalid;

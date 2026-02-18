@@ -72,6 +72,7 @@ void BuildManager::onStart()
     buildOrders.clear();
     activeBuildOrderIndex = -1;
     activeBuildOrderStep = 0;
+    //Make false at the start of a game.
     buildOrderActive = false;
     buildOrderCompleted = false;
 
@@ -89,14 +90,24 @@ void BuildManager::onStart()
 void BuildManager::onFrame() {
     for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
     {
-        (it->state == ResourceRequest::State::Accepted_Completed) ? it = resourceRequests.erase(it) : it++;
+        if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
+        {
+            if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
+            if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+
+            it = resourceRequests.erase(it);
+        }
+        else
+        {
+            it++;
+        }
     }
 
     // Execute build order steps (adds requests gradually, try to avoid expensive queue building)
     runBuildOrderOnFrame();
 
     spenderManager.OnFrame(resourceRequests);
-    buildingPlacer.drawPoweredTiles();
+    //buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -111,7 +122,8 @@ void BuildManager::onFrame() {
             {
                 if (request.requestedBuilding->canTrain(request.unit) &&
                     !request.requestedBuilding->isTraining() &&
-                    request.requestedBuilding->isCompleted())
+                    request.requestedBuilding->isCompleted() &&
+                    request.requestedBuilding->isPowered())
                 {
                     request.requestedBuilding->train(request.unit);
                     request.state = ResourceRequest::State::Accepted_Completed;
@@ -127,82 +139,65 @@ void BuildManager::onFrame() {
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
                 }
                 else
-                {
-                    
-BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
+                {  
+                    const PlacementInfo placementInfo = buildingPlacer.getPositionToBuild(request.unit);
 
-if (request.useForcedTile)
-{
-    tileToPlace = request.forcedTile;
+                    if (placementInfo.position == BWAPI::Positions::Invalid)
+                    {
+                        const PlacementInfo::PlacementFlag flag_info = placementInfo.flag;
 
-    // If forced tile is out of bounds, drop it
-    if (!tileToPlace.isValid()
-        || tileToPlace.x < 0 || tileToPlace.y < 0
-        || (tileToPlace.x + request.unit.tileWidth()) > BWAPI::Broodwar->mapWidth()
-        || (tileToPlace.y + request.unit.tileHeight()) > BWAPI::Broodwar->mapHeight())
-    {
-        request.useForcedTile = false;
-        request.forcedTile = BWAPI::TilePositions::Invalid;
-        continue;
-    }
+                        switch (flag_info)
+                        {
+                        case PlacementInfo::NO_POWER:
+                            //should create a new pylon request
+                            std::cout << "FAILED: NO POWER\n";
+                            break;
+                        case PlacementInfo::NO_BLOCKS:
+                            //Wait for a bit and kill the request if no blocks are added
+                            std::cout << "FAILED: NO BLOCKS\n";
+                            break;
+                        case PlacementInfo::NO_GYSERS:
+                            //Shouldnt happen but okay
+                            std::cout << "FAILED: NO GYSERS\n";
+                            break;
+                        case PlacementInfo::NO_PLACEMENTS:
+                            //Wait for a bit and kill the request if no placements are added.
+                            std::cout << "FAILED: NO PLACEMENTS\n";
+                            break;
+                        case PlacementInfo::NO_EXPANSIONS:
+                            //kill the expansion request.
+                            std::cout << "FAILED: NO EXPANSION\n";
+                            break;
+                        }
 
-    // If terrain itself isn't buildable, drop forced tile
-    if (!isTerrainBuildable(request.unit, tileToPlace))
-    {
-        request.useForcedTile = false;
-        request.forcedTile = BWAPI::TilePositions::Invalid;
-        continue;
-    }
+                        request.attempts++;
 
-    // ...or if missing pylon, wait.
-    if (!BWAPI::Broodwar->canBuildHere(tileToPlace, request.unit))
-    {
-        const bool needsPower = (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && request.unit.requiresPsi());
-        if (needsPower && !BWAPI::Broodwar->hasPower(tileToPlace, request.unit))
-        {
-            continue;
-        }
+                        continue;
+                    }
 
-        // Otherwise it may be blocked by a moving unit, retry later
-        continue;
-    }
-}
-else
-{
-    BWAPI::Position pos = buildingPlacer.getPositionToBuild(request.unit);
-    BWAPI::TilePosition t(pos);
+                    const BWAPI::Unit workerAvalible = getUnitToBuild(placementInfo.position);
 
-    if (!isValidBuildTile(request.unit, t))
-        continue;
-
-    tileToPlace = t;
-}
-
-const BWAPI::Position locationToPlace(tileToPlace);
-const BWAPI::Unit workerAvalible = getUnitToBuild(locationToPlace);
-
-if (workerAvalible == nullptr) continue;
+                    if (workerAvalible == nullptr) continue;
 
 
-                    //For now dont use Astar to get path to location
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
                         std::cout << "Trying to build Nexus\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
                     }
                     else if(request.unit.isRefinery())
                     {
                         //std::cout << "Trying to build assimlator\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position, true);
                     }
                     else
                     {
                         //std::cout << "Trying to build regular building\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
                     }
 
-                    Builder temp = Builder(workerAvalible, request.unit, locationToPlace, pathToLocation);
+                    Builder temp = Builder(workerAvalible, request.unit, placementInfo.position, pathToLocation);
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
@@ -213,7 +208,8 @@ if (workerAvalible == nullptr) continue;
             {
                 if (request.requestedBuilding->canUpgrade(request.upgrade) &&
                     !request.requestedBuilding->isUpgrading() &&
-                    request.requestedBuilding->isCompleted())
+                    request.requestedBuilding->isCompleted() &&
+                    request.requestedBuilding->isPowered())
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
@@ -224,7 +220,8 @@ if (workerAvalible == nullptr) continue;
             {
                 if (request.requestedBuilding->canResearch(request.upgrade) &&
                     !request.requestedBuilding->isResearching() &&
-                    request.requestedBuilding->isCompleted())
+                    request.requestedBuilding->isCompleted() &&
+                    request.requestedBuilding->isPowered())
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
@@ -244,10 +241,10 @@ if (workerAvalible == nullptr) continue;
 
     //Debug
     //Will most likely need to add a building data class to make this easier to be able to keep track of buildings and what units they are creating.
-    for (BWAPI::Unit building : buildings)
+    /*for (BWAPI::Unit building : buildings)
     {
         BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }
+    }*/
 
     pumpUnit();
 
@@ -261,8 +258,6 @@ if (workerAvalible == nullptr) continue;
 void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
     if (unit == nullptr) return;
-
-    //std::cout << "Created " << unit->getType() << "\n";
 
     buildingPlacer.onUnitCreate(unit);
 
@@ -304,13 +299,14 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
         if (it->getUnitReference()->getID() == unit->getID())
         {
             const BWAPI::Unit unitAvalible = getUnitToBuild(it->requestedPositionToBuild);
-            it->setUnitReference(unitAvalible);
-            break;
+            if (unitAvalible != nullptr)
+            {
+                it->setUnitReference(unitAvalible);
+                break;
+            }
         }
-        else
-        {
-            it++;
-        }
+
+        it++;
     }
 
     if (unit->getPlayer() != BWAPI::Broodwar->self())
@@ -321,7 +317,7 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
     if (!unitType.isBuilding()) return;
 
     //Check if a building has been killed
-    for (BWAPI::Unit building : buildings)
+    for (const BWAPI::Unit building : buildings)
     {
         if (building == unit)
         {
@@ -335,7 +331,22 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
     buildingPlacer.onUnitMorph(unit);
 
-    std::cout << "Created " << unit->getType() << "\n";
+    std::cout << "Created " << unit->getType() << " (On Morph)\n";
+
+    //Need to check this for tech and upgrades;
+    for (ResourceRequest& request : resourceRequests)
+    {
+        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+            request.unit == unit->getType())
+        {
+            request.state = ResourceRequest::State::Accepted_Completed;
+        }
+        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+            request.unit == unit->getType())
+        {
+            request.state = ResourceRequest::State::Accepted_Completed;
+        }
+    }
 
     if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit->getPlayer() == BWAPI::Broodwar->self())
     {
