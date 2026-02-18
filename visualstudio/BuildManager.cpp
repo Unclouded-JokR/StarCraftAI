@@ -4,7 +4,7 @@
 #include "BuildingPlacer.h"
 #include "Builder.h"
 #include <cmath>
-#include <random>
+#include <cstdlib>
 
 
 // Returns true if tile is valid, in bounds, and BWAPI considers it buildable for the given type.
@@ -19,7 +19,6 @@ static bool isValidBuildTile(BWAPI::UnitType type, const BWAPI::TilePosition& t)
     if ((t.x + w) > BWAPI::Broodwar->mapWidth())  return false;
     if ((t.y + h) > BWAPI::Broodwar->mapHeight()) return false;
 
-    // Strong guard: prevents (0,0) / unreachable “placements” from breaking BO.
     if (!BWAPI::Broodwar->canBuildHere(t, type)) return false;
 
     return true;
@@ -68,6 +67,7 @@ BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderRef
 void BuildManager::onStart()
 {
     std::cout << "Builder Manager Initialized" << "\n";
+
     // Reset per-game state
     buildOrders.clear();
     activeBuildOrderIndex = -1;
@@ -103,7 +103,6 @@ void BuildManager::onFrame() {
         }
     }
 
-    // Execute build order steps (adds requests gradually, try to avoid expensive queue building)
     runBuildOrderOnFrame();
 
     spenderManager.OnFrame(resourceRequests);
@@ -140,42 +139,88 @@ void BuildManager::onFrame() {
                 }
                 else
                 {  
-                    const PlacementInfo placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                    // for natural walling, bypass PlacementInfo and use useForcedTile to build exactly there.
+                    BWAPI::Position placementPos = BWAPI::Positions::Invalid;
 
-                    if (placementInfo.position == BWAPI::Positions::Invalid)
+                    if (request.useForcedTile)
                     {
-                        const PlacementInfo::PlacementFlag flag_info = placementInfo.flag;
+                        const BWAPI::TilePosition tileToPlace = request.forcedTile;
 
-                        switch (flag_info)
+                        // If forced tile is out of bounds, drop it
+                        if (!tileToPlace.isValid()
+                            || tileToPlace.x < 0 || tileToPlace.y < 0
+                            || (tileToPlace.x + request.unit.tileWidth()) > BWAPI::Broodwar->mapWidth()
+                            || (tileToPlace.y + request.unit.tileHeight()) > BWAPI::Broodwar->mapHeight())
                         {
-                        case PlacementInfo::NO_POWER:
-                            //should create a new pylon request
-                            std::cout << "FAILED: NO POWER\n";
-                            break;
-                        case PlacementInfo::NO_BLOCKS:
-                            //Wait for a bit and kill the request if no blocks are added
-                            std::cout << "FAILED: NO BLOCKS\n";
-                            break;
-                        case PlacementInfo::NO_GYSERS:
-                            //Shouldnt happen but okay
-                            std::cout << "FAILED: NO GYSERS\n";
-                            break;
-                        case PlacementInfo::NO_PLACEMENTS:
-                            //Wait for a bit and kill the request if no placements are added.
-                            std::cout << "FAILED: NO PLACEMENTS\n";
-                            break;
-                        case PlacementInfo::NO_EXPANSIONS:
-                            //kill the expansion request.
-                            std::cout << "FAILED: NO EXPANSION\n";
-                            break;
+                            request.useForcedTile = false;
+                            request.forcedTile = BWAPI::TilePositions::Invalid;
+                            continue;
                         }
 
-                        request.attempts++;
+                        // If terrain itself isn't buildable, drop forced tile
+                        if (!isTerrainBuildable(request.unit, tileToPlace))
+                        {
+                            request.useForcedTile = false;
+                            request.forcedTile = BWAPI::TilePositions::Invalid;
+                            continue;
+                        }
 
-                        continue;
+                        // ...or if missing pylon, wait.
+                        if (!BWAPI::Broodwar->canBuildHere(tileToPlace, request.unit))
+                        {
+                            const bool needsPower = (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && request.unit.requiresPsi());
+                            if (needsPower && !BWAPI::Broodwar->hasPower(tileToPlace, request.unit))
+                            {
+                                continue;
+                            }
+
+                            // Otherwise it may be blocked by a moving unit, retry later
+                            continue;
+                        }
+
+                        placementPos = BWAPI::Position(tileToPlace);
+                    }
+                    else
+                    {
+                        const PlacementInfo placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+
+                        if (placementInfo.position == BWAPI::Positions::Invalid)
+                        {
+                            const PlacementInfo::PlacementFlag flag_info = placementInfo.flag;
+
+                            switch (flag_info)
+                            {
+                            case PlacementInfo::NO_POWER:
+                                //should create a new pylon request
+                                std::cout << "FAILED: NO POWER\n";
+                                break;
+                            case PlacementInfo::NO_BLOCKS:
+                                //Wait for a bit and kill the request if no blocks are added
+                                std::cout << "FAILED: NO BLOCKS\n";
+                                break;
+                            case PlacementInfo::NO_GYSERS:
+                                //Shouldnt happen but okay
+                                std::cout << "FAILED: NO GYSERS\n";
+                                break;
+                            case PlacementInfo::NO_PLACEMENTS:
+                                //Wait for a bit and kill the request if no placements are added.
+                                std::cout << "FAILED: NO PLACEMENTS\n";
+                                break;
+                            case PlacementInfo::NO_EXPANSIONS:
+                                //kill the expansion request.
+                                std::cout << "FAILED: NO EXPANSION\n";
+                                break;
+                            }
+
+                            request.attempts++;
+
+                            continue;
+                        }
+
+                        placementPos = placementInfo.position;
                     }
 
-                    const BWAPI::Unit workerAvalible = getUnitToBuild(placementInfo.position);
+                    const BWAPI::Unit workerAvalible = getUnitToBuild(placementPos);
 
                     if (workerAvalible == nullptr) continue;
 
@@ -183,21 +228,21 @@ void BuildManager::onFrame() {
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
-                        std::cout << "Trying to build Nexus\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
+                        //std::cout << "Trying to build Nexus\n";
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos);
                     }
                     else if(request.unit.isRefinery())
                     {
                         //std::cout << "Trying to build assimlator\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position, true);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos, true);
                     }
                     else
                     {
                         //std::cout << "Trying to build regular building\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementInfo.position);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos);
                     }
 
-                    Builder temp = Builder(workerAvalible, request.unit, placementInfo.position, pathToLocation);
+                    Builder temp = Builder(workerAvalible, request.unit, placementPos, pathToLocation);
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
@@ -650,77 +695,16 @@ std::string BuildManager::buildOrderNameToString(int name) const
     {
         case 1: return "2 Gateway Observer";
         case 2: return "3 Gate Robo";
-        case 3: return "Corsair/Dragoon";
+        case 3: return "9/9 Gateways vs. Zerg";
+		case 4: return "9/9 Gateways vs. Protoss";
+		case 5: return "10/12 Gateways vs. Zerg";
         default: return "Unknown";
     }
 }
 
 void BuildManager::initBuildOrdersOnStart()
 {
-    buildOrders.clear();
-
-    // 1) 2 Gateway Observer vs Terran
-    {
-        BuildOrder bo;
-        bo.name = 1;
-        bo.id = 1;
-        bo.vsRace = BWAPI::Races::Terran;
-
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 8} });
-        bo.steps.push_back({ BuildStepType::ScoutWorker,       BWAPI::UnitTypes::None,        1, {BuildTriggerType::AtSupply, 8} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Assimilator, 1, {BuildTriggerType::AtSupply, 12} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 14} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 15} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 16} }); // 2nd gate
-        bo.steps.push_back({ BuildStepType::SupplyRampNatural,             BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 21} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 25} });
-        bo.steps.push_back({ BuildStepType::NaturalWall,             BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 27} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 29} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 31} });
-        bo.steps.push_back({ BuildStepType::Build,             BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 38} });
-
-        buildOrders.push_back(bo);
-    }
-
-    // 2) 3 Gate Robo vs Protoss
-    {
-        BuildOrder bo;
-        bo.name = 2;
-        bo.id = 2;
-        bo.vsRace = BWAPI::Races::Protoss;
-
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 8} });
-        bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 9} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Assimilator, 1, {BuildTriggerType::AtSupply, 12} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 14} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 16} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 20} }); // 2nd gate
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 24} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 26} }); // 3rd gate
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 30} });
-        buildOrders.push_back(bo);
-    }
-
-    // 3) Corsair/Dragoon vs Zerg
-    {
-        BuildOrder bo;
-        bo.name = 3;
-        bo.id = 3;
-        bo.vsRace = BWAPI::Races::Zerg;
-
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 8} });
-        bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 9} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Assimilator, 1, {BuildTriggerType::AtSupply, 12} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 14} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 15} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Stargate, 1, {BuildTriggerType::AtSupply, 18} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 21} });
-        bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 25} }); // add gates for dragoon follow-up
-        buildOrders.push_back(bo);
-    }
+    buildOrders = BuildOrders::createAll();
 }
 
 void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
@@ -749,11 +733,7 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
             candidates.push_back(i);
     }
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, (int)candidates.size() - 1);
-
-    activeBuildOrderIndex = candidates[dis(gen)];
+    activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
     activeBuildOrderStep = 0;
     buildOrderActive = true;
     buildOrderCompleted = false;
@@ -1080,25 +1060,27 @@ bool BuildManager::enqueueNaturalWallAtChoke()
             const auto& small = wall->getSmallTiles();
             if (small.empty()) return false;
 
-            BWAPI::TilePosition anchor = BWAPI::TilePosition(BWEB::Map::getClosestChokeTile(BWEB::Map::getNaturalChoke(),
-                BWEB::Map::getMainPosition()));
-
-            
-BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-            int bestDist = INT_MAX;
-
+            const BWAPI::TilePosition chokeTile(BWAPI::TilePosition(choke->Center()));
             const BWEM::Area* mainArea = BWEB::Map::getMainArea();
+
+            auto score = [&](const BWAPI::TilePosition& t) {
+                return std::abs(t.x - chokeTile.x) + std::abs(t.y - chokeTile.y);
+            };
+
+            BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
+            int bestDist = INT_MAX;
 
             for (const auto& t : small)
             {
-                // Prefer tiles on the main-side area and reachable from main.
                 if (mainArea && BWEB::Map::mapBWEM.GetArea(t) != mainArea)
                     continue;
-
                 if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
                     continue;
 
-                int d = std::abs(t.x - anchor.x) + std::abs(t.y - anchor.y);
+                const int d = score(t);
+                if (d > 4)
+                    continue;
+
                 if (d < bestDist)
                 {
                     bestDist = d;
@@ -1106,11 +1088,40 @@ BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
                 }
             }
 
-            // If BWEB's small tiles don't give us a good main-side reachable pylon spot, fall back to search
             if (!best.isValid())
-                naturalWallPylonTile = BWAPI::TilePositions::Invalid;
-            else
-                naturalWallPylonTile = best;
+            {
+                for (const auto& t : small)
+                {
+                    if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
+                        continue;
+                    const int d = score(t);
+                    if (d > 4) continue;
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = t;
+                    }
+                }
+            }
+
+            if (!best.isValid())
+            {
+                bestDist = INT_MAX;
+                for (const auto& t : small)
+                {
+                    if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
+                        continue;
+                    const int d = score(t);
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = t;
+                    }
+                }
+            }
+
+            // If still invalid, fall back to findNaturalChokePylonTile() later
+            naturalWallPylonTile = best.isValid() ? best : BWAPI::TilePositions::Invalid;
         }
 
         // Get gateway tiles
@@ -1149,7 +1160,6 @@ BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
         return false;
     }
 
-    // Wait for the pylon to be completed so gateways can be powered
     bool pylonComplete = false;
     for (auto u : BWAPI::Broodwar->self()->getUnits())
     {

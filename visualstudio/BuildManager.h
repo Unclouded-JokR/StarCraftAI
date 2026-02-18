@@ -10,6 +10,7 @@
 #include "A-StarPathfinding.h"
 #include "BuildingPlacer.h"
 #include "Builder.h"
+#include "BuildOrder.h"
 #include "SpenderManager.h"
 #define FRAMES_BEFORE_TRYAGAIN 72
 #define MAX_ATTEMPTS 3
@@ -48,40 +49,6 @@ struct ResourceRequest
     int priority;
 };
 
-
-enum class BuildTriggerType { Immediately, AtSupply };
-
-struct BuildTrigger
-{
-    BuildTriggerType type = BuildTriggerType::Immediately;
-    int value = 0; // supply for AtSupply
-};
-
-enum class BuildStepType
-{
-    Build,               // build a building (unit field)
-    ScoutWorker,         // call commanderReference->getUnitToScout()
-    SupplyRampNatural,   // place a pylon on/near natural ramp using findNaturalRampPlacement
-    NaturalWall          // create a wall at natural choke using BWEB
-};
-
-struct BuildOrderStep
-{
-    BuildStepType type = BuildStepType::Build;
-    BWAPI::UnitType unit = BWAPI::UnitTypes::None; // used for Build
-    int count = 1;                                 // used for Build
-    BuildTrigger trigger;
-};
-
-struct BuildOrder
-{
-    int name = 0;
-    int id = 0;
-
-    BWAPI::Race vsRace = BWAPI::Races::Unknown;
-
-    std::vector<BuildOrderStep> steps;
-};
 
 class BuildManager
 {
