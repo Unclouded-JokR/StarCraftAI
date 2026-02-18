@@ -222,7 +222,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			}
 		}
 		neighbourTimer.stop();
-		cout << "Time spent evaluating 8 neighbours: " << neighbourTimer.getElapsedTimeInMilliSec() << endl;
 	}
 
 	return Path();
@@ -429,6 +428,9 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 }
 
 void AStar::fillAreaPathCache() {
+	Timer pathCacheTimer = Timer();
+	pathCacheTimer.start();
+
 	AreaPathCache.clear();
 
 	//Finding possible combinations of areas
@@ -470,7 +472,8 @@ void AStar::fillAreaPathCache() {
 
 			vector<BWAPI::Position> finalPositions;
 			int finalDistance = 0;
-			for (int k = 0; k < smallestCPPath.size()-1; k++) {
+			for (int k = 0; k < smallestCPPath.size()-1 && smallestCPPath.size() > 1; k++) {
+
 				Path subPath = GeneratePath(BWAPI::Position(smallestCPPath.at(k)->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(smallestCPPath.at(k + 1)->Center()));
 				finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
 				finalDistance += subPath.distance;
@@ -478,15 +481,17 @@ void AStar::fillAreaPathCache() {
 			
 			Path finalPath = Path(finalPositions, finalDistance);
 
-			cout << "Area pair " << "(" << area2.Id() << "," << area1.Id() << ")" << " generated with path size: " << finalPath.positions.size() << endl;
 			if (area1.Id() < area2.Id()) {
-				AreaPathCache.at(make_pair(area1.Id(), area2.Id())) = finalPath;
+				AreaPathCache.insert(make_pair(make_pair(area1.Id(), area2.Id()), finalPath));
 			}
 			else {
-				AreaPathCache.at(make_pair(area2.Id(), area1.Id())) = finalPath;
+				AreaPathCache.insert(make_pair(make_pair(area1.Id(), area2.Id()), finalPath));
 			}
 		}
 	}
+
+	pathCacheTimer.stop();
+	cout << "Time spent caching all chokepoint paths: " << pathCacheTimer.getElapsedTimeInMilliSec() << endl;
 }
 
 int AStar::TileToIndex(BWAPI::TilePosition tile) {
