@@ -4,18 +4,23 @@
 #include "../../BWEM/src/bwem.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
-#define DEBUG_DRAW_GENERATION true
+#define DEBUG
+#define TIME_LIMIT_ENABLED false
 #define HEURISTIC_WEIGHT 2.0
 #define TIME_LIMIT_MS 50.0
+#define FRAMES_BETWEEN_CACHING
 
 using namespace std;
 namespace {
 	auto& bwem_map = BWEM::Map::Instance();
 }
 
+class Path;
+
 extern vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 extern vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
 extern vector<BWAPI::TilePosition> earlyExpansionTiles;
+extern vector<BWAPI::Position> precachedPathPositions;
 
 struct Node {
 	BWAPI::TilePosition tile, parent;
@@ -97,6 +102,8 @@ class Path {
 class AStar {
 	private:
 		static map<pair<BWEM::Area::id, BWEM::Area::id>, Path> AreaPathCache;
+		static map<pair<BWAPI::WalkPosition, BWAPI::WalkPosition>, Path> ChokepointPathCache;
+
 		static int TileToIndex(BWAPI::TilePosition tile);
 		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
 		static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);

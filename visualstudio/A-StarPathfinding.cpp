@@ -5,18 +5,22 @@
 vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
 vector<BWAPI::TilePosition> earlyExpansionTiles;
+vector<BWAPI::Position> precachedPathPositions;
 
 // Initializing static variable AreaPathCache
 map<pair<BWEM::Area::id, BWEM::Area::id>, Path> AStar::AreaPathCache;
+map<pair<BWAPI::WalkPosition, BWAPI::WalkPosition>, Path> AStar::ChokepointPathCache;
 
 // Generates path from start to end using A* pathfinding algorithm
 // IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
 Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
 	Timer totalTimer = Timer();
 	totalTimer.start();
+#ifndef DEBUG
 	rectCoordinates.clear();
 	closedTiles.clear();
 	earlyExpansionTiles.clear();
+#endif
 
 	//cout << "Actual distance: " << _start.getDistance(_end) << endl;
 	//cout << "Heuristic distance: " << chebyshevDistance(_start, _end) << endl;
@@ -68,7 +72,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	bool earlyExpansion = false;
 	while (openSet.size() > 0) {
 		// Time limit for path generations
-		if (totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+		if (TIME_LIMIT_ENABLED && totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			return Path();
 		}
 
@@ -152,11 +156,12 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(positions.begin(), positions.end());
 
+#ifndef DEBUG
 			endTimer.stop();
 			cout << "Time spent backtracking + smoothing path: " << endTimer.getElapsedTimeInMilliSec() << endl;
-
 			totalTimer.stop();
 			cout << "Milliseconds spent generating path: " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
+#endif
 			return Path(positions, finalDistance);
 		}
 
@@ -277,7 +282,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 
 	bool earlyExpansion = false;
 	while (openSet.size() > 0) {
-		if (subPathTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+		if (TIME_LIMIT_ENABLED && subPathTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			return Path();
 		}
 
@@ -428,10 +433,13 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 }
 
 void AStar::fillAreaPathCache() {
+#ifndef DEBUG
 	Timer pathCacheTimer = Timer();
 	pathCacheTimer.start();
+#endif
 
 	AreaPathCache.clear();
+	precachedPathPositions.clear();
 
 	//Finding possible combinations of areas
 	const vector<BWEM::Area>& areas = bwem_map.Areas();
@@ -451,35 +459,65 @@ void AStar::fillAreaPathCache() {
 			const vector<const BWEM::ChokePoint*> chokepoints1 = area1.ChokePoints();
 			const vector<const BWEM::ChokePoint*> chokepoints2 = area2.ChokePoints();
 
+			if (chokepoints1.empty() || chokepoints2.empty()) {
+				continue;
+			}
+
 			int closest = INT_MAX;
 			pair< BWAPI::WalkPosition, BWAPI::WalkPosition> closestPair;
 
+			bool found = false;
 			for (const BWEM::ChokePoint* cp1 : chokepoints1) {
+				if (cp1->Blocked()) {
+					continue;
+				}
+
 				for (const BWEM::ChokePoint* cp2 : chokepoints2) {
+					if (cp2->Blocked()) {
+						continue;
+					}
+
 					const BWAPI::WalkPosition cp1_center = cp1->Center();
 					const BWAPI::WalkPosition cp2_center = cp2->Center();
 
-					int dist = cp1_center.getApproxDistance(cp2_center);
+					const int dist = cp1_center.getApproxDistance(cp2_center);
 					if (dist < closest) {
 						closest = dist;
 						closestPair = make_pair(cp1_center, cp2_center);
+						found = true;
 					}
 				}
 			}
 
 			// After grabbing the closest chokepoint positions between both areas, create path taking shortest path
+			// If no valid chokepoints found, skikp
+			if (found == false) {
+				continue;
+			}
 			const BWEM::CPPath smallestCPPath = bwem_map.GetPath(BWAPI::Position(closestPair.first), BWAPI::Position(closestPair.second));
 
 			vector<BWAPI::Position> finalPositions;
 			int finalDistance = 0;
 			for (int k = 0; k < smallestCPPath.size()-1 && smallestCPPath.size() > 1; k++) {
+				const BWAPI::WalkPosition cp1Pos = smallestCPPath.at(k)->Center();
+				const BWAPI::WalkPosition cp2Pos = smallestCPPath.at(k + 1)->Center();
 
-				Path subPath = GeneratePath(BWAPI::Position(smallestCPPath.at(k)->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(smallestCPPath.at(k + 1)->Center()));
+				// Caches the paths between chokepoints so that other paths between Areas don't generate them again
+				Path subPath;
+				if (ChokepointPathCache.find(make_pair(cp1Pos, cp2Pos)) != ChokepointPathCache.end()) {
+					subPath = ChokepointPathCache[make_pair(cp1Pos, cp2Pos)];
+				}
+				else {
+					subPath = GeneratePath(BWAPI::Position(cp1Pos), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2Pos));
+					ChokepointPathCache[make_pair(cp1Pos, cp2Pos)] = subPath;
+				}
+
 				finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
 				finalDistance += subPath.distance;
 			}
 			
 			Path finalPath = Path(finalPositions, finalDistance);
+			precachedPathPositions.insert(precachedPathPositions.end(), finalPositions.begin(), finalPositions.end());
 
 			if (area1.Id() < area2.Id()) {
 				AreaPathCache.insert(make_pair(make_pair(area1.Id(), area2.Id()), finalPath));
@@ -490,8 +528,10 @@ void AStar::fillAreaPathCache() {
 		}
 	}
 
+#ifndef DEBUG
 	pathCacheTimer.stop();
-	cout << "Time spent caching all chokepoint paths: " << pathCacheTimer.getElapsedTimeInMilliSec() << endl;
+	cout << "Time spent caching all chokepoint paths: " << pathCacheTimer.getElapsedTimeInMilliSec() << endl
+#endif
 }
 
 int AStar::TileToIndex(BWAPI::TilePosition tile) {
@@ -534,11 +574,11 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 		return false;
 	}
 
-	if (DEBUG_DRAW_GENERATION){
-		if (rectCoordinates.size() < 10000) {
-			rectCoordinates.push_back(std::make_pair(topLeft, bottomRight));
-		}
+#ifndef DEBUG
+	if (rectCoordinates.size() < 10000) {
+		rectCoordinates.push_back(std::make_pair(topLeft, bottomRight));
 	}
+#endif
 
 	return true;
 }

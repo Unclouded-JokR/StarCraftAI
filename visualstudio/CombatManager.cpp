@@ -7,7 +7,7 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-	AStar::fillAreaPathCache();
+	//AStar::fillAreaPathCache();
 }
 
 void CombatManager::onFrame() {
@@ -19,8 +19,9 @@ void CombatManager::onFrame() {
 		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.first), BWAPI::Position(tile.first) + BWAPI::Position(32, 32), BWAPI::Colors::Red);
 		BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first) + BWAPI::Position(0, 16), "%.2f", tile.second);
 	}
-	for (auto& tile : earlyExpansionTiles) {
-		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile), BWAPI::Position(tile) + BWAPI::Position(32, 32), BWAPI::Colors::Yellow);
+
+	for (auto& pos : precachedPathPositions) {
+		BWAPI::Broodwar->drawBoxMap(pos - BWAPI::Position(16, 16), pos + BWAPI::Position(16, 16), BWAPI::Colors::Red);
 	}
 
 	drawDebugInfo();
