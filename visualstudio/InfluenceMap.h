@@ -21,6 +21,9 @@ public:
 
     int getEnemyInfluence(int x, int y) const;
     int getAllyInfluence(int x, int y) const;
+    int getEnemyInfluenceAtTile(const BWAPI::TilePosition& tile) const;
+    int getAllyInfluenceAtTile(const BWAPI::TilePosition& tile) const;
+    int getCombinedInfluenceAtTile(const BWAPI::TilePosition& tile) const;
     int buildingInfluenceValue(const BWAPI::UnitType& type) const;
     int getHeight() const;
     int getWidth() const;

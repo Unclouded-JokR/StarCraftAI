@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BuildOrder.h" />
     <ClInclude Include="SquadStateTypes.h" />
     <ClInclude Include="SquadState.h" />
     <ClInclude Include="VectorPos.h" />
@@ -77,6 +78,7 @@
   <ItemGroup>
     <ClCompile Include="Builder.cpp" />
     <ClCompile Include="BuildingPlacer.cpp" />
+    <ClCompile Include="BuildOrder.cpp" />
     <ClCompile Include="ThreatGrid.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TimerManager.cpp" />

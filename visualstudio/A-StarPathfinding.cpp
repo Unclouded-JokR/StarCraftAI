@@ -135,7 +135,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			reverse(tiles.begin(), tiles.end());
 
 			timer.stop();
-			//std::cout << "Milliseconds spent generating path: " << timer.getElapsedTimeInMilliSec() << endl;
+			std::cout << "Milliseconds spent generating path: " << timer.getElapsedTimeInMilliSec() << endl;
 			return Path(tiles, distance);
 		}
 
