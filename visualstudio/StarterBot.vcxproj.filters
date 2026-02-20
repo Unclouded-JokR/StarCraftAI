@@ -44,7 +44,6 @@
     <ClCompile Include="ScoutingDragoon.cpp" />
     <ClCompile Include="ScoutingObserver.cpp" />
     <ClCompile Include="ScoutingProbe.cpp" />
-    <ClCompile Include="A-StarPathfinding.h" />
     <ClCompile Include="A-StarPathfinding.cpp" />
     <ClCompile Include="TimerManager.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -105,7 +104,8 @@
     <ClInclude Include="Builder.h" />
     <ClInclude Include="ThreatGrid.h" />
     <ClInclude Include="SquadState.h" />
-	<ClInclude Include="SquadStateTypes.h" />
-	<ClInclude Include="VectorPos.h" />
+    <ClInclude Include="SquadStateTypes.h" />
+    <ClInclude Include="VectorPos.h" />
+    <ClInclude Include="A-StarPathfinding.h" />
   </ItemGroup>
 </Project>

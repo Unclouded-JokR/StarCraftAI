@@ -275,6 +275,16 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
+	if (unit_type == BWAPI::UnitTypes::Protoss_Zealot || unit_type == BWAPI::UnitTypes::Protoss_Dragoon)
+	{
+		if (scoutingManager.canAcceptCombatScout(unit_type))
+		{
+			scoutingManager.assignScout(unit);
+			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
+			return;
+		}
+	}
+
 	//getUnitToScout();
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);

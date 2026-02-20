@@ -125,6 +125,11 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
     // cache into the map (overwrite if re-assigning the same id)
     behaviors_[unit->getID()] = std::move(sb);
 
+    if (commanderRef)
+    {
+        commanderRef->combatManager.detachUnit(unit);
+    }
+
     // bookkeeping
     markScout(unit);
 }
@@ -178,31 +183,41 @@ void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp)
     if (commanderRef) commanderRef->onEnemyNaturalFound(tp);
 }
 
-void ScoutingManager::onUnitDestroy(BWAPI::Unit unit) 
+void ScoutingManager::onUnitDestroy(BWAPI::Unit unit)
 {
-    unmarkScout(unit);
-    const int id = unit ? unit->getID() : -1;
+    if (!unit)
+    {
+        return;
+    }
 
-    // If proxy patrol dies, reset
-    if (id != -1 && id == proxyPatrolZealotId_)
+    const int id = unit->getID();
+
+    // Only do anything if it was a scout or had a behavior.
+    const bool hadBehavior = behaviors_.find(id) != behaviors_.end();
+    const bool wasScout = isScout(unit);
+
+    if (!hadBehavior && !wasScout)
+    {
+        return;
+    }
+
+    unmarkScout(unit);
+
+    if (id == proxyPatrolZealotId_)
     {
         proxyPatrolZealotId_ = -1;
     }
 
-    if (id != -1) 
+    auto it = behaviors_.find(id);
+    if (it != behaviors_.end())
     {
-        auto it = behaviors_.find(id);
-        if (it != behaviors_.end()) 
-        {
-            visit_onUnitDestroy(it->second, unit);
-            behaviors_.erase(it);
-        }
-        releaseObserverSlot(id);
-        observerScouts_.erase(std::remove(observerScouts_.begin(), observerScouts_.end(), unit),
-                              observerScouts_.end());
+        visit_onUnitDestroy(it->second, unit);
+        behaviors_.erase(it);
     }
 
-    for (auto& [_, sb] : behaviors_) visit_onUnitDestroy(sb, unit);
+    releaseObserverSlot(id);
+    observerScouts_.erase(std::remove(observerScouts_.begin(), observerScouts_.end(), unit),
+        observerScouts_.end());
 }
 
 int ScoutingManager::reserveObserverSlot(int unitId) 
@@ -268,12 +283,22 @@ void ScoutingManager::markScout(BWAPI::Unit u)
 {
     if (!u || !u->exists()) return;
 
-    if (u->getType().isWorker()) {
+    const auto t = u->getType();
+
+    if (t.isWorker()) {
         if (!workerScout_) workerScout_ = u;
         return;
     }
 
-    if (u->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
+    if (t == BWAPI::UnitTypes::Protoss_Observer)
+    {
+        if (std::find(observerScouts_.begin(), observerScouts_.end(), u) == observerScouts_.end())
+        {
+            observerScouts_.push_back(u);
+        }
+        return;
+    }
+    if (t == BWAPI::UnitTypes::Protoss_Zealot) {
         if ((int)combatZealots_.size() < maxZealotScouts_ &&
             std::find(combatZealots_.begin(), combatZealots_.end(), u) == combatZealots_.end()) {
             combatZealots_.push_back(u);
@@ -281,7 +306,7 @@ void ScoutingManager::markScout(BWAPI::Unit u)
         return;
     }
 
-    if (u->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
+    if (t == BWAPI::UnitTypes::Protoss_Dragoon) {
         if ((int)combatDragoons_.size() < maxDragoonScouts_ &&
             std::find(combatDragoons_.begin(), combatDragoons_.end(), u) == combatDragoons_.end()) {
             combatDragoons_.push_back(u);
@@ -311,11 +336,12 @@ void ScoutingManager::unmarkScout(BWAPI::Unit u)
         return;
     }
 
-    // If type is unknown (edge case), try removing from both
     combatZealots_.erase(std::remove(combatZealots_.begin(), combatZealots_.end(), u),
         combatZealots_.end());
     combatDragoons_.erase(std::remove(combatDragoons_.begin(), combatDragoons_.end(), u),
         combatDragoons_.end());
+    observerScouts_.erase(std::remove(observerScouts_.begin(), observerScouts_.end(), u), 
+        observerScouts_.end());
 }
 
 bool ScoutingManager::isScout(BWAPI::Unit u) const 

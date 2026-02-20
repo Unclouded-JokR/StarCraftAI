@@ -32,4 +32,7 @@ public:
     BWAPI::Unit getAvailableUnit(function<bool(BWAPI::Unit)> filter);
 
     void handleTextCommand(std::string text);
+
+    // Adding in this to strip scouts from squad if they somehow make it in -Marshall
+    bool detachUnit(BWAPI::Unit unit);
 };

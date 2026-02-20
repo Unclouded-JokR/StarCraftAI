@@ -58,6 +58,8 @@ private:
     static constexpr int kRepositionStepPx = 160;
     static constexpr int kCalmFramesToReturn = 72;
     int lastThreatFrame = -100000;
+    static constexpr int kDangerClosePx = 96; // tune: 96-160
+    int lastAttackCmdFrame = -100000;
 
     // --- proxy patrol tuning ---
     static constexpr int kProxyRebuildEveryFrames = 24 * 10; // 10s
@@ -85,5 +87,12 @@ private:
     static double groundPathLengthPx(const BWAPI::Position& from, const BWAPI::Position& to);
     static BWAPI::Position clampToMapPx(const BWAPI::Position& p, int marginPx = 32);
 
+    BWAPI::Unit findPrimaryThreat(int radiusPx) const;
+    void retreatHomeMicro(BWAPI::Unit threat);
+    BWAPI::Unit findInWeaponRangeTarget() const;
     
+    BWAPI::Unit lastAttackTarget = nullptr;
+
+    int attackCommitFrames() const;
+    bool tryFireAndCommit(BWAPI::Unit target);
 };

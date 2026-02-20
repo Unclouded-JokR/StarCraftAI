@@ -197,11 +197,16 @@ void Squad::removeUnit(BWAPI::Unit unit){
 
 		// Closest unit to the leader is assigned as the new leader
 		double closest = std::numeric_limits<double>::infinity();
-		BWAPI::Unit closestUnit;
+		BWAPI::Unit closestUnit = nullptr;
 		for (BWAPI::Unit _unit : units) {
-			BWAPI::Position unitPos = unit->getPosition();
+			if (!_unit || !_unit->exists()) {
+				continue;
+			}
+
+			const BWAPI::Position unitPos = _unit->getPosition();
 			const double dist = unitPos.getDistance(leaderPos);
-			if (dist < closest && _unit->exists()) {
+
+			if (dist < closest) {
 				closest = dist;
 				closestUnit = _unit;
 			}

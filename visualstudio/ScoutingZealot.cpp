@@ -172,47 +172,41 @@ void ScoutingZealot::onFrame() {
 
     case State::HoldEdge:
     {
-        if (threatenedNow()) {
-            const int now = Broodwar->getFrameCount();
-            lastThreatFrame = now;
+        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);
 
-            // Run straight home (to our main)
-            issueMove(homeRetreatPoint(), /*force*/true);
+        if (threat || zealot->isUnderAttack())
+        {
+            lastThreatFrame = BWAPI::Broodwar->getFrameCount();
             state = State::Reposition;
+
+            retreatHomeMicro(threat);
             break;
         }
 
-        if (!zealot->isMoving() && !zealot->isAttacking()) {
-            zealot->holdPosition();
-        }
-        if (Broodwar->getFrameCount() - lastMoveIssueFrame > 48) {
-            issueMove(pickEdgeOfVisionSpot(), /*force*/true, /*reissueDist*/16);
-        }
+
+
         break;
     }
 
     case State::Reposition:
     {
-        const int now = Broodwar->getFrameCount();
+        const int now = BWAPI::Broodwar->getFrameCount();
+        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);
 
-        // If still threatened, keep resetting calm timer and keep moving home
-        if (threatenedNow()) {
+        if (threat || zealot->isUnderAttack())
+        {
             lastThreatFrame = now;
-            issueMove(homeRetreatPoint(), /*force*/true, /*reissueDist*/64);
+            retreatHomeMicro(threat);
             break;
         }
 
-        // Area calm long enough? Go back to the natural perch
-        if (now - lastThreatFrame >= kCalmFramesToReturn) {
-            issueMove(pickEdgeOfVisionSpot(), /*force*/true);
+        if (now - lastThreatFrame >= kCalmFramesToReturn)
+        {
+            issueMove(pickEdgeOfVisionSpot(), true);
             state = State::HoldEdge;
             break;
         }
 
-        // Calm but waiting out timer: hold position so we don't drift
-        if (!zealot->isMoving() && !zealot->isAttacking()) {
-            zealot->holdPosition();
-        }
         break;
     }
     case State::ProxyPatrol:
@@ -699,4 +693,191 @@ void ScoutingZealot::rebuildProxyPoints()
     
 
     proxyPoints = std::move(ordered);
+}
+
+
+BWAPI::Unit ScoutingZealot::findPrimaryThreat(int radiusPx) const
+{
+    if (!zealot || !zealot->exists())
+    {
+        return nullptr;
+    }
+
+    BWAPI::Unit best = nullptr;
+    int bestD = INT_MAX;
+
+    for (auto& e : BWAPI::Broodwar->enemy()->getUnits())
+    {
+        if (!e || !e->exists())
+        {
+            continue;
+        }
+
+        const auto t = e->getType();
+
+        if (t.isWorker())
+        {
+            continue;
+        }
+
+        if (!t.canAttack())
+        {
+            continue;
+        }
+
+        const int d = zealot->getDistance(e);
+        if (d > radiusPx)
+        {
+            continue;
+        }
+
+        if (d < bestD)
+        {
+            bestD = d;
+            best = e;
+        }
+    }
+
+    return best;
+}
+
+void ScoutingZealot::retreatHomeMicro(BWAPI::Unit threat)
+{
+    if (!zealot || !zealot->exists())
+    {
+        return;
+    }
+
+    const int now = BWAPI::Broodwar->getFrameCount();
+    const int commit = attackCommitFrames();
+
+    // If we recently issued an attack, don't stomp it with movement.
+    if (now - lastAttackCmdFrame < commit && lastAttackTarget && lastAttackTarget->exists())
+    {
+        return;
+    }
+
+    BWAPI::Unit target = nullptr;
+
+    if (threat && threat->exists() && zealot->canAttackUnit(threat))
+    {
+        target = threat;
+    }
+    else
+    {
+        target = findPrimaryThreat(kThreatRadiusPx);
+    }
+
+    // If something is in range, try to fire.
+    if (target && target->exists())
+    {
+        if (tryFireAndCommit(target))
+        {
+            return;
+        }
+    }
+
+    // Otherwise retreat.
+    issueMove(homeRetreatPoint(), false, 64);
+}
+
+BWAPI::Unit ScoutingZealot::findInWeaponRangeTarget() const
+{
+    if (!zealot || !zealot->exists())
+    {
+        return nullptr;
+    }
+
+    BWAPI::Unit best = nullptr;
+    int bestD = INT_MAX;
+
+    for (auto& e : BWAPI::Broodwar->enemy()->getUnits())
+    {
+        if (!e || !e->exists())
+        {
+            continue;
+        }
+
+        if (e->getType().isWorker())
+        {
+            continue;
+        }
+
+        if (!zealot->canAttackUnit(e))
+        {
+            continue;
+        }
+
+        if (!zealot->isInWeaponRange(e))
+        {
+            continue;
+        }
+
+        const int d = zealot->getDistance(e);
+        if (d < bestD)
+        {
+            bestD = d;
+            best = e;
+        }
+    }
+
+    return best;
+}
+
+int ScoutingZealot::attackCommitFrames() const
+{
+    if (!zealot || !zealot->exists())
+    {
+        return 0;
+    }
+
+    const int range = zealot->getType().groundWeapon().maxRange();
+
+    // Dragoons need a bigger window so we don't cancel their windup.
+    if (range > 32)
+    {
+        return 8;
+    }
+
+    // Zealot (melee) is fine with a tiny commit.
+    return 2;
+}
+
+bool ScoutingZealot::tryFireAndCommit(BWAPI::Unit target)
+{
+    if (!zealot || !zealot->exists() || !target || !target->exists())
+    {
+        return false;
+    }
+
+    if (!zealot->canAttackUnit(target))
+    {
+        return false;
+    }
+
+    if (!zealot->isInWeaponRange(target))
+    {
+        return false;
+    }
+
+    const int now = BWAPI::Broodwar->getFrameCount();
+    const int commit = attackCommitFrames();
+
+    // If we *just* told it to attack, do nothing and let the shot happen.
+    if (now - lastAttackCmdFrame < commit && lastAttackTarget == target)
+    {
+        return true;
+    }
+
+    // Only issue the attack when the weapon is ready.
+    if (zealot->getGroundWeaponCooldown() == 0)
+    {
+        zealot->attack(target);
+        lastAttackCmdFrame = now;
+        lastAttackTarget = target;
+        return true;
+    }
+
+    // Weapon not ready, but still in range. Let normal retreat logic move us.
+    return false;
 }

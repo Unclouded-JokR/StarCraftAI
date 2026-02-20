@@ -202,3 +202,50 @@ void CombatManager::handleTextCommand(std::string text) {
 		}
 	}
 }
+
+
+// Adding this in to strip scout units from squads if they somehow make it in -Marshall
+bool CombatManager::detachUnit(BWAPI::Unit unit) {
+	if (!unit) {
+		return false;
+	}
+
+	auto itMap = unitSquadIdMap.find(unit);
+	if (itMap == unitSquadIdMap.end()) {
+		totalCombatUnits.erase(unit);
+		return false;
+	}
+
+	const int squadId = itMap->second;
+
+	for (auto* squad : Squads) {
+		if (!squad) {
+			continue;
+		}
+
+		if (squad->squadId != squadId) {
+			continue;
+		}
+
+		squad->removeUnit(unit);
+
+		unitSquadIdMap.erase(unit);
+		totalCombatUnits.erase(unit);
+
+		if (squad->units.empty()) {
+			removeSquad(squad);
+		}
+		else {
+			// Optional: ensure leader is valid after removal
+			if (!squad->leader || !squad->leader->exists()) {
+				squad->leader = squad->units.front();
+			}
+		}
+
+		return true;
+	}
+
+	unitSquadIdMap.erase(unit);
+	totalCombatUnits.erase(unit);
+	return true;
+}
