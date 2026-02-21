@@ -282,6 +282,7 @@ Action StrategyManager::onFrame()
 
 	//Building logic
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
+	//std::cout << "B.O Complete? " << buildOrderCompleted << "\n";
 
 	//ProtoBot unit information
 	const FriendlyBuildingCounter ProtoBot_buildings = commanderReference->informationManager.getFriendlyBuildingCounter();

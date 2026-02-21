@@ -161,7 +161,7 @@ void NexusEconomy::onFrame()
 		//If a worker is constructing skip over them until they are done.
 		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() /* || (worker->getOrder() == BWAPI::Orders::Move && workerOrder[worker] > 1) */ || worker->isMoving())
 		{
-			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
+			//BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
 			continue;
 		}
 
