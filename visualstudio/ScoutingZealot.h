@@ -39,7 +39,7 @@ private:
         Reposition,
         Done
     };
-
+    State returnStateAfterReposition = State::HoldEdge;
     ProtoBotCommander* commanderRef = nullptr;
     ScoutingManager* manager = nullptr;
     BWAPI::Unit zealot = nullptr;
@@ -51,7 +51,6 @@ private:
 
     State state = State::Idle;
     int lastMoveIssueFrame = 0;
-
     static constexpr int kMoveCooldownFrames = 8;
     static constexpr int kEdgeMarginPx = 24;
     static constexpr int kThreatRadiusPx = 256;
@@ -67,7 +66,7 @@ private:
     static constexpr int kProxyRebuildEveryFrames = 24 * 10; // 10s
     static constexpr int kProxyArriveDist = 96;
     static constexpr int kProxyMinBetweenMoves = 12;
-    static constexpr double kMaxGroundDist = 90 * 32;
+    static constexpr double kMaxGroundDist = 180 * 32;
 
     std::vector<BWAPI::Position> proxyPoints;
     int proxyNextIdx = 0;
@@ -76,10 +75,25 @@ private:
     BWAPI::Position proxyCurTarget = BWAPI::Positions::Invalid;
     bool isProxyPatroller = false;
 
+    // --- Scout Stuck fix --- 
+
+    BWAPI::Position cachedPerch = BWAPI::Positions::Invalid;
+    int cachedPerchFrame = -100000;
+
+    BWAPI::Position lastIssuedGoal = BWAPI::Positions::Invalid;
+
+    BWAPI::Position lastPos = BWAPI::Positions::Invalid;
+    int stuckFrames = 0;
+
+    static constexpr int kPerchRecalcFrames = 24;       // 1 sec
+    static constexpr int kGoalChangeResetDist = 64;     // px
+
     // --- helpers ---
     BWAPI::Position homeRetreatPoint() const;
     void computeEnemyNatural();
-    BWAPI::Position pickEdgeOfVisionSpot() const;
+    BWAPI::Position pickEdgeOfVisionSpot();
+    BWAPI::Position findReachableNearby(const BWAPI::Position& desired) const;
+    
     bool threatenedNow() const;
     void issueMove(const BWAPI::Position& p, bool force = false, int reissueDist = 32);
 
