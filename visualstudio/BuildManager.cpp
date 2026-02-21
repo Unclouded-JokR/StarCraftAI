@@ -92,8 +92,8 @@ void BuildManager::onFrame() {
     {
         if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
         {
-            if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
-            if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+            //if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
+            //if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
 
             it = resourceRequests.erase(it);
         }
