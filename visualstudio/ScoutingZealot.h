@@ -60,6 +60,8 @@ private:
     int lastThreatFrame = -100000;
     static constexpr int kDangerClosePx = 96; // tune: 96-160
     int lastAttackCmdFrame = -100000;
+    int lastTargetSelectFrame = -100000;
+    static constexpr int kTargetStickFrames = 18;
 
     // --- proxy patrol tuning ---
     static constexpr int kProxyRebuildEveryFrames = 24 * 10; // 10s
@@ -95,4 +97,5 @@ private:
 
     int attackCommitFrames() const;
     bool tryFireAndCommit(BWAPI::Unit target);
+    bool isGoodKiteTarget(BWAPI::Unit u, int radiusPx) const;
 };

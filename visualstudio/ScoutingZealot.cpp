@@ -748,27 +748,52 @@ void ScoutingZealot::retreatHomeMicro(BWAPI::Unit threat)
         return;
     }
 
-    const int now = BWAPI::Broodwar->getFrameCount();
-    const int commit = attackCommitFrames();
-
-    // If we recently issued an attack, don't stomp it with movement.
-    if (now - lastAttackCmdFrame < commit && lastAttackTarget && lastAttackTarget->exists())
+    // If we're mid-windup / firing, don't change anything.
+    if (zealot->isStartingAttack() || zealot->isAttackFrame())
     {
         return;
     }
 
+    const int now = BWAPI::Broodwar->getFrameCount();
+
     BWAPI::Unit target = nullptr;
 
-    if (threat && threat->exists() && zealot->canAttackUnit(threat))
+    // Stick to last target for a short window to avoid retarget stutter.
+    if (lastAttackTarget && lastAttackTarget->exists())
     {
-        target = threat;
-    }
-    else
-    {
-        target = findPrimaryThreat(kThreatRadiusPx);
+        if (now - lastTargetSelectFrame < kTargetStickFrames)
+        {
+            if (isGoodKiteTarget(lastAttackTarget, kThreatRadiusPx))
+            {
+                target = lastAttackTarget;
+            }
+        }
     }
 
-    // If something is in range, try to fire.
+    // If we don't have a sticky target, pick a new one.
+    if (!target)
+    {
+        BWAPI::Unit candidate = nullptr;
+
+        if (isGoodKiteTarget(threat, kThreatRadiusPx))
+        {
+            candidate = threat;
+        }
+        else
+        {
+            candidate = findPrimaryThreat(kThreatRadiusPx);
+        }
+
+        target = candidate;
+
+        if (target)
+        {
+            lastAttackTarget = target;
+            lastTargetSelectFrame = now;
+        }
+    }
+
+    // If in range, try to shoot (tryFireAndCommit also "locks" the target).
     if (target && target->exists())
     {
         if (tryFireAndCommit(target))
@@ -777,8 +802,8 @@ void ScoutingZealot::retreatHomeMicro(BWAPI::Unit threat)
         }
     }
 
-    // Otherwise retreat.
-    issueMove(homeRetreatPoint(), false, 64);
+    // No shot right now: kite step.
+    issueMove(homeRetreatPoint(), true, 64);
 }
 
 BWAPI::Unit ScoutingZealot::findInWeaponRangeTarget() const
@@ -860,24 +885,57 @@ bool ScoutingZealot::tryFireAndCommit(BWAPI::Unit target)
         return false;
     }
 
+    // Lock target choice even if weapon is cooling down.
+    lastAttackTarget = target;
+
     const int now = BWAPI::Broodwar->getFrameCount();
     const int commit = attackCommitFrames();
 
-    // If we *just* told it to attack, do nothing and let the shot happen.
     if (now - lastAttackCmdFrame < commit && lastAttackTarget == target)
     {
+        lastTargetSelectFrame = now;
         return true;
     }
 
-    // Only issue the attack when the weapon is ready.
     if (zealot->getGroundWeaponCooldown() == 0)
     {
         zealot->attack(target);
         lastAttackCmdFrame = now;
-        lastAttackTarget = target;
+        lastTargetSelectFrame = now;
         return true;
     }
 
-    // Weapon not ready, but still in range. Let normal retreat logic move us.
     return false;
+}
+
+bool ScoutingZealot::isGoodKiteTarget(BWAPI::Unit u, int radiusPx) const
+{
+    if (!u || !u->exists())
+    {
+        return false;
+    }
+
+    if (u->getPlayer() != BWAPI::Broodwar->enemy())
+    {
+        return false;
+    }
+
+    const auto t = u->getType();
+
+    if (t.isWorker())
+    {
+        return false;
+    }
+
+    if (!t.canAttack())
+    {
+        return false;
+    }
+
+    if (!zealot->canAttackUnit(u))
+    {
+        return false;
+    }
+
+    return zealot->getDistance(u) <= radiusPx;
 }
