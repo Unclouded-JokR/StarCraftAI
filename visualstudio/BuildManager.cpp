@@ -696,18 +696,16 @@ std::string BuildManager::buildOrderNameToString(int name) const
     {
         case 1: return "2 Gateway Observer";
         case 2: return "3 Gate Robo";
-        case 3: return "Corsair/Dragoon";
-        case 4: return "9/9 Gateways vs Protoss";
-		case 5: return "10/12 Gateways vs Zerg";
-        case 6: return "12 Nexus vs Terran";
-        case 7: return "28 Nexus vs. Terran";
-        case 8: return "9/9 Gateways vs. Zerg";
-        case 9: return "9/10 Gateways vs. Zerg";
-        case 10: return "10/12 Gateways vs. Zerg";
-        case 11: return "9/9 Gateways vs. Protoss";
-        case 12: return "9/10 Gateways vs. Protoss";
-        case 13: return "10/12 Gateways vs. Protoss";
-        case 14: return "4 Gate Goon vs. Protoss";
+        case 3: return "Proxy Gateways vs. Zerg";
+        case 4: return "12 Nexus vs Terran";
+        case 5: return "28 Nexus vs. Terran";
+        case 6: return "9/9 Gateways vs. Zerg";
+        case 7: return "9/10 Gateways vs. Zerg";
+        case 8: return "10/12 Gateways vs. Zerg";
+        case 9: return "9/9 Gateways vs. Protoss";
+        case 10: return "9/10 Gateways vs. Protoss";
+        case 11: return "10/12 Gateways vs. Protoss";
+        case 12: return "4 Gate Goon vs. Protoss";
         default: return "Unknown";
     }
 }
