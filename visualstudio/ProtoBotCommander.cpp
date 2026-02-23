@@ -314,8 +314,8 @@ void ProtoBotCommander::drawDebugInformation()
 	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
 	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
 
-	Tools::DrawUnitCommands();
-	Tools::DrawUnitBoundingBoxes();
+	//Tools::DrawUnitCommands();
+	//Tools::DrawUnitBoundingBoxes();
 
 	timerManager.displayTimers(490, 225);
 }

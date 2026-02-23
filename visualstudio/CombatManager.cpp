@@ -7,24 +7,23 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-	//AStar::fillAreaPathCache();
+	AStar::clearPathCache();
+	AStar::fillUncachedAreaPairs();
 }
 
 void CombatManager::onFrame() {
+
 	for (auto& squad : Squads) {
 		squad->onFrame();
 	}
 
-	for (auto& tile : closedTiles) {
-		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(tile.first), BWAPI::Position(tile.first) + BWAPI::Position(32, 32), BWAPI::Colors::Red);
-		BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first) + BWAPI::Position(0, 16), "%.2f", tile.second);
+	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
+		AStar::fillAreaPathCache();
 	}
 
-	for (auto& pos : precachedPathPositions) {
-		BWAPI::Broodwar->drawBoxMap(pos - BWAPI::Position(16, 16), pos + BWAPI::Position(16, 16), BWAPI::Colors::Red);
-	}
-
+#ifdef DEBUG_CM
 	drawDebugInfo();
+#endif
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
@@ -135,6 +134,19 @@ void CombatManager::drawDebugInfo() {
 	for (auto& squad : Squads) {
 		squad->drawDebugInfo();
 	}
+
+	MapTools map_tool = MapTools();
+	//for (auto& tile : closedTiles) {
+	//	map_tool = MapTools();
+	//	map_tool.drawTile(tile.first.x, tile.first.y, BWAPI::Colors::Red);
+	//	BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first) + BWAPI::Position(0, 16), "%.2f", tile.second);
+	//}
+
+#ifdef DEBUG_PRECACHE //In A-StarPathfinding.h
+	for (const auto& pos : precachedPositions) {
+		map_tool.drawTile(BWAPI::TilePosition(pos).x, BWAPI::TilePosition(pos).y, BWAPI::Colors::Red);
+	}
+#endif
 }
 
 BWAPI::Unit CombatManager::getAvailableUnit() {

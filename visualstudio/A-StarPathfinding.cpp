@@ -1,22 +1,25 @@
 #include "A-StarPathfinding.h"
 #include <queue>
 
+
 // Global variables used to debug path generation
 vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
 vector<BWAPI::TilePosition> earlyExpansionTiles;
-vector<BWAPI::Position> precachedPathPositions;
 
-// Initializing static variable AreaPathCache
-map<pair<BWEM::Area::id, BWEM::Area::id>, Path> AStar::AreaPathCache;
-map<pair<BWAPI::WalkPosition, BWAPI::WalkPosition>, Path> AStar::ChokepointPathCache;
+// Initializing static variables 
+map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AStar::AreaPathCache;
+map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> AStar::ChokepointPathCache;
+vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::UncachedAreaPairs;
+vector<BWAPI::Position> precachedPositions;
+
 
 // Generates path from start to end using A* pathfinding algorithm
 // IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
 Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
 	Timer totalTimer = Timer();
 	totalTimer.start();
-#ifndef DEBUG
+#ifdef DEBUG_PATH
 	rectCoordinates.clear();
 	closedTiles.clear();
 	earlyExpansionTiles.clear();
@@ -38,12 +41,84 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	// Flying units can move directly to the end position without pathfinding
 	if (unitType.isFlyer()) {
 		positions.push_back(_end);
-		finalDistance  = _start.getApproxDistance(_end);
+		finalDistance = _start.getApproxDistance(_end);
 		return Path(positions, finalDistance);
 	}
 
 	BWAPI::TilePosition start = BWAPI::TilePosition(_start);
 	const BWAPI::TilePosition end = BWAPI::TilePosition(_end);
+
+	// Check for precached route before generating
+	const BWEM::Area* area1 = bwem_map.GetArea(start);
+	const BWEM::Area* area2 = bwem_map.GetArea(end);
+
+	bool precached = false;
+	Path precachedPath = Path();
+	if (area1->Id() != area2->Id()) {
+		if (!AreaPathCache.contains(make_pair(area1->Id(), area2->Id())) || !AreaPathCache.contains(make_pair(area2->Id(), area1->Id())) || (!area1->AccessibleFrom(area2))){
+			return Path();
+		}
+
+		// Two cases: 
+		// - area1 and area2 are not neighbours (follow chokepoint path from 1 to 2)
+		// - area1 and area2 are neighbours (have to find closest path that goes to the chokepoint between area1 and area2)
+		
+		// If area1 and area2 are not neighbours, simply path through the entire cached path
+		if (!contains(area1->AccessibleNeighbours(), area2)) {
+			pair<const BWEM::Area*, const BWEM::Area*> pair = make_pair(area1, area2);
+			precachedPath = AreaPathCache[make_pair(area1->Id(), area2->Id())];
+
+			// Since cached paths go from smaller ID to larger ID, if area1 has the larger ID, flip the positions in the precachedPath
+			if (area1->Id() > area2->Id()) {
+				precachedPath.flip();
+			}
+
+			if (precachedPath.positions.size() > 0) {
+				Path startPath = generateSubPath(_start, unitType, precachedPath.positions.at(0));
+				Path endPath = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+
+				vector<BWAPI::Position> finalVec;
+				// Attatching start
+				finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
+				// Attatching precache
+				finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
+				// Attatching end
+				finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
+				const int finalDist = startPath.distance + precachedPath.distance + endPath.distance;
+
+#ifdef DEBUG_PATH
+				cout << "Using cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
+#endif
+				totalTimer.stop();
+				if (finalVec.size() > 0) {
+					return Path(finalVec, finalDist);
+				}
+			}
+		}
+		// If they are neigbours, try to find a nearby cached path to the end area that we can attach to
+		else {
+			Path subPath = closestCachedPath(_start, _end);
+			Path startPath = generateSubPath(_start, unitType, subPath.positions.at(0));
+			Path endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
+
+			vector<BWAPI::Position> finalVec;
+			// Attatching start
+			finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
+			// Attatching precache
+			finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
+			// Attatching end
+			finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
+			const int finalDist = startPath.distance + subPath.distance + endPath.distance;
+
+#ifdef DEBUG_PATH
+			cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
+#endif
+			totalTimer.stop();
+			if (finalVec.size() > 0) {
+				return Path(finalVec, finalDist);
+			}
+		}
+	}
 
 	// Optimization using priority_queue for open set
 	// The priority_queue will always have the node with the lowest fCost at the top
@@ -56,8 +131,8 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	// O(1) lookup time :)
 	const int mapWidth = BWAPI::Broodwar->mapWidth();
 	const int mapHeight = BWAPI::Broodwar->mapHeight();
-	vector<bool> closedSet(mapWidth* mapHeight, false); // Default: no closed positions
-	vector<int> gCostMap(mapWidth* mapHeight, INT_MAX); // Default: all gCosts are as large as possible
+	vector<bool> closedSet(mapWidth * mapHeight, false); // Default: no closed positions
+	vector<int> gCostMap(mapWidth * mapHeight, INT_MAX); // Default: all gCosts are as large as possible
 
 	// Store parents in an unordered_map for reconstructing path later
 	unordered_map<int, BWAPI::TilePosition> parent;
@@ -156,7 +231,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(positions.begin(), positions.end());
 
-#ifndef DEBUG
+#ifdef DEBUG_PATH
 			endTimer.stop();
 			cout << "Time spent backtracking + smoothing path: " << endTimer.getElapsedTimeInMilliSec() << endl;
 			totalTimer.stop();
@@ -202,7 +277,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 						// TODO: Optimize using pre-computed grid of hCosts. Only need 1 end node to base it off of.
 						// TilePosition.getApproxDistance(goal) counts the x moves and y moves it would take to get to the goal (dx + dy basically).
 						// Therefore, the hCost grid of any other goal is just an offset of the pre-computed value (since its just a coordinate shifted by integers)
-						const int hCost = neighbourTile.getApproxDistance(end) * 10;
+						const int hCost = neighbourTile.getApproxDistance(end) * ((x != 0 && y != 0) ? 14 : 10);
 						const double fCost = gCost + (HEURISTIC_WEIGHT * hCost);
 
 						//cout << "Tile costs: " << gCost << " | " << hCost << " | " << fCost << endl;
@@ -234,15 +309,17 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 // Behaves similarly to GeneratePath but does not check for subpaths. Meant to generate paths in-between chokepoints.
 Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
-	Timer subPathTimer = Timer();
-	subPathTimer.start();
+	Timer subTimer = Timer();
+	subTimer.start();
 
 	vector<BWAPI::Position> positions = vector<BWAPI::Position>();
+	vector<BWAPI::Position> subPathPositions = vector<BWAPI::Position>();
 	int finalDistance = 0;
 	// Checks if either the starting or ending tile positions are invalid
 	// If so, returns early with no positions added to the path
 	if (!_start.isValid() || !_end.isValid()) {
 		cout << "ERROR: Starting point or ending point not valid" << endl;
+		subTimer.stop();
 		return Path();
 	}
 
@@ -250,6 +327,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 	if (unitType.isFlyer()) {
 		positions.push_back(_end);
 		finalDistance = _start.getApproxDistance(_end);
+		subTimer.stop();
 		return Path(positions, finalDistance);
 	}
 
@@ -282,7 +360,9 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 
 	bool earlyExpansion = false;
 	while (openSet.size() > 0) {
-		if (TIME_LIMIT_ENABLED && subPathTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+		// Time limit for path generations
+		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+			subTimer.stop();
 			return Path();
 		}
 
@@ -311,25 +391,9 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 				currentNode.tile = parent[TileToIndex(currentNode.tile)];
 				const BWAPI::Position currentPos = BWAPI::Position(currentNode.tile);
 
-				if (positions.size() == 2) {
-					dir = positions.at(1) - positions.at(0);
-					finalDistance += positions.at(1).getApproxDistance(positions.at(0));
-				}
-				else if (positions.size() > 2) {
-					BWAPI::Position currentWaypoint = positions.at(positions.size() - 1);
-					BWAPI::Position prevWaypoint = positions.at(positions.size() - 2);
-					const BWAPI::Position newDir = currentWaypoint - prevWaypoint;
-					const double currentDistance = currentWaypoint.getApproxDistance(prevWaypoint);
+				finalDistance += currentPos.getApproxDistance(prevPos);
 
-					if (dir == newDir) {
-						finalDistance += currentWaypoint.getApproxDistance(positions.at(positions.size() - 3));
-						positions.erase(positions.end() - 2);
-					}
-					else {
-						dir = newDir;
-						finalDistance += currentDistance;
-					}
-				}
+				// Don't smooth cached paths since units need to grab the nearest path that will take them to the chokepoint of the area they want to go to
 
 				const BWAPI::Unit closestObstacle = BWAPI::Broodwar->getClosestUnit(currentWaypoint, (BWAPI::Filter::IsBuilding || BWAPI::Filter::IsSpecialBuilding), unitType.width() / 2 + 5);
 				if (closestObstacle != nullptr && closestObstacle->exists()) {
@@ -343,7 +407,6 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 					if (buildingDir.y < 0) {
 						yOffset += 5;
 					}
-
 					if (buildingDir.x > 0) {
 						xOffset -= 5;
 					}
@@ -360,16 +423,21 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 				prevPos = currentPos;
 			}
 
+
 			// Since we're pushing to the tile vector from end to start, we need to reverse it afterwards
 			reverse(positions.begin(), positions.end());
 
-			subPathTimer.stop();
-			cout << "Subpath generated: " << subPathTimer.getElapsedTimeInMilliSec() << endl;
+#ifdef DEBUG_SUBPATH
+			subTimer.stop();
+			cout << "Milliseconds spent generating SUB path: " << subTimer.getElapsedTimeInMilliSec() << " ms" << endl;
+#endif
 			return Path(positions, finalDistance);
 		}
 
 		// Step through each neighbour of the current node. The first neighbour that has a lower fCost is instantly explored next
 		// Neighbour's walkability is already checked inside of getNeighbours()
+		Timer neighbourTimer = Timer();
+		neighbourTimer.start();
 		for (int x = -1; x <= 1; x++) {
 			for (int y = -1; y <= 1; y++) {
 
@@ -400,10 +468,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 					const int gCost = currentNode.gCost + currentNode.tile.getApproxDistance(neighbourTile) * ((x != 0 && y != 0) ? 14 : 10);
 					// Only process the rest of the neighbour if it's gCost is less than what was previously seen
 					if (gCost < gCostMap[TileToIndex(neighbourTile)]) {
-						// TODO: Optimize using pre-computed grid of hCosts. Only need 1 end node to base it off of.
-						// TilePosition.getApproxDistance(goal) counts the x moves and y moves it would take to get to the goal (dx + dy basically).
-						// Therefore, the hCost grid of any other goal is just an offset of the pre-computed value (since its just a coordinate shifted by integers)
-						const int hCost = neighbourTile.getApproxDistance(end) * 10;
+						const int hCost = neighbourTile.getApproxDistance(end) * ((x != 0 && y != 0) ? 14 : 10);
 						const double fCost = gCost + (HEURISTIC_WEIGHT * hCost);
 
 						//cout << "Tile costs: " << gCost << " | " << hCost << " | " << fCost << endl;
@@ -427,111 +492,190 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 				}
 			}
 		}
+		neighbourTimer.stop();
 	}
 
 	return Path();
 }
 
-void AStar::fillAreaPathCache() {
-#ifndef DEBUG
-	Timer pathCacheTimer = Timer();
-	pathCacheTimer.start();
-#endif
-
-	AreaPathCache.clear();
-	precachedPathPositions.clear();
-
-	//Finding possible combinations of areas
+void AStar::fillUncachedAreaPairs() {
 	const vector<BWEM::Area>& areas = bwem_map.Areas();
-
 	for (int i = 0; i < areas.size(); i++) {
 		for (int j = i + 1; j < areas.size(); j++) {
-			const BWEM::Area& area1 = areas.at(i);
-			const BWEM::Area& area2 = areas.at(j);
-
-			const vector<const BWEM::Area*> neighbours = area1.AccessibleNeighbours();
+			// Have to do this to since bwem_map.Areas() doesn't return pointers so you can't make pairs of pointers with them
+			const BWEM::Area& area1 = *bwem_map.GetArea(BWAPI::WalkPosition(areas.at(i).Top()));
+			const BWEM::Area& area2 = *bwem_map.GetArea(BWAPI::WalkPosition(areas.at(j).Top()));
 
 			// Avoid areas that cannot reach each other or areas that are already next to each other
+			const vector<const BWEM::Area*> neighbours = area1.AccessibleNeighbours();
 			if (!area1.AccessibleFrom(&area2) || find(neighbours.begin(), neighbours.end(), &area2) != neighbours.end()) {
 				continue;
 			}
 
-			const vector<const BWEM::ChokePoint*> chokepoints1 = area1.ChokePoints();
-			const vector<const BWEM::ChokePoint*> chokepoints2 = area2.ChokePoints();
-
-			if (chokepoints1.empty() || chokepoints2.empty()) {
-				continue;
-			}
-
-			int closest = INT_MAX;
-			pair< BWAPI::WalkPosition, BWAPI::WalkPosition> closestPair;
-
-			bool found = false;
-			for (const BWEM::ChokePoint* cp1 : chokepoints1) {
-				if (cp1->Blocked()) {
-					continue;
-				}
-
-				for (const BWEM::ChokePoint* cp2 : chokepoints2) {
-					if (cp2->Blocked()) {
-						continue;
-					}
-
-					const BWAPI::WalkPosition cp1_center = cp1->Center();
-					const BWAPI::WalkPosition cp2_center = cp2->Center();
-
-					const int dist = cp1_center.getApproxDistance(cp2_center);
-					if (dist < closest) {
-						closest = dist;
-						closestPair = make_pair(cp1_center, cp2_center);
-						found = true;
-					}
-				}
-			}
-
-			// After grabbing the closest chokepoint positions between both areas, create path taking shortest path
-			// If no valid chokepoints found, skikp
-			if (found == false) {
-				continue;
-			}
-			const BWEM::CPPath smallestCPPath = bwem_map.GetPath(BWAPI::Position(closestPair.first), BWAPI::Position(closestPair.second));
-
-			vector<BWAPI::Position> finalPositions;
-			int finalDistance = 0;
-			for (int k = 0; k < smallestCPPath.size()-1 && smallestCPPath.size() > 1; k++) {
-				const BWAPI::WalkPosition cp1Pos = smallestCPPath.at(k)->Center();
-				const BWAPI::WalkPosition cp2Pos = smallestCPPath.at(k + 1)->Center();
-
-				// Caches the paths between chokepoints so that other paths between Areas don't generate them again
-				Path subPath;
-				if (ChokepointPathCache.find(make_pair(cp1Pos, cp2Pos)) != ChokepointPathCache.end()) {
-					subPath = ChokepointPathCache[make_pair(cp1Pos, cp2Pos)];
-				}
-				else {
-					subPath = GeneratePath(BWAPI::Position(cp1Pos), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2Pos));
-					ChokepointPathCache[make_pair(cp1Pos, cp2Pos)] = subPath;
-				}
-
-				finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
-				finalDistance += subPath.distance;
-			}
-			
-			Path finalPath = Path(finalPositions, finalDistance);
-			precachedPathPositions.insert(precachedPathPositions.end(), finalPositions.begin(), finalPositions.end());
-
+			// pair isn't working with const BWEM::Area& for some reason so switching to walkpositions so you can get area from bwem_map.GetArea(wp)
 			if (area1.Id() < area2.Id()) {
-				AreaPathCache.insert(make_pair(make_pair(area1.Id(), area2.Id()), finalPath));
+				pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition> areaPair = make_pair(area1.Top(), area2.Top());
+				UncachedAreaPairs.push_back(areaPair);
 			}
 			else {
-				AreaPathCache.insert(make_pair(make_pair(area1.Id(), area2.Id()), finalPath));
+				pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition> areaPair = make_pair(area2.Top(), area1.Top());
+				UncachedAreaPairs.push_back(areaPair);
+			}
+		}
+	}
+}
+
+void AStar::fillAreaPathCache() {
+#ifdef DEBUG_PRECACHE
+	Timer pathCacheTimer = Timer();
+	pathCacheTimer.start();
+#endif
+
+	if (UncachedAreaPairs.empty()) {
+		return;
+	}
+
+	const BWEM::Area& area1 = *bwem_map.GetArea(UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).first);
+	const BWEM::Area& area2 = *bwem_map.GetArea(UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).second);
+	UncachedAreaPairs.pop_back();
+
+	const vector<const BWEM::ChokePoint*> chokepoints1 = area1.ChokePoints();
+	const vector<const BWEM::ChokePoint*> chokepoints2 = area2.ChokePoints();
+
+	if (chokepoints1.empty() || chokepoints2.empty()) {
+#ifdef DEBUG_PRECACHE
+		cout << "No checkpoints found between areas" << endl;
+#endif
+		return;
+	}
+
+	int closest = INT_MAX;
+	pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*> closestCPPair;
+
+	for (const BWEM::ChokePoint* cp1 : chokepoints1) {
+		if (cp1->Blocked()) {
+			continue;
+		}
+
+		for (const BWEM::ChokePoint* cp2 : chokepoints2) {
+			if (cp2->Blocked()) {
+				continue;
+			}
+
+			const BWAPI::WalkPosition cp1_center = cp1->Center();
+			const BWAPI::WalkPosition cp2_center = cp2->Center();
+
+			const int dist = cp1_center.getApproxDistance(cp2_center);
+			if (dist < closest) {
+				closest = dist;
+				closestCPPair = make_pair(cp1, cp2);
 			}
 		}
 	}
 
-#ifndef DEBUG
-	pathCacheTimer.stop();
-	cout << "Time spent caching all chokepoint paths: " << pathCacheTimer.getElapsedTimeInMilliSec() << endl
+	// Group paths bewteen the shortest path of chokepoints between the chosen chokepoints of both areas
+	const BWEM::CPPath smallestCPPath = bwem_map.GetPath(BWAPI::Position(closestCPPair.first->Center()), BWAPI::Position(closestCPPair.second->Center()));
+
+	vector<BWAPI::Position> finalPositions;
+	int finalDistance = 0;
+	for (int k = 0; k < smallestCPPath.size() - 1 && smallestCPPath.size() > 1; k++) {
+		const BWEM::ChokePoint* cp1 = smallestCPPath.at(k);
+		const BWEM::ChokePoint* cp2 = smallestCPPath.at(k + 1);
+
+		if (cp1 == nullptr || cp2 == nullptr) {
+			return;
+		}
+
+		// Caches the paths between chokepoints so that other paths between Areas don't generate them again
+		Path subPath;
+		pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*> cpPair = make_pair(cp1, cp2);
+		if (ChokepointPathCache.find(make_pair(cp1, cp2)) != ChokepointPathCache.end()) {
+			subPath = ChokepointPathCache[make_pair(cp1, cp2)];
+		}
+		else {
+			subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
+			ChokepointPathCache[make_pair(cp1, cp2)] = subPath;
+
+#ifdef DEBUG_PRECACHE
+			precachedPositions.insert(precachedPositions.end(), subPath.positions.begin(), subPath.positions.end());
 #endif
+		}
+
+		finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
+		finalDistance += subPath.distance;
+	}
+
+	pair<const BWEM::Area::id, const BWEM::Area::id> finalPair = make_pair(area1.Id(), area2.Id());
+	const Path finalPath = Path(finalPositions, finalDistance);
+	AreaPathCache.insert(make_pair(finalPair, finalPath));
+
+#ifdef DEBUG_PRECACHE
+	pathCacheTimer.stop();
+	cout << "Time spent precaching path of size (" << finalPositions.size() << "): " << pathCacheTimer.getElapsedTimeInMilliSec() << endl;
+#endif
+}
+
+void AStar::clearPathCache() {
+	AreaPathCache.clear();
+	ChokepointPathCache.clear();
+	UncachedAreaPairs.clear();
+}
+
+// Assumes you've already checked if the area that these two positions are in are neighbours
+Path AStar::closestCachedPath(BWAPI::Position pos, BWAPI::Position goal) {
+	const BWEM::Area* startArea = bwem_map.GetArea(BWAPI::WalkPosition(pos));
+	const BWEM::Area* endArea = bwem_map.GetArea(BWAPI::WalkPosition(goal));
+
+	const vector<const BWEM::Area*> neighbours = startArea->AccessibleNeighbours();
+
+	Path closestPath = Path();
+	int closestDist = INT_MAX;
+	int closestIdx = -1;
+	for (const auto& neighbour : neighbours) {
+		if (neighbour->Id() == endArea->Id()
+			|| !AreaPathCache.contains(make_pair(startArea->Id(), neighbour->Id()))
+			|| !AreaPathCache.contains(make_pair(neighbour->Id(), startArea->Id()))) {
+			continue;
+		}
+
+		Path precachedPath;
+		if (neighbour->Id() < endArea->Id()) {
+			if (!AreaPathCache.contains(make_pair(neighbour->Id(), startArea->Id()))) {
+				continue;
+			}
+			precachedPath = AreaPathCache[make_pair(neighbour->Id(), endArea->Id())];
+		}
+		else {
+			if (!AreaPathCache.contains(make_pair(startArea->Id(), neighbour->Id()))) {
+				continue;
+			}
+			precachedPath = AreaPathCache[make_pair(endArea->Id(), neighbour->Id())];
+		}
+
+		for (int i = 0; i < precachedPath.positions.size(); i++) {
+			const BWAPI::Position pathPos = precachedPath.positions.at(i);
+			const int dist = pos.getApproxDistance(pathPos);
+			if (dist < closestDist) {
+				closestPath = precachedPath;
+				closestDist = dist;
+				closestIdx = i;
+			}
+		}
+	}
+
+	// Need to chop off part of the closestPath thats not needed
+	vector<BWAPI::Position> finalVec(closestPath.positions.begin() + closestIdx, closestPath.positions.end());
+	int finalDist = 0;
+	for (int i = 0; i < finalVec.size(); i++) {
+		if (i == 0) {
+			continue;
+		}
+		finalDist += finalVec.at(i).getApproxDistance(finalVec.at(i-1));
+	}
+
+	Path subPath = Path(finalVec, finalDist);
+
+	return subPath;
 }
 
 int AStar::TileToIndex(BWAPI::TilePosition tile) {
@@ -569,12 +713,12 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 	const BWAPI::Position topLeft = BWAPI::Position(tileCenter.x - (unitType.width() / 2), tileCenter.y - (unitType.height() / 2));
 	const BWAPI::Position bottomRight = BWAPI::Position(tileCenter.x + (unitType.width() / 2), tileCenter.y + (unitType.height() / 2));
 	// Checks if any buildings are touching where the unit would be in the middle of the tile
-	const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding);
+	const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding || BWAPI::Filter::IsSpecialBuilding);
 	if (!unitsInRect.empty()) {
 		return false;
 	}
 
-#ifndef DEBUG
+#ifdef DEBUG_PATH
 	if (rectCoordinates.size() < 10000) {
 		rectCoordinates.push_back(std::make_pair(topLeft, bottomRight));
 	}

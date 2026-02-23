@@ -3,7 +3,9 @@
 #include "Squad.h"
 #include "A-StarPathfinding.h"
 
-#define FRAMES_BETWEEN_CACHING 10
+#define DEBUG_CM
+#define FRAMES_BETWEEN_CACHING 5
+
 using namespace std;
 
 class ProtoBotCommander;

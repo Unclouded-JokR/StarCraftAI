@@ -4,11 +4,12 @@
 #include "../../BWEM/src/bwem.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
-#define DEBUG
+//#define DEBUG_PATH
+#define DEBUG_PRECACHE
+//#define DEBUG_SUBPATH
 #define TIME_LIMIT_ENABLED false
 #define HEURISTIC_WEIGHT 2.0
-#define TIME_LIMIT_MS 50.0
-#define FRAMES_BETWEEN_CACHING
+#define TIME_LIMIT_MS 70.0
 
 using namespace std;
 namespace {
@@ -18,9 +19,8 @@ namespace {
 class Path;
 
 extern vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
-extern vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
+extern vector<BWAPI::Position> precachedPositions;
 extern vector<BWAPI::TilePosition> earlyExpansionTiles;
-extern vector<BWAPI::Position> precachedPathPositions;
 
 struct Node {
 	BWAPI::TilePosition tile, parent;
@@ -94,25 +94,42 @@ class Path {
 			this->distance = 0;
 		};
 
-		bool operator ==(const Path& path) {
-			return this->positions == path.positions;
+		void flip() {
+			vector<BWAPI::Position> vec = this->positions;
+			reverse(vec.begin(), vec.end());
+			this->positions = vec;
+		}
+
+		bool operator ==(const Path& other) {
+			return this->positions == other.positions;
+		}
+		const Path& operator+(const Path& other){
+			vector<BWAPI::Position> finalPositions;
+			int finalDist = this->distance + other.distance;
+			finalPositions.insert(finalPositions.end(), this->positions.begin(), this->positions.end());
+			finalPositions.insert(finalPositions.end(), other.positions.begin(), other.positions.end());
+			return Path(finalPositions, finalDist);
 		}
 };
 
 class AStar {
-	private:
-		static map<pair<BWEM::Area::id, BWEM::Area::id>, Path> AreaPathCache;
-		static map<pair<BWAPI::WalkPosition, BWAPI::WalkPosition>, Path> ChokepointPathCache;
+private:
+	static map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AreaPathCache;
+	static map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> ChokepointPathCache;
+	static vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> UncachedAreaPairs;
 
-		static int TileToIndex(BWAPI::TilePosition tile);
-		static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
-		static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);
-		static double chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2);
-		static double octileDistance(BWAPI::Position pos1, BWAPI::Position pos2);
-		static Path generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint=false);
+	static int TileToIndex(BWAPI::TilePosition tile);
+	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
+	static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+	static double chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+	static double octileDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+	static Path generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);
+	static Path closestCachedPath(BWAPI::Position start, BWAPI::Position end);
 
-	public:
-		static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint=false);
-		static void drawPath(Path path);
-		static void fillAreaPathCache();
+public:
+	static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);
+	static void drawPath(Path path);
+	static void fillUncachedAreaPairs();
+	static void fillAreaPathCache();
+	static void clearPathCache();
 };

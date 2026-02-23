@@ -132,7 +132,8 @@ public:
 	Map *							GetMap() const;
 
 	Area &							operator=(const Area &) = delete;
-	bool							operator==(const Area& other){ return this->Id() == other.Id(); }
+	bool							operator==(const Area& other)const { return this->Id() == other.Id(); }
+	bool							operator<(const Area& other) const { return this->Id() < other.Id(); }
 
 ////////////////////////////////////////////////////////////////////////////
 //	Details: The functions below are used by the BWEM's internals
