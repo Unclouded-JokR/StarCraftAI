@@ -1097,6 +1097,14 @@ namespace BWEB {
 
 namespace BWEB::Walls {
 
+
+
+    void BWEB::Walls::onEnd()
+    {
+        getWalls().clear();
+    }
+
+
     Wall* createWall(vector<UnitType>& buildings, const BWEM::Area * area, const BWEM::ChokePoint * choke, const UnitType tightType, const vector<UnitType>& defenses, const bool openWall, const bool requireTight)
     {
         ofstream writeFile;

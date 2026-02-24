@@ -239,28 +239,7 @@ std::string StrategyManager::onStart()
 	//Calculate position we will tell squads to wait before attacking if enemy base is unknown or not.
 	int shortestDistance = INT_MAX;
 
-	for (auto area : mainArea->AccessibleNeighbours())
-	{
-		for (auto choke : area->ChokePoints())
-		{
-			const std::pair<const BWEM::Area*, const BWEM::Area*> chokeAreas = choke->GetAreas();
-
-			if (chokeAreas.first->Id() == mainArea->Id() || chokeAreas.second->Id() == mainArea->Id()) continue;
-
-			int distance = 0;
-			const BWEM::CPPath pathToChoke = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(choke->Center()), &distance);
-
-			if (distance == -1) continue;
-
-			std::cout << "Path distance: " << (distance) << "\n";
-
-			if (distance < shortestDistance)
-			{
-				shortestDistance = distance;
-				startingChoke = BWAPI::Position(choke->Center());
-			}
-		}
-	}
+	startingChoke = BWAPI::Position(BWEB::Map::getNaturalChoke()->Center());
 
 	std::cout << "Starting choke located at " << startingChoke << "\n";
 
@@ -303,6 +282,7 @@ Action StrategyManager::onFrame()
 
 	//Building logic
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
+	//std::cout << "B.O Complete? " << buildOrderCompleted << "\n";
 
 	//ProtoBot unit information
 	const FriendlyBuildingCounter ProtoBot_buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
@@ -340,7 +320,7 @@ Action StrategyManager::onFrame()
 	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
 
 	//4 Gateways per nexus should be built
-	saturatedNexus = (ProtoBot_buildings.gateway / 2);
+	saturatedNexus = (ProtoBot_buildings.gateway / 4);
 
 	std::vector<BWAPI::Position> enemyBaselocations;
 	for (const auto [unit, building] : enemyBuildingInfo)
@@ -356,15 +336,15 @@ Action StrategyManager::onFrame()
 	}
 
 	//Move this to inside if so we dont scout during build order unless instructed.
-//#pragma region Scout
-//	if (frame - frameSinceLastScout >= 24 * 20) {
-//		frameSinceLastScout = frame;
-//		Scout s;
-//		action.commanderAction = s;
-//		action.type = ActionType::Action_Scout;
-//		return action;
-//	}
-//#pragma endregion
+#pragma region Scout
+	if (frame - frameSinceLastScout >= 24 * 20) {
+		frameSinceLastScout = frame;
+		Scout s;
+		action.commanderAction = s;
+		action.type = ActionType::Action_Scout;
+		return action;
+	}
+#pragma endregion
 
 #pragma region Expand
 	if (buildOrderCompleted)
@@ -406,7 +386,7 @@ Action StrategyManager::onFrame()
 			//Not expanding properlly after having enough gateways
 			if (ProtoBot_buildings.nexus == saturatedNexus)
 			{
-				mineralsToExpand * 2.5;
+				//mineralsToExpand *= 2.5;
 				std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
 
 				Expand actionToTake;
@@ -555,14 +535,14 @@ Action StrategyManager::onFrame()
 #pragma endregion
 
 #pragma region Attack
-	//If we have more than two full squads attack. 
+	// If we have more than two full squads attack. 
 	if (Protobot_Squads.size() >= 2 && enemyBaselocations.size() != 0)
 	{
 		if (commanderReference->combatManager.totalCombatUnits.size() >= (MAX_SQUAD_SIZE * 2))
 		{
-			std::cout << "ATTACK ACTION: Attacking enemy base\n";
+			//std::cout << "ATTACK ACTION: Attacking enemy base\n";
 			Attack actionToTake;
-			//Attack the first enemy base location for now.
+			// Attack the first enemy base location for now.
 			actionToTake.position = enemyBaselocations.at(0);
 
 			action.commanderAction = actionToTake;
@@ -575,16 +555,17 @@ Action StrategyManager::onFrame()
 #pragma region Defend
 	if (Protobot_IdleSquads.size() != 0)
 	{
-		std::cout << "Defend Action: telling squad to defend base.\n";
+		//std::cout << "Defend Action: telling squad to defend base.\n";
 
 		Defend actionToTake;
 		actionToTake.position = startingChoke;
-		
+
 		action.commanderAction = actionToTake;
 		action.type = ActionType::Action_Defend;
 		return action;
 	}
 #pragma endregion
+
 
 
 	//StrategyManager::printBoredomMeter();

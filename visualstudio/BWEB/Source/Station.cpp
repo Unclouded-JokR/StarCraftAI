@@ -591,6 +591,19 @@ namespace BWEB {
 
 namespace BWEB::Stations {
 
+    void onEnd()
+    {
+        startMainStation = nullptr;
+        startNatStation = nullptr;
+        stations.clear();
+        mainBases.clear();
+        natBases.clear();
+        mainChokes.clear();
+        natChokes.clear();
+        testTiles.clear();
+        testPaths.clear();
+    }
+
     void findStations()
     {
         // Find all main bases

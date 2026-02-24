@@ -130,6 +130,9 @@ namespace BWEB {
 
         /// <summary> Draws all the features of the Wall. </summary>
         void draw();
+
+        /// <summary> Clears all cached Walls state </summary>
+        void onEnd();
     };
 
     namespace Walls {
@@ -175,5 +178,9 @@ namespace BWEB {
 
         /// <summary> Calls the draw function for each Wall that exists. </summary>
         void draw();
+
+        /// <summary> Clears all stored walls so BWEM pointers from the previous game don't persist </summary>
+        void onEnd();
+
     }
 }

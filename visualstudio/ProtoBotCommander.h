@@ -80,7 +80,6 @@ public:
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
 	std::vector<NexusEconomy> getNexusEconomies();
-	//BWAPI::Unitset getAllUnitsAssignedToNexus();
 
 	//Information Manager Methods
 	const std::set<BWAPI::Unit>& getKnownEnemyUnits();
@@ -108,8 +107,11 @@ public:
 	bool checkWorkerIsConstructing(BWAPI::Unit);
 	int checkAvailableSupply();
 
-	//Scouting
+	// Scouting Manager Methods
 	BWAPI::Unit getUnitToScout();
+
+	// Strategy Manager Methods
+	bool shouldGasSteal();
 
 private:
 	EnemyLocations enemy_;

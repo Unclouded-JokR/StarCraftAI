@@ -74,6 +74,31 @@ int InfluenceMap::getAllyInfluence(int x, int y) const
     return allyMap[x][y];
 }
 
+// Tile-based getters convert BWAPI::TilePosition to the internal walk-tile grid
+int InfluenceMap::getEnemyInfluenceAtTile(const BWAPI::TilePosition& tile) const
+{
+    if (!tile.isValid()) return 0;
+    // Each tile = 4 walktiles; use center walktile of the tile
+    int wx = tile.x * 4 + 2;
+    int wy = tile.y * 4 + 2;
+    if (wx < 0 || wx >= width || wy < 0 || wy >= height) return 0;
+    return getEnemyInfluence(wx, wy);
+}
+
+int InfluenceMap::getAllyInfluenceAtTile(const BWAPI::TilePosition& tile) const
+{
+    if (!tile.isValid()) return 0;
+    int wx = tile.x * 4 + 2;
+    int wy = tile.y * 4 + 2;
+    if (wx < 0 || wx >= width || wy < 0 || wy >= height) return 0;
+    return getAllyInfluence(wx, wy);
+}
+
+int InfluenceMap::getCombinedInfluenceAtTile(const BWAPI::TilePosition& tile) const
+{
+    return getEnemyInfluenceAtTile(tile) - getAllyInfluenceAtTile(tile);
+}
+
 void InfluenceMap::decayMaps()
 {
     for (int x = 0; x < width; x++)

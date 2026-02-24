@@ -56,6 +56,21 @@ private:
     static constexpr int kAirThreatThreshold = 40;   // Air threat "Danger" value
     static constexpr int kDetectReactBufferPx = 48;  // Stay a decent buffer distance from the detection radius
 
+    static constexpr int kSlot3RebuildEveryFrames = 24 * 6;     // every 6s
+    static constexpr int kSlot3MinBetweenMoves = 24;            // 1s
+    static constexpr int kSlot3ArriveDist = 96;
+
+    // --- slot 3 roam scout ---
+    BWAPI::Position slot3Home = BWAPI::Positions::Invalid;
+    bool slot3HomeSet = false;
+    bool slot3ReturningHome = false;
+    std::vector<BWAPI::Position> slot3Checkpoints;
+    int slot3NextRebuildFrame = 0;
+    bool slot3NeedsRebuild = false;
+    int slot3NextIdx = 0;
+    int slot3NextMoveFrame = 0;
+    BWAPI::Position slot3CurTarget = BWAPI::Positions::Invalid;
+
 
     // helpers
     void computePosts(); // fills posts[0..3]
@@ -67,4 +82,7 @@ private:
     static double groundPathLengthPx(const BWAPI::Position& from, const BWAPI::Position& to);
     bool isUnsafe(const BWAPI::Position& p) const;
     BWAPI::Position pickDetourToward(const BWAPI::Position& target) const;
+    bool haveVisionAt(const BWAPI::Position& p, int radiusPx) const;
+    void rebuildSlot3Checkpoints();
+
 };

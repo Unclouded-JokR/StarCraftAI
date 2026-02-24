@@ -102,6 +102,9 @@ namespace BWEB {
         /// <summary> Initializes the building of every BWEB::Station on the map, call it only once per game. </summary>
         void findStations();
 
+        /// <summary> Clears all cached Stations state </summary>
+        void onEnd();
+
         /// <summary> Calls the draw function for each Station that exists. </summary>
         void draw();
 

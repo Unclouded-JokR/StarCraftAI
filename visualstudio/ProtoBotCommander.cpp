@@ -104,21 +104,8 @@ void ProtoBotCommander::onFrame()
 
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
-	m_mapTools.onFrame();
+	//m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
-
-	/*for (const Area& area : theMap.Areas())
-	{
-		for (const Base& base : area.Bases())
-		{
-			if (BWEM::utils::MapDrawer::showBases && BWAPI::Broodwar->canBuildHere(base.Location(), BWAPI::UnitTypes::Protoss_Nexus))
-			{
-				BWAPI::Broodwar->drawBoxMap(BWAPI::Position(base.Location()),
-					BWAPI::Position(base.Location() + BWAPI::UnitType(BWAPI::UnitTypes::Protoss_Nexus).tileSize()),
-					BWEM::utils::MapDrawer::Color::bases);
-			}
-		}
-	}*/
 
 	/*
 	* Protobot Modules
@@ -196,12 +183,15 @@ void ProtoBotCommander::onFrame()
 	//BWEB::Map::draw();
 
 	// Draw some relevent information to the screen to help us debug the bot
-	drawDebugInformation();
+	//drawDebugInformation();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
 {
 	std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
+
+    // Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
+    BWEB::Map::onEnd();
 }
 
 /*
@@ -225,8 +215,6 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
 {
 	buildManager.onUnitDiscover(unit);
-
-	//add information manager here.
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
@@ -254,8 +242,8 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-	//Need to call on create again for the case of an assimilator not CREATING a new "unit"
-	buildManager.onUnitCreate(unit);
+	//std::cout << "ProtoBot onUnitComplete: " << unit->getType() << "\n";
+
 	informationManager.onUnitComplete(unit);
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
@@ -265,12 +253,15 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	//We will let the Ecconomy Manager exclusivly deal with all ecconomy units (Nexus, Assimilator, Probe).
 	if (unit_type == BWAPI::UnitTypes::Protoss_Nexus || unit_type == BWAPI::UnitTypes::Protoss_Assimilator || unit_type == BWAPI::UnitTypes::Protoss_Probe)
 	{
+		//std::cout << "Calling onComplete for " << unit_type << " " << unit->getID() << "\n";
 		economyManager.assignUnit(unit);
+		buildManager.onUnitComplete(unit);
 		return;
 	}
 
 	if (unit_type.isBuilding())
 	{
+		//std::cout << "Calling onComplete for " << unit_type << " " << unit->getID() << "\n";
 		buildManager.onUnitComplete(unit);
 		return;
 	}
@@ -280,7 +271,17 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		if (scoutingManager.canAcceptObserverScout())
 		{
 			scoutingManager.assignScout(unit);
-			BWAPI::Broodwar->printf("[Commander] Assigned Observer %d to Scouting", unit->getID());
+			//BWAPI::Broodwar->printf("[Commander] Assigned Observer %d to Scouting", unit->getID());
+			return;
+		}
+	}
+
+	if (unit_type == BWAPI::UnitTypes::Protoss_Zealot || unit_type == BWAPI::UnitTypes::Protoss_Dragoon)
+	{
+		if (scoutingManager.canAcceptCombatScout(unit_type))
+		{
+			scoutingManager.assignScout(unit);
+			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
 			return;
 		}
 	}
@@ -527,3 +528,9 @@ bool ProtoBotCommander::isDetectorThreatened(const BWAPI::Position& pos) const
 	return r.detectorThreat > 0;
 }
 
+bool ProtoBotCommander::shouldGasSteal()
+{
+	bool const enable = strategyManager.shouldGasSteal();
+
+	return enable;
+}
