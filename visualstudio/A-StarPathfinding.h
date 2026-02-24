@@ -5,11 +5,11 @@
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
 //#define DEBUG_PATH
-#define DEBUG_PRECACHE
+//#define DEBUG_PRECACHE
 //#define DEBUG_SUBPATH
-#define TIME_LIMIT_ENABLED false
-#define HEURISTIC_WEIGHT 2.0
-#define TIME_LIMIT_MS 70.0
+#define TIME_LIMIT_ENABLED true
+#define HEURISTIC_WEIGHT 3
+#define TIME_LIMIT_MS 500.0
 
 using namespace std;
 namespace {

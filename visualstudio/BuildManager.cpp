@@ -92,7 +92,7 @@ void BuildManager::onFrame() {
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace, true);
                     }
                     else
-                    {
+                    {                                                                                                                           
                         //std::cout << "Trying to build regular building\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), locationToPlace);
                     }

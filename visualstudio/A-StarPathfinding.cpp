@@ -9,6 +9,7 @@ vector<BWAPI::TilePosition> earlyExpansionTiles;
 
 // Initializing static variables 
 map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AStar::AreaPathCache;
+static map<pair<const BWAPI::TilePosition, const BWAPI::TilePosition>, const Path> BasePathCache;
 map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> AStar::ChokepointPathCache;
 vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::UncachedAreaPairs;
 vector<BWAPI::Position> precachedPositions;
@@ -54,28 +55,49 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 	bool precached = false;
 	Path precachedPath = Path();
-	if (area1->Id() != area2->Id()) {
-		if (!AreaPathCache.contains(make_pair(area1->Id(), area2->Id())) || !AreaPathCache.contains(make_pair(area2->Id(), area1->Id())) || (!area1->AccessibleFrom(area2))){
-			return Path();
-		}
+	if (area1 != nullptr && area2 != nullptr && area1->Id() != area2->Id()) {
+		if ((AreaPathCache.contains(make_pair(area1->Id(), area2->Id())) || AreaPathCache.contains(make_pair(area2->Id(), area1->Id()))) && area1->AccessibleFrom(area2)) {
+			// Two cases: 
+			// - area1 and area2 are not neighbours (get shortest path of chokepoints from 1 to)
+			// - area1 and area2 are neighbours (have to find closest path that goes to the chokepoint between area1 and area2)
 
-		// Two cases: 
-		// - area1 and area2 are not neighbours (follow chokepoint path from 1 to 2)
-		// - area1 and area2 are neighbours (have to find closest path that goes to the chokepoint between area1 and area2)
-		
-		// If area1 and area2 are not neighbours, simply path through the entire cached path
-		if (!contains(area1->AccessibleNeighbours(), area2)) {
-			pair<const BWEM::Area*, const BWEM::Area*> pair = make_pair(area1, area2);
-			precachedPath = AreaPathCache[make_pair(area1->Id(), area2->Id())];
+			// If area1 and area2 are not neighbours, simply path through the entire cached path
+			if (!contains(area1->AccessibleNeighbours(), area2)) {
+				pair<const BWEM::Area*, const BWEM::Area*> pair = make_pair(area1, area2);
+				precachedPath = AreaPathCache[make_pair(area1->Id(), area2->Id())];
 
-			// Since cached paths go from smaller ID to larger ID, if area1 has the larger ID, flip the positions in the precachedPath
-			if (area1->Id() > area2->Id()) {
-				precachedPath.flip();
+				// Since cached paths go from smaller ID to larger ID, if area1 has the larger ID, flip the positions in the precachedPath
+				if (area1->Id() > area2->Id()) {
+					precachedPath.flip();
+				}
+
+				if (precachedPath.positions.size() > 0) {
+					Path startPath = generateSubPath(_start, unitType, precachedPath.positions.at(0));
+					Path endPath = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+
+					vector<BWAPI::Position> finalVec;
+					// Attatching start
+					finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
+					// Attatching precache
+					finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
+					// Attatching end
+					finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
+					const int finalDist = startPath.distance + precachedPath.distance + endPath.distance;
+
+#ifdef DEBUG_PATH
+					cout << "Using cached path: " << "start size: " << startPath.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << endPath.positions.size() << endl;
+#endif
+					totalTimer.stop();
+					if (finalVec.size() > 0) {
+						return Path(finalVec, finalDist);
+					}
+				}
 			}
-
-			if (precachedPath.positions.size() > 0) {
-				Path startPath = generateSubPath(_start, unitType, precachedPath.positions.at(0));
-				Path endPath = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+			// If they are neigbours, try to find a nearby cached path to the end area that we can attach to
+			else {
+				Path subPath = closestCachedPath(_start, _end);
+				Path startPath = GeneratePath(_start, unitType, subPath.positions.at(0));
+				Path endPath = GeneratePath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
 
 				vector<BWAPI::Position> finalVec;
 				// Attatching start
@@ -84,38 +106,15 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
 				// Attatching end
 				finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
-				const int finalDist = startPath.distance + precachedPath.distance + endPath.distance;
+				const int finalDist = startPath.distance + subPath.distance + endPath.distance;
 
 #ifdef DEBUG_PATH
-				cout << "Using cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
+				cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
 #endif
 				totalTimer.stop();
 				if (finalVec.size() > 0) {
 					return Path(finalVec, finalDist);
 				}
-			}
-		}
-		// If they are neigbours, try to find a nearby cached path to the end area that we can attach to
-		else {
-			Path subPath = closestCachedPath(_start, _end);
-			Path startPath = generateSubPath(_start, unitType, subPath.positions.at(0));
-			Path endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
-
-			vector<BWAPI::Position> finalVec;
-			// Attatching start
-			finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
-			// Attatching precache
-			finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
-			// Attatching end
-			finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
-			const int finalDist = startPath.distance + subPath.distance + endPath.distance;
-
-#ifdef DEBUG_PATH
-			cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
-#endif
-			totalTimer.stop();
-			if (finalVec.size() > 0) {
-				return Path(finalVec, finalDist);
 			}
 		}
 	}
@@ -264,19 +263,15 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 				if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
 
-					// If neighbour was already visited or already evaluated, skip it
-					if (closedSet[TileToIndex(neighbourTile)] || openSetNodes.contains(neighbourTile)) {
-						continue;
-					}
-
 					// CHANGE: Using integers for gCost and hCost for efficiency while sacrificing some accuracy across long distances
 					// Makes use of how optimized BWAPI's getApproxDistance is
 					const int gCost = currentNode.gCost + currentNode.tile.getApproxDistance(neighbourTile) * ((x != 0 && y != 0) ? 14 : 10);
-					// Only process the rest of the neighbour if it's gCost is less than what was previously seen
-					if (gCost < gCostMap[TileToIndex(neighbourTile)]) {
-						// TODO: Optimize using pre-computed grid of hCosts. Only need 1 end node to base it off of.
-						// TilePosition.getApproxDistance(goal) counts the x moves and y moves it would take to get to the goal (dx + dy basically).
-						// Therefore, the hCost grid of any other goal is just an offset of the pre-computed value (since its just a coordinate shifted by integers)
+					// If neighbour is revisited but doesn't have a lower cost than what was previously evaluated, skip it
+					if (closedSet[TileToIndex(neighbourTile)] && gCost >= gCostMap[TileToIndex(neighbourTile)]) {
+						continue;
+					}
+
+					if (!openSetNodes.contains(neighbourTile) || gCost < gCostMap[TileToIndex(neighbourTile)]) {
 						const int hCost = neighbourTile.getApproxDistance(end) * ((x != 0 && y != 0) ? 14 : 10);
 						const double fCost = gCost + (HEURISTIC_WEIGHT * hCost);
 
@@ -293,8 +288,10 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 							earlyExpansion = true;
 						}*/
 
-						openSet.push(neighbourNode);
-						openSetNodes.insert(neighbourTile);
+						if (!openSetNodes.contains(neighbourTile)) {
+							openSet.push(neighbourNode);
+							openSetNodes.insert(neighbourTile);
+						}
 						parent[TileToIndex(neighbourTile)] = currentNode.tile;
 						gCostMap[TileToIndex(neighbourTile)] = gCost;
 					}
@@ -363,6 +360,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
+			cout << "TIME LIMIT REACHED: Empty path returned." << endl;
 			return Path();
 		}
 
@@ -458,16 +456,15 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 				// If the neighbour tile is walkable, creates a Node of the neighbour tile and adds it to the neighbours vector
 				if (tileWalkable(unitType, neighbourTile, end, isInteractableEndpoint)) {
 
-					// If neighbour was already visited or already evaluated, skip it
-					if (closedSet[TileToIndex(neighbourTile)] || openSetNodes.contains(neighbourTile)) {
-						continue;
-					}
-
 					// CHANGE: Using integers for gCost and hCost for efficiency while sacrificing some accuracy across long distances
 					// Makes use of how optimized BWAPI's getApproxDistance is
 					const int gCost = currentNode.gCost + currentNode.tile.getApproxDistance(neighbourTile) * ((x != 0 && y != 0) ? 14 : 10);
-					// Only process the rest of the neighbour if it's gCost is less than what was previously seen
-					if (gCost < gCostMap[TileToIndex(neighbourTile)]) {
+					// If neighbour is revisited but doesn't have a lower cost than what was previously evaluated, skip it
+					if (closedSet[TileToIndex(neighbourTile)] && gCost >= gCostMap[TileToIndex(neighbourTile)]) {
+						continue;
+					}
+
+					if (!openSetNodes.contains(neighbourTile) || gCost < gCostMap[TileToIndex(neighbourTile)]) {
 						const int hCost = neighbourTile.getApproxDistance(end) * ((x != 0 && y != 0) ? 14 : 10);
 						const double fCost = gCost + (HEURISTIC_WEIGHT * hCost);
 
@@ -484,8 +481,10 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 							earlyExpansion = true;
 						}*/
 
-						openSet.push(neighbourNode);
-						openSetNodes.insert(neighbourTile);
+						if (!openSetNodes.contains(neighbourTile)) {
+							openSet.push(neighbourNode);
+							openSetNodes.insert(neighbourTile);
+						}
 						parent[TileToIndex(neighbourTile)] = currentNode.tile;
 						gCostMap[TileToIndex(neighbourTile)] = gCost;
 					}
@@ -713,7 +712,7 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 	const BWAPI::Position topLeft = BWAPI::Position(tileCenter.x - (unitType.width() / 2), tileCenter.y - (unitType.height() / 2));
 	const BWAPI::Position bottomRight = BWAPI::Position(tileCenter.x + (unitType.width() / 2), tileCenter.y + (unitType.height() / 2));
 	// Checks if any buildings are touching where the unit would be in the middle of the tile
-	const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding || BWAPI::Filter::IsSpecialBuilding);
+	const BWAPI::Unitset& unitsInRect = BWAPI::Broodwar->getUnitsInRectangle(topLeft, bottomRight, BWAPI::Filter::IsBuilding || (BWAPI::Filter::IsNeutral && !BWAPI::Filter::IsCritter));
 	if (!unitsInRect.empty()) {
 		return false;
 	}
