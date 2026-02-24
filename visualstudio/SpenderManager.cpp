@@ -24,7 +24,21 @@ int SpenderManager::availableMinerals(std::vector<ResourceRequest> &requests)
         if (request.state == ResourceRequest::State::Accepted_Completed ||
             request.state == ResourceRequest::State::PendingApproval) continue;
 
-        if (request.type == ResourceRequest::Type::Building) currentMineralCount -= request.unit.mineralPrice();
+        switch (request.type)
+        {
+            case ResourceRequest::Type::Unit:
+            case ResourceRequest::Type::Building:
+                currentMineralCount -= request.unit.mineralPrice();
+                break;
+
+            case ResourceRequest::Type::Upgrade:
+                currentMineralCount -= request.upgrade.mineralPrice();
+                break;
+
+            case ResourceRequest::Type::Tech:
+                currentMineralCount -= request.tech.mineralPrice();
+                break;
+        }
     }
 
     return currentMineralCount;
@@ -40,7 +54,21 @@ int SpenderManager::availableGas(std::vector<ResourceRequest> &requests)
         if (request.state == ResourceRequest::State::Accepted_Completed ||
             request.state == ResourceRequest::State::PendingApproval) continue;
 
-        if(request.type == ResourceRequest::Type::Building) currentGasCount -= request.unit.gasPrice();
+        switch (request.type)
+        {
+        case ResourceRequest::Type::Unit:
+        case ResourceRequest::Type::Building:
+            currentGasCount -= request.unit.gasPrice();
+            break;
+
+        case ResourceRequest::Type::Upgrade:
+            currentGasCount -= request.upgrade.gasPrice();
+            break;
+
+        case ResourceRequest::Type::Tech:
+            currentGasCount -= request.tech.gasPrice();
+            break;
+        }
     }
 
     return currentGasCount;
@@ -126,6 +154,25 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
 
     //std::cout << "Current mineral count: " << currentMineralCount << "\n";
     //std::cout << "Current gas count: " << currentGasCount << "\n";
+
+    //Pylon first pass. These units should have priority.
+    /*for (ResourceRequest& request : requests)
+    {
+        if (request.state == ResourceRequest::State::PendingApproval && request.type == ResourceRequest::Type::Building && request.unit == BWAPI::UnitTypes::Protoss_Pylon)
+        {
+            mineralPrice = request.unit.mineralPrice();
+            gasPrice = request.unit.gasPrice();
+
+            canAffordRequest = canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount);
+
+            if (canAffordRequest)
+            {
+                request.state = ResourceRequest::State::Approved_InProgress;
+                currentMineralCount -= mineralPrice;
+                currentGasCount -= gasPrice;
+            }
+        }
+    }*/
 
     //spend money until we cant anymore.
     for (ResourceRequest& request : requests)

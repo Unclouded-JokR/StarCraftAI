@@ -3,6 +3,7 @@
 #include <string>
 #include <BWAPI.h>
 #include <fstream>
+#include <ctime>
 
 #include "../src/starterbot/MapTools.h"
 #include "../src/starterbot/Tools.h"

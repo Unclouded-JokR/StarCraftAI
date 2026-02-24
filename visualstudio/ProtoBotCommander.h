@@ -48,11 +48,6 @@ public:
 	CombatManager combatManager;
 	StrategyManager strategyManager;
 
-	/*
-	* Used for Debugging
-	*/
-	std::string buildOrderSelected;
-
 	ProtoBotCommander();
 
 	/*
@@ -115,47 +110,4 @@ public:
 
 private:
 	EnemyLocations enemy_;
-};
-
-enum ActionType {
-	Action_Expand,
-	Action_Scout,
-	Action_Build,
-	Action_Attack,
-	Action_Defend,
-	Action_None
-};
-
-struct Expand
-{
-	BWAPI::UnitType unitToBuild;
-};
-
-struct Scout {
-
-};
-
-struct Build
-{
-	BWAPI::UnitType unitToBuild;
-};
-
-struct Attack
-{
-	BWAPI::Position position;
-};
-
-struct Defend
-{
-	BWAPI::Position position;
-};
-
-struct None
-{
-
-};
-
-struct Action {
-	std::variant<Expand, Scout, Build, Attack, Defend, None> commanderAction;
-	ActionType type;
 };

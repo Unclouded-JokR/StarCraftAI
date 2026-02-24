@@ -142,6 +142,7 @@ void BuildManager::onFrame() {
                     //  for natural walling, bypass PlacementInfo and use forcedTile calculation to build.
 
                     BWAPI::Position placementPos = BWAPI::Positions::Invalid;
+                    PlacementInfo placementInfo;
 
                     if (request.useForcedTile)
                     {
@@ -183,7 +184,7 @@ void BuildManager::onFrame() {
                     }
                     else
                     {
-                        const PlacementInfo placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                        placementInfo = buildingPlacer.getPositionToBuild(request.unit);
 
                         if (placementInfo.position == BWAPI::Positions::Invalid)
                         {
@@ -193,23 +194,23 @@ void BuildManager::onFrame() {
                             {
                             case PlacementInfo::NO_POWER:
                                 //should create a new pylon request
-                                std::cout << "FAILED: NO POWER\n";
+                                //std::cout << "FAILED: NO POWER\n";
                                 break;
                             case PlacementInfo::NO_BLOCKS:
                                 //Wait for a bit and kill the request if no blocks are added
-                                std::cout << "FAILED: NO BLOCKS\n";
+                                //std::cout << "FAILED: NO BLOCKS\n";
                                 break;
                             case PlacementInfo::NO_GYSERS:
                                 //Shouldnt happen but okay
-                                std::cout << "FAILED: NO GYSERS\n";
+                                //std::cout << "FAILED: NO GYSERS\n";
                                 break;
                             case PlacementInfo::NO_PLACEMENTS:
                                 //Wait for a bit and kill the request if no placements are added.
-                                std::cout << "FAILED: NO PLACEMENTS\n";
+                                //std::cout << "FAILED: NO PLACEMENTS\n";
                                 break;
                             case PlacementInfo::NO_EXPANSIONS:
                                 //kill the expansion request.
-                                std::cout << "FAILED: NO EXPANSION\n";
+                                //std::cout << "FAILED: NO EXPANSION\n";
                                 break;
                             }
 
@@ -247,6 +248,8 @@ void BuildManager::onFrame() {
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
+
+                    BWEB::Map::addUsed(placementInfo.topLeft, request.unit);
                 }
                 break;
             }
@@ -564,18 +567,18 @@ bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
 
 void BuildManager::pumpUnit()
 {
-    FriendlyUnitCounter ProtoBot_Units = commanderReference->informationManager.getFriendlyUnitCounter();
-    FriendlyBuildingCounter ProtoBot_Buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
-    FriendlyUpgradeCounter ProtoBot_Upgrades = commanderReference->informationManager.getFriendlyUpgradeCounter();
+    const FriendlyUnitCounter ProtoBot_Units = commanderReference->informationManager.getFriendlyUnitCounter();
+    const FriendlyBuildingCounter ProtoBot_Buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
+    const FriendlyUpgradeCounter ProtoBot_Upgrades = commanderReference->informationManager.getFriendlyUpgradeCounter();
     const int totalMinerals = BWAPI::Broodwar->self()->minerals();
     const int totalGas = BWAPI::Broodwar->self()->gas();
 
     for (BWAPI::Unit unit : buildings)
     {
-        BWAPI::UnitType type = unit->getType();
+        const BWAPI::UnitType type = unit->getType();
         if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            if (ProtoBot_Buildings.cyberneticsCore >= 1)
+            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 5)
             {
                 trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
             }
@@ -591,30 +594,36 @@ void BuildManager::pumpUnit()
                 trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
             }
         }
-        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading() && totalMinerals >= 500)
+        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
         {
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit))
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Singularity_Charge);
             }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
         {
-            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !upgradeAlreadyRequested(unit))
+            if (ProtoBot_Buildings.gateway < 8 || ProtoBot_Buildings.templarArchives < 1) continue;
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
-            }*/
-
+            }
         }
-        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading() && totalMinerals >= 500)
+        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
         {
+            if (ProtoBot_Buildings.gateway < 8) continue;
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+            }
+            
+            if (ProtoBot_Upgrades.singularityCharge != 3) continue;
+            
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
             {
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
-            }
-            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
             }
             else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !upgradeAlreadyRequested(unit))
             {
@@ -717,6 +726,8 @@ void BuildManager::initBuildOrdersOnStart()
 
 void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
 {
+    srand(time(0));
+
     if (buildOrders.empty())
     {
         buildOrderActive = false;
@@ -741,7 +752,8 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
             candidates.push_back(i);
     }
 
-    activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
+    //activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
+    activeBuildOrderIndex = 4;
     activeBuildOrderStep = 0;
     buildOrderActive = true;
     buildOrderCompleted = false;

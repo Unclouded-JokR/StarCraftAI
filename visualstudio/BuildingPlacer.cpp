@@ -17,7 +17,7 @@ bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, 
     }
     else
     {
-        if (typeFound == BWAPI::UnitTypes::Protoss_Assimilator || typeFound == BWAPI::UnitTypes::Terran_Refinery || typeFound == BWAPI::UnitTypes::Zerg_Extractor)
+        if (typeFound.isRefinery())
         {
             return true;
         }
@@ -272,6 +272,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
             else
             {
+                information.topLeft = pos;
                 information.flag = PlacementInfo::SUCCESS;
                 information.position = BWAPI::Position(pos);
             }
@@ -287,6 +288,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
             else
             {
+                information.topLeft = pos;
                 information.flag = PlacementInfo::SUCCESS;
                 information.position = BWAPI::Position(pos);
             }
@@ -306,12 +308,14 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                 }
                 else
                 {
+                    information.topLeft = powerTilePosition;
                     information.position = BWAPI::Position(powerTilePosition);
                     information.flag = PlacementInfo::SUCCESS;
                 }
             }
             else
             {
+                information.topLeft = powerTilePosition;
                 information.position = BWAPI::Position(powerTilePosition);
                 information.flag = PlacementInfo::SUCCESS;
             }
@@ -328,6 +332,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
             else
             {
+                information.topLeft = pos;
                 information.flag = PlacementInfo::SUCCESS;
                 information.position = BWAPI::Position(pos);
             }

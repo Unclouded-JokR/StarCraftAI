@@ -1,160 +1,80 @@
 #pragma once
 #include <BWAPI.h>
 #include <variant>
+#include <vector>
+#include <bwem.h>
+
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 3
 #define SUPPLY_THRESHOLD_MIDGAME 5
 #define SUPPLY_THRESHOLD_LATEGAME 8
+#define MIDGAME_TIME 5
+#define LATEGAME_TIME 15
+#define MAX_SUPPLY 200
 
-class StrategyManager;
-
-class StrategyState {
-public:
-	std::string stringStateName;
-	StrategyState(std::string stateName) : stringStateName(stateName) {}
-
-	virtual void enter(StrategyManager& strategyManager) = 0;
-	virtual void exit(StrategyManager& strategyManager) = 0;
-	virtual void evaluate(StrategyManager& strategyManager) = 0;
-	virtual ~StrategyState() = default;
-
-	std::string printStateName()
-	{
-		return "Current state is: " + stringStateName + ".";
-	}
-};
-
-/*
-*								[Boredom State]
-*
-* [Notes]:
-* Start making slightly more aggressive moves with the hopes of getting into combat.
-* Can optionally make this  that the enemy player is playing a more potentially more defensive or expand style of play.
-*
-*/
-class StrategyBoredomState : public StrategyState {
-public:
-	StrategyBoredomState(std::string stateName) : StrategyState(stateName) {}
-	void enter(StrategyManager& strategyManager) override;
-	void exit(StrategyManager& strategyManager) override;
-	void evaluate(StrategyManager& strategyManager) override;
-};
-
-/*
-*								[Content State]
-*
-*[Notes]:
-* Normal play and decision making.
-* Will try to pick the best move based on time and enemy considerations.
-*
-*/
-class StrategyContentState : public StrategyState {
-public:
-	StrategyContentState(std::string stateName) : StrategyState(stateName) {}
-	void enter(StrategyManager& strategyManager) override;
-	void exit(StrategyManager& strategyManager) override;
-	void evaluate(StrategyManager& strategyManager) override;
-};
-
-/*
-*								[Denial State]
-*
-*[Notes]:
-* Plays quicker and makes more rash decisions, can make the time to choose the best descision quicker.
-*
-*/
-class StrategyDenialState : public StrategyState {
-public:
-	StrategyDenialState(std::string stateName) : StrategyState(stateName) {}
-	void enter(StrategyManager& strategyManager) override;
-	void exit(StrategyManager& strategyManager) override;
-	void evaluate(StrategyManager& strategyManager) override;
-};
-
-/*
-*								[Ego State]
-*
-*[Notes]:
-* Makes greedier decisions that other states would not choose. Takes more time to decide what decision to make.
-*/
-class StrategyEgoState : public StrategyState {
-public:
-	StrategyEgoState(std::string stateName) : StrategyState(stateName) {}
-	void enter(StrategyManager& strategyManager) override;
-	void exit(StrategyManager& strategyManager) override;
-	void evaluate(StrategyManager& strategyManager) override;
-};
-
-/*
-*								[Angry State]
-*
-*[Notes]:
-* Plays to kill the enemy and prevent them from getting more of a lead. Will make more aggressive moves with the hopes of winning.
-*/
-class StrategyAngryState : public StrategyState {
-public:
-	StrategyAngryState(std::string stateName) : StrategyState(stateName) {}
-	void enter(StrategyManager& strategyManager) override;
-	void exit(StrategyManager& strategyManager) override;
-	void evaluate(StrategyManager& strategyManager) override;
-};
-
-/*
-*								[Rage State]
-*
-*[Notes]:
-* Very aggressive moves, with the main goal of killing the enemy units that have killed them (get the score of a unit)
-* and with the hopes of killing a enemy expansion or highly valued units like workers and what not.
-*
-* Might use cheese strats here to make enemy lose workers like dropships.
-*/
-class StrategyRageState : public StrategyState {
-public:
-	int timeWhenRageEntered = 0;
-	int rageTime = 30; //in seconds
-
-	StrategyRageState(std::string stateName) : StrategyState(stateName) {}
-	void enter(StrategyManager& strategyManager) override;
-	void exit(StrategyManager& strategyManager) override;
-	void evaluate(StrategyManager& strategyManager) override;
-};
+//Adjust this time so enemy bots are not able to continue researching since we wouldnt scale as well as them. Kinda high for an start craft game time.
+#define FRAMES_TO_ALL_IN 57600
 
 class ProtoBotCommander;
-struct Action;
+struct FriendlyBuildingCounter;
+
+enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION, STENGTHENING_ARMY};
+enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
+enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
+
+//All units the strategy manager is able to request
+struct ProtoBotReuqestCounter {
+	int gateway_requests = 0;
+	int pylon_requests = 0;
+	int nexus_requests = 0;
+	int assimilator_requests = 0;
+	int forge_requests = 0;
+	int cybernetics_requests = 0;
+	int robotics_requests = 0;
+	int observatory_requests = 0;
+};
+
+struct Action {
+	enum ActionType { ACTION_EXPAND, ACTION_SCOUT, ACTION_BUILD, ACTION_ATTACK, ACTION_DEFEND, ACTION_NONE};
+	ActionType type = ACTION_NONE;
+
+	BWAPI::UnitType expansionToConstruct = BWAPI::UnitTypes::None;
+	BWAPI::UnitType buildingToConstruct = BWAPI::UnitTypes::None;
+	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
+	BWAPI::Position defendPosition = BWAPI::Positions::Invalid;
+};
 
 class StrategyManager
 {
-public:
-	ProtoBotCommander* commanderReference;
-	BWAPI::Position startingChoke;
-	float boredomMeter = 0.0f; //Value between 0-1
-	float angerMeter = 0.0f; //Value between 0-1;
-	float egoMeter = 0.0f; //Value between 0-1;
+private:
+	ProductionFocus ProtoBot_ProductionGoal = ProductionFocus::EXPANDING_INFLUENCE;
+	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };
+	size_t minutesPassedIndex = 0;
 
-	float boredomPerSecond = 0.05f;
-	float angerFromUnitDeath = .005f;
-	float egoFromEnemyUnitDeath = .01f;
+	//If we have excess minerals something is most likely wrong.
+	int mineralExcessToExpand = 1000;
+	int frameSinceLastScout = 0;
+	const BWEM::Area* mainArea;
+
+public:
+	ProtoBotReuqestCounter requestCounter;
+	std::unordered_set<const BWEM::Area*> ProtoBot_Areas;
+	std::unordered_set<const BWEM::ChokePoint*> ProtoBotArea_SquadPlacements;
+	std::unordered_map<const BWEM::ChokePoint*, bool> PositionsFilled;
+	BWAPI::Position startingChoke;
+
+	ProtoBotCommander* commanderReference;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
-	std::string onStart();
-	Action onFrame();
-	void onUnitDestroy(BWAPI::Unit unit); //for buildings and workers
-	void onUnitCreate(BWAPI::Unit unit);
+	void onStart();
+	std::vector<Action> onFrame();
+	void onUnitDestroy(BWAPI::Unit); //for buildings and workers
+	void onUnitCreate(BWAPI::Unit);
+	void onUnitMorph(BWAPI::Unit);
+	void onUnitComplete(BWAPI::Unit);
+	void onUnitShow(BWAPI::Unit);
+
+	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();
-
-	void printBoredomMeter();
-	void printAngerMeter();
-	void changeState(StrategyState*);
-	void battleLost(); //Optionally can makes these two a single function with a bool parameter 
-	void battleWon();
-	std::string getCurrentStateName();
 	bool checkAlreadyRequested(BWAPI::UnitType type);
-
-	static StrategyContentState contentState;
-	static StrategyBoredomState boredomState;
-	static StrategyEgoState egoState;
-	static StrategyDenialState denialState;
-	static StrategyRageState rageState;
-	static StrategyAngryState angryState;
-	StrategyState* currentState;
 };
