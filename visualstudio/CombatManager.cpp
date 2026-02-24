@@ -147,8 +147,6 @@ void CombatManager::drawDebugInfo() {
 		BWAPI::Position prevPos = precachedPositions.at(0);
 		for (const auto& pos : precachedPositions) {
 			map_tool.drawTile(BWAPI::TilePosition(pos).x, BWAPI::TilePosition(pos).y, BWAPI::Colors::Red);
-			BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
-			BWAPI::Broodwar->drawCircleMap(pos, 5, BWAPI::Colors::Purple);
 			prevPos = pos;
 		}
 	}
