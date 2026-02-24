@@ -8,8 +8,8 @@
 //#define DEBUG_PRECACHE
 //#define DEBUG_SUBPATH
 #define TIME_LIMIT_ENABLED true
-#define HEURISTIC_WEIGHT 3
 #define TIME_LIMIT_MS 500.0
+#define HEURISTIC_WEIGHT 3
 
 using namespace std;
 namespace {
