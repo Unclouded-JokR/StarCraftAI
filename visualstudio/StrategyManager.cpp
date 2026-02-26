@@ -276,7 +276,7 @@ std::vector<Action> StrategyManager::onFrame()
 		}
 		
 		//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
-		if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
+		/*if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
 		{
 			std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 			Action action;
@@ -284,7 +284,7 @@ std::vector<Action> StrategyManager::onFrame()
 			action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Forge;
 
 			actionsToReturn.push_back(action);
-		}
+		}*/
 
 		//Only need 1 cybernetics core
 		if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
@@ -298,7 +298,7 @@ std::vector<Action> StrategyManager::onFrame()
 		}
 
 		//Should only build 1 robotics facility
-		if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+		/*if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 		{
 			std::cout << "build action: requesting to warp robotics facility\n";
 			Action action;
@@ -306,10 +306,10 @@ std::vector<Action> StrategyManager::onFrame()
 			action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Robotics_Facility;
 
 			actionsToReturn.push_back(action);
-		}
+		}*/
 
 		//Only 1 observatory
-		if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
+		/*if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
 		{
 			std::cout << "Build Action: requesting to warp observatory\n";
 			Action action;
@@ -317,11 +317,11 @@ std::vector<Action> StrategyManager::onFrame()
 			action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Observatory;
 
 			actionsToReturn.push_back(action);
-		}
+		}*/
 
 		//2/3 Forge upgrade units
 
-		if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+		/*if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 		{
 			std::cout << "build action: requesting to warp citadel of adun\n";
 			Action action;
@@ -339,7 +339,7 @@ std::vector<Action> StrategyManager::onFrame()
 			action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Templar_Archives;
 
 			actionsToReturn.push_back(action);
-		}
+		}*/
 	}
 #pragma endregion
 /*
