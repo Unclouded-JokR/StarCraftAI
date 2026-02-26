@@ -42,7 +42,7 @@ void StrategyManager::onStart()
 			const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
 			
 			//Ignore choke that is on ramp to prevent builders from being able to construct.
-			if (areas.first == mainArea || areas.second == mainArea) continue;
+			if (areas.first == mainArea || areas.second == mainArea || choke->Blocked()) continue;
 
 			ProtoBotArea_SquadPlacements.insert(choke);
 			PositionsFilled.insert({ choke, false });
@@ -440,6 +440,54 @@ std::vector<Action> StrategyManager::onFrame()
 #pragma endregion
 
 	return actionsToReturn;
+}
+
+BWAPI::Unitset StrategyManager::getProtoBotBuildings()
+{
+	const BWAPI::Unitset ProtoBot_units = BWAPI::Broodwar->self()->getUnits();
+	BWAPI::Unitset ProtoBot_buildings;
+
+	for (const BWAPI::Unit unit : ProtoBot_buildings)
+	{
+		if (unit->getType().isBuilding()) ProtoBot_buildings.insert(unit);
+	}
+
+	return ProtoBot_buildings;
+}
+
+int StrategyManager::getTotalMineralsNeeded()
+{
+	const BWAPI::Unitset ProtoBot_buildings = getProtoBotBuildings();
+	if(ProtoBot_buildings.empty()) return 0;
+
+	const FriendlyBuildingCounter ProtoBot_buildingCount = commanderReference->informationManager.getFriendlyBuildingCounter();
+	const FriendlyUnitCounter ProtoBot_unitCount = commanderReference->informationManager.getFriendlyUnitCounter();
+
+	const int probeProductionCost = (BWAPI::UnitTypes::Protoss_Probe.mineralPrice() * ProtoBot_buildingCount.nexus);
+	const int oberserverProductionCost = (BWAPI::UnitTypes::Protoss_Observer.mineralPrice() * ProtoBot_buildingCount.roboticsFacility);
+
+	int combatUnitPorductionCost = 0;
+	/*for (BWAPI::Unit unit : ProtoBot_buildings)
+	{
+		if(unit.)
+	}*/
+
+
+	int maximumMineralsNeeded = probeProductionCost + combatUnitPorductionCost + oberserverProductionCost;
+}
+
+int StrategyManager::getTotalGasNeeded()
+{
+	const BWAPI::Unitset ProtoBot_buildings = getProtoBotBuildings();
+	if (ProtoBot_buildings.empty()) return 0;
+
+	const FriendlyBuildingCounter ProtoBot_buildingCount = commanderReference->informationManager.getFriendlyBuildingCounter();
+	const FriendlyUnitCounter ProtoBot_unitCount = commanderReference->informationManager.getFriendlyUnitCounter();
+
+	int probeProductionCost = (BWAPI::UnitTypes::Protoss_Probe.gasPrice() * ProtoBot_buildingCount.nexus);
+
+	int TotalGasNeeded = 0;
+	
 }
 
 //More logic to this later

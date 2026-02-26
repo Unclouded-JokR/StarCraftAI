@@ -74,6 +74,11 @@ public:
 	void onUnitComplete(BWAPI::Unit);
 	void onUnitShow(BWAPI::Unit);
 
+	//Methods to be able to determine how much resources we need to reserve for mineral production.
+	int getTotalMineralsNeeded();
+	int getTotalGasNeeded();
+
+	BWAPI::Unitset getProtoBotBuildings();
 	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();
 	bool checkAlreadyRequested(BWAPI::UnitType type);
