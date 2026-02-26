@@ -92,10 +92,17 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 						return Path(finalVec, finalDist);
 					}
 				}
+				else {
+					return Path();
+				}
 			}
 			// If they are neigbours, try to find a nearby cached path to the end area that we can attach to
 			else {
 				Path subPath = closestCachedPath(_start, _end);
+				if (subPath == Path()) {
+					return Path();
+				}
+
 				Path startPath = GeneratePath(_start, unitType, subPath.positions.at(0));
 				Path endPath = GeneratePath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
 
@@ -147,6 +154,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	while (openSet.size() > 0) {
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+			cout << "TIME LIMIT REACHED IN PATH: Empty path returned." << endl;
 			return Path();
 		}
 
@@ -360,7 +368,6 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
-			cout << "TIME LIMIT REACHED: Empty path returned." << endl;
 			return Path();
 		}
 

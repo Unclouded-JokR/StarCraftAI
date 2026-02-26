@@ -7,6 +7,7 @@ public:
 	void Enter(Squad* squad);
 	void Update(Squad* squad);
 	void Exit(Squad* squad);
+	std::string getName();
 	static SquadState& getInstance();
 private:
 	AttackingState() {};
@@ -19,6 +20,7 @@ public:
 	void Enter(Squad* squad);
 	void Update(Squad* squad);
 	void Exit(Squad* squad);
+	std::string getName();
 	static SquadState& getInstance();
 private:
 	DefendingState() {};
@@ -31,6 +33,7 @@ public:
 	void Enter(Squad* squad);
 	void Update(Squad* squad);
 	void Exit(Squad* squad);
+	std::string getName();
 	static SquadState& getInstance();
 private:
 	IdleState() {};

@@ -100,12 +100,13 @@ class Path {
 			this->positions = vec;
 		}
 
-		bool operator ==(const Path& other) {
+		bool operator ==(const Path& other) const{
 			return this->positions == other.positions;
 		}
+
 		const Path& operator+(const Path& other){
 			vector<BWAPI::Position> finalPositions;
-			int finalDist = this->distance + other.distance;
+			const int finalDist = this->distance + other.distance;
 			finalPositions.insert(finalPositions.end(), this->positions.begin(), this->positions.end());
 			finalPositions.insert(finalPositions.end(), other.positions.begin(), other.positions.end());
 			return Path(finalPositions, finalDist);

@@ -68,6 +68,10 @@ void CombatManager::defend(BWAPI::Position position) {
 		squad->commandPos = position;
 		squad->setState(DefendingState::getInstance());
 	}
+
+	for (auto& squad : DefendingSquads) {
+		squad->commandPos = position;
+	}
 }
 
 Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {

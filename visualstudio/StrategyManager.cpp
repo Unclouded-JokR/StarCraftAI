@@ -42,7 +42,7 @@ void StrategyManager::onStart()
 			const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
 			
 			//Ignore choke that is on ramp to prevent builders from being able to construct.
-			if (areas.first == mainArea || areas.second == mainArea || choke->Blocked()) continue;
+			if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
 
 			ProtoBotArea_SquadPlacements.insert(choke);
 			PositionsFilled.insert({ choke, false });
@@ -361,12 +361,12 @@ std::vector<Action> StrategyManager::onFrame()
 */
 
 #pragma region Defend
-	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->getAllUnits();
+	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
 	BWAPI::Unitset enemyCombatUnits;
 
 	for (BWAPI::Unit unit : unitsOnVisison)
 	{
-		if (unit->getPlayer() == BWAPI::Broodwar->enemy() && !unit->getType().isBuilding())
+		if (!unit->getType().isBuilding())
 		{
 			enemyCombatUnits.insert(unit);
 		}
@@ -377,6 +377,10 @@ std::vector<Action> StrategyManager::onFrame()
 
 	for (const BWAPI::Unit unit : enemyCombatUnits)
 	{
+		if (!unit->exists() || unit == nullptr) {
+			continue;
+		}
+
 		unitToAttack = unit;
 		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
 		
@@ -388,16 +392,17 @@ std::vector<Action> StrategyManager::onFrame()
 
 	if (enemyAttacking)
 	{
-		Action attack;
-		attack.type = Action::ACTION_ATTACK;
-		attack.attackPosition = unitToAttack->getPosition();
+		if (unitToAttack->exists() || unitToAttack != nullptr) {
+			Action attack;
+			attack.type = Action::ACTION_DEFEND;
+			attack.attackPosition = unitToAttack->getPosition();
+			actionsToReturn.push_back(attack);
 
-		actionsToReturn.push_back(attack);
-		
-		//Remove all squads from placement
-		for (const BWEM::ChokePoint* placement : ProtoBotArea_SquadPlacements)
-		{
-			PositionsFilled[placement] = false;
+			//Remove all squads from placement
+			for (const BWEM::ChokePoint* placement : ProtoBotArea_SquadPlacements)
+			{
+				PositionsFilled[placement] = false;
+			}
 		}
 	}
 	else
@@ -599,7 +604,7 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 				const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
 
 				//Ignore choke that is on ramp to prevent builders from being able to construct.
-				if (areas.first == mainArea || areas.second == mainArea) continue;
+				if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
 
 				ProtoBotArea_SquadPlacements.insert(choke);
 			}
@@ -637,7 +642,7 @@ void StrategyManager::onUnitCreate(BWAPI::Unit unit)
 				const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
 
 				//Ignore choke that is on ramp to prevent builders from being able to construct.
-				if (areas.first == mainArea || areas.second == mainArea) continue;
+				if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
 
 				ProtoBotArea_SquadPlacements.insert(choke);
 				PositionsFilled.insert({ choke, false });
