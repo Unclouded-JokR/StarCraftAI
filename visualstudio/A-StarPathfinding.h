@@ -1,6 +1,6 @@
 #pragma once
 #include <BWAPI.h>
-#include "Timer.h";
+#include "Timer.h"
 #include "../../BWEM/src/bwem.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
