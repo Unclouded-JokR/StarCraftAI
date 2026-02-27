@@ -6,13 +6,13 @@
 vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
 vector<BWAPI::TilePosition> earlyExpansionTiles;
+vector<BWAPI::Position> precachedPositions;
 
 // Initializing static variables 
 map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AStar::AreaPathCache;
-static map<pair<const BWAPI::TilePosition, const BWAPI::TilePosition>, const Path> BasePathCache;
 map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> AStar::ChokepointPathCache;
 vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::UncachedAreaPairs;
-vector<BWAPI::Position> precachedPositions;
+vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::failedAreaPairs;
 
 
 // Generates path from start to end using A* pathfinding algorithm
@@ -30,7 +30,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	//cout << "Heuristic distance: " << chebyshevDistance(_start, _end) << endl;
 
 	vector<BWAPI::Position> positions = vector<BWAPI::Position>();
-	vector<BWAPI::Position> subPathPositions = vector<BWAPI::Position>();
 	int finalDistance = 0;
 	// Checks if either the starting or ending tile positions are invalid
 	// If so, returns early with no positions added to the path
@@ -48,83 +47,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 	BWAPI::TilePosition start = BWAPI::TilePosition(_start);
 	const BWAPI::TilePosition end = BWAPI::TilePosition(_end);
-
-	// Check for precached route before generating
-	const BWEM::Area* area1 = bwem_map.GetArea(start);
-	const BWEM::Area* area2 = bwem_map.GetArea(end);
-
-	bool precached = false;
-	Path precachedPath = Path();
-	if (area1 != nullptr && area2 != nullptr && area1->Id() != area2->Id()) {
-		if ((AreaPathCache.contains(make_pair(area1->Id(), area2->Id())) || AreaPathCache.contains(make_pair(area2->Id(), area1->Id()))) && area1->AccessibleFrom(area2)) {
-			// Two cases: 
-			// - area1 and area2 are not neighbours (get shortest path of chokepoints from 1 to)
-			// - area1 and area2 are neighbours (have to find closest path that goes to the chokepoint between area1 and area2)
-
-			// If area1 and area2 are not neighbours, simply path through the entire cached path
-			if (!contains(area1->AccessibleNeighbours(), area2)) {
-				pair<const BWEM::Area*, const BWEM::Area*> pair = make_pair(area1, area2);
-				precachedPath = AreaPathCache[make_pair(area1->Id(), area2->Id())];
-
-				// Since cached paths go from smaller ID to larger ID, if area1 has the larger ID, flip the positions in the precachedPath
-				if (area1->Id() > area2->Id()) {
-					precachedPath.flip();
-				}
-
-				if (precachedPath.positions.size() > 0) {
-					Path startPath = generateSubPath(_start, unitType, precachedPath.positions.at(0));
-					Path endPath = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
-
-					vector<BWAPI::Position> finalVec;
-					// Attatching start
-					finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
-					// Attatching precache
-					finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
-					// Attatching end
-					finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
-					const int finalDist = startPath.distance + precachedPath.distance + endPath.distance;
-
-#ifdef DEBUG_PATH
-					cout << "Using cached path: " << "start size: " << startPath.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << endPath.positions.size() << endl;
-#endif
-					totalTimer.stop();
-					if (finalVec.size() > 0) {
-						return Path(finalVec, finalDist);
-					}
-				}
-				else {
-					return Path();
-				}
-			}
-			// If they are neigbours, try to find a nearby cached path to the end area that we can attach to
-			else {
-				Path subPath = closestCachedPath(_start, _end);
-				if (subPath == Path()) {
-					return Path();
-				}
-
-				Path startPath = GeneratePath(_start, unitType, subPath.positions.at(0));
-				Path endPath = GeneratePath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
-
-				vector<BWAPI::Position> finalVec;
-				// Attatching start
-				finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
-				// Attatching precache
-				finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
-				// Attatching end
-				finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
-				const int finalDist = startPath.distance + subPath.distance + endPath.distance;
-
-#ifdef DEBUG_PATH
-				cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
-#endif
-				totalTimer.stop();
-				if (finalVec.size() > 0) {
-					return Path(finalVec, finalDist);
-				}
-			}
-		}
-	}
 
 	// Optimization using priority_queue for open set
 	// The priority_queue will always have the node with the lowest fCost at the top
@@ -245,6 +167,85 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			cout << "Milliseconds spent generating path: " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
 #endif
 			return Path(positions, finalDistance);
+		}
+
+		// Before checking neighbours, see if the current node can get a precached location to the ending area
+		const BWEM::Area* area1 = bwem_map.GetArea(currentNode.tile);
+		const BWEM::Area* area2 = bwem_map.GetArea(end);
+
+		Path precachedPath = Path();
+		if (area1 != nullptr && area2 != nullptr && area1->Id() != area2->Id()) {
+			if ((AreaPathCache.contains(make_pair(area1->Id(), area2->Id())) || AreaPathCache.contains(make_pair(area2->Id(), area1->Id()))) && area1->AccessibleFrom(area2)) {
+				// Two cases: 
+				// - area1 and area2 are not neighbours (get shortest path of chokepoints from 1 to)
+				// - area1 and area2 are neighbours (have to find closest path that goes to the chokepoint between area1 and area2)
+
+				// If area1 and area2 are not neighbours, simply path through the entire cached path
+				if (!contains(area1->AccessibleNeighbours(), area2)) {
+					pair<const BWEM::Area*, const BWEM::Area*> pair = make_pair(area1, area2);
+					precachedPath = AreaPathCache[make_pair(area1->Id(), area2->Id())];
+
+					// Since cached paths go from smaller ID to larger ID, if area1 has the larger ID, flip the positions in the precachedPath
+					if (area1->Id() > area2->Id()) {
+						precachedPath.flip();
+					}
+
+					if (precachedPath.positions.size() > 0) {
+						vector<BWAPI::Position> currentPositions;
+						int currentDistance = 0;
+						while (currentNode.tile != start) {
+							if (isInteractableEndpoint && currentNode.tile == end) {
+								currentPositions.push_back(BWAPI::Position(currentNode.tile));
+							}
+							else {
+								currentPositions.push_back(BWAPI::Position(currentNode.tile) + BWAPI::Position(16, 16));
+							}
+							currentDistance += currentNode.tile.getApproxDistance(parent[TileToIndex(currentNode.tile)]);
+							currentNode.tile = parent[TileToIndex(currentNode.tile)];
+						}
+						Path currentPath = Path(currentPositions, currentDistance);
+						Path toStartOfPrecache = generateSubPath(precachedPath.positions.at(0), unitType, _end);
+						Path toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+						Path finalPath = toStartOfPrecache + precachedPath + toEnd;
+
+#ifdef DEBUG_PATH
+						cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
+#endif
+						totalTimer.stop();
+						return finalPath;
+					}
+					else {
+						return Path();
+					}
+				}
+				// If they are neigbours, try to find a nearby cached path to the end area that we can attach to
+				else {
+					Path subPath = closestCachedPath(_start, _end);
+					if (subPath == Path()) {
+						return Path();
+					}
+
+					Path startPath = GeneratePath(_start, unitType, subPath.positions.at(0));
+					Path endPath = GeneratePath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
+
+					vector<BWAPI::Position> finalVec;
+					// Attatching start
+					finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
+					// Attatching precache
+					finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
+					// Attatching end
+					finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
+					const int finalDist = startPath.distance + subPath.distance + endPath.distance;
+
+#ifdef DEBUG_PATH
+					cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
+#endif
+					totalTimer.stop();
+					if (finalVec.size() > 0) {
+						return Path(finalVec, finalDist);
+					}
+				}
+			}
 		}
 
 		// Step through each neighbour of the current node. The first neighbour that has a lower fCost is instantly explored next
@@ -537,13 +538,30 @@ void AStar::fillAreaPathCache() {
 	pathCacheTimer.start();
 #endif
 
+	BWAPI::WalkPosition firstPos;
+	BWAPI::WalkPosition secondPos;
+	
+	bool tryingFailedPair = false;
 	if (UncachedAreaPairs.empty()) {
-		return;
+		// If empty, try caching the failed pairs
+		if (failedAreaPairs.empty()) {
+			return;
+		}
+		else {
+			firstPos = failedAreaPairs.at(failedAreaPairs.size() - 1).first;
+			secondPos = failedAreaPairs.at(failedAreaPairs.size() - 1).second;
+			failedAreaPairs.pop_back();
+			tryingFailedPair = true;
+		}
+	}
+	else {
+		firstPos = UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).first;
+		secondPos = UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).second;
+		UncachedAreaPairs.pop_back();
 	}
 
-	const BWEM::Area& area1 = *bwem_map.GetArea(UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).first);
-	const BWEM::Area& area2 = *bwem_map.GetArea(UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).second);
-	UncachedAreaPairs.pop_back();
+	const BWEM::Area& area1 = *bwem_map.GetArea(firstPos);
+	const BWEM::Area& area2 = *bwem_map.GetArea(secondPos);
 
 	const vector<const BWEM::ChokePoint*> chokepoints1 = area1.ChokePoints();
 	const vector<const BWEM::ChokePoint*> chokepoints2 = area2.ChokePoints();
@@ -615,8 +633,18 @@ void AStar::fillAreaPathCache() {
 	}
 
 	pair<const BWEM::Area::id, const BWEM::Area::id> finalPair = make_pair(area1.Id(), area2.Id());
-	const Path finalPath = Path(finalPositions, finalDistance);
-	AreaPathCache.insert(make_pair(finalPair, finalPath));
+	if (finalPositions.size() > 1) {
+		const Path finalPath = Path(finalPositions, finalDistance);
+		AreaPathCache.insert(make_pair(finalPair, finalPath));
+	}
+	else {
+		if (!tryingFailedPair) {
+			failedAreaPairs.push_back(make_pair(firstPos, secondPos));
+		}
+#ifdef DEBUG_PRECACHE
+		cout << "Failed precache stored" << endl;
+#endif
+	}
 
 #ifdef DEBUG_PRECACHE
 	pathCacheTimer.stop();

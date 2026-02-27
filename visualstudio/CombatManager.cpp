@@ -96,15 +96,9 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 
 void CombatManager::removeSquad(Squad* squad) {
 	Squads.erase(remove(Squads.begin(), Squads.end(), squad), Squads.end());
-	if (squad->currentState = &IdleState::getInstance()) {
-		IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
-	}
-	else if (squad->currentState = &DefendingState::getInstance()) {
-		DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
-	}
-	else if (squad->currentState = &AttackingState::getInstance()) {
-		AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
-	}
+	IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
+	DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
+	AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
 
 	BWAPI::Broodwar->printf("Removed Squad %d", squad->squadId);
 
