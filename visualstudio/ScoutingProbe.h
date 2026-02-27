@@ -3,6 +3,10 @@
 #include <bwem.h>
 #include <vector>
 #include <optional>
+#include "A-StarPathfinding.h"
+
+#include <chrono>
+#include <string>
 
 class ProtoBotCommander;
 class ScoutingManager;
@@ -57,12 +61,21 @@ private:
     BWAPI::Position lastPos = BWAPI::Positions::Invalid;
     int lastProgressFrame = 0;
     int lastProgressDist = INT_MAX;
-
-    int stuckSinceFrame = 0;
     int sidestepDir = 1;
     int sidestepAttempts = 0;
-
+    int nextReplanFrame = 0;
+    BWAPI::Position lastPlannedGoal = BWAPI::Positions::Invalid;
     BWAPI::Position currentMoveGoal = BWAPI::Positions::Invalid;
+
+    // A* escape mode (only when jammed)
+    int aStarEscapeUntilFrame = 0;
+    BWAPI::Position aStarEscapeGoal = BWAPI::Positions::Invalid;
+
+    // stuck detector state
+    BWAPI::Position lastStuckPos = BWAPI::Positions::Invalid;
+    int lastStuckCheckFrame = 0;
+    int stuckFrames = 0;
+
 
     // orbit
     std::vector<BWAPI::Position> orbitWaypoints;
@@ -78,6 +91,8 @@ private:
     static constexpr int kHarassRadiusFromMain = 320;
     static constexpr int kThreatRearmFrames = 8;
     static constexpr int kCalmFramesToResumeHarass = 72; // ~3 seconds at 24 FPS
+    static constexpr int kReplanFrames = 24;          // 1s
+    static constexpr int kGoalChangeReplanDist = 96;  // px
 
     // helpers
     void buildStartTargets();
@@ -97,6 +112,8 @@ private:
     bool hasPlannedPath() const { return !plannedPath.empty(); }
     BWAPI::Position currentPlannedWaypoint() const;
     BWAPI::Position computeSidestepTarget(const BWAPI::Position& goal);
+    bool isStuck(int now);
+    BWAPI::Position computeEscapeGoal() const;
     BWAPI::Unit findAssimilatorOnTargetGeyser() const;
 
     // returning cargo QoL
@@ -109,4 +126,16 @@ private:
     static int normDeg(int d) { d %= 360; return d < 0 ? d + 360 : d; }
     static BWAPI::Position clampToMapPx(const BWAPI::Position& p, int marginPx = 32);
     static BWAPI::Position snapToNearestWalkable(BWAPI::Position p, int maxRadiusPx = 128);
+    static BWAPI::Position snapToNearestWalkableClear(BWAPI::Position p, BWAPI::UnitType ut, int maxRadiusPx = 128);
+
+    bool planAStarPathTo(const BWAPI::Position& goal, bool interactableEndpoint = false);
+    void followPlannedPath(const BWAPI::Position& finalGoal, int reissueDist = 48);
+
+    // Timer debug
+
+    int dbgLastOrbitPrintFrame = 0;
+    int dbgLastOrbitBuildMs = 0;
+    int dbgLastOrbitReplanMs = 0;
+    int dbgLastAStarMs = 0;
+    int dbgLastSnapMs = 0;
 };
