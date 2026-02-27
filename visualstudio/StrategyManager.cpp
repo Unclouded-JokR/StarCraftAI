@@ -394,15 +394,9 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		if (unitToAttack->exists() || unitToAttack != nullptr) {
 			Action attack;
-			attack.type = Action::ACTION_DEFEND;
+			attack.type = Action::ACTION_ATTACK;
 			attack.attackPosition = unitToAttack->getPosition();
-			actionsToReturn.push_back(attack);
-
-			//Remove all squads from placement
-			for (const BWEM::ChokePoint* placement : ProtoBotArea_SquadPlacements)
-			{
-				PositionsFilled[placement] = false;
-			}
+			actionsToReturn.push_back(attack);	
 		}
 	}
 	else

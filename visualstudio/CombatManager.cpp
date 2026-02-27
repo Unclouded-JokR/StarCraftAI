@@ -44,33 +44,34 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
+	for (auto& squad : AttackingSquads) {
+		squad->commandPos = position;
+		squad->setState(AttackingState::getInstance());
+	}
 	for (auto& squad : DefendingSquads) {
+		squad->prevDefendPos = squad->commandPos;
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
 
-		DefendingSquads.erase(std::remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
+		DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
 		AttackingSquads.push_back(squad);
 	}
 	for (auto& squad : IdleSquads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
 
-		IdleSquads.erase(std::remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
+		IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
 		AttackingSquads.push_back(squad);
 	}
 }
 
 void CombatManager::defend(BWAPI::Position position) {
 	for (auto& squad : IdleSquads) {
-		IdleSquads.erase(std::remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
+		IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
 		DefendingSquads.push_back(squad);
 
 		squad->commandPos = position;
 		squad->setState(DefendingState::getInstance());
-	}
-
-	for (auto& squad : DefendingSquads) {
-		squad->commandPos = position;
 	}
 }
 
@@ -94,9 +95,20 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 }
 
 void CombatManager::removeSquad(Squad* squad) {
-	Squads.erase(std::remove(Squads.begin(), Squads.end(), squad), Squads.end());
+	Squads.erase(remove(Squads.begin(), Squads.end(), squad), Squads.end());
+	if (squad->currentState = &IdleState::getInstance()) {
+		IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
+	}
+	else if (squad->currentState = &DefendingState::getInstance()) {
+		DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
+	}
+	else if (squad->currentState = &AttackingState::getInstance()) {
+		AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
+	}
 
-	BWAPI::Broodwar->printf("Removed empty Squad %d", squad->squadId);
+	BWAPI::Broodwar->printf("Removed Squad %d", squad->squadId);
+
+	delete squad;
 }
 
 // Function called by ProtoBot commander when unit is sent to combat manager
@@ -119,6 +131,10 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 	// If all squads are full or there are no squads, creates a new squad
 	// Assigns first unit as the leader
 	Squad* newSquad = addSquad(unit);
+	if (newSquad == nullptr) {
+		return false;
+	}
+
 	newSquad->addUnit(unit);
 	totalCombatUnits.insert(unit);
 	unitSquadIdMap[unit] = newSquad->squadId;

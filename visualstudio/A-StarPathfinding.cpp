@@ -584,31 +584,34 @@ void AStar::fillAreaPathCache() {
 
 	vector<BWAPI::Position> finalPositions;
 	int finalDistance = 0;
-	for (int k = 0; k < smallestCPPath.size() - 1 && smallestCPPath.size() > 1; k++) {
-		const BWEM::ChokePoint* cp1 = smallestCPPath.at(k);
-		const BWEM::ChokePoint* cp2 = smallestCPPath.at(k + 1);
 
-		if (cp1 == nullptr || cp2 == nullptr) {
-			return;
-		}
+	if (smallestCPPath.size() > 1) {
+		for (int k = 0; k < smallestCPPath.size() - 1; k++) {
+			const BWEM::ChokePoint* cp1 = smallestCPPath.at(k);
+			const BWEM::ChokePoint* cp2 = smallestCPPath.at(k + 1);
 
-		// Caches the paths between chokepoints so that other paths between Areas don't generate them again
-		Path subPath;
-		pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*> cpPair = make_pair(cp1, cp2);
-		if (ChokepointPathCache.find(make_pair(cp1, cp2)) != ChokepointPathCache.end()) {
-			subPath = ChokepointPathCache[make_pair(cp1, cp2)];
-		}
-		else {
-			subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
-			ChokepointPathCache[make_pair(cp1, cp2)] = subPath;
+			if (cp1 == nullptr || cp2 == nullptr) {
+				return;
+			}
+
+			// Caches the paths between chokepoints so that other paths between Areas don't generate them again
+			Path subPath;
+			pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*> cpPair = make_pair(cp1, cp2);
+			if (ChokepointPathCache.find(make_pair(cp1, cp2)) != ChokepointPathCache.end()) {
+				subPath = ChokepointPathCache[make_pair(cp1, cp2)];
+			}
+			else {
+				subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
+				ChokepointPathCache[make_pair(cp1, cp2)] = subPath;
 
 #ifdef DEBUG_PRECACHE
-			precachedPositions.insert(precachedPositions.end(), subPath.positions.begin(), subPath.positions.end());
+				precachedPositions.insert(precachedPositions.end(), subPath.positions.begin(), subPath.positions.end());
 #endif
-		}
+			}
 
-		finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
-		finalDistance += subPath.distance;
+			finalPositions.insert(finalPositions.end(), subPath.positions.begin(), subPath.positions.end());
+			finalDistance += subPath.distance;
+		}
 	}
 
 	pair<const BWEM::Area::id, const BWEM::Area::id> finalPair = make_pair(area1.Id(), area2.Id());

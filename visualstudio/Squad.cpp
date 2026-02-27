@@ -20,6 +20,10 @@ void Squad::onFrame() {
 }
 
 void Squad::setState(SquadState& newState) {
+	if (this == nullptr) {
+		return;
+	}
+
 	currentState->Exit(this);
 	currentState = &newState;
 	currentState->Enter(this);
