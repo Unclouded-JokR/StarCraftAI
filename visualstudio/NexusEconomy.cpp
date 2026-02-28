@@ -85,17 +85,16 @@ int NexusEconomy::addMissedResources()
 void NexusEconomy::onFrame()
 {
 
-	//economyReference->commanderReference->timerManager.startTimer(TimerManager::test);
-
 	lifetime += 1;
 	if (lifetime >= 500) lifetime = 500;
 	moveTimer += 1;
 
-	//economyReference->commanderReference->timerManager.stopTimer(TimerManager::test);
 
 
 	//make this solution better.
 	if (lifetime < 500) int y = addMissedResources();
+
+
 
 	/*
 		===========================
@@ -153,15 +152,15 @@ void NexusEconomy::onFrame()
 
 	for (BWAPI::Unit worker : workers)
 	{
-		if (worker->isIdle()) workerOrder[worker] = 0;
+		//if (worker->isIdle()) workerOrder[worker] = 0;
 		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
 
 		if (minerals.size() == 0) break;
 
 		//If a worker is constructing skip over them until they are done.
-		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() /* || (worker->getOrder() == BWAPI::Orders::Move && workerOrder[worker] > 1) */ || worker->isMoving())
+		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() || worker->isMoving())
 		{
-			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
+			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true); //This line causes 160 ms delay
 			continue;
 		}
 
@@ -259,7 +258,6 @@ void NexusEconomy::onFrame()
 
 
 	}
-
 
 
 
@@ -795,3 +793,12 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 }
 
 //map = maps/BroodWar/aiide/(?)*.sc?
+
+/*
+if (unit->getType().isRefinery() && unit->getPlayer() != Broodwar->self()) {
+    // Check if unit is within your main base region
+    if (unit->getTilePosition().getDistance(yourBaseLocation) < 15) {
+        Broodwar->printf("Gas steal detected!");
+    }
+}
+*/
