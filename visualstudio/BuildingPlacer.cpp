@@ -145,7 +145,7 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
 
 BWAPI::TilePosition BuildingPlacer::findAvailableGyser()
 {
-    std::cout << "Checking for open gysers\n";
+    //std::cout << "Checking for open gysers\n";
     BWAPI::TilePosition availableGyser = BWAPI::TilePositions::Invalid;
 
     for (const BWEM::Area& area : theMap.Areas())
@@ -253,7 +253,6 @@ void BuildingPlacer::drawPoweredTiles()
             BWAPI::Broodwar->drawBoxMap(BWAPI::Position(block.getTilePosition()), BWAPI::Position((block.getTilePosition().x + block.width()) * 32 + 1, (block.getTilePosition().y + block.height()) * 32 + 1), BWAPI::Colors::Blue, false);
         }
     }
-
 }
 
 PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)

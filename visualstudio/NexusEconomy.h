@@ -38,8 +38,6 @@ public:
 	std::unordered_map<BWAPI::Unit, int> workerOrder;
 	std::unordered_map<BWAPI::Unit, Path> workerPaths;
 
-
-
 	//Calculated maximums based on number of minerals.
 	int optimalWorkerAmount;
 	int maximumWorkers;
