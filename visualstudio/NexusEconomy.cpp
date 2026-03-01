@@ -688,7 +688,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 			for (auto u : minerals)
 			{
 				//compare = nexus->getPosition().getApproxDistance(u->getPosition());
-				compare = nexus->getPosition().x-u->getPosition().x;
+				compare = std::abs(nexus->getPosition().x-u->getPosition().x);
 				if (compare < largeDist && !closestMinerals.contains(u))
 				{
 					appended = u;
