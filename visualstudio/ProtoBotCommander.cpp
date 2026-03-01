@@ -161,7 +161,7 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::All);
 
 	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
+	//Tools::DrawUnitHealthBars();
 
 	//BWEB::Map::draw();
 
