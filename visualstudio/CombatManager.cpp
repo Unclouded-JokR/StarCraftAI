@@ -44,34 +44,33 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
-	for (auto& squad : AttackingSquads) {
-		squad->commandPos = position;
-		squad->setState(AttackingState::getInstance());
-	}
-	for (auto& squad : DefendingSquads) {
-		squad->prevDefendPos = squad->commandPos;
-		squad->commandPos = position;
-		squad->setState(AttackingState::getInstance());
-
-		DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
-		AttackingSquads.push_back(squad);
-	}
 	for (auto& squad : IdleSquads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
 
-		IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
-		AttackingSquads.push_back(squad);
+	}
+	for (auto& squad : AttackingSquads) {
+		squad->commandPos = position;
 	}
 }
 
 void CombatManager::defend(BWAPI::Position position) {
 	for (auto& squad : IdleSquads) {
-		IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
-		DefendingSquads.push_back(squad);
-
-		squad->commandPos = position;
+		squad->prevDefendPos = position;
 		squad->setState(DefendingState::getInstance());
+	}
+	for (auto& squad : DefendingSquads) {
+		squad->commandPos = position;
+	}
+}
+
+void CombatManager::reinforce(BWAPI::Position position) {
+	for (auto& squad : DefendingSquads) {
+		squad->commandPos = position;
+		squad->setState(ReinforcingState::getInstance());
+	}
+	for (auto& squad : ReinforcingSquads) {
+		squad->commandPos = position;
 	}
 }
 
@@ -100,9 +99,23 @@ void CombatManager::removeSquad(Squad* squad) {
 	DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
 	AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
 
+	// Handling filled chokepoint locations in strategy manager
+	for (const auto& cp : commanderReference->strategyManager.ProtoBotArea_SquadPlacements) {
+		if (cp != nullptr && squad->prevDefendPos == BWAPI::Position(cp->Center())) {
+			commanderReference->strategyManager.PositionsFilled[cp] = false;
+
+#ifdef DEBUG_CM
+			cout << "Removed squad from chokepoint position: " << BWAPI::Position(cp->Center()).x << "," << BWAPI::Position(cp->Center()).y << endl;
+#endif
+		}
+	}
+
+#ifdef DEBUG_CM
 	BWAPI::Broodwar->printf("Removed Squad %d", squad->squadId);
+#endif
 
 	delete squad;
+	squad = nullptr;
 }
 
 // Function called by ProtoBot commander when unit is sent to combat manager

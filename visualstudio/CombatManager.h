@@ -8,6 +8,11 @@
 
 using namespace std;
 
+extern vector<Squad*> AttackingSquads;
+extern vector<Squad*> DefendingSquads;
+extern vector<Squad*> ReinforcingSquads;
+extern vector<Squad*> IdleSquads;
+
 class ProtoBotCommander;
 
 class CombatManager{
@@ -17,8 +22,9 @@ public:
     BWAPI::Unitset totalCombatUnits;
 	map<BWAPI::Unit, int> unitSquadIdMap;
     vector<Squad*> Squads = vector<Squad*>();
-    vector<Squad*> DefendingSquads = vector<Squad*>();
     vector<Squad*> AttackingSquads = vector<Squad*>();
+    vector<Squad*> DefendingSquads = vector<Squad*>();
+    vector<Squad*> ReinforcingSquads = vector<Squad*>();
     vector<Squad*> IdleSquads = vector<Squad*>();
 
     void onStart();
@@ -26,6 +32,7 @@ public:
     void onUnitDestroy(BWAPI::Unit unit);
     void attack(BWAPI::Position position);
     void defend(BWAPI::Position position);
+    void reinforce(BWAPI::Position position);
     Squad* addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(Squad* squad);
     bool assignUnit(BWAPI::Unit unit);

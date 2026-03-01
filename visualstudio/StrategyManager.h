@@ -82,13 +82,14 @@ const ProductionGoals productionGoalLate =
 };
 
 struct Action {
-	enum ActionType { ACTION_EXPAND, ACTION_SCOUT, ACTION_BUILD, ACTION_ATTACK, ACTION_DEFEND, ACTION_NONE};
+	enum ActionType { ACTION_EXPAND, ACTION_SCOUT, ACTION_BUILD, ACTION_ATTACK, ACTION_DEFEND, ACTION_NONE, ACTION_REINFORCE};
 	ActionType type = ACTION_NONE;
 
 	BWAPI::UnitType expansionToConstruct = BWAPI::UnitTypes::None;
 	BWAPI::UnitType buildingToConstruct = BWAPI::UnitTypes::None;
 	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
 	BWAPI::Position defendPosition = BWAPI::Positions::Invalid;
+	BWAPI::Position reinforcePosition = BWAPI::Positions::Invalid;
 };
 
 class StrategyManager

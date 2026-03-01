@@ -656,8 +656,8 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		if (unitToAttack->exists() || unitToAttack != nullptr) {
 			Action attack;
-			attack.type = Action::ACTION_ATTACK;
-			attack.attackPosition = unitToAttack->getPosition();
+			attack.type = Action::ACTION_REINFORCE;
+			attack.reinforcePosition = unitToAttack->getPosition();
 			actionsToReturn.push_back(attack);	
 		}
 	}
