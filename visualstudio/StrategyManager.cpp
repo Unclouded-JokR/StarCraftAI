@@ -227,13 +227,13 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		if (ProtoBot_ProductionFocus == ProductionFocus::UNIT_PRODUCTION)
 		{
-			if (unitProductionFrameTimer + 1 >= (UNIT_PRODUCTION_TIME + (DELAY_PER_PRODUCTION * ProductionGoal_index)))
+			if (timer + 1 >= (UNIT_PRODUCTION_TIME + (DELAY_PER_PRODUCTION * ProductionGoal_index)))
 			{
 				ProtoBot_ProductionFocus = ProductionFocus::EXPANDING_INFLUENCE;
 			}
 
 			//Should build gateway's or nexus's if we have enough minerals. Need to make sure we are not over saturating nexuses.
-			/*
+
 			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus) && canAfford(BWAPI::UnitTypes::Protoss_Nexus, resourcesAvalible) )
 			{
 				//Not expanding properlly after having enough gateways
@@ -301,14 +301,12 @@ std::vector<Action> StrategyManager::onFrame()
 					actionsToReturn.push_back(action);
 				}
 			}
-			*/
 
-
-			unitProductionFrameTimer++;
+			timer++;
 		}
 		else if(ProtoBot_ProductionFocus == ProductionFocus::EXPANDING_INFLUENCE && !(ProductionGoal_index >= ProtoBot_ProductionGoals.size()))
 		{
-			//Change the requests to not rely on checking if its already requested. Make production slower than it has to be.
+			//Add timer to push production goals after a certain amount of frames
 			if (!metProductionGoal(ProtoBot_buildings))
 			{
 				//Nexus
@@ -440,7 +438,7 @@ std::vector<Action> StrategyManager::onFrame()
 			else
 			{
 				std::cout << "Met Production Goal\n";
-				unitProductionFrameTimer = 0;
+				timer = 0;
 				ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 				ProductionGoal_index++;
 			}

@@ -78,7 +78,7 @@ const ProductionGoals productionGoalMid =
 
 const ProductionGoals productionGoalLate =
 {
-	4, 8, 1, 1, 1, 1, 1, 1
+	4, 8, 3, 1, 1, 1, 1, 1
 };
 
 struct Action {
@@ -99,7 +99,7 @@ private:
 	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate};
 	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;
-	int unitProductionFrameTimer = 0;
+	int timer = 0;
 
 	IncompleteBuildingCounter incompleteBuildings;
 
