@@ -17,7 +17,7 @@ bool BuildingPlacer::alreadyUsingTiles(BWAPI::TilePosition position, int width, 
     }
     else
     {
-        if (typeFound == BWAPI::UnitTypes::Protoss_Assimilator || typeFound == BWAPI::UnitTypes::Terran_Refinery || typeFound == BWAPI::UnitTypes::Zerg_Extractor)
+        if (typeFound.isRefinery())
         {
             return true;
         }
@@ -145,7 +145,7 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
 
 BWAPI::TilePosition BuildingPlacer::findAvailableGyser()
 {
-    std::cout << "Checking for open gysers\n";
+    //std::cout << "Checking for open gysers\n";
     BWAPI::TilePosition availableGyser = BWAPI::TilePositions::Invalid;
 
     for (const BWEM::Area& area : theMap.Areas())
@@ -253,7 +253,6 @@ void BuildingPlacer::drawPoweredTiles()
             BWAPI::Broodwar->drawBoxMap(BWAPI::Position(block.getTilePosition()), BWAPI::Position((block.getTilePosition().x + block.width()) * 32 + 1, (block.getTilePosition().y + block.height()) * 32 + 1), BWAPI::Colors::Blue, false);
         }
     }
-
 }
 
 PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
@@ -272,6 +271,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
             else
             {
+                information.topLeft = pos;
                 information.flag = PlacementInfo::SUCCESS;
                 information.position = BWAPI::Position(pos);
             }
@@ -287,6 +287,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
             else
             {
+                information.topLeft = pos;
                 information.flag = PlacementInfo::SUCCESS;
                 information.position = BWAPI::Position(pos);
             }
@@ -306,12 +307,14 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
                 }
                 else
                 {
+                    information.topLeft = powerTilePosition;
                     information.position = BWAPI::Position(powerTilePosition);
                     information.flag = PlacementInfo::SUCCESS;
                 }
             }
             else
             {
+                information.topLeft = powerTilePosition;
                 information.position = BWAPI::Position(powerTilePosition);
                 information.flag = PlacementInfo::SUCCESS;
             }
@@ -328,6 +331,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
             }
             else
             {
+                information.topLeft = pos;
                 information.flag = PlacementInfo::SUCCESS;
                 information.position = BWAPI::Position(pos);
             }

@@ -17,8 +17,6 @@ void Squad::onFrame() {
 
 	// Process current squad state
 	currentState->Update(this);
-
-	BWAPI::Broodwar->drawTextMap(BWAPI::Position(leader->getPosition().x - 25, leader->getPosition().y - 25), "Leader");
 }
 
 void Squad::setState(SquadState& newState) {
@@ -170,12 +168,6 @@ void Squad::pathHandler() {
 	for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
 		BWAPI::Broodwar->drawBoxMap(rect.first, rect.second, BWAPI::Colors::Yellow);
 	}
-	for (pair<BWAPI::TilePosition, double> pair : closedTiles) {
-		// Drawing box around tile
-		BWAPI::Position pos = BWAPI::Position(pair.first);
-		BWAPI::Broodwar->drawBoxMap(BWAPI::Position(pos.x, pos.y), BWAPI::Position(pos.x + 32, pos.y + 32), BWAPI::Colors::Red);
-		BWAPI::Broodwar->drawTextMap(BWAPI::Position(pos.x + 8, pos.y + 8), "%.2f", pair.second);
-	}
 
 	AStar::drawPath(currentPath);
 }
@@ -197,11 +189,16 @@ void Squad::removeUnit(BWAPI::Unit unit){
 
 		// Closest unit to the leader is assigned as the new leader
 		double closest = std::numeric_limits<double>::infinity();
-		BWAPI::Unit closestUnit;
+		BWAPI::Unit closestUnit = nullptr;
 		for (BWAPI::Unit _unit : units) {
-			BWAPI::Position unitPos = unit->getPosition();
+			if (!_unit || !_unit->exists()) {
+				continue;
+			}
+
+			const BWAPI::Position unitPos = _unit->getPosition();
 			const double dist = unitPos.getDistance(leaderPos);
-			if (dist < closest && _unit->exists()) {
+
+			if (dist < closest) {
 				closest = dist;
 				closestUnit = _unit;
 			}
@@ -365,12 +362,26 @@ void Squad::drawDebugInfo() {
 			continue;
 		}
 
+		int yOffset = 5;
+		int count = 0;
+
 		// Draw lines and shapes to debug commands
 		const BWAPI::UnitCommand command = unit->getLastCommand();
 
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 5, squadColor, true);
 		if (unit == leader) {
 			BWAPI::Broodwar->drawCircleMap(unit->getPosition(), 2, BWAPI::Colors::White, true);
+			BWAPI::Broodwar->drawTextMap(BWAPI::Position(unit->getPosition().x - 12, unit->getPosition().y + 20), "LEADER", BWAPI::Colors::White);
+
+			if (currentState == &AttackingState::getInstance()) {
+				BWAPI::Broodwar->drawTextMap(BWAPI::Position(unit->getPosition().x - 16, unit->getPosition().y + 25), "-ATTACKING-", BWAPI::Colors::Orange);
+			}
+			if (currentState == &DefendingState::getInstance()) {
+				BWAPI::Broodwar->drawTextMap(BWAPI::Position(unit->getPosition().x - 16, unit->getPosition().y + 25), "-DEFENDING-", BWAPI::Colors::Orange);
+			}
+			if (currentState == &IdleState::getInstance()) {
+				BWAPI::Broodwar->drawTextMap(BWAPI::Position(unit->getPosition().x - 16, unit->getPosition().y + 25), "-IDLE-", BWAPI::Colors::Orange);
+			}
 		}
 
 		if (command.getTargetPosition() != BWAPI::Positions::None) {
@@ -385,6 +396,6 @@ void Squad::drawDebugInfo() {
 
 		// Draws squad ID below unit
 		const BWAPI::Position textPos(unit->getPosition().x - 20, unit->getPosition().y + 20);
-		BWAPI::Broodwar->drawTextMap(textPos, "Squad %d", squadId);
+		BWAPI::Broodwar->drawTextMap(textPos, "%d", squadId);
 	}
 }

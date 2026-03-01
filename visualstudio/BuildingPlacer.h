@@ -21,6 +21,7 @@ struct PlacementInfo
 	PlacementFlag flag = PlacementFlag::DEFAULT;
 
 	BWAPI::Position position = BWAPI::Positions::Invalid;
+	BWAPI::TilePosition topLeft = BWAPI::TilePositions::Invalid;
 };
 
 struct BlockData {

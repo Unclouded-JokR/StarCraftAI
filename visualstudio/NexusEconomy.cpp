@@ -160,7 +160,7 @@ void NexusEconomy::onFrame()
 		//If a worker is constructing skip over them until they are done.
 		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() || worker->isMoving())
 		{
-			BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true); //This line causes 160 ms delay
+			//BWAPI::Broodwar->drawEllipseMap(worker->getPosition(), 3, 3, BWAPI::Color(0, 0, 255), true);
 			continue;
 		}
 

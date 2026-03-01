@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cmath>
 #include <climits>
+#include <functional>
+#include <chrono>
 
 using namespace BWAPI;
 using namespace BWEM;
@@ -16,6 +18,101 @@ namespace {
     }
     static inline int mapWpx() { return BWAPI::Broodwar->mapWidth() * 32; }
     static inline int mapHpx() { return BWAPI::Broodwar->mapHeight() * 32; }
+
+    using Clock = std::chrono::high_resolution_clock;
+
+    static bool IsFreeForUnitFootprint(const BWAPI::Position& center, BWAPI::UnitType ut)
+    {
+        if (!center.isValid())
+        {
+            return false;
+        }
+
+        const BWAPI::Position topLeft(center.x - ut.width() / 2, center.y - ut.height() / 2);
+        const BWAPI::Position bottomRight(center.x + ut.width() / 2, center.y + ut.height() / 2);
+
+        if (!topLeft.isValid() || !bottomRight.isValid())
+        {
+            return false;
+        }
+
+        const BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(
+            topLeft,
+            bottomRight,
+            BWAPI::Filter::IsBuilding || (BWAPI::Filter::IsNeutral && !BWAPI::Filter::IsCritter)
+        );
+
+        return units.empty();
+    }
+
+    struct ScopedMsTimer
+    {
+        const char* label;
+        int* outMs;
+        Clock::time_point t0;
+
+        ScopedMsTimer(const char* lbl, int* out)
+            : label(lbl)
+            , outMs(out)
+            , t0(Clock::now())
+        {
+        }
+
+        ~ScopedMsTimer()
+        {
+            const auto t1 = Clock::now();
+            const int ms = (int)std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+            if (outMs)
+            {
+                *outMs = ms;
+            }
+        }
+    };
+
+    static void debugEveryNFrames(int& lastPrintFrame, int everyNFrames, const std::string& msg)
+    {
+        const int now = BWAPI::Broodwar->getFrameCount();
+        if (now - lastPrintFrame < everyNFrames)
+        {
+            return;
+        }
+        lastPrintFrame = now;
+        BWAPI::Broodwar->printf("%s", msg.c_str());
+    }
+
+    static bool shouldPrintEveryNFrames(int& lastPrintFrame, int everyNFrames)
+    {
+        const int now = BWAPI::Broodwar->getFrameCount();
+        if (now - lastPrintFrame < everyNFrames)
+        {
+            return false;
+        }
+        lastPrintFrame = now;
+        return true;
+    }
+
+    static void debugEveryNFramesIfMsUnder
+    (
+        int& lastPrintFrame,
+        int everyNFrames,
+        int measuredMs,
+        int limitMs,
+        const std::function<std::string()>& buildMsg
+    )
+    {
+        if (measuredMs > limitMs)
+        {
+            return;
+        }
+
+        if (!shouldPrintEveryNFrames(lastPrintFrame, everyNFrames))
+        {
+            return;
+        }
+
+        const std::string msg = buildMsg();
+        BWAPI::Broodwar->printf("%s", msg.c_str());
+    }
 }
 
 void ScoutingProbe::onStart() {
@@ -36,6 +133,12 @@ void ScoutingProbe::onStart() {
     gasStealHoldingForMinerals = false;
     nextMineralCheckFrame = 0;
     state = startTargets.empty() ? State::Done : State::Search;
+    aStarEscapeUntilFrame = 0;
+    aStarEscapeGoal = BWAPI::Positions::Invalid;
+
+    lastStuckPos = BWAPI::Positions::Invalid;
+    lastStuckCheckFrame = 0;
+    stuckFrames = 0;
 }
 
 void ScoutingProbe::assign(BWAPI::Unit unit) {
@@ -45,6 +148,9 @@ void ScoutingProbe::assign(BWAPI::Unit unit) {
     Broodwar->printf("[Scouting] Assigned scout: %s (id=%d)", scout->getType().c_str(), scout->getID());
     lastHP = scout->getHitPoints();
     lastShields = scout->getShields();
+    aStarEscapeUntilFrame = 0;
+    aStarEscapeGoal = BWAPI::Positions::Invalid;
+    stuckFrames = 0;
     if (scout->isCarryingMinerals() || scout->isCarryingGas())
         state = State::ReturningCargo;
     else
@@ -91,8 +197,16 @@ void ScoutingProbe::onFrame() {
     case State::Search: {
         if (nextTarget >= (int)startTargets.size()) { state = State::Done; break; }
         const auto tp = startTargets[nextTarget];
-        const Position goal(tp);
-        issueMoveToward(goal);
+        const BWAPI::Position goal(tp);
+
+        if (plannedPath.empty() || !lastPlannedGoal.isValid() || lastPlannedGoal.getApproxDistance(goal) > 32)
+        {
+            planTerrainPathTo(goal);
+            lastPlannedGoal = goal;
+            nextReplanFrame = now + 999999; // basically "never" during this leg
+        }
+
+        followPlannedPath(goal, 64);
 
         if (scout->getDistance(goal) <= kCloseEnoughToTarget) {
             if (seeAnyEnemyBuildingNear(goal, 800)) {
@@ -118,24 +232,67 @@ void ScoutingProbe::onFrame() {
         break;
 
     case State::Orbit:
-        // If still threatened, keep clocking "lastThreatFrame" so the calm timer resets
-        if (threatenedNow()) {
+    {
+        if (threatenedNow())
+        {
             lastThreatFrame = now;
         }
 
-        // If we've been calm long enough and know their main, resume harassment
-        if (enemyMainPos.isValid() && gasStealDone
+        if (enemyMainPos.isValid()
             && (now - lastThreatFrame) >= kCalmFramesToResumeHarass)
         {
             plannedPath.clear();
+            aStarEscapeUntilFrame = 0;
+            aStarEscapeGoal = BWAPI::Positions::Invalid;
+            stuckFrames = 0;
             state = State::Harass;
             break;
         }
 
         ensureOrbitWaypoints();
-        issueMoveToward(currentOrbitPoint(), /*reissueDist*/64, false);
+
+        // If we are currently in escape mode, follow A* until timeout or success
+        if (aStarEscapeUntilFrame > now && aStarEscapeGoal.isValid())
+        {
+            followPlannedPath(aStarEscapeGoal, 64);
+
+            // If we got far enough from where we were jammed, return to orbit
+            if (scout->getDistance(aStarEscapeGoal) < 96)
+            {
+                aStarEscapeUntilFrame = 0;
+                aStarEscapeGoal = BWAPI::Positions::Invalid;
+                plannedPath.clear();
+                stuckFrames = 0;
+            }
+
+            advanceOrbitIfArrived();
+            break;
+        }
+
+        // Normal mode: old orbit movement (no A*)
+        issueMoveToward(currentOrbitPoint(), 64, false);
         advanceOrbitIfArrived();
+
+        // Detect jam and trigger A* escape
+        if (isStuck(now))
+        {
+            aStarEscapeGoal = computeEscapeGoal();
+
+            if (aStarEscapeGoal.isValid())
+            {
+                plannedPath.clear();
+                planAStarPathTo(aStarEscapeGoal, false);
+
+                // stay in escape mode for ~2 seconds max
+                aStarEscapeUntilFrame = now + 48;
+
+                // prevent immediate re-trigger loop
+                stuckFrames = 0;
+            }
+        }
+
         break;
+    }
 
     case State::Done:
     default:
@@ -196,14 +353,48 @@ void ScoutingProbe::buildStartTargets() {
     Broodwar->printf("[Scouting] %d start targets.", static_cast<int>(startTargets.size()));
 }
 
-void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool force) {
-    if (!scout || !scout->exists() || !p.isValid()) return;
-    if (!force && Broodwar->getFrameCount() - lastMoveIssueFrame < kMoveCooldownFrames) return;
-    if (force || scout->getDistance(p) > reissueDist || !scout->isMoving()) {
-        scout->stop(); scout->move(p);
+void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool force)
+{
+    if (!scout || !scout->exists() || !p.isValid())
+    {
+        return;
+    }
+
+    if (!force && Broodwar->getFrameCount() - lastMoveIssueFrame < kMoveCooldownFrames)
+    {
+        return;
+    }
+
+    BWAPI::Position target = p;
+
+    target = snapToNearestWalkableClear(target, scout->getType(), 192);
+
+    // If we are trying to move into a building footprint, trigger A* escape mode
+    if (!IsFreeForUnitFootprint(target, scout->getType()))
+    {
+        aStarEscapeGoal = snapToNearestWalkableClear(target, scout->getType(), 256);
+        if (!aStarEscapeGoal.isValid())
+        {
+            aStarEscapeGoal = snapToNearestWalkable(target, 256);
+        }
+
+        if (aStarEscapeGoal.isValid())
+        {
+            plannedPath.clear();
+            planAStarPathTo(aStarEscapeGoal, false);
+            aStarEscapeUntilFrame = Broodwar->getFrameCount() + 48;
+            stuckFrames = 0;
+            return;
+        }
+    }
+
+    if (force || scout->getDistance(target) > reissueDist || !scout->isMoving())
+    {
+        scout->move(target);
         lastMoveIssueFrame = Broodwar->getFrameCount();
     }
-    Broodwar->drawLineMap(scout->getPosition(), p, Colors::Yellow);
+
+    Broodwar->drawLineMap(scout->getPosition(), target, Colors::Yellow);
 }
 
 
@@ -356,7 +547,8 @@ bool ScoutingProbe::tryGasSteal()
         // While waiting for approval, keep moving toward the geyser
         if (scout->getDistance(targetGeyser) > 96 || !scout->isMoving())
         {
-            scout->move(targetGeyser->getPosition());
+            planAStarPathTo(targetGeyser->getPosition(), true);
+            followPlannedPath(targetGeyser->getPosition(), 64);
             nextGasStealRetryFrame = now + kGasStealRetryCooldown;
             return true;
         }
@@ -376,7 +568,8 @@ bool ScoutingProbe::tryGasSteal()
 
     if (scout->getDistance(targetGeyser) > 96)
     {
-        scout->move(targetGeyser->getPosition());
+        planAStarPathTo(targetGeyser->getPosition(), true);
+        followPlannedPath(targetGeyser->getPosition(), 64);
         nextGasStealRetryFrame = now + kGasStealRetryCooldown;
         return true;
     }
@@ -396,7 +589,8 @@ bool ScoutingProbe::tryGasSteal()
     }
 
     // If build fails this frame, nudge and retry later
-    scout->move(targetGeyser->getPosition());
+    planAStarPathTo(targetGeyser->getPosition(), true);
+    followPlannedPath(targetGeyser->getPosition(), 64);
     nextGasStealRetryFrame = now + kGasStealRetryCooldown;
     return true;
 }
@@ -422,30 +616,77 @@ bool ScoutingProbe::tryHarassWorker() {
 }
 
 void ScoutingProbe::ensureOrbitWaypoints() {
-    if (!orbitWaypoints.empty()) return;
-    orbitWaypoints.clear();
-    orbitWaypoints.reserve(8);
-    BWAPI::Broodwar->printf("Orbit");
-    const Position center = clampToMapPx(computeOrbitCenter(), 64);
-    const int radius = kOrbitRadius;
-
-    for (int deg = 0; deg < 360; deg += 45) {
-        Position raw = orbitPoint(center, radius, deg);
-        raw = clampToMapPx(raw, 48);
-        Position snapped = snapToNearestWalkable(raw, 128);
-        if (snapped.isValid()) orbitWaypoints.push_back(snapped);
+    if (!orbitWaypoints.empty())
+    {
+        return;
     }
-    if (orbitWaypoints.empty()) orbitWaypoints.push_back(center);
 
-    Position threat = getAvgPosition();
-    int oppDeg = threat.isValid()
-        ? angleDeg(center, threat) + 180
-        : (scout && scout->exists() ? angleDeg(center, scout->getPosition()) + 180 : 0);
-    oppDeg = normDeg(oppDeg);
-    const int step = 45;
-    int startIdx = (oppDeg + step / 2) / step;
-    orbitIdx = static_cast<std::size_t>(startIdx % int(orbitWaypoints.size()));
-    dwellUntilFrame = 0;
+    int buildMs = 0;
+    {
+        ScopedMsTimer t("ensureOrbitWaypoints", &buildMs);
+
+        orbitWaypoints.clear();
+        orbitWaypoints.reserve(8);
+
+        const Position center = clampToMapPx(computeOrbitCenter(), 64);
+        const int radius = kOrbitRadius;
+
+        int snapTotalMs = 0;
+
+        for (int deg = 0; deg < 360; deg += 45)
+        {
+            Position raw = orbitPoint(center, radius, deg);
+            raw = clampToMapPx(raw, 48);
+
+            int snapMs = 0;
+            Position snapped;
+            {
+                ScopedMsTimer ts("snapToNearestWalkable", &snapMs);
+                const BWAPI::UnitType ut = (scout && scout->exists()) ? scout->getType() : BWAPI::UnitTypes::Protoss_Probe;
+                snapped = snapToNearestWalkableClear(raw, ut, 160);
+            }
+
+            snapTotalMs += snapMs;
+
+            if (snapped.isValid())
+            {
+                orbitWaypoints.push_back(snapped);
+            }
+        }
+
+        dbgLastSnapMs = snapTotalMs;
+
+        if (orbitWaypoints.empty())
+        {
+            orbitWaypoints.push_back(center);
+        }
+
+        Position threat = getAvgPosition();
+        int oppDeg = threat.isValid()
+            ? angleDeg(center, threat) + 180
+            : (scout && scout->exists() ? angleDeg(center, scout->getPosition()) + 180 : 0);
+
+        oppDeg = normDeg(oppDeg);
+
+        const int step = 45;
+        int startIdx = (oppDeg + step / 2) / step;
+        orbitIdx = static_cast<std::size_t>(startIdx % int(orbitWaypoints.size()));
+        dwellUntilFrame = 0;
+    }
+
+    dbgLastOrbitBuildMs = buildMs;
+
+    /*debugEveryNFramesIfMsUnder(
+        dbgLastOrbitPrintFrame,
+        24,
+        dbgLastOrbitBuildMs,
+        200,
+        [&]()
+        {
+            return "[Orbit] built waypoints in " + std::to_string(dbgLastOrbitBuildMs) +
+                "ms (snap total " + std::to_string(dbgLastSnapMs) + "ms)";
+        }
+    );*/
 }
 
 BWAPI::Position ScoutingProbe::currentOrbitPoint() const {
@@ -629,6 +870,90 @@ BWAPI::Position ScoutingProbe::snapToNearestWalkable(Position p, int maxRadiusPx
     return Positions::Invalid;
 }
 
+BWAPI::Position ScoutingProbe::snapToNearestWalkableClear
+(
+    BWAPI::Position p,
+    BWAPI::UnitType ut,
+    int maxRadiusPx
+)
+{
+    p = clampToMapPx(p, 32);
+    BWAPI::WalkPosition w0(p);
+
+    const int rMax = std::max(1, maxRadiusPx / 8);
+
+    auto toPosCenter =
+        [](const BWAPI::WalkPosition& w)
+        {
+            return BWAPI::Position(w.x * 8 + 4, w.y * 8 + 4);
+        };
+
+    if (w0.isValid() && BWAPI::Broodwar->isWalkable(w0))
+    {
+        const BWAPI::Position c = toPosCenter(w0);
+        if (IsFreeForUnitFootprint(c, ut))
+        {
+            return c;
+        }
+    }
+
+    int bestD2 = INT_MAX;
+    BWAPI::WalkPosition best(-1, -1);
+
+    for (int r = 1; r <= rMax; ++r)
+    {
+        bool foundThisRing = false;
+
+        for (int dy = -r; dy <= r; ++dy)
+        {
+            for (int dx = -r; dx <= r; ++dx)
+            {
+                if (std::max(std::abs(dx), std::abs(dy)) != r)
+                {
+                    continue;
+                }
+
+                BWAPI::WalkPosition w(w0.x + dx, w0.y + dy);
+                if (!w.isValid())
+                {
+                    continue;
+                }
+
+                if (!BWAPI::Broodwar->isWalkable(w))
+                {
+                    continue;
+                }
+
+                const BWAPI::Position c = toPosCenter(w);
+                if (!IsFreeForUnitFootprint(c, ut))
+                {
+                    continue;
+                }
+
+                const int d2 = dx * dx + dy * dy;
+                if (d2 < bestD2)
+                {
+                    bestD2 = d2;
+                    best = w;
+                    foundThisRing = true;
+                }
+            }
+        }
+
+        if (foundThisRing)
+        {
+            break;
+        }
+    }
+
+    if (best.x != -1)
+    {
+        return toPosCenter(best);
+    }
+
+    return BWAPI::Positions::Invalid;
+}
+
 BWAPI::Unit ScoutingProbe::findAssimilatorOnTargetGeyser() const
 {
     if (!targetGeyser || !targetGeyser->exists())
@@ -657,4 +982,209 @@ BWAPI::Unit ScoutingProbe::findAssimilatorOnTargetGeyser() const
     }
 
     return nullptr;
+}
+
+bool ScoutingProbe::planAStarPathTo(const BWAPI::Position& goal, bool interactableEndpoint)
+{
+    plannedPath.clear();
+
+    if (!scout || !scout->exists() || !goal.isValid())
+    {
+        return false;
+    }
+
+    int astarMs = 0;
+    BWAPI::Position safeGoal = goal;
+
+    if (!interactableEndpoint)
+    {
+        const BWAPI::UnitType ut = scout->getType();
+        if (!IsFreeForUnitFootprint(safeGoal, ut))
+        {
+            safeGoal = snapToNearestWalkableClear(safeGoal, ut, 256);
+        }
+    }
+
+    if (!safeGoal.isValid())
+    {
+        plannedPath.push_back(goal);
+        return true;
+    }
+    Path p;
+    {
+        ScopedMsTimer t("AStar::GeneratePath", &astarMs);
+        p = AStar::GeneratePath(scout->getPosition(), scout->getType(), safeGoal, interactableEndpoint);
+    }
+    dbgLastAStarMs = astarMs;
+
+    if (p.positions.empty())
+    {
+        plannedPath.push_back(goal);
+        return true;
+    }
+
+    plannedPath = p.positions;
+
+    if (!plannedPath.empty() && scout->getDistance(plannedPath.front()) < 24)
+    {
+        plannedPath.erase(plannedPath.begin());
+    }
+
+    return !plannedPath.empty();
+}
+
+void ScoutingProbe::followPlannedPath(const BWAPI::Position& finalGoal, int reissueDist)
+{
+    if (!scout || !scout->exists() || !finalGoal.isValid())
+    {
+        return;
+    }
+
+    const int now = BWAPI::Broodwar->getFrameCount();
+
+    bool needReplan = false;
+
+    if (now >= nextReplanFrame)
+    {
+        needReplan = true;
+    }
+
+    if (lastPlannedGoal.isValid() && finalGoal.getApproxDistance(lastPlannedGoal) > kGoalChangeReplanDist)
+    {
+        needReplan = true;
+    }
+
+    if (!hasPlannedPath())
+    {
+        needReplan = true;
+    }
+
+    
+
+    if (needReplan)
+    {
+        int replanMs = 0;
+        {
+            ScopedMsTimer t("followPlannedPath replan", &replanMs);
+            planAStarPathTo(finalGoal, false);
+        }
+        dbgLastOrbitReplanMs = replanMs;
+
+        lastPlannedGoal = finalGoal;
+        nextReplanFrame = now + kReplanFrames;
+
+        /*debugEveryNFramesIfMsUnder(
+            dbgLastOrbitPrintFrame,
+            24,
+            dbgLastOrbitReplanMs,
+            200,
+            [&]()
+            {
+                return "[Orbit] replan " + std::to_string(dbgLastOrbitReplanMs) +
+                    "ms (A* " + std::to_string(dbgLastAStarMs) +
+                    "ms) pathLen=" + std::to_string((int)plannedPath.size());
+            }
+        );*/
+    }
+
+    if (plannedPath.empty())
+    {
+        issueMoveToward(finalGoal, reissueDist, true);
+        return;
+    }
+
+    while (!plannedPath.empty() && scout->getDistance(plannedPath.front()) < 72)
+    {
+        plannedPath.erase(plannedPath.begin());
+    }
+
+    BWAPI::Position wp = plannedPath.empty() ? finalGoal : plannedPath.front();
+    issueMoveToward(wp, reissueDist, false);
+}
+
+bool ScoutingProbe::isStuck(int now)
+{
+    if (!scout || !scout->exists())
+    {
+        return false;
+    }
+
+    static constexpr int kStuckCheckEvery = 4;
+    static constexpr int kStuckMoveEps = 16;
+    static constexpr int kStuckTriggerFrames = 8;
+
+    if (now - lastStuckCheckFrame < kStuckCheckEvery)
+    {
+        return stuckFrames >= kStuckTriggerFrames;
+    }
+
+    lastStuckCheckFrame = now;
+
+    const BWAPI::Position cur = scout->getPosition();
+
+    if (!lastStuckPos.isValid())
+    {
+        lastStuckPos = cur;
+        stuckFrames = 0;
+        return false;
+    }
+
+    const int moved = cur.getApproxDistance(lastStuckPos);
+    lastStuckPos = cur;
+
+    if (moved < kStuckMoveEps)
+    {
+        stuckFrames += kStuckCheckEvery;
+    }
+    else
+    {
+        stuckFrames = 0;
+    }
+
+    return stuckFrames >= kStuckTriggerFrames;
+}
+
+BWAPI::Position ScoutingProbe::computeEscapeGoal() const
+{
+    if (!scout || !scout->exists())
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    const BWAPI::Position from = scout->getPosition();
+
+    // Prefer orbit target, but if it's invalid fall back to enemy main center
+    BWAPI::Position baseGoal = currentOrbitPoint();
+    if (!baseGoal.isValid())
+    {
+        baseGoal = enemyMainPos;
+    }
+
+    if (!baseGoal.isValid())
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    // Push outward away from threat direction to break worker surrounds
+    const BWAPI::Position d = baseGoal - from;
+    if (!d.isValid() || (d.x == 0 && d.y == 0))
+    {
+        return snapToNearestWalkable(from, 192);
+    }
+
+    const double len = std::sqrt(double(d.x) * double(d.x) + double(d.y) * double(d.y));
+    if (len < 1.0)
+    {
+        return snapToNearestWalkable(from, 192);
+    }
+
+    const double nx = double(d.x) / len;
+    const double ny = double(d.y) / len;
+
+    // step a bit toward the orbit target so A* can route around minerals/workers
+    BWAPI::Position raw(from.x + int(nx * 256.0), from.y + int(ny * 256.0));
+    raw = clampToMapPx(raw, 32);
+
+    // Make sure it's walkable-ish
+    return snapToNearestWalkable(raw, 256);
 }

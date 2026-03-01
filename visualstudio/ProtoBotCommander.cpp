@@ -37,7 +37,7 @@ void ProtoBotCommander::onStart()
 	BWEB::Blocks::findBlocks();
 
 	m_mapTools.onStart();
-
+	
 	/*
 	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
 	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
@@ -79,7 +79,7 @@ void ProtoBotCommander::onStart()
 	informationManager.onStart();
 
 	//Replace with commented out line when multiple build orders are in place.
-	buildOrderSelected = strategyManager.onStart();
+	strategyManager.onStart();
 
 	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
 
@@ -104,7 +104,7 @@ void ProtoBotCommander::onFrame()
 
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
-	//m_mapTools.onFrame();
+	m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
 
 	/*
@@ -115,44 +115,27 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::Information);
 
 	timerManager.startTimer(TimerManager::Strategy);
-	Action action = strategyManager.onFrame();
-	//std::cout << action.type << "\n";
+	std::vector<Action> actions = strategyManager.onFrame();
 
-	switch (action.type)
+	for (const Action& action : actions)
 	{
-		case ActionType::Action_Expand:
+		switch (action.type)
 		{
-			const Expand value = get<Expand>(action.commanderAction);
-			requestBuild(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Build:
-		{
-			const Build value = get<Build>(action.commanderAction);
-			requestBuild(value.unitToBuild);
-			break;
-		}
-		case ActionType::Action_Scout:
-		{
-			//std::cout << "Requesting scout!\n";
-			getUnitToScout();
-			break;
-		}
-		case ActionType::Action_Attack:
-		{
-			const Attack attack = get<Attack>(action.commanderAction);
-			combatManager.attack(attack.position);
-			break;
-		}
-		case ActionType::Action_Defend:
-		{
-			const Defend defend = get<Defend>(action.commanderAction);
-			combatManager.defend(defend.position);
-			break;
-		}
-		default:
-		{
-			break;
+			case Action::ACTION_EXPAND:
+				requestBuild(action.expansionToConstruct);
+				break;
+			case Action::ACTION_BUILD:
+				requestBuild(action.buildingToConstruct);
+				break;
+			case Action::ACTION_SCOUT:
+				getUnitToScout();
+				break;
+			case Action::ACTION_ATTACK:
+				combatManager.attack(action.attackPosition);
+				break;
+			case Action::ACTION_DEFEND:
+				combatManager.defend(action.defendPosition);
+				break;
 		}
 	}
 	timerManager.stopTimer(TimerManager::Strategy);
@@ -178,12 +161,12 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::All);
 
 	// Draw unit health bars, which brood war unfortunately does not do
-	//Tools::DrawUnitHealthBars();
+	Tools::DrawUnitHealthBars();
 
 	//BWEB::Map::draw();
 
 	// Draw some relevent information to the screen to help us debug the bot
-	//drawDebugInformation();
+	drawDebugInformation();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -210,11 +193,6 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	strategyManager.onUnitDestroy(unit);
 	informationManager.onUnitDestroy(unit);
 	buildManager.onUnitDestroy(unit);
-}
-
-void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
-{
-	buildManager.onUnitDiscover(unit);
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
@@ -244,6 +222,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
 	//std::cout << "ProtoBot onUnitComplete: " << unit->getType() << "\n";
 
+	strategyManager.onUnitComplete(unit);
 	informationManager.onUnitComplete(unit);
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
@@ -276,13 +255,34 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
+	/*
+	if (unit_type == BWAPI::UnitTypes::Protoss_Zealot || unit_type == BWAPI::UnitTypes::Protoss_Dragoon)
+	{
+		if (scoutingManager.canAcceptCombatScout(unit_type))
+		{
+			scoutingManager.assignScout(unit);
+			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
+			return;
+		}
+	}*/
+
+	if (unit_type == BWAPI::UnitTypes::Protoss_Observer)
+	{
+		if (scoutingManager.canAcceptCombatScout(unit_type))
+		{
+			scoutingManager.assignScout(unit);
+			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
+			return;
+		}
+	}
+
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }
 
 void ProtoBotCommander::onUnitShow(BWAPI::Unit unit)
 {
-
+	buildManager.onUnitDiscover(unit);
 }
 
 void ProtoBotCommander::onUnitHide(BWAPI::Unit unit)

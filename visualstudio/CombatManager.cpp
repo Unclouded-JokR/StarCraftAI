@@ -7,15 +7,23 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-
+	AStar::clearPathCache();
+	AStar::fillUncachedAreaPairs();
 }
 
 void CombatManager::onFrame() {
+
 	for (auto& squad : Squads) {
 		squad->onFrame();
 	}
 
+	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
+		AStar::fillAreaPathCache();
+	}
+
+#ifdef DEBUG_CM
 	drawDebugInfo();
+#endif
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
@@ -59,6 +67,10 @@ void CombatManager::defend(BWAPI::Position position) {
 
 		squad->commandPos = position;
 		squad->setState(DefendingState::getInstance());
+	}
+
+	for (auto& squad : DefendingSquads) {
+		squad->commandPos = position;
 	}
 }
 
@@ -126,6 +138,23 @@ void CombatManager::drawDebugInfo() {
 	for (auto& squad : Squads) {
 		squad->drawDebugInfo();
 	}
+
+	MapTools map_tool = MapTools();
+	//for (auto& tile : closedTiles) {
+	//	map_tool = MapTools();
+	//	map_tool.drawTile(tile.first.x, tile.first.y, BWAPI::Colors::Red);
+	//	BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first) + BWAPI::Position(0, 16), "%.2f", tile.second);
+	//}
+
+#ifdef DEBUG_PRECACHE //In A-StarPathfinding.h
+	if (!precachedPositions.empty()) {
+		BWAPI::Position prevPos = precachedPositions.at(0);
+		for (const auto& pos : precachedPositions) {
+			map_tool.drawTile(BWAPI::TilePosition(pos).x, BWAPI::TilePosition(pos).y, BWAPI::Colors::Red);
+			prevPos = pos;
+		}
+	}
+#endif
 }
 
 BWAPI::Unit CombatManager::getAvailableUnit() {
@@ -201,4 +230,51 @@ void CombatManager::handleTextCommand(std::string text) {
 			BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size() - 1).x, positions.at(positions.size() - 1).y, dist);
 		}
 	}
+}
+
+
+// Adding this in to strip scout units from squads if they somehow make it in -Marshall
+bool CombatManager::detachUnit(BWAPI::Unit unit) {
+	if (!unit) {
+		return false;
+	}
+
+	auto itMap = unitSquadIdMap.find(unit);
+	if (itMap == unitSquadIdMap.end()) {
+		totalCombatUnits.erase(unit);
+		return false;
+	}
+
+	const int squadId = itMap->second;
+
+	for (auto* squad : Squads) {
+		if (!squad) {
+			continue;
+		}
+
+		if (squad->squadId != squadId) {
+			continue;
+		}
+
+		squad->removeUnit(unit);
+
+		unitSquadIdMap.erase(unit);
+		totalCombatUnits.erase(unit);
+
+		if (squad->units.empty()) {
+			removeSquad(squad);
+		}
+		else {
+			// Optional: ensure leader is valid after removal
+			if (!squad->leader || !squad->leader->exists()) {
+				squad->leader = squad->units.front();
+			}
+		}
+
+		return true;
+	}
+
+	unitSquadIdMap.erase(unit);
+	totalCombatUnits.erase(unit);
+	return true;
 }
