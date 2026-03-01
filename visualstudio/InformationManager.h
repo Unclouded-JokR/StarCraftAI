@@ -273,10 +273,6 @@ private:
 	void checkUpgrades();
 	void checkEnemyResearch();
 	void checkEnemyUpgrades();
-    void printFriendlyUnit();
-	void printFriendlyBuilding();
-	void printFriendlyResearch();
-	void printFriendlyUpgrades();
 
 public:
     ProtoBotCommander* commanderReference;
@@ -304,6 +300,10 @@ public:
     void printEnemyResearch() const;
     void printEnemyUpgrades() const;
     void printTrackedEnemies() const;
+    void printFriendlyUnit();
+    void printFriendlyBuilding();
+    void printFriendlyResearch();
+    void printFriendlyUpgrades();
 
 	FriendlyUnitCounter getFriendlyUnitCounter() const { return friendlyUnitCounter; }
 	FriendlyBuildingCounter getFriendlyBuildingCounter() const { return friendlyBuildingCounter; }

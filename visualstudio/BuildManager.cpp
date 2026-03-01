@@ -3,9 +3,6 @@
 #include "SpenderManager.h"
 #include "BuildingPlacer.h"
 #include "Builder.h"
-#include <cmath>
-#include <cstdlib>
-
 
 // Returns true if tile is valid, in bounds, and BWAPI considers it buildable for the given type.
 static bool isValidBuildTile(BWAPI::UnitType type, const BWAPI::TilePosition& t)
@@ -106,7 +103,7 @@ void BuildManager::onFrame() {
     runBuildOrderOnFrame();
 
     spenderManager.OnFrame(resourceRequests);
-    buildingPlacer.drawPoweredTiles();
+    //buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -313,6 +310,49 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
 
     buildingPlacer.onUnitCreate(unit);
 
+    if (unit->getPlayer() == BWAPI::Broodwar->self())
+    {
+        switch (unit->getType())
+        {
+            case BWAPI::UnitTypes::Protoss_Gateway:
+                if (requestCounter.gateway_requests > 0)
+                    --requestCounter.gateway_requests;
+                break;
+            case BWAPI::UnitTypes::Protoss_Nexus:
+                if (requestCounter.nexus_requests > 0)
+                    --requestCounter.nexus_requests;
+                break;
+            case BWAPI::UnitTypes::Protoss_Forge:
+                if (requestCounter.forge_requests > 0)
+                    --requestCounter.forge_requests;
+                break;
+            case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+                if (requestCounter.cybernetics_requests > 0)
+                    --requestCounter.cybernetics_requests;
+                break;
+            case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+                if (requestCounter.robotics_requests > 0)
+                    --requestCounter.robotics_requests;
+                break;
+            case BWAPI::UnitTypes::Protoss_Observatory:
+                if (requestCounter.observatory_requests > 0)
+                    --requestCounter.observatory_requests;
+                break;
+
+            case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+                if (requestCounter.citadel_requests > 0)
+                    --requestCounter.citadel_requests;
+                break;
+
+            case BWAPI::UnitTypes::Protoss_Templar_Archives:
+                if (requestCounter.templarArchives_requests > 0)
+                    --requestCounter.templarArchives_requests;
+                break;
+            default:
+                break;
+        }
+    }
+
     //Need to check this for tech and upgrades;
     for (ResourceRequest& request : resourceRequests)
     {
@@ -355,6 +395,48 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
             {
                 it->setUnitReference(unitAvalible);
                 break;
+            }
+            else
+            {
+               switch (it->buildingToConstruct)
+                {
+                    case BWAPI::UnitTypes::Protoss_Gateway:
+                        if (requestCounter.gateway_requests > 0)
+                            --requestCounter.gateway_requests;
+                        break;
+                    case BWAPI::UnitTypes::Protoss_Nexus:
+                        if (requestCounter.nexus_requests > 0)
+                            --requestCounter.nexus_requests;
+                        break;
+                    case BWAPI::UnitTypes::Protoss_Forge:
+                        if (requestCounter.forge_requests > 0)
+                            --requestCounter.forge_requests;
+                        break;
+                    case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+                        if (requestCounter.cybernetics_requests > 0)
+                            --requestCounter.cybernetics_requests;
+                        break;
+                    case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+                        if (requestCounter.robotics_requests > 0)
+                            --requestCounter.robotics_requests;
+                        break;
+                    case BWAPI::UnitTypes::Protoss_Observatory:
+                        if (requestCounter.observatory_requests > 0)
+                            --requestCounter.observatory_requests;
+                        break;
+
+                    case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+                        if (requestCounter.citadel_requests > 0)
+                            --requestCounter.citadel_requests;
+                        break;
+
+                    case BWAPI::UnitTypes::Protoss_Templar_Archives:
+                        if (requestCounter.templarArchives_requests > 0)
+                            --requestCounter.templarArchives_requests;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -433,7 +515,6 @@ void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 /// <param name="building"></param>
 void BuildManager::buildBuilding(BWAPI::UnitType building)
 {
-    
     if (isBuildOrderActive() && isRestrictedTechBuilding(building))
     {
         return;
@@ -443,6 +524,36 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
     request.type = ResourceRequest::Type::Building;
     request.unit = building;
     request.fromBuildOrder = false;
+
+    switch (building)
+    {
+        case BWAPI::UnitTypes::Protoss_Gateway: 
+            requestCounter.gateway_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Nexus: 
+            requestCounter.nexus_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Forge: 
+            requestCounter.forge_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Cybernetics_Core: 
+            requestCounter.cybernetics_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Robotics_Facility: 
+            requestCounter.robotics_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Observatory: 
+            requestCounter.observatory_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Citadel_of_Adun: 
+            requestCounter.citadel_requests++; 
+            break;
+        case BWAPI::UnitTypes::Protoss_Templar_Archives: 
+            requestCounter.templarArchives_requests++; 
+            break;
+        default: 
+            break;
+    }
 
     resourceRequests.push_back(request);
 }
@@ -622,7 +733,7 @@ void BuildManager::pumpUnit()
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
             }
             
-            if (ProtoBot_Upgrades.singularityCharge != 3) continue;
+            if (ProtoBot_Upgrades.singularityCharge != 1) continue;
             
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
             {
@@ -665,6 +776,11 @@ void BuildManager::pumpUnit()
             }*/
         }
     }
+}
+
+std::pair<int, int> BuildManager::getPlannedResources()
+{
+    return std::make_pair(spenderManager.getPlannedMinerals(resourceRequests), spenderManager.getPlannedGas(resourceRequests));
 }
 
 BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
@@ -755,8 +871,8 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
             candidates.push_back(i);
     }
 
-    //activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
-    activeBuildOrderIndex = 4;
+    activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
+    //activeBuildOrderIndex = 3;
     activeBuildOrderStep = 0;
     buildOrderActive = true;
     buildOrderCompleted = false;

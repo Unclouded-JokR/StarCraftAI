@@ -18,10 +18,15 @@ public:
 	BWAPI::Color squadColor;
 	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
+
 	BWAPI::Position commandPos;
+	BWAPI::Position currentDefensivePosition;
 	BWAPI::Position kitePos;
+
 	Path currentPath = Path();
 	int currentPathIdx = 0;
+
+	SquadState* currentState = nullptr;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor);
 
@@ -39,7 +44,6 @@ public:
 	}
 
 private:
-	SquadState* currentState = nullptr;
 
 	void simpleFlock();
 	void flockingHandler();

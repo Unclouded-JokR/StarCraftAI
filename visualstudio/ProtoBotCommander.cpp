@@ -136,6 +136,9 @@ void ProtoBotCommander::onFrame()
 			case Action::ACTION_DEFEND:
 				combatManager.defend(action.defendPosition);
 				break;
+			case Action::ACTION_REINFORCE:
+				combatManager.reinforce(action.reinforcePosition);
+				break;
 		}
 	}
 	timerManager.stopTimer(TimerManager::Strategy);
@@ -161,7 +164,7 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::All);
 
 	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
+	//Tools::DrawUnitHealthBars();
 
 	//BWEB::Map::draw();
 

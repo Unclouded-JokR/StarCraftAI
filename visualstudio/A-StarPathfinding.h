@@ -104,7 +104,7 @@ class Path {
 			return this->positions == other.positions;
 		}
 
-		const Path& operator+(const Path& other){
+		Path operator+(const Path& other){
 			vector<BWAPI::Position> finalPositions;
 			const int finalDist = this->distance + other.distance;
 			finalPositions.insert(finalPositions.end(), this->positions.begin(), this->positions.end());
@@ -118,6 +118,7 @@ private:
 	static map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AreaPathCache;
 	static map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> ChokepointPathCache;
 	static vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> UncachedAreaPairs;
+	static vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> failedAreaPairs;
 
 	static int TileToIndex(BWAPI::TilePosition tile);
 	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
