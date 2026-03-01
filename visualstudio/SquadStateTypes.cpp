@@ -1,17 +1,16 @@
 #include "SquadStateTypes.h"
 
-#define DEBUG_STATES
-
 // Initializing extern variables from "CombatManager.h"
-vector<Squad*> AttackingSquads;
-vector<Squad*> DefendingSquads;
-vector<Squad*> ReinforcingSquads;
-vector<Squad*> IdleSquads;
+vector<Squad*> CombatManager::AttackingSquads;
+vector<Squad*> CombatManager::DefendingSquads;
+vector<Squad*> CombatManager::ReinforcingSquads;
+vector<Squad*> CombatManager::IdleSquads;
 
 void AttackingState::Enter(Squad* squad) {
 #ifdef DEBUG_STATES
-	AttackingSquads.push_back(squad);
+	cout << "(" << squad->squadId << ")" << "Entered ATTACKING state" << endl;
 #endif
+	CombatManager::AttackingSquads.push_back(squad);
 }
 void AttackingState::Update(Squad* squad) {
 	for (BWAPI::Unit& squadMate : squad->units)
@@ -25,7 +24,10 @@ void AttackingState::Update(Squad* squad) {
 	}
 }
 void AttackingState::Exit(Squad* squad) {
-	AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
+#ifdef DEBUG_STATES
+	cout << "(" << squad->squadId << ")" << "Exited ATTACKING state" << endl;
+#endif
+	CombatManager::AttackingSquads.erase(remove(CombatManager::AttackingSquads.begin(), CombatManager::AttackingSquads.end(), squad), CombatManager::AttackingSquads.end());
 	squad->kitePos = BWAPI::Positions::Invalid;
 	squad->currentPath = Path();
 	squad->currentPathIdx = 0;
@@ -39,25 +41,29 @@ SquadState& AttackingState::getInstance()
 
 void DefendingState::Enter(Squad* squad) {
 #ifdef DEBUG_STATES
-	DefendingSquads.push_back(squad);
+	cout << "(" << squad->squadId << ")" << "Entered DEFENDING state" << endl;
 #endif
+	CombatManager::DefendingSquads.push_back(squad);
 }
 
 void DefendingState::Update(Squad* squad) {
-	squad->leader->attack(squad->prevDefendPos);
+	squad->leader->attack(squad->currentDefensivePosition);
 	for (BWAPI::Unit& squadMate : squad->units)
 	{
 		if (squadMate == squad->leader) continue;
 
 		if (squadMate->isIdle() && !(squadMate->getDistance(squad->leader) < 200))
 		{
-			squadMate->attack(squad->prevDefendPos);
+			squadMate->attack(squad->currentDefensivePosition);
 		}
 	}
 }
 
 void DefendingState::Exit(Squad* squad) {
-	DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
+#ifdef DEBUG_STATES
+	cout << "(" << squad->squadId << ")" << "Exited DEFENDING state" << endl;
+#endif
+	CombatManager::DefendingSquads.erase(remove(CombatManager::DefendingSquads.begin(), CombatManager::DefendingSquads.end(), squad), CombatManager::DefendingSquads.end());
 	squad->kitePos = BWAPI::Positions::Invalid;
 	squad->currentPath = Path();
 	squad->currentPathIdx = 0;
@@ -72,18 +78,22 @@ SquadState& DefendingState::getInstance()
 
 void ReinforcingState::Enter(Squad* squad) {
 #ifdef DEBUG_STATES
-	ReinforcingSquads.push_back(squad);
-	squad->leader->attack(squad->commandPos);
+	cout << "(" << squad->squadId << ")" << "Entered REINFORCING state" << endl;
 #endif
+
+	CombatManager::ReinforcingSquads.push_back(squad);
+	squad->leader->attack(squad->commandPos);
 }
 
 void ReinforcingState::Update(Squad* squad) {
-	int searchRadius = 100;
+	int searchRadius = 200;
 	BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsInRadius(squad->commandPos, searchRadius, BWAPI::Filter::IsEnemy);
 
 	// If theres no enemies around where the squad needs to reinforce, retreat back to the defensive position
-	if (enemies.empty() || squad->leader->getPosition().getApproxDistance(squad->commandPos) < MAX_REINFORCE_DIST) {
-		cout << "Returning to defend chokepoint: " << squad->prevDefendPos.x << "," << squad->prevDefendPos.y << endl;
+	if (squad->leader->getPosition().getApproxDistance(squad->commandPos) > MAX_REINFORCE_DIST) {
+#ifdef DEBUG_STATES
+		cout << "Returning to defend chokepoint: " << squad->currentDefensivePosition.x << "," << squad->currentDefensivePosition.y << endl;
+#endif
 		squad->setState(DefendingState::getInstance());
 	}
 
@@ -100,7 +110,10 @@ void ReinforcingState::Update(Squad* squad) {
 }
 
 void ReinforcingState::Exit(Squad* squad) {
-	ReinforcingSquads.erase(remove(ReinforcingSquads.begin(), ReinforcingSquads.end(), squad), ReinforcingSquads.end());
+#ifdef DEBUG_STATES
+	cout << "(" << squad->squadId << ")" << "Exited REINFORCING state" << endl;
+#endif
+	CombatManager::ReinforcingSquads.erase(remove(CombatManager::ReinforcingSquads.begin(), CombatManager::ReinforcingSquads.end(), squad), CombatManager::ReinforcingSquads.end());
 }
 
 SquadState& ReinforcingState::getInstance()
@@ -111,13 +124,17 @@ SquadState& ReinforcingState::getInstance()
 
 void IdleState::Enter(Squad* squad) {
 #ifdef DEBUG_STATES
-	IdleSquads.push_back(squad);
+	cout << "(" << squad->squadId << ")" << "Entered IDLE state" << endl;
 #endif
+	CombatManager::IdleSquads.push_back(squad);
 }
 void IdleState::Update(Squad* squad) {
 }
 void IdleState::Exit(Squad* squad) {
-	IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
+#ifdef DEBUG_STATES
+	cout << "(" << squad->squadId << ")" << "Exited IDLE state" << endl;
+#endif
+	CombatManager::IdleSquads.erase(remove(CombatManager::IdleSquads.begin(), CombatManager::IdleSquads.end(), squad), CombatManager::IdleSquads.end());
 	squad->kitePos = BWAPI::Positions::Invalid;
 	squad->currentPath = Path();
 	squad->currentPathIdx = 0;

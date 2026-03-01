@@ -3,15 +3,10 @@
 #include "Squad.h"
 #include "A-StarPathfinding.h"
 
-#define DEBUG_CM
+//#define DEBUG_CM
 #define FRAMES_BETWEEN_CACHING 5
 
 using namespace std;
-
-extern vector<Squad*> AttackingSquads;
-extern vector<Squad*> DefendingSquads;
-extern vector<Squad*> ReinforcingSquads;
-extern vector<Squad*> IdleSquads;
 
 class ProtoBotCommander;
 
@@ -19,13 +14,13 @@ class CombatManager{
 public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
-    BWAPI::Unitset totalCombatUnits;
-	map<BWAPI::Unit, int> unitSquadIdMap;
+    BWAPI::Unitset allUnits;
+	map<BWAPI::Unit, Squad*> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
-    vector<Squad*> AttackingSquads = vector<Squad*>();
-    vector<Squad*> DefendingSquads = vector<Squad*>();
-    vector<Squad*> ReinforcingSquads = vector<Squad*>();
-    vector<Squad*> IdleSquads = vector<Squad*>();
+    static vector<Squad*> AttackingSquads;
+    static vector<Squad*> DefendingSquads;
+    static vector<Squad*> ReinforcingSquads;
+    static vector<Squad*> IdleSquads;
 
     void onStart();
     void onFrame();
@@ -36,7 +31,7 @@ public:
     Squad* addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(Squad* squad);
     bool assignUnit(BWAPI::Unit unit);
-    int isAssigned(BWAPI::Unit unit);
+    bool isAssigned(BWAPI::Unit unit);
     void drawDebugInfo();
     BWAPI::Unit getAvailableUnit();
     BWAPI::Unit getAvailableUnit(function<bool(BWAPI::Unit)> filter);

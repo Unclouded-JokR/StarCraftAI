@@ -27,36 +27,38 @@ void CombatManager::onFrame() {
 }
 
 void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
-	for (auto& squad : Squads) {
-		if (squad->squadId == unitSquadIdMap[unit]) {
-			squad->removeUnit(unit);
-			unitSquadIdMap.erase(unit);
-			totalCombatUnits.erase(unit);
+	if (isAssigned(unit)) {
+		Squad* squad = unitSquadMap[unit];
+		squad->removeUnit(unit);
+		unitSquadMap.erase(unit);
+		allUnits.erase(unit);
 
-			if (squad->units.empty()) {
-				removeSquad(squad);
-			}
-			break;
+		if (squad->units.empty()) {
+			removeSquad(squad);
 		}
-	}
 
-	unitSquadIdMap.erase(unit);
+		unitSquadMap.erase(unit);
+	}
 }
 
 void CombatManager::attack(BWAPI::Position position) {
 	for (auto& squad : IdleSquads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
-
 	}
-	for (auto& squad : AttackingSquads) {
+	for (auto& squad : DefendingSquads) {
 		squad->commandPos = position;
+		squad->setState(AttackingState::getInstance());
+	}
+	for (auto& squad : ReinforcingSquads) {
+		squad->commandPos = position;
+		squad->setState(AttackingState::getInstance());
 	}
 }
 
 void CombatManager::defend(BWAPI::Position position) {
 	for (auto& squad : IdleSquads) {
-		squad->prevDefendPos = position;
+		squad->currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
 	}
 	for (auto& squad : DefendingSquads) {
@@ -86,9 +88,12 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 	const int id = Squads.size() + 1;
 
 	Squad* newSquad = new Squad(leaderUnit, id, randomColor);
-	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
 	Squads.push_back(newSquad);
 	IdleSquads.push_back(newSquad);
+
+#ifdef DEBUG_CM
+	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
+#endif
 
 	return newSquad;
 }
@@ -97,11 +102,12 @@ void CombatManager::removeSquad(Squad* squad) {
 	Squads.erase(remove(Squads.begin(), Squads.end(), squad), Squads.end());
 	IdleSquads.erase(remove(IdleSquads.begin(), IdleSquads.end(), squad), IdleSquads.end());
 	DefendingSquads.erase(remove(DefendingSquads.begin(), DefendingSquads.end(), squad), DefendingSquads.end());
+	ReinforcingSquads.erase(remove(ReinforcingSquads.begin(), ReinforcingSquads.end(), squad), ReinforcingSquads.end());
 	AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
 
 	// Handling filled chokepoint locations in strategy manager
 	for (const auto& cp : commanderReference->strategyManager.ProtoBotArea_SquadPlacements) {
-		if (cp != nullptr && squad->prevDefendPos == BWAPI::Position(cp->Center())) {
+		if (cp != nullptr && squad->currentDefensivePosition == BWAPI::Position(cp->Center())) {
 			commanderReference->strategyManager.PositionsFilled[cp] = false;
 
 #ifdef DEBUG_CM
@@ -129,8 +135,8 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 	for (auto& squad : Squads) {
 		if (squad->units.size() < MAX_SQUAD_SIZE) {
 			squad->addUnit(unit);
-			totalCombatUnits.insert(unit);
-			unitSquadIdMap[unit] = squad->squadId;
+			allUnits.insert(unit);
+			unitSquadMap[unit] = squad;
 			return true;
 		}
 	}
@@ -143,17 +149,17 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 	}
 
 	newSquad->addUnit(unit);
-	totalCombatUnits.insert(unit);
-	unitSquadIdMap[unit] = newSquad->squadId;
+	allUnits.insert(unit);
+	unitSquadMap[unit] = newSquad;
 	return true;
 }
 
-int CombatManager::isAssigned(BWAPI::Unit unit) {
-	if (unitSquadIdMap.find(unit) != unitSquadIdMap.end()) {
-		return unitSquadIdMap[unit];
+bool CombatManager::isAssigned(BWAPI::Unit unit) {
+	if (unitSquadMap.find(unit) != unitSquadMap.end()) {
+		return true;
 	}
 	else {
-		return -1;
+		return false;
 	}
 }
 
@@ -193,8 +199,8 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 			if (!filter(unit)) continue;
 
 			squad->removeUnit(unit);
-			totalCombatUnits.erase(unit);
-			unitSquadIdMap.erase(unit);
+			allUnits.erase(unit);
+			unitSquadMap.erase(unit);
 			return unit;
 		}
 	}
@@ -262,42 +268,29 @@ bool CombatManager::detachUnit(BWAPI::Unit unit) {
 		return false;
 	}
 
-	auto itMap = unitSquadIdMap.find(unit);
-	if (itMap == unitSquadIdMap.end()) {
-		totalCombatUnits.erase(unit);
+	auto itMap = unitSquadMap.find(unit);
+	if (itMap == unitSquadMap.end()) {
+		allUnits.erase(unit);
 		return false;
 	}
 
-	const int squadId = itMap->second;
+	Squad* squad = itMap->second;
 
-	for (auto* squad : Squads) {
-		if (!squad) {
-			continue;
+	squad->removeUnit(unit);
+	unitSquadMap.erase(unit);
+	allUnits.erase(unit);
+
+	if (squad->units.empty()) {
+		removeSquad(squad);
+	}
+	else {
+		// Optional: ensure leader is valid after removal
+		if (!squad->leader || !squad->leader->exists()) {
+			squad->leader = squad->units.front();
 		}
-
-		if (squad->squadId != squadId) {
-			continue;
-		}
-
-		squad->removeUnit(unit);
-
-		unitSquadIdMap.erase(unit);
-		totalCombatUnits.erase(unit);
-
-		if (squad->units.empty()) {
-			removeSquad(squad);
-		}
-		else {
-			// Optional: ensure leader is valid after removal
-			if (!squad->leader || !squad->leader->exists()) {
-				squad->leader = squad->units.front();
-			}
-		}
-
-		return true;
 	}
 
-	unitSquadIdMap.erase(unit);
-	totalCombatUnits.erase(unit);
+	unitSquadMap.erase(unit);
+	allUnits.erase(unit);
 	return true;
 }

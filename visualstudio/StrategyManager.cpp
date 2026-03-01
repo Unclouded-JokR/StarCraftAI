@@ -609,7 +609,7 @@ std::vector<Action> StrategyManager::onFrame()
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
 	if (supplyUsed >= 150 || totalSupply == MAX_SUPPLY)
 	{
-		if (commanderReference->combatManager.totalCombatUnits.size() >= (MAX_SQUAD_SIZE * 2) && enemyBaselocations.size() != 0)
+		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * 4) && enemyBaselocations.size() != 0)
 		{
 			//std::cout << "ATTACK ACTION: Attacking enemy base\n";
 			Action attack;
@@ -692,7 +692,6 @@ std::vector<Action> StrategyManager::onFrame()
 				Action defend;
 				defend.type = Action::ACTION_DEFEND;
 				defend.defendPosition = BWAPI::Position(areaToDefend);
-
 				actionsToReturn.push_back(defend);
 				PositionsFilled[chokeToDefend] = true;
 			}

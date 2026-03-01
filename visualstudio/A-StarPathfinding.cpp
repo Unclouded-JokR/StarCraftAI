@@ -211,6 +211,10 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 #ifdef DEBUG_PATH
 						cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
 #endif
+						if (currentPath.positions.size() == 0 || toStartOfPrecache.positions.size() == 0 || toEnd.positions.size() == 0) {
+							return Path();
+						}
+
 						totalTimer.stop();
 						return finalPath;
 					}

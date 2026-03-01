@@ -20,7 +20,7 @@ public:
 	std::vector<BWAPI::Unit> units;
 
 	BWAPI::Position commandPos;
-	BWAPI::Position prevDefendPos;
+	BWAPI::Position currentDefensivePosition;
 	BWAPI::Position kitePos;
 
 	Path currentPath = Path();
