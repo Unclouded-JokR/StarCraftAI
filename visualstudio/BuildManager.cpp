@@ -871,8 +871,8 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
             candidates.push_back(i);
     }
 
-    //activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
-    activeBuildOrderIndex = 3;
+    activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
+    //activeBuildOrderIndex = 3;
     activeBuildOrderStep = 0;
     buildOrderActive = true;
     buildOrderCompleted = false;
