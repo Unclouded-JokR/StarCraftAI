@@ -2,8 +2,11 @@
 #include <vector>
 #include <string>
 #include <BWAPI.h>
+#include <iostream>
 #include <fstream>
 #include <ctime>
+#include <cmath>
+#include <cstdlib>
 
 #include "../src/starterbot/MapTools.h"
 #include "../src/starterbot/Tools.h"
@@ -15,6 +18,19 @@
 #include "SpenderManager.h"
 #define FRAMES_BEFORE_TRYAGAIN 72
 #define MAX_ATTEMPTS 3
+
+//Units strategy manager cares about, details the units that are being requested and have not been placed yet.
+
+struct ProtoBotRequestCounter {
+    int gateway_requests = 0;
+    int nexus_requests = 0;
+    int forge_requests = 0;
+    int cybernetics_requests = 0;
+    int robotics_requests = 0;
+    int observatory_requests = 0;
+    int citadel_requests = 0;
+    int templarArchives_requests = 0;
+};
 
 class ProtoBotCommander;
 class NexusEconomy;
@@ -57,6 +73,7 @@ public:
     ProtoBotCommander* commanderReference;
     SpenderManager spenderManager;
     BuildingPlacer buildingPlacer;
+    ProtoBotRequestCounter requestCounter;
 
     std::vector<Builder> builders;
     std::vector<ResourceRequest> resourceRequests;
@@ -116,6 +133,7 @@ public:
     std::vector<NexusEconomy> getNexusEconomies();
 
     void pumpUnit();
+    std::pair <int, int> getPlannedResources();
 private:
     std::vector<BuildOrder> buildOrders;
     int activeBuildOrderIndex = -1;

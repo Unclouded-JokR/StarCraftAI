@@ -74,6 +74,64 @@ int SpenderManager::availableGas(std::vector<ResourceRequest> &requests)
     return currentGasCount;
 }
 
+int SpenderManager::getPlannedMinerals(std::vector<ResourceRequest>& requests)
+{
+    int currentMineralCount = BWAPI::Broodwar->self()->minerals();
+
+    for (const ResourceRequest& request : requests)
+    {
+        //Sanity Check
+        if (request.state == ResourceRequest::State::Accepted_Completed) continue;
+
+        switch (request.type)
+        {
+        case ResourceRequest::Type::Unit:
+        case ResourceRequest::Type::Building:
+            currentMineralCount -= request.unit.mineralPrice();
+            break;
+
+        case ResourceRequest::Type::Upgrade:
+            currentMineralCount -= request.upgrade.mineralPrice();
+            break;
+
+        case ResourceRequest::Type::Tech:
+            currentMineralCount -= request.tech.mineralPrice();
+            break;
+        }
+    }
+
+    return currentMineralCount;
+}
+
+int SpenderManager::getPlannedGas(std::vector<ResourceRequest>& requests)
+{
+    int currentGasCount = BWAPI::Broodwar->self()->gas();
+
+    for (const ResourceRequest& request : requests)
+    {
+        //Sanity Check
+        if (request.state == ResourceRequest::State::Accepted_Completed) continue;
+
+        switch (request.type)
+        {
+        case ResourceRequest::Type::Unit:
+        case ResourceRequest::Type::Building:
+            currentGasCount -= request.unit.gasPrice();
+            break;
+
+        case ResourceRequest::Type::Upgrade:
+            currentGasCount -= request.upgrade.gasPrice();
+            break;
+
+        case ResourceRequest::Type::Tech:
+            currentGasCount -= request.tech.gasPrice();
+            break;
+        }
+    }
+
+    return currentGasCount;
+}
+
 //[TODO] consider making this take into consideration the time it will take to arrive at a place. 
 int SpenderManager::availableSupply()
 {
@@ -156,7 +214,7 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
     //std::cout << "Current gas count: " << currentGasCount << "\n";
 
     //Pylon first pass. These units should have priority.
-    /*for (ResourceRequest& request : requests)
+    for (ResourceRequest& request : requests)
     {
         if (request.state == ResourceRequest::State::PendingApproval && request.type == ResourceRequest::Type::Building && request.unit == BWAPI::UnitTypes::Protoss_Pylon)
         {
@@ -172,7 +230,7 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
                 currentGasCount -= gasPrice;
             }
         }
-    }*/
+    }
 
     //spend money until we cant anymore.
     for (ResourceRequest& request : requests)

@@ -161,9 +161,9 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::All);
 
 	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
+	//Tools::DrawUnitHealthBars();
 
-	BWEB::Map::draw();
+	//BWEB::Map::draw();
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
@@ -193,11 +193,6 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 	strategyManager.onUnitDestroy(unit);
 	informationManager.onUnitDestroy(unit);
 	buildManager.onUnitDestroy(unit);
-}
-
-void ProtoBotCommander::onUnitDiscover(BWAPI::Unit unit)
-{
-	buildManager.onUnitDiscover(unit);
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
@@ -287,7 +282,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitShow(BWAPI::Unit unit)
 {
-
+	buildManager.onUnitDiscover(unit);
 }
 
 void ProtoBotCommander::onUnitHide(BWAPI::Unit unit)

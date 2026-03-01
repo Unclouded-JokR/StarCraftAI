@@ -15,6 +15,8 @@ public:
     bool canAfford(int mineralPrice, int gasPrice, int currentMinerals, int currentGas);
     int availableMinerals(std::vector<ResourceRequest>&);
     int availableGas(std::vector<ResourceRequest>&);
+    int getPlannedMinerals(std::vector<ResourceRequest>&);
+    int getPlannedGas(std::vector<ResourceRequest>&);
     int plannedSupply(std::vector<ResourceRequest>&, BWAPI::Unitset);
     int availableSupply();
 
