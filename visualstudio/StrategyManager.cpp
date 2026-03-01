@@ -225,7 +225,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 	if (buildOrderCompleted)
 	{
-		if (ProtoBot_ProductionFocus == ProductionFocus::UNIT_PRODUCTION)
+		if (ProtoBot_ProductionFocus == ProductionFocus::UNIT_PRODUCTION && !(ProductionGoal_index >= ProtoBot_ProductionGoals.size()))
 		{
 			if (timer + 1 >= (UNIT_PRODUCTION_TIME + (DELAY_PER_PRODUCTION * ProductionGoal_index)))
 			{
@@ -443,148 +443,148 @@ std::vector<Action> StrategyManager::onFrame()
 				ProductionGoal_index++;
 			}
 		}
-	}
-
-	/*
-	if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus) )
-	{
-		//Not expanding properlly after having enough gateways
-		if (ProtoBot_buildings.nexus == saturatedNexus)
+		else
 		{
-			std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
-			Action expand;
-			expand.type = Action::ACTION_EXPAND;
-			expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
+			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
+			{
+				//Not expanding properlly after having enough gateways
+				if (ProtoBot_buildings.nexus == saturatedNexus)
+				{
+					std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
+					Action expand;
+					expand.type = Action::ACTION_EXPAND;
+					expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
 
-			actionsToReturn.push_back(expand);
+					actionsToReturn.push_back(expand);
+				}
+
+				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
+				{
+					mineralExcessToExpand *= 2;
+					std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+
+					Action expand;
+					expand.type = Action::ACTION_EXPAND;
+					expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
+
+					actionsToReturn.push_back(expand);
+				}
+
+				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
+				{
+					std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					minutesPassedIndex++;
+
+					Action expand;
+					expand.type = Action::ACTION_EXPAND;
+					expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
+
+					actionsToReturn.push_back(expand);
+				}
+			}
+
+			//If a nexus economy has an gyser to place an assimlator at, place one when we have more than: numbers of minerals + 3 workers.
+			for (const NexusEconomy& nexusEconomy : nexusEconomies)
+			{
+				if (nexusEconomy.vespeneGyser != nullptr
+					&& nexusEconomy.assimilator == nullptr
+					&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
+					&& nexusEconomy.lifetime >= 500
+					&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
+				{
+					//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
+					Action action;
+					action.type = Action::ACTION_BUILD;
+					action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Assimilator;
+
+					actionsToReturn.push_back(action);
+				}
+			}
+
+			//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
+			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && ProtoBot_buildings.pylon >= 1)
+			{
+				//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
+
+				//4 Gateways per nexus economy
+				if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
+				{
+					//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
+					Action action;
+					action.type = Action::ACTION_BUILD;
+					action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Gateway;
+
+					actionsToReturn.push_back(action);
+				}
+			}
+
+			//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
+			if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
+			{
+				std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+				Action action;
+				action.type = Action::ACTION_BUILD;
+				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Forge;
+
+				actionsToReturn.push_back(action);
+			}
+
+			//Only need 1 cybernetics core
+			if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
+			{
+				std::cout << "build action: requesting to warp forge\n";
+				Action action;
+				action.type = Action::ACTION_BUILD;
+				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
+
+				actionsToReturn.push_back(action);
+			}
+
+			//Should only build 1 robotics facility
+			if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+			{
+				std::cout << "build action: requesting to warp robotics facility\n";
+				Action action;
+				action.type = Action::ACTION_BUILD;
+				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Robotics_Facility;
+
+				actionsToReturn.push_back(action);
+			}
+
+			//Only 1 observatory
+			if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
+			{
+				std::cout << "Build Action: requesting to warp observatory\n";
+				Action action;
+				action.type = Action::ACTION_BUILD;
+				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Observatory;
+
+				actionsToReturn.push_back(action);
+			}
+
+			//2/3 Forge upgrade units
+
+			if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+			{
+				std::cout << "build action: requesting to warp citadel of adun\n";
+				Action action;
+				action.type = Action::ACTION_BUILD;
+				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
+
+				actionsToReturn.push_back(action);
+			}
+
+			if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
+			{
+				std::cout << "build action: requesting to warp templar archives\n";
+				Action action;
+				action.type = Action::ACTION_BUILD;
+				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Templar_Archives;
+
+				actionsToReturn.push_back(action);
+			}
 		}
-
-		if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
-		{
-			mineralExcessToExpand *= 2;
-			std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
-
-			Action expand;
-			expand.type = Action::ACTION_EXPAND;
-			expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
-
-			actionsToReturn.push_back(expand);
-		}
-
-		if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
-		{
-			std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
-			minutesPassedIndex++;
-
-			Action expand;
-			expand.type = Action::ACTION_EXPAND;
-			expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
-
-			actionsToReturn.push_back(expand);
-		}
 	}
-
-	//If a nexus economy has an gyser to place an assimlator at, place one when we have more than: numbers of minerals + 3 workers.
-	for (const NexusEconomy& nexusEconomy : nexusEconomies)
-	{
-		if (nexusEconomy.vespeneGyser != nullptr
-			&& nexusEconomy.assimilator == nullptr
-			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-			&& nexusEconomy.lifetime >= 500
-			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
-		{
-			//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
-			Action action;
-			action.type = Action::ACTION_BUILD;
-			action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Assimilator;
-
-			actionsToReturn.push_back(action);
-		}
-	}
-
-	//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
-	if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && ProtoBot_buildings.pylon >= 1)
-	{
-		//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
-
-		//4 Gateways per nexus economy
-		if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
-		{
-			//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
-			Action action;
-			action.type = Action::ACTION_BUILD;
-			action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Gateway;
-
-			actionsToReturn.push_back(action);
-		}
-	}
-
-	//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
-	if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
-	{
-		std::cout << "BUILD ACTION: Requesting to warp Forge\n";
-		Action action;
-		action.type = Action::ACTION_BUILD;
-		action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Forge;
-
-		actionsToReturn.push_back(action);
-	}
-
-	//Only need 1 cybernetics core
-	if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
-	{
-		std::cout << "build action: requesting to warp forge\n";
-		Action action;
-		action.type = Action::ACTION_BUILD;
-		action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
-
-		actionsToReturn.push_back(action);
-	}
-
-	//Should only build 1 robotics facility
-	if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
-	{
-		std::cout << "build action: requesting to warp robotics facility\n";
-		Action action;
-		action.type = Action::ACTION_BUILD;
-		action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-
-		actionsToReturn.push_back(action);
-	}
-
-	//Only 1 observatory
-	if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
-	{
-		std::cout << "Build Action: requesting to warp observatory\n";
-		Action action;
-		action.type = Action::ACTION_BUILD;
-		action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Observatory;
-
-		actionsToReturn.push_back(action);
-	}
-
-	//2/3 Forge upgrade units
-
-	if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
-	{
-		std::cout << "build action: requesting to warp citadel of adun\n";
-		Action action;
-		action.type = Action::ACTION_BUILD;
-		action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
-
-		actionsToReturn.push_back(action);
-	}
-
-	if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
-	{
-		std::cout << "build action: requesting to warp templar archives\n";
-		Action action;
-		action.type = Action::ACTION_BUILD;
-		action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Templar_Archives;
-
-		actionsToReturn.push_back(action);
-	}
-	*/
 
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout

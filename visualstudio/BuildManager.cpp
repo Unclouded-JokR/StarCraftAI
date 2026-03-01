@@ -733,7 +733,7 @@ void BuildManager::pumpUnit()
                 buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
             }
             
-            if (ProtoBot_Upgrades.singularityCharge != 3) continue;
+            if (ProtoBot_Upgrades.singularityCharge != 1) continue;
             
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
             {
