@@ -27,10 +27,12 @@ public:
 	int offset;
 	int moveTimer = 5;
 	int workerNums;
+	int attackingWorkers = 0;
 
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
 	BWAPI::Unitset minerals;
+	BWAPI::Unitset closestMinerals;
 	BWAPI::Unit vespeneGyser = nullptr; //Should maybe consider changing this to a unit set like minerals in case multiple gysers.
 	BWAPI::Unit assimilator = nullptr;
 	std::unordered_map<BWAPI::Unit, int> resourceWorkerCount;
@@ -47,7 +49,7 @@ public:
 	int addMissedResources();
 	void onFrame();
 	void printMineralWorkerCounts();
-	void moveToMineral(BWAPI::Unit worker, BWAPI::Unit mineral);
+	//void moveToMineral(BWAPI::Unit worker, BWAPI::Unit mineral);
 
 	bool OnUnitDestroy(BWAPI::Unit unit);
 	BWAPI::Unit GetClosestMineralToWorker(BWAPI::Unit worker);

@@ -53,6 +53,41 @@ int NexusEconomy::addMissedResources()
 				newMinerals.insert(unit);
 			}
 		}
+
+		if (unit->getType().isRefinery() && !unit->isBeingConstructed() && unit->getPlayer() != BWAPI::Broodwar->self()) {
+			std::cout << "Gas steal detected...\n";
+			for (auto u : workers)
+			{
+				if (u->getType().isWorker() && attackingWorkers < 8) {
+					u->attack(unit);
+					attackingWorkers += 1;
+				}
+			}
+			attackingWorkers = 0;
+		}
+
+		if (unit->isAttacking() && unit->getPlayer() != BWAPI::Broodwar->self()) {
+			for (auto u : workers)
+			{
+				if (u->getType().isWorker() && attackingWorkers < 8) {
+					u->attack(unit);
+					attackingWorkers += 1;
+				}
+			}
+			attackingWorkers = 0;
+		}
+
+		/*for (auto& u : BWAPI::Broodwar->enemy()->getUnits()) {
+			if (u->getType().isRefinery() && u->getPlayer() != BWAPI::Broodwar->self()) {
+				for (auto u : workers)
+				{
+					if (u->getType().isWorker() && attackingWorkers < 8) {
+						u->attack(unit);
+						attackingWorkers += 1;
+					}
+				}
+			}
+		}*/
 	}
 
 	if (newMinerals.size() == 0) return minerals.size();
@@ -82,6 +117,24 @@ int NexusEconomy::addMissedResources()
 	//std::cout << "Total Minerals: " << minerals.size() << "\n";
 }
 
+/*
+void NexusEconomy::testGasSteal()
+{
+	BWAPI::Unit enemyWorker = nullptr;
+	for (auto& u : BWAPI::Broodwar->enemy()->getUnits()) {
+		if (u->getType().isWorker()) {
+			enemyWorker = u;
+			break;
+		}
+	}
+
+
+	if (buildPos != BWAPI::TilePositions::None) {
+		enemyWorker->build(buildPos, BWAPI::UnitTypes::Protoss_Pylon);
+	}
+}
+*/
+
 void NexusEconomy::onFrame()
 {
 
@@ -89,7 +142,10 @@ void NexusEconomy::onFrame()
 	if (lifetime >= 500) lifetime = 500;
 	moveTimer += 1;
 
-
+	if (lifetime == 500 && BWAPI::Broodwar->getFrameCount() % 150 == 0)
+	{
+		int kill = addMissedResources();
+	}
 
 	//make this solution better.
 	if (lifetime < 500) int y = addMissedResources();
@@ -166,7 +222,7 @@ void NexusEconomy::onFrame()
 
 
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
-		if (!worker->isCarryingMinerals() /* && worker->isIdle()*/)
+		if (!worker->isCarryingMinerals())
 		{
 			if (assimilator != nullptr && resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
 			{
@@ -196,38 +252,6 @@ void NexusEconomy::onFrame()
 			}
 
 		}
-		/*
-		if (workerPaths.find(worker) == workerPaths.end() && assignedResource[worker] != vespeneGyser)
-		{
-			workerPaths[worker] = AStar::GeneratePath(worker->getPosition(), BWAPI::UnitTypes::Protoss_Probe, assignedResource[worker]->getPosition(), true);
-			//lifetime += 1;
-			std::cout << "generating path\n";
-		}
-		*/
-
-		//Mineral Locking Logic
-		/*
-		if ((assignedResource[worker] != vespeneGyser && worker->getDistance(assignedResource[worker]) < 50 && assignedResource[worker]) && moveTimer >= 5)
-		{
-			//std::cout << "gathering Mineral " << "\n";
-			worker->rightClick(assignedResource[worker], true);
-			if (worker->getOrder() == BWAPI::Orders::MoveToMinerals ||
-				worker->getOrder() == BWAPI::Orders::WaitForMinerals)
-			{
-				if (worker->getOrderTarget() != assignedResource[worker])
-				{
-					worker->rightClick(assignedResource[worker]);
-				}
-				continue;
-			}
-		}
-		else if ((assignedResource[worker] != vespeneGyser && moveTimer >= 5 && !(worker->isCarryingMinerals()) && assignedResource[worker]) || moveTimer >= 5 && (worker->isIdle() && assignedResource[worker] && !(worker->isCarryingMinerals())))
-		{
-			//worker->move(assignedResource[worker]->getPosition());
-			worker->rightClick(assignedResource[worker], true);
-
-
-		}*/
 
 		if (worker->getOrder() == BWAPI::Orders::MoveToMinerals ||
 			worker->getOrder() == BWAPI::Orders::WaitForMinerals || worker->isIdle())
@@ -293,67 +317,6 @@ void NexusEconomy::printMineralWorkerCounts()
 	}
 }
 
-void NexusEconomy::moveToMineral(BWAPI::Unit worker, BWAPI::Unit closestMineral)
-{
-	std::cout << "Im in " << "\n";
-	/*if (worker->getOrder() == BWAPI::Orders::MiningMinerals || worker->getOrder() == BWAPI::Orders::MoveToMinerals || worker->isMoving())
-	{
-		return;
-	}*/
-
-	spot = closestMineral->getPosition().x;
-	if (spot - worker->getPosition().x == 0)
-	{
-		return;
-	}
-	slope = (closestMineral->getPosition().y - worker->getPosition().y) / (spot - worker->getPosition().x);
-	dx = closestMineral->getPosition().x - worker->getPosition().x;
-	dy = closestMineral->getPosition().y - worker->getPosition().y;
-
-	if (worker->getDistance(closestMineral) < 50)
-	{
-		std::cout << "gathering Mineral " << "\n";
-		worker->move(closestMineral->getPosition(), true);
-		worker->gather(closestMineral);
-		return;
-	}
-
-	slope = dy / dx;
-	intercept = worker->getPosition().y - slope * worker->getPosition().x;
-
-	offset = (dx > 0) ? 10 : -10;
-	spot_to_move = spot + offset;
-	//worker->move(BWAPI::Position(spot_to_move, slope * spot_to_move + intercept));
-	if (worker->getOrder() != BWAPI::Orders::Move)
-	{
-		//BWAPI::Position p = closestMineral->getPosition();
-		worker->move(BWAPI::Position(spot_to_move, slope * spot_to_move + intercept));
-		std::cout << "moving to Mineral " << "\n";
-	}
-
-}
-/*
-void NexusEconomy::moveToMineral(BWAPI::Unit worker, BWAPI::Unit closestMineral)
-{
-	workerOrder[worker] = 1;
-	if (worker->getOrder() == BWAPI::Orders::MiningMinerals || worker->isMoving()/* ||worker->getOrder() == BWAPI::Orders::MoveToMinerals)
-	{
-		return;
-	}
-
-	if (worker->getDistance(closestMineral->getPosition()) < 32)
-	{
-		std::cout << "gathering Mineral " << "\n";
-		worker->gather(closestMineral);
-		return;
-	}
-
-	worker->move(closestMineral->getPosition(), true);
-
-
-
-}*/
-
 
 //Return true if the unit was apart of instance of NexusEconomy
 //[TODO]: also need to figure out edge case when unit destroyed is a nexus
@@ -416,6 +379,13 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 		std::cout << "Assimilator destroyed...\n";
 		assimilator = nullptr;
 		resourceWorkerCount[assimilator] = 0;
+		for (auto u : workers)
+		{
+			if (assignedResource[u] == vespeneGyser)
+			{
+				assignedResource.erase(u);
+			}
+		}
 		return true;
 	}
 	else if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser && vespeneGyser != nullptr && unit == vespeneGyser)
@@ -474,6 +444,19 @@ void NexusEconomy::assignWorker(BWAPI::Unit unit)
 
 void NexusEconomy::assignAssimilator(BWAPI::Unit assimilator)
 {
+	/*if (assimilator->getType().isRefinery() && assimilator->getPlayer() != BWAPI::Broodwar->self()) {
+		// Check if unit is within your main base region
+			//BWAPI::Broodwar->printf("Gas steal detected!");
+		std::cout << "Gas steal detected...\n";
+		int attackingWorkers = 0;
+		for (auto u : workers)
+		{
+			if (u->getType().isWorker() && attackingWorkers < 5) {
+				u->attack(assimilator);
+				attackingWorkers += 1;
+			}
+		}
+	}*/
 	this->assimilator = assimilator;
 	resourceWorkerCount[assimilator] = 0;
 }
@@ -693,19 +676,53 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 //[TODO]: make sure we are handing off probe properlly
 BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 {
+
+	BWAPI::Unitset closestWorkers;
+	if (closestMinerals.size() == 0)
+	{
+		int largeDist = 999;
+		int compare = 0;
+		BWAPI::Unit appended;
+		for (int ii = 0; ii < 5; ii++)
+		{
+			for (auto u : minerals)
+			{
+				//compare = nexus->getPosition().getApproxDistance(u->getPosition());
+				compare = nexus->getPosition().x-u->getPosition().x;
+				if (compare < largeDist && !closestMinerals.contains(u))
+				{
+					appended = u;
+				}
+			}
+
+			closestMinerals.insert(appended);
+		}
+	}
+	
+	
+	for (const BWAPI::Unit unit : workers)
+	{
+		if (closestMinerals.contains(assignedResource[unit]))
+		{
+			closestWorkers.insert(unit);
+		}
+	}
 	//economyReference->commanderReference->timerManager.startTimer(TimerManager::Testing);
 
-	if (workers.size() == 0) return nullptr;
+	if (closestWorkers.size() == 0) return nullptr;
 
 	BWAPI::Unit unitToReturn = nullptr;
 	int minDistance = INT_MAX;
 
 	//Get closest idle units if possible.
-	for (const BWAPI::Unit unit : workers)
+	for (const BWAPI::Unit unit : closestWorkers)
 	{
 		if (economyReference->workerIsConstructing(unit)) continue;
 
-		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		//const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		int distance = 0;
+		theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(locationToBuild), &distance);
+
 
 		if (unit->isIdle() && distance < minDistance)
 		{
@@ -738,11 +755,13 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 	}
 
 	minDistance = INT_MAX;
-	for (const BWAPI::Unit unit : workers)
+	for (const BWAPI::Unit unit : closestWorkers)
 	{
 		if (economyReference->workerIsConstructing(unit)) continue;
 
-		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		//const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		int distance = 0;
+		theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(locationToBuild), &distance);
 
 		if (unit->isCarryingMinerals() && distance < minDistance)
 		{
@@ -751,6 +770,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 		}
 	}
 
+	
 	//economyReference->commanderReference->timerManager.stopTimer(TimerManager::Testing);
 	//std::cout << "time to build: " << economyReference->commanderReference->timerManager.getTotalElapsedTest() << " from m2\n";
 
@@ -763,11 +783,13 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 
 
 	minDistance = INT_MAX;
-	for (const BWAPI::Unit unit : workers)
+	for (const BWAPI::Unit unit : closestWorkers)
 	{
 		if (economyReference->workerIsConstructing(unit)) continue;
 
-		const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		//const int distance = locationToBuild.getApproxDistance(unit->getPosition());
+		int distance = 0;
+		theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(locationToBuild), &distance);
 
 		if (distance < minDistance && assignedResource.find(unitToReturn) != assignedResource.end() && assignedResource[unit] != vespeneGyser)
 		{
@@ -802,3 +824,6 @@ if (unit->getType().isRefinery() && unit->getPlayer() != Broodwar->self()) {
     }
 }
 */
+
+//ai     = ../bin/StarterBot.dll
+//ai_dbg = .. / bin / StarterBot_d.dll
