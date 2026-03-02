@@ -66,6 +66,9 @@ private:
 	int mapWidth = 0;
 	int mapHeight = 0;
 
+	//Adding this as fail safe to give us access to more Blocks
+	int nexusCount = 0;
+
 public:
 	int Powered_LargePlacements = 0;
 	int Powered_MediumPlacements = 0;
