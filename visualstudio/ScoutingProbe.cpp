@@ -194,8 +194,14 @@ void ScoutingProbe::onFrame() {
         handleReturningCargoState();
         break;
 
-    case State::Search: {
-        if (nextTarget >= (int)startTargets.size()) { state = State::Done; break; }
+    case State::Search:
+    {
+        if (nextTarget >= (int)startTargets.size())
+        {
+            state = State::Done;
+            break;
+        }
+
         const auto tp = startTargets[nextTarget];
         const BWAPI::Position goal(tp);
 
@@ -203,21 +209,34 @@ void ScoutingProbe::onFrame() {
         {
             planTerrainPathTo(goal);
             lastPlannedGoal = goal;
-            nextReplanFrame = now + 999999; // basically "never" during this leg
+            nextReplanFrame = now + 999999;
         }
 
         followPlannedPath(goal, 64);
 
-        if (scout->getDistance(goal) <= kCloseEnoughToTarget) {
-            if (seeAnyEnemyBuildingNear(goal, 800)) {
-                enemyMainTile = tp;
-                enemyMainPos = goal;
+        if (scout->getDistance(goal) <= kCloseEnoughToTarget)
+        {
+            if (seeAnyEnemyBuildingNear(goal, 800))
+            {
                 Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
-                state = State::GasSteal;
+
+                if (manager && !manager->getEnemyMain().has_value())
+                {
+                    manager->setEnemyMain(tp);
+                }
+                else
+                {
+                    enemyMainTile = tp;
+                    enemyMainPos = goal;
+                    state = State::GasSteal;
+                }
+
                 break;
             }
+
             ++nextTarget;
         }
+
         break;
     }
 
@@ -748,11 +767,6 @@ int ScoutingProbe::angleDeg(const Position& from, const Position& to) {
 }
 
 BWAPI::Position ScoutingProbe::computeOrbitCenter() const {
-    if (enemyMainPos.isValid()) 
-    {
-        if (manager) manager->setEnemyMain(BWAPI::TilePosition(enemyMainPos));
-        return enemyMainPos;
-    } 
     if (scout && scout->exists()) return scout->getPosition();
     return Position(0, 0);
 }
