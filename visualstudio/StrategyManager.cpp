@@ -607,7 +607,9 @@ std::vector<Action> StrategyManager::onFrame()
 	// If we have more than two full squads attack. 
 	const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2;
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
-	if (supplyUsed >= 150 || totalSupply == MAX_SUPPLY)
+	
+	//Add timer on supply cap to make us attack so we dont waste time.
+	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
 		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * 4) && enemyBaselocations.size() != 0)
 		{

@@ -12,6 +12,8 @@
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
 
+//If we sit at same supply level for 4 minutes, all in with squads to end the game.
+#define FRAMES_UNTIL_SUPPLY_ALL_IN 5760
 
 //2:30 minutes
 #define FRAMES_BEFORE_FORCE_EXPANDING_INFLUENCE 3600
