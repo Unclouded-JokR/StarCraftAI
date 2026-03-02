@@ -15,10 +15,7 @@ void AttackingState::Enter(Squad* squad) {
 void AttackingState::Update(Squad* squad) {
 	for (BWAPI::Unit& squadMate : squad->units)
 	{
-		if (squadMate == squad->leader) continue;
-
-		if (squadMate->isIdle() && !(squadMate->getDistance(squad->leader) < 200))
-		{
+		if (squadMate->isIdle()) {
 			squadMate->attack(squad->commandPos);
 		}
 	}
@@ -52,7 +49,7 @@ void DefendingState::Update(Squad* squad) {
 	{
 		if (squadMate == squad->leader) continue;
 
-		if (squadMate->isIdle() && !(squadMate->getDistance(squad->leader) < 200))
+		if (squadMate->getDistance(squad->leader) > 200)
 		{
 			squadMate->attack(squad->currentDefensivePosition);
 		}
@@ -82,7 +79,6 @@ void ReinforcingState::Enter(Squad* squad) {
 #endif
 
 	CombatManager::ReinforcingSquads.push_back(squad);
-	squad->leader->attack(squad->commandPos);
 }
 
 void ReinforcingState::Update(Squad* squad) {
@@ -101,10 +97,7 @@ void ReinforcingState::Update(Squad* squad) {
 	squad->leader->attack(squad->commandPos);
 	for (BWAPI::Unit& squadMate : squad->units)
 	{
-		if (squadMate == squad->leader) continue;
-
-		if (squadMate->isIdle() && !(squadMate->getDistance(squad->leader) < 200))
-		{
+		if (squadMate->isIdle()) {
 			squadMate->attack(squad->commandPos);
 		}
 	}
