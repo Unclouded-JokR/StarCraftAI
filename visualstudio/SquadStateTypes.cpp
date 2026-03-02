@@ -90,11 +90,12 @@ void ReinforcingState::Update(Squad* squad) {
 	BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsInRadius(squad->commandPos, searchRadius, BWAPI::Filter::IsEnemy);
 
 	// If theres no enemies around where the squad needs to reinforce, retreat back to the defensive position
-	if (squad->leader->getPosition().getApproxDistance(squad->commandPos) > MAX_REINFORCE_DIST) {
+	if (squad->leader->getPosition().getApproxDistance(squad->currentDefensivePosition) > MAX_REINFORCE_DIST || enemies.empty()) {
 #ifdef DEBUG_STATES
 		cout << "Returning to defend chokepoint: " << squad->currentDefensivePosition.x << "," << squad->currentDefensivePosition.y << endl;
 #endif
 		squad->setState(DefendingState::getInstance());
+		return;
 	}
 
 	squad->leader->attack(squad->commandPos);

@@ -547,8 +547,9 @@ void AStar::fillAreaPathCache() {
 	
 	bool tryingFailedPair = false;
 	if (UncachedAreaPairs.empty()) {
+		return;
 		// If empty, try caching the failed pairs
-		if (failedAreaPairs.empty()) {
+		/*if (failedAreaPairs.empty()) {
 			return;
 		}
 		else {
@@ -556,7 +557,7 @@ void AStar::fillAreaPathCache() {
 			secondPos = failedAreaPairs.at(failedAreaPairs.size() - 1).second;
 			failedAreaPairs.pop_back();
 			tryingFailedPair = true;
-		}
+		}*/
 	}
 	else {
 		firstPos = UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).first;
