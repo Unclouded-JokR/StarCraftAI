@@ -1011,15 +1011,11 @@ BWAPI::TilePosition BuildManager::findNaturalRampPlacement(BWAPI::UnitType type)
 
     // Anchor on the choke tile closest to our natural, then inch a few tiles toward the main
     const BWAPI::Position natPos = BWEB::Map::getNaturalPosition();
-    const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
-
     const BWAPI::TilePosition chokeTile(BWEB::Map::getClosestChokeTile(choke, natPos));
     const BWAPI::TilePosition mainTile(BWEB::Map::getMainTile());
 
     const int dirX = (mainTile.x > chokeTile.x) ? 1 : (mainTile.x < chokeTile.x ? -1 : 0);
     const int dirY = (mainTile.y > chokeTile.y) ? 1 : (mainTile.y < chokeTile.y ? -1 : 0);
-
-    const BWAPI::TilePosition anchor = chokeTile + BWAPI::TilePosition(dirX, dirY) * 3;
 
     const int w = type.tileWidth();
     const int h = type.tileHeight();
@@ -1031,22 +1027,32 @@ BWAPI::TilePosition BuildManager::findNaturalRampPlacement(BWAPI::UnitType type)
             && (t.y + h) <= BWAPI::Broodwar->mapHeight();
     };
 
+    // Try a few anchors, from closest to choke to slightly deeper toward main in case closest anchor is unplaceable on some maps
+    const BWAPI::TilePosition anchors[] = {
+        chokeTile + BWAPI::TilePosition(dirX, dirY) * 1,
+        chokeTile + BWAPI::TilePosition(dirX, dirY) * 2,
+        chokeTile + BWAPI::TilePosition(dirX, dirY) * 3
+    };
+
     const int maxR = 10;
-    for (int r = 0; r <= maxR; r++)
+    for (const auto& anchor : anchors)
     {
-        for (int dx = -r; dx <= r; dx++)
+        for (int r = 0; r <= maxR; r++)
         {
-            for (int dy = -r; dy <= r; dy++)
+            for (int dx = -r; dx <= r; dx++)
             {
-                if (std::abs(dx) != r && std::abs(dy) != r) continue;
+                for (int dy = -r; dy <= r; dy++)
+                {
+                    if (std::abs(dx) != r && std::abs(dy) != r) continue;
 
-                const BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
-                if (!inBounds(t)) continue;
-                if (!BWEB::Map::isPlaceable(type, t)) continue;
-                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None) continue;
+                    const BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
+                    if (!inBounds(t)) continue;
+                    if (!BWEB::Map::isPlaceable(type, t)) continue;
+                    if (BWEB::Map::isReserved(t, w, h)) continue; // avoid reserved BWEB blocks
+                    if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None) continue;
 
-                // Try not to reject reserved here since BWEB blocks may reserve ramp-adjacent tiles on purpose
-                return t;
+                    return t;
+                }
             }
         }
     }
