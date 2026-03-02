@@ -56,7 +56,18 @@ BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
     int distanceToPowerBlock = INT_MAX;
     BWAPI::TilePosition powerTilePosition = BWAPI::TilePositions::Invalid;
 
-    for (BWEB::Block block : ProtoBot_Blocks)
+    std::vector<BWEB::Block> blocksToCheck;
+
+    if (nexusCount >= 3)
+    {
+        blocksToCheck = BWEB::Blocks::getBlocks();
+    }
+    else
+    {
+        blocksToCheck = ProtoBot_Blocks;
+    }
+
+    for (BWEB::Block block : blocksToCheck)
     {
         BlockData data = Block_Information[block.getTilePosition()];
 
@@ -89,7 +100,18 @@ BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
     int distanceToPowerBlock = INT_MAX;
     BWAPI::TilePosition supplyReservePosition = BWAPI::TilePositions::Invalid;
 
-    for (BWEB::Block block : ProtoBot_Blocks)
+    std::vector<BWEB::Block> blocksToCheck;
+
+    if (nexusCount >= 3)
+    {
+        blocksToCheck = BWEB::Blocks::getBlocks();
+    }
+    else
+    {
+        blocksToCheck = ProtoBot_Blocks;
+    }
+
+    for (BWEB::Block block : blocksToCheck)
     {
         BlockData data = Block_Information[block.getTilePosition()];
 
@@ -195,7 +217,18 @@ BWAPI::TilePosition BuildingPlacer::findAvaliblePlacement(BWAPI::UnitType type)
     int distance = INT_MAX;
     BWAPI::TilePosition closestDistance = BWAPI::TilePositions::Invalid;
 
-    for (BWEB::Block block : ProtoBot_Blocks)
+    std::vector<BWEB::Block> blocksToCheck = {};
+
+    if (nexusCount >= 3)
+    {
+        blocksToCheck = BWEB::Blocks::getBlocks();
+    }
+    else
+    {
+        blocksToCheck = ProtoBot_Blocks;
+    }
+
+    for (BWEB::Block block : blocksToCheck)
     {
         BlockData& data = Block_Information[block.getTilePosition()];
 
@@ -230,7 +263,18 @@ void BuildingPlacer::drawPoweredTiles()
         }
     }*/
 
-    for (BWEB::Block block : ProtoBot_Blocks)
+    std::vector<BWEB::Block> blocksToCheck = {};
+
+    if (nexusCount >= 3)
+    {
+        blocksToCheck = BWEB::Blocks::getBlocks();
+    }
+    else
+    {
+        blocksToCheck = ProtoBot_Blocks;
+    }
+
+    for (BWEB::Block block : blocksToCheck)
     {
         block.draw();
 
@@ -363,6 +407,7 @@ void BuildingPlacer::onStart()
     int largePlacements = 0;
     int mediumPlacements = 0;
     int smallPlacements = 0;
+    nexusCount = 0;
 
     for (BWEB::Block block : blocks)
     {
@@ -440,6 +485,8 @@ void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
 {
     if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
     {
+        nexusCount++;
+
         const BWEM::Area* expandedArea = theMap.GetArea(unit->getTilePosition());
 
         //If the area is the same no new blocks should be added
@@ -501,6 +548,8 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
 
     if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
     {
+        if (nexusCount > 0) nexusCount--;
+
         const BWEM::Area* destroyedNexusArea = theMap.GetArea(unit->getTilePosition());
 
         //Sanity Check

@@ -16,7 +16,7 @@ void InformationManager::onStart()
     //influenceMap.onStart();
     threatGrid.onStart();
     
-    std::cout << "Information Manager Initialized\n";
+    //std::cout << "Information Manager Initialized\n";
 }
 
 void InformationManager::onFrame()

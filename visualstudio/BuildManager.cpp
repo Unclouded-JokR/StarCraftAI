@@ -63,7 +63,7 @@ BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderRef
 #pragma region BWAPI EVENTS
 void BuildManager::onStart()
 {
-    std::cout << "Builder Manager Initialized" << "\n";
+    //std::cout << "Builder Manager Initialized" << "\n";
 
     // Reset per-game state
     buildOrders.clear();
@@ -103,7 +103,7 @@ void BuildManager::onFrame() {
     runBuildOrderOnFrame();
 
     spenderManager.OnFrame(resourceRequests);
-    //buildingPlacer.drawPoweredTiles();
+    buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -877,7 +877,7 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
     buildOrderActive = true;
     buildOrderCompleted = false;
 
-    std::cout << "Selected Build Order: " << buildOrderNameToString(buildOrders[activeBuildOrderIndex].name) << "\n";
+    //std::cout << "Selected Build Order: " << buildOrderNameToString(buildOrders[activeBuildOrderIndex].name) << "\n";
 }
 
 void BuildManager::selectRandomBuildOrder()
