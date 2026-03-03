@@ -96,6 +96,7 @@ void InformationManager::onFrame()
         if (info.destroyed)
         {
             it = _knownEnemyBuildings.erase(it);
+            cout << "Building removed" << endl;
             continue;
         }
 

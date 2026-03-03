@@ -603,6 +603,7 @@ std::vector<Action> StrategyManager::onFrame()
 #pragma endregion
 
 #pragma region Attack
+	bool isFinalAttack = false;
 	// If we have more than two full squads attack. 
 	const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2;
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
@@ -612,16 +613,34 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * 4) && enemyBaselocations.size() != 0)
 		{
-			//std::cout << "ATTACK ACTION: Attacking enemy base\n";
+			const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+			BWAPI::TilePosition startingLocation = BWAPI::Broodwar->self()->getStartLocation();
+			BWAPI::Position posToAttack;
+			for (const auto& pair : commanderReference->informationManager.getKnownEnemyBuildings()) {
+				posToAttack = pair.second.lastKnownPosition;
+			}
+			
+			if (commanderReference->informationManager.getKnownEnemyBuildings().size() == 0) {
+				if (commanderReference->informationManager.getKnownEnemies().size() != 0) {
+					for (const auto& pair : commanderReference->informationManager.getTrackedEnemies()) {
+						posToAttack = pair.second.lastSeenPos;
+					}
+				}
+			}
+
+			if (posToAttack == BWAPI::Positions::Invalid) {
+				posToAttack = BWAPI::Position(enemyBaselocations.at(0));
+			}
+
 			Action attack;
 			attack.type = Action::ACTION_ATTACK;
-			attack.attackPosition = enemyBaselocations.at(0);
-
+			attack.attackPosition = posToAttack;
 			actionsToReturn.push_back(attack);
+
+			isFinalAttack = true;
 		}
 	}
 #pragma endregion
-
 
 #pragma region Defend
 	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
@@ -653,7 +672,7 @@ std::vector<Action> StrategyManager::onFrame()
 		}
 	}
 
-	if (enemyAttacking)
+	if (!isFinalAttack && enemyAttacking)
 	{
 		if (unitToAttack->exists() || unitToAttack != nullptr) {
 			Action attack;
@@ -664,7 +683,7 @@ std::vector<Action> StrategyManager::onFrame()
 	}
 	else
 	{
-		if (Protobot_IdleSquads.size() != 0)
+		if (!isFinalAttack && (Protobot_IdleSquads.size() != 0))
 		{
 			int distanceToClosestChoke = INT_MAX;
 			BWAPI::WalkPosition areaToDefend = BWAPI::WalkPositions::Invalid;

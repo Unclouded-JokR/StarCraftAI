@@ -3,6 +3,7 @@
 #include <variant>
 #include <vector>
 #include <bwem.h>
+#include "../../src/starterbot/Tools.h"
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 3

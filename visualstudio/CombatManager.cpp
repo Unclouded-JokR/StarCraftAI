@@ -54,15 +54,7 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
-	for (auto& squad : IdleSquads) {
-		squad->commandPos = position;
-		squad->setState(AttackingState::getInstance());
-	}
-	for (auto& squad : DefendingSquads) {
-		squad->commandPos = position;
-		squad->setState(AttackingState::getInstance());
-	}
-	for (auto& squad : ReinforcingSquads) {
+	for (const auto& squad : Squads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
 	}
