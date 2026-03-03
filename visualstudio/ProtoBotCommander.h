@@ -38,6 +38,7 @@ struct ThreatQueryResult;
 
 class ProtoBotCommander
 {
+
 public:
 	MapTools m_mapTools;
 	TimerManager timerManager;

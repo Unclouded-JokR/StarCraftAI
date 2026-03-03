@@ -10,7 +10,7 @@ StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : comman
 
 void StrategyManager::onStart()
 {
-	std::cout << "Strategy Manager Initialized" << '\n';
+	//std::cout << "Strategy Manager Initialized" << '\n';
 
 	//Reset Static Variables
 	minutesPassedIndex = 0;
@@ -50,11 +50,11 @@ void StrategyManager::onStart()
 		}
 	}
 
-	std::cout << "ProtoBot areas: " << ProtoBot_Areas.size() << "\n";
+	//std::cout << "ProtoBot areas: " << ProtoBot_Areas.size() << "\n";
 
 	startingChoke = BWAPI::Position(BWEB::Map::getNaturalChoke()->Center());
 
-	std::cout << "Starting choke located at " << startingChoke << "\n";	
+	//std::cout << "Starting choke located at " << startingChoke << "\n";	
 }
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
@@ -234,7 +234,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 			//Should build gateway's or nexus's if we have enough minerals. Need to make sure we are not over saturating nexuses.
 
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus) && canAfford(BWAPI::UnitTypes::Protoss_Nexus, resourcesAvalible) )
+			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 			{
 				//Not expanding properlly after having enough gateways
 				if (ProtoBot_buildings.nexus == saturatedNexus)
@@ -282,8 +282,7 @@ std::vector<Action> StrategyManager::onFrame()
 			}
 			
 			//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) &&
-				canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible))
+			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible))
 			{
 				//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 

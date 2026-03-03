@@ -12,6 +12,14 @@ namespace BWEM { class Base; } // forward-declare BWEM::Base
 
 class ProtoBotCommander;
 
+enum class Playstyle
+{
+    None,
+    Aggro,
+    Macro,
+    Tech
+};
+
 struct FriendlyUnitCounter
 {
     int arbiter = 0;
@@ -257,6 +265,7 @@ private:
     std::map<int, TrackedEnemy> trackedEnemies;  // track by BWAPI unit ID
     InfluenceMap influenceMap;
     ThreatGrid threatGrid;
+	Playstyle playstyle = Playstyle::None;
     double gameState;
 	FriendlyUnitCounter friendlyUnitCounter;
 	FriendlyBuildingCounter friendlyBuildingCounter;
@@ -338,4 +347,6 @@ public:
     int getEnemyGroundThreatAt(BWAPI::Position p) const;
     int getEnemyDetectionAt(BWAPI::Position p) const;
     ThreatQueryResult queryThreatAt(const BWAPI::Position& pos) const;
+
+    void buildGuesser();
 };

@@ -16,7 +16,7 @@ void InformationManager::onStart()
     //influenceMap.onStart();
     threatGrid.onStart();
     
-    std::cout << "Information Manager Initialized\n";
+    //std::cout << "Information Manager Initialized\n";
 }
 
 void InformationManager::onFrame()
@@ -107,6 +107,7 @@ void InformationManager::onFrame()
     }
 
     updateEnemyBuildingCounter();
+    buildGuesser();
 
     //TestDrawBaseOwnership();
     if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
@@ -1503,5 +1504,64 @@ bool InformationManager::enemyHasCloakTech() const
     }
 
     return false;
+}
+
+void InformationManager::buildGuesser()
+{
+    int aggro = 0;
+	int macro = 0;
+    int tech = 0;
+    tech += enemyBuildingCounter.arbiterTribunal;
+    tech += enemyBuildingCounter.assimilator;
+    tech += enemyBuildingCounter.citadelOfAdun;
+    tech += enemyBuildingCounter.cyberneticsCore;
+    tech += enemyBuildingCounter.fleetBeacon;
+    aggro += enemyBuildingCounter.forge;
+    aggro += enemyBuildingCounter.gateway;
+    macro += enemyBuildingCounter.nexus;
+    tech += enemyBuildingCounter.observatory;
+    aggro += enemyBuildingCounter.photonCannon;
+    macro += enemyBuildingCounter.pylon;
+    tech += enemyBuildingCounter.roboticsFacility;
+    tech += enemyBuildingCounter.roboticsSupportBay;
+    macro += enemyBuildingCounter.shieldBattery;
+    tech += enemyBuildingCounter.stargate;
+    tech += enemyBuildingCounter.templarArchives;
+    tech += enemyBuildingCounter.terranAcademy;
+    tech += enemyBuildingCounter.terranArmory;
+    aggro += enemyBuildingCounter.terranBarracks;
+    aggro += enemyBuildingCounter.terranBunker;
+    macro += enemyBuildingCounter.terranCommandCenter;
+    tech += enemyBuildingCounter.terranEngineeringBay;
+    tech += enemyBuildingCounter.terranFactory;
+    aggro += enemyBuildingCounter.terranMissileTurret;
+    tech += enemyBuildingCounter.terranRefinery;
+    tech += enemyBuildingCounter.terranScienceFacility;
+    tech += enemyBuildingCounter.terranStarport;
+    macro += enemyBuildingCounter.terranSupplyDepot;
+    aggro += enemyBuildingCounter.zergCreepColony;
+    tech += enemyBuildingCounter.zergDefilerMound;
+    tech += enemyBuildingCounter.zergEvolutionChamber;
+    tech += enemyBuildingCounter.zergExtractor;
+    tech += enemyBuildingCounter.zergGreaterSpire;
+    macro += enemyBuildingCounter.zergHatchery;
+    tech += enemyBuildingCounter.zergHive;
+    tech += enemyBuildingCounter.zergHydraliskDen;
+    tech += enemyBuildingCounter.zergInfestedCommandCenter;
+    tech += enemyBuildingCounter.zergLair;
+    tech += enemyBuildingCounter.zergNydusCanal;
+    tech += enemyBuildingCounter.zergQueensNest;
+    aggro += enemyBuildingCounter.zergSpawningPool;
+    tech += enemyBuildingCounter.zergSpire;
+    aggro += enemyBuildingCounter.zergSporeColony;
+    aggro += enemyBuildingCounter.zergSunkenColony;
+    tech += enemyBuildingCounter.zergUltraliskCavern;
+
+    if (aggro > tech && aggro > macro)
+		playstyle = Playstyle::Aggro;
+    else if (macro > tech && macro > aggro)
+		playstyle = Playstyle::Macro;
+    else if (tech > aggro && tech > macro)
+		playstyle = Playstyle::Tech;
 }
 
