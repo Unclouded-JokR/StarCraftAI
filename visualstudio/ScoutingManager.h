@@ -93,6 +93,9 @@ private:
     std::optional<BWAPI::TilePosition> enemyMainCache_;
     std::optional<BWAPI::TilePosition> enemyNaturalCache_;
 
+    bool inBehaviorFrame_ = false;
+    std::optional<BWAPI::TilePosition> pendingEnemyMain_;
+
    // Number of scouts
     int  maxZealotScouts_{ 2 };
     int  maxDragoonScouts_{ 2 };

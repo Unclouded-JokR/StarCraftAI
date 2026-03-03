@@ -589,7 +589,7 @@ std::vector<Action> StrategyManager::onFrame()
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
 
-	/*if (buildOrderCompleted)
+	if (buildOrderCompleted)
 	{
 		//change this to frames since last info gained
 		if (frame - frameSinceLastScout >= 24 * 20) {
@@ -599,7 +599,7 @@ std::vector<Action> StrategyManager::onFrame()
 			scout.type = Action::ACTION_SCOUT;
 			actionsToReturn.push_back(scout);
 		}
-	}*/
+	}
 	
 #pragma endregion
 

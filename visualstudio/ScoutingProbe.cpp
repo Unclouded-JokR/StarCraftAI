@@ -214,26 +214,26 @@ void ScoutingProbe::onFrame() {
 
         followPlannedPath(goal, 64);
 
-        if (scout->getDistance(goal) <= kCloseEnoughToTarget)
+        if (seeAnyEnemyBuildingNear(goal, 800))
         {
-            if (seeAnyEnemyBuildingNear(goal, 800))
+            Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
+
+            if (manager && !manager->getEnemyMain().has_value())
             {
-                Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
-
-                if (manager && !manager->getEnemyMain().has_value())
-                {
-                    manager->setEnemyMain(tp);
-                }
-                else
-                {
-                    enemyMainTile = tp;
-                    enemyMainPos = goal;
-                    state = State::GasSteal;
-                }
-
-                break;
+                manager->setEnemyMain(tp);
+            }
+            else
+            {
+                enemyMainTile = tp;
+                enemyMainPos = goal;
+                state = State::GasSteal;
             }
 
+            break;
+        }
+
+        if (scout->getDistance(goal) <= kCloseEnoughToTarget)
+        {
             ++nextTarget;
         }
 
@@ -767,7 +767,16 @@ int ScoutingProbe::angleDeg(const Position& from, const Position& to) {
 }
 
 BWAPI::Position ScoutingProbe::computeOrbitCenter() const {
-    if (scout && scout->exists()) return scout->getPosition();
+    if (enemyMainPos.isValid())
+    {
+        return enemyMainPos;
+    }
+
+    if (scout && scout->exists())
+    {
+        return scout->getPosition();
+    }
+
     return Position(0, 0);
 }
 
@@ -1201,4 +1210,69 @@ BWAPI::Position ScoutingProbe::computeEscapeGoal() const
 
     // Make sure it's walkable-ish
     return snapToNearestWalkable(raw, 256);
+}
+
+bool ScoutingProbe::tryConfirmEnemyMainByStartLocations()
+{
+    if (enemyMainTile.has_value() || startTargets.empty())
+    {
+        return false;
+    }
+
+    BWAPI::Unit found = nullptr;
+    BWAPI::TilePosition foundTp = BWAPI::TilePositions::Invalid;
+
+    static constexpr int kStartConfirmRadius = 9000; 
+
+    for (auto& e : BWAPI::Broodwar->enemy()->getUnits())
+    {
+        if (!e || !e->exists())
+        {
+            continue;
+        }
+
+        if (!e->getType().isBuilding())
+        {
+            continue;
+        }
+
+        const BWAPI::Position bp = e->getPosition();
+        if (!bp.isValid())
+        {
+            continue;
+        }
+
+        for (const auto& tp : startTargets)
+        {
+            const BWAPI::Position sp(tp);
+            if (bp.getDistance(sp) <= kStartConfirmRadius)
+            {
+                found = e;
+                foundTp = tp;
+                break;
+            }
+        }
+
+        if (found)
+        {
+            break;
+        }
+    }
+
+    if (!found || !foundTp.isValid())
+    {
+        return false;
+    }
+
+    enemyMainTile = foundTp;
+    enemyMainPos = BWAPI::Position(foundTp);
+
+    if (manager)
+    {
+        manager->setEnemyMain(foundTp);
+    }
+
+    BWAPI::Broodwar->printf("[Scouting] Enemy main confirmed near start (%d,%d)", foundTp.x, foundTp.y);
+    state = State::GasSteal;
+    return true;
 }

@@ -60,9 +60,18 @@ static void visit_onUnitDestroy(BehaviorVariant& sb, BWAPI::Unit u)
 void ScoutingManager::onFrame() 
 {
     // iterate all active behaviors; each owns its own state
-    for (auto& [id, sb] : behaviors_) 
+    inBehaviorFrame_ = true;
+    for (auto& [id, sb] : behaviors_)
     {
         visit_frame(sb);
+    }
+    inBehaviorFrame_ = false;
+
+    if (!enemyMainCache_.has_value() && pendingEnemyMain_.has_value())
+    {
+        const auto tp = *pendingEnemyMain_;
+        pendingEnemyMain_.reset();
+        setEnemyMain(tp); // now it is safe to broadcast
     }
 
     drawScoutTags();
@@ -170,11 +179,36 @@ bool ScoutingManager::hasScout() const
 
 void ScoutingManager::setEnemyMain(const BWAPI::TilePosition& tp) 
 {
-    enemyMainCache_ = tp;
-    if (commanderRef) commanderRef->onEnemyMainFound(tp);
+    if (!tp.isValid())
+    {
+        return;
+    }
 
-    // broadcast to all current behaviors
-    for (auto& [id, sb] : behaviors_) visit_setEnemyMain(sb, tp);
+    // Already known: ignore duplicates
+    if (enemyMainCache_.has_value())
+    {
+        return;
+    }
+
+    // If called from inside behavior onFrame, defer the broadcast
+    if (inBehaviorFrame_)
+    {
+        pendingEnemyMain_ = tp;
+        return;
+    }
+
+    // Commit + broadcast
+    enemyMainCache_ = tp;
+
+    if (commanderRef)
+    {
+        commanderRef->onEnemyMainFound(tp);
+    }
+
+    for (auto& [id, sb] : behaviors_)
+    {
+        visit_setEnemyMain(sb, tp);
+    }
 }
 
 void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp) 

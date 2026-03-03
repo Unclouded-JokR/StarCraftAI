@@ -38,6 +38,7 @@ private:
     std::optional<BWAPI::TilePosition> enemyMainTile;
     BWAPI::Position enemyMainPos = BWAPI::Positions::Invalid;
 
+
     // targets
     std::vector<BWAPI::TilePosition> startTargets;
     std::size_t nextTarget = 0;
@@ -115,6 +116,7 @@ private:
     bool isStuck(int now);
     BWAPI::Position computeEscapeGoal() const;
     BWAPI::Unit findAssimilatorOnTargetGeyser() const;
+    bool tryConfirmEnemyMainByStartLocations();
 
     // returning cargo QoL
     void handleReturningCargoState();
