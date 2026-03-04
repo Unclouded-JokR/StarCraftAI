@@ -28,6 +28,7 @@ public:
 	int moveTimer = 5;
 	int workerNums;
 	int attackingWorkers = 0;
+	bool needWorkers = true;
 
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
@@ -54,6 +55,7 @@ public:
 	bool OnUnitDestroy(BWAPI::Unit unit);
 	BWAPI::Unit GetClosestMineralToWorker(BWAPI::Unit worker);
 	void assignWorker(BWAPI::Unit unit);
+	void assignWorkerBulk();
 	void assignAssimilator(BWAPI::Unit assimilator);
 
 	BWAPI::Unitset getWorkersToTransfer(int numberOfWorkersForTransfer);

@@ -5,6 +5,8 @@
 #include <vector>
 #include <unordered_map>
 
+#define MAX_WORKERS 75
+
 class ProtoBotCommander;
 
 class EconomyManager
@@ -27,8 +29,10 @@ public:
 	void resourcesDepletedTranfer(BWAPI::Unitset workers, NexusEconomy& nexusEconomy);
 	BWAPI::Unit getAvalibleWorker(BWAPI::Position buildLocation);
 	BWAPI::Unit getUnitScout();
+	BWAPI::Unitset getMineralsAtBase(BWAPI::TilePosition nexusLocation);
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	int newMinerals;
+	int totalWorkers = 0;
 
 	//Requets to Commander
 	bool checkRequestAlreadySent(int unitID);

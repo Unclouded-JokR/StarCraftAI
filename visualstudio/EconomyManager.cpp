@@ -17,26 +17,50 @@ void EconomyManager::onStart()
 
 void EconomyManager::onFrame()
 {
+    int workerAmount = 0;
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         nexusEconomy.onFrame();
 
-        if (nexusEconomy.lifetime == 250)
+        if (nexusEconomy.lifetime == 125)
         {
             if (nexusEconomy.nexusID > 1)
             {
-                newMinerals = nexusEconomy.addMissedResources();
-                BWAPI::Unitset incomingWorkers = getWorkersToTransfer(newMinerals, nexusEconomy);
-                //std::cout << "new minerals: " << newMinerals << "\n";
-
-                for (BWAPI::Unit worker : incomingWorkers)
-                {
-                    nexusEconomy.assignWorker(worker);
-                }
+                nexusEconomy.workers = getWorkersToTransfer(nexusEconomy.minerals.size(), nexusEconomy);
+                nexusEconomy.assignWorkerBulk();
             }
         }
 
+        workerAmount += nexusEconomy.workers.size();
+
     }
+
+    if (workerAmount >= MAX_WORKERS)
+    {
+        for (NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            nexusEconomy.needWorkers = false;
+            if (totalWorkers == 0)
+            {
+               // std::cout << "no more workers shall be trained\n";
+                totalWorkers = 1;
+            }
+        }
+    }
+    else
+    {
+        for (NexusEconomy& nexusEconomy : nexusEconomies)
+        {
+            nexusEconomy.needWorkers = true;
+            if (totalWorkers == 1)
+            {
+                //std::cout << "need more workers\n";
+                totalWorkers = 0;
+            }
+
+        }
+    }
+
 }
 
 void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
@@ -119,7 +143,10 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
         if (alreadyExists == false)
         {
             NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
+            temp.minerals = getMineralsAtBase(unit->getTilePosition());
             nexusEconomies.push_back(temp);
+            //std::cout << "nexus: " << temp.workers.size();
+
         }
         else
         {
@@ -171,7 +198,7 @@ BWAPI::Unitset EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEc
         if (nexusEconomy.nexusID == nexusEconomyRequest.nexusID) continue;
 
         //Check if a nexus economy has workers to spare.
-        if (nexusEconomy.workers.size() != 0)
+        if (nexusEconomy.workers.size() >= numberOfWorkers)
         {
             BWAPI::Unitset workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
 
@@ -285,6 +312,37 @@ BWAPI::Unit EconomyManager::getUnitScout()
 
         if (unitToReturn != nullptr) return unitToReturn;
     }
+}
+
+BWAPI::Unitset EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation)
+{
+    const BWEM::Base* myBase = nullptr;
+    bool found = false;
+    for (const Area& area : theMap.Areas())
+    {
+        for (const BWEM::Base& base : area.Bases()) {
+            if (base.Location().getApproxDistance(nexusLocation) < 5) {
+                myBase = &base;
+                found = true;
+                break;
+            }
+        }
+        if (found) { break; }
+    }
+
+    BWAPI::Unitset mineralsToReturn;
+
+    if (myBase)
+    {
+        for (const auto* mineral : myBase->Minerals()) 
+        {
+             mineralsToReturn.insert(mineral->Unit());
+        }
+    }
+
+    std::cout << mineralsToReturn.size();
+    return mineralsToReturn;
+
 }
 
 std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
