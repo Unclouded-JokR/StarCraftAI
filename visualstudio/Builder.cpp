@@ -7,22 +7,6 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	requestedPositionToBuild(positionToBuild),
 	referencePath(path)
 {
-	/*std::cout << unitReference->getID() << "\n";
-	std::cout << buildingToConstruct.getName() << "\n";
-	std::cout << positionToBuild.x << ", " << positionToBuild.y << "\n";*/
-	/*if (buildingToConstruct == BWAPI::UnitTypes::Protoss_Assimilator)
-	{
-		unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-	}
-	else
-	{
-		referencePath = AStar::GeneratePath(unitReference->getPosition(), unitReference->getType(), positionToBuild);
-		path = referencePath.positions;
-	}*/
-
-	//std::cout << path.positions.size() << "\n";
-	//unitReference->rightClick(referencePath.positions.at(0));
-
 	if (referencePath.positions.empty()) std::cout << "Path is empty to place " << buildingToConstruct << " at " << positionToBuild << "\n";
 
 	unitReference->stop();
@@ -52,6 +36,7 @@ void Builder::onFrame()
 		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
+			BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "BUILDING");
 		}
 		else
 		{
@@ -63,6 +48,8 @@ void Builder::onFrame()
 					unitReference->rightClick(referencePath.positions.at(pathIndex));
 				}
 			}
+
+			BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "MOVING");
 		}
 
 		//Incase unit gets stuck
