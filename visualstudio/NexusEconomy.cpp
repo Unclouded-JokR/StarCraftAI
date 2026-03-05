@@ -148,7 +148,7 @@ void NexusEconomy::onFrame()
 	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));*/
 
 	//Problem start here
-
+	/*
 	
 	for (BWAPI::Unit mineral : minerals)
 	{
@@ -162,7 +162,7 @@ void NexusEconomy::onFrame()
 	
 	//std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
 	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
-	
+	*/
 
 	//Problem end here
 
