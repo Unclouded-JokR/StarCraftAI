@@ -255,6 +255,8 @@ BWAPI::TilePosition BuildingPlacer::findAvaliblePlacement(BWAPI::UnitType type)
 
 void BuildingPlacer::drawPoweredTiles()
 {
+    if (debug == false) return;
+
     /*for (int row = 0; row < poweredTiles.size(); row++)
     {
         for (int column = 0; column < poweredTiles[row].size(); column++)

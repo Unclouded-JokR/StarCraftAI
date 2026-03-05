@@ -7,7 +7,7 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	requestedPositionToBuild(positionToBuild),
 	referencePath(path)
 {
-	if (referencePath.positions.empty()) std::cout << "Path is empty to place " << buildingToConstruct << " at " << positionToBuild << "\n";
+	if (referencePath.positions.empty() && debug) std::cout << "Path is empty to place " << buildingToConstruct << " at " << positionToBuild << "\n";
 
 	unitReference->stop();
 }
@@ -36,7 +36,7 @@ void Builder::onFrame()
 		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
-			BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "BUILDING");
+			if(debug) BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "BUILDING");
 		}
 		else
 		{
@@ -49,7 +49,7 @@ void Builder::onFrame()
 				}
 			}
 
-			BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "MOVING");
+			if (debug) BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "MOVING");
 		}
 
 		//Incase unit gets stuck

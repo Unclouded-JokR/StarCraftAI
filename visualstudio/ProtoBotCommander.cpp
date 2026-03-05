@@ -175,12 +175,10 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::All);
 
 	// Draw unit health bars, which brood war unfortunately does not do
-	//Tools::DrawUnitHealthBars();
-
-	//BWEB::Map::draw();
+	Tools::DrawUnitHealthBars();
 
 	// Draw some relevent information to the screen to help us debug the bot
-	//drawDebugInformation();
+	drawDebugInformation();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)

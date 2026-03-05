@@ -103,7 +103,7 @@ void BuildManager::onFrame() {
     runBuildOrderOnFrame();
 
     spenderManager.OnFrame(resourceRequests);
-    buildingPlacer.drawPoweredTiles();
+    //buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -280,9 +280,6 @@ void BuildManager::onFrame() {
         }
     }
 
-
-    //build order check here
-
     for (Builder& builder : builders)
     {
         builder.onFrame();
@@ -296,12 +293,6 @@ void BuildManager::onFrame() {
     }*/
 
     pumpUnit();
-
-    ////Might need to add filter on units, economy buildings, and pylons having the "Warpping Building" text.
-    //for (BWAPI::Unit building : buildingWarps)
-    //{
-    //    BWAPI::Broodwar->drawTextMap(building->getPosition(), "Warpping Building");
-    //}
 }
 
 void BuildManager::onUnitCreate(BWAPI::Unit unit)
@@ -391,6 +382,9 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 {
     buildingPlacer.onUnitDestroy(unit);
 
+    if (unit->getPlayer() != BWAPI::Broodwar->self())
+        return;
+
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
         if (it->getUnitReference()->getID() == unit->getID())
@@ -401,10 +395,10 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
                 it->setUnitReference(unitAvalible);
                 break;
             }
-            else
+            /*else
             {
                switch (it->buildingToConstruct)
-                {
+               {
                     case BWAPI::UnitTypes::Protoss_Gateway:
                         if (requestCounter.gateway_requests > 0)
                             --requestCounter.gateway_requests;
@@ -441,15 +435,15 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
                         break;
                     default:
                         break;
-                }
+               }
+
+
             }
+            */
         }
 
         it++;
     }
-
-    if (unit->getPlayer() != BWAPI::Broodwar->self())
-        return;
 
     BWAPI::UnitType unitType = unit->getType();
 
