@@ -48,29 +48,6 @@ void ProtoBotCommander::onStart()
 	BWEB::Blocks::findBlocks();
 
 	m_mapTools.onStart();
-	
-	/*
-	* Use this to query the BuildManager to randomly select a build order based on the enemy race.
-	* We can change the return for this method to be a int to avoid an interupt to OS if std::string causes that.
-	*
-	* 100 for Protoss, 200 for Terran, 300 for Zerg
-	*
-	* the next two digits would be the id of the build order we would randomly select.
-	* 0 - 99 (max would be 99 but there is no way we would need that many)
-	*
-	* We could reduce these digits to tens instead to decrease memeory usage.
-	*/
-
-	/*
-	* [TO DO]:
-	* Create code to select opening randomly for avalible openings.
-	* Have functions that can ask building manager how many openings we have.
-	*/
-	std::string enemyRace = enemyRaceCheck();
-	//std::cout << "Enemy Race " << enemyRace << '\n';
-
-	//[TODO] Need build order structure to be implemented.
-	//vector<BuildOrder> build_orders = buildManager.getBuildOrders(enemyRace);
 
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
@@ -88,18 +65,10 @@ void ProtoBotCommander::onStart()
 	* Protobot Modules
 	*/
 	informationManager.onStart();
-
-	//Replace with commented out line when multiple build orders are in place.
 	strategyManager.onStart();
-
-	//buildOrder buildOrderSelection = strategyManager.onStart(build_orders);
-
 	economyManager.onStart();
-
 	combatManager.onStart();
-
 	scoutingManager.onStart();
-
 	buildManager.onStart();
 
 	//std::cout << "============================\n";
@@ -393,24 +362,6 @@ bool ProtoBotCommander::buildOrderCompleted()
 bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
 {
 	return buildManager.requestedBuilding(building);
-}
-
-std::string ProtoBotCommander::enemyRaceCheck()
-{
-	BWAPI::Race enemyRace = BWAPI::Broodwar->enemy()->getRace();
-
-	if (enemyRace == BWAPI::Races::Protoss)
-	{
-		return "Protoss_";
-	}
-	else if (enemyRace == BWAPI::Races::Terran)
-	{
-		return "Terran_";
-	}
-	else
-	{
-		return "Zerg_";
-	}
 }
 
 bool ProtoBotCommander::alreadySentRequest(int unitID)

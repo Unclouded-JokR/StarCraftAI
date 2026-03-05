@@ -53,7 +53,6 @@ int main(int argc, char * argv[])
 
 void PlayGame()
 {
-    //StarterBot bot;
     ProtoBotCommander bot;
 
     // The main game loop, which continues while we are connected to BWAPI and in a game

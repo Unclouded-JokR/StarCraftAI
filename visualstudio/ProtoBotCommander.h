@@ -67,11 +67,6 @@ public:
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
 
-	/*
-	* Methods for modules to communicate, Will also need unit set versions of these methods as well.
-	*/
-	std::string enemyRaceCheck();
-
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
 	std::vector<NexusEconomy> getNexusEconomies();
