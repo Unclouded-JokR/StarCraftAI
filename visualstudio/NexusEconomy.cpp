@@ -148,9 +148,9 @@ void NexusEconomy::onFrame()
 	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));*/
 
 	//Problem start here
-
+	/*
 	
-	/*for (BWAPI::Unit mineral : minerals)
+	for (BWAPI::Unit mineral : minerals)
 	{
 		BWAPI::Broodwar->drawLineMap(nexus->getPosition(), mineral->getPosition(), BWAPI::Color(0, 0, 255));
 		BWAPI::Broodwar->drawTextMap(mineral->getPosition(), std::to_string(resourceWorkerCount[mineral]).c_str());
@@ -159,10 +159,10 @@ void NexusEconomy::onFrame()
 	if (assimilator != nullptr) BWAPI::Broodwar->drawLineMap(nexus->getPosition(), assimilator->getPosition(), BWAPI::Color(255, 255, 0));
 
 	if (vespeneGyser != nullptr) BWAPI::Broodwar->drawLineMap(nexus->getPosition(), vespeneGyser->getPosition(), BWAPI::Color(144, 238, 144));
-	*/
+	
 	//std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
 	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
-	
+	*/
 
 	//Problem end here
 
@@ -213,7 +213,7 @@ void NexusEconomy::onFrame()
 
 
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
-		if (!worker->isCarryingMinerals() || workerOrder[worker] == 0)
+		if (!worker->isCarryingMinerals())
 		{
 			if (assimilator != nullptr && resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
 			{

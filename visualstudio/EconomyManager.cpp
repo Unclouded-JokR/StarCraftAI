@@ -24,9 +24,9 @@ void EconomyManager::onFrame()
 
         if (nexusEconomy.lifetime == 125)
         {
-            if (nexusEconomy.nexusID > 1)
+            if (nexusEconomy.nexusID > 1 && nexusEconomy.workers.size() == 0)
             {
-                nexusEconomy.workers = getWorkersToTransfer(nexusEconomy.minerals.size(), nexusEconomy);
+                nexusEconomy.workers = getWorkersToTransfer(nexusEconomy.minerals.size(), nexusEconomy);;
                 nexusEconomy.assignWorkerBulk();
             }
         }
@@ -192,27 +192,30 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
 */
 BWAPI::Unitset EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEconomy& nexusEconomyRequest)
 {
+    BWAPI::Unitset workersToTransfer;
     //Need to check if the size is sufficent for the transer possibly.
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         if (nexusEconomy.nexusID == nexusEconomyRequest.nexusID) continue;
 
         //Check if a nexus economy has workers to spare.
-        if (nexusEconomy.workers.size() >= numberOfWorkers)
+        if (nexusEconomy.workers.size() != 0)
         {
-            BWAPI::Unitset workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
+            workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
 
             //for (BWAPI::Unit worker : workersToTransfer)
             //{
                 //nexusEconomyRequest.assignWorker(worker);
             //}
 
-            return workersToTransfer;
 
             //std::cout << "New nexus workers: " << nexusEconomyRequest.workers.size() << "\n";
             break;
         }
     }
+
+    return workersToTransfer;
+
 }
 
 void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, NexusEconomy& transferFrom)
