@@ -55,7 +55,7 @@ int NexusEconomy::addMissedResources()
 		}*/
 
 		if (unit->getType().isRefinery() && !unit->isBeingConstructed() && unit->getPlayer() != BWAPI::Broodwar->self()) {
-			std::cout << "Gas steal detected...\n";
+			//std::cout << "Gas steal detected...\n";
 			for (auto u : workers)
 			{
 				if (u->getType().isWorker() && attackingWorkers < 8) {
@@ -193,7 +193,7 @@ void NexusEconomy::onFrame()
 	for (BWAPI::Unit worker : workers)
 	{
 		//if (worker->isIdle()) workerOrder[worker] = 0;
-		BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
+		//BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
 
 		if (minerals.size() == 0) break;
 
@@ -368,7 +368,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	}
 	else if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && assimilator != nullptr && unit == assimilator)
 	{
-		std::cout << "Assimilator destroyed...\n";
+		//std::cout << "Assimilator destroyed...\n";
 		assimilator = nullptr;
 		resourceWorkerCount[assimilator] = 0;
 		for (auto u : workers)
@@ -382,7 +382,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	}
 	else if (unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser && vespeneGyser != nullptr && unit == vespeneGyser)
 	{
-		std::cout << "Gyser Depleted...\n";
+		//::cout << "Gyser Depleted...\n";
 		//assimilator = nullptr;
 		resourceWorkerCount[assimilator] = 0;
 		return true;
@@ -608,7 +608,7 @@ BWAPI::Unitset NexusEconomy::getWorkersToTransfer(int numberOfWorkersForTransfer
 //[TODO]: make sure we are handing off probe properlly
 BWAPI::Unit NexusEconomy::getWorkerToScout()
 {
-	std::cout << "Request for Worker scouts!\n";
+	//std::cout << "Request for Worker scouts!\n";
 	if (workers.size() == 0) return nullptr;
 
 	BWAPI::Unit unitToReturn = nullptr;
@@ -642,7 +642,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 		workers.erase(unitToReturn);
 		resourceWorkerCount[assignedResource[unitToReturn]] -= 1;
 		assignedResource.erase(unitToReturn);
-		std::cout << "Requesting Worker scouts!\n";
+		//std::cout << "Requesting Worker scouts!\n";
 		return unitToReturn;
 	}
 
@@ -664,13 +664,13 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 		workers.erase(unitToReturn);
 		resourceWorkerCount[assignedResource[unitToReturn]] -= 1;
 		assignedResource.erase(unitToReturn);
-		std::cout << "Reuqesting Worker scouts!\n";
+		//std::cout << "Reuqesting Worker scouts!\n";
 		return unitToReturn;
 	}
 
 	//If not unit is avalible that meets prior conditions choose unit randomly for now.
 	const int random = rand() % workers.size();
-	std::cout << "Random Index Choosen: " << random << "\n";
+	//std::cout << "Random Index Choosen: " << random << "\n";
 
 	int index = 0;
 	for (BWAPI::Unit unit : workers)
@@ -691,7 +691,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	workers.erase(unitToReturn);
 	resourceWorkerCount[assignedResource[unitToReturn]] -= 1;
 	assignedResource.erase(unitToReturn);
-	std::cout << "Reuqesting Worker scouts!\n";
+	//std::cout << "Reuqesting Worker scouts!\n";
 	return unitToReturn;
 }
 
@@ -754,7 +754,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 			if (assignedResource.find(unit) != assignedResource.end() && assignedResource[unit] != vespeneGyser)
 			{
 				unitToReturn = unit;
-				std::cout << unit->getID() << " is going to build!" << "\n";
+				//std::cout << unit->getID() << " is going to build!" << "\n";
 			}
 		}
 	}
@@ -816,7 +816,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 		if (distance < minDistance && assignedResource.find(unitToReturn) != assignedResource.end() && assignedResource[unit] != vespeneGyser)
 		{
 			unitToReturn = unit;
-			std::cout << unit->getID() << " is going to build!" << "\n";
+			//std::cout << unit->getID() << " is going to build!" << "\n";
 		}
 	}
 

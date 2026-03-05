@@ -210,9 +210,6 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
     int gasPrice = 0;
     bool canAffordRequest = false;
 
-    //std::cout << "Current mineral count: " << currentMineralCount << "\n";
-    //std::cout << "Current gas count: " << currentGasCount << "\n";
-
     //Pylon first pass. These units should have priority.
     for (ResourceRequest& request : requests)
     {

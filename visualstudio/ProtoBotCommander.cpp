@@ -175,9 +175,7 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::All);
 
 	// Draw unit health bars, which brood war unfortunately does not do
-	//Tools::DrawUnitHealthBars();
-
-	//BWEB::Map::draw();
+	Tools::DrawUnitHealthBars();
 
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
@@ -461,7 +459,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		if (scoutingManager.canAcceptWorkerScout()) {
 			if (BWAPI::Unit w = economyManager.getUnitScout(); isValidUnit(w)) {
 				scoutingManager.assignScout(w);
-				std::cout << "Assigned worker scout " << w->getID() << "\n";
+				//std::cout << "Assigned worker scout " << w->getID() << "\n";
 			}
 		}
 		return nullptr;
@@ -478,7 +476,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		);
 		if (!isValidUnit(u)) break;
 		scoutingManager.assignScout(u);
-		std::cout << "Assigned combat scout (Zealot) " << u->getID() << "\n";
+		//std::cout << "Assigned combat scout (Zealot) " << u->getID() << "\n";
 	}
 
 	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Dragoon))
@@ -490,7 +488,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		);
 		if (!isValidUnit(u)) break;
 		scoutingManager.assignScout(u);
-		std::cout << "Assigned combat scout (Dragoon) " << u->getID() << "\n";
+		//std::cout << "Assigned combat scout (Dragoon) " << u->getID() << "\n";
 	}
 
 	while (scoutingManager.canAcceptObserverScout())
@@ -504,7 +502,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		);
 		if (!u) break;
 		scoutingManager.assignScout(u);
-		std::cout << "Assigned observer scout " << u->getID() << "\n";
+		//std::cout << "Assigned observer scout " << u->getID() << "\n";
 	}
 
 	return nullptr;
