@@ -631,7 +631,7 @@ std::vector<Action> StrategyManager::onFrame()
 					attackPos = pair.second.lastKnownPosition;
 					break;
 				}
-				else{
+				else if (pair.first->exists()) {
 					attackPos = pair.first->getPosition();
 					break;
 				}
