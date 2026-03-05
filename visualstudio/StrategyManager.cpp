@@ -615,29 +615,29 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * 4) && enemyBaselocations.size() != 0)
 		{
+			isFinalAttack = true;
+
 			const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
-			BWAPI::TilePosition startingLocation = BWAPI::Broodwar->self()->getStartLocation();
 			BWAPI::Position attackPos;
 
 			// Prioritize attacking known enemy buildings
+			
 			for (const auto& pair : commanderReference->informationManager.getKnownEnemyBuildings()) {
 				if (pair.second.destroyed) {
-					cout << "Current building destroyed" << endl;
 					continue;
 				}
 
 				if (!pair.first->isVisible()) {
 					attackPos = pair.second.lastKnownPosition;
-					cout << "Moving to building fog position" << endl;
 					break;
 				}
-				else if (pair.first->exists()) {
+				else{
 					attackPos = pair.first->getPosition();
-					cout << "Moving to visible position" << endl;
+					break;
 				}
 			}
 
-			// If no valid attack position, wait at the enemy base
+			// If no valid attack position, pick enemy base first
 			if (attackPos == BWAPI::Positions::Invalid) {
 				attackPos = BWAPI::Position(enemyBaselocations.at(0));
 			}
@@ -651,84 +651,85 @@ std::vector<Action> StrategyManager::onFrame()
 
 				lastAttackPos = attackPos;
 			}
-
-			isFinalAttack = true;
 		}
 	}
 #pragma endregion
 
 #pragma region Defend
-	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
-	BWAPI::Unitset enemyCombatUnits;
+	// Only check for defensive positions and actions if we're not in the final attack phase
+	if (!isFinalAttack) {
+		BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
+		BWAPI::Unitset enemyCombatUnits;
 
-	for (BWAPI::Unit unit : unitsOnVisison)
-	{
-		if (!unit->getType().isBuilding())
+		for (BWAPI::Unit unit : unitsOnVisison)
 		{
-			enemyCombatUnits.insert(unit);
-		}
-	}
-
-	bool enemyAttacking = false;
-	BWAPI::Unit unitToAttack;
-
-	for (const BWAPI::Unit unit : enemyCombatUnits)
-	{
-		if (!unit->exists() || unit == nullptr) {
-			continue;
-		}
-
-		unitToAttack = unit;
-		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
-		
-		for (const BWEM::Area* area : ProtoBot_Areas)
-		{
-			if (enemyAreaLocation == area) enemyAttacking = true;
-		}
-	}
-
-	if (!isFinalAttack && enemyAttacking)
-	{
-		if (unitToAttack->exists() || unitToAttack != nullptr) {
-			Action attack;
-			attack.type = Action::ACTION_REINFORCE;
-			attack.reinforcePosition = unitToAttack->getPosition();
-			actionsToReturn.push_back(attack);	
-		}
-	}
-	else
-	{
-		if (!isFinalAttack && (Protobot_IdleSquads.size() != 0))
-		{
-			int distanceToClosestChoke = INT_MAX;
-			BWAPI::WalkPosition areaToDefend = BWAPI::WalkPositions::Invalid;
-			const BWEM::ChokePoint* chokeToDefend;
-
-			for (const BWEM::ChokePoint* placement : ProtoBotArea_SquadPlacements)
+			if (!unit->getType().isBuilding())
 			{
-				if (PositionsFilled[placement] == false)
-				{
-					int distanceToChoke = 0;
-					const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(placement->Center()), &distanceToChoke);
+				enemyCombatUnits.insert(unit);
+			}
+		}
 
-					if (distanceToChoke == -1) continue;
+		bool enemyAttacking = false;
+		BWAPI::Unit unitToAttack;
 
-					if (distanceToChoke < distanceToClosestChoke)
-					{
-						distanceToClosestChoke = distanceToChoke;
-						areaToDefend = placement->Center();
-						chokeToDefend = placement;
-					}
-				}
+		for (const BWAPI::Unit unit : enemyCombatUnits)
+		{
+			if (!unit->exists() || unit == nullptr) {
+				continue;
 			}
 
-			if (areaToDefend != BWAPI::WalkPositions::Invalid)
+			unitToAttack = unit;
+			const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
+
+			for (const BWEM::Area* area : ProtoBot_Areas)
 			{
-				Action defend;
-				defend.type = Action::ACTION_DEFEND;
-				defend.defendPosition = BWAPI::Position(areaToDefend);
-				actionsToReturn.push_back(defend);
-				PositionsFilled[chokeToDefend] = true;
+				if (enemyAreaLocation == area) enemyAttacking = true;
+			}
+		}
+
+		if (enemyAttacking)
+		{
+			if (unitToAttack->exists() || unitToAttack != nullptr) {
+				Action attack;
+				attack.type = Action::ACTION_REINFORCE;
+				attack.reinforcePosition = unitToAttack->getPosition();
+				actionsToReturn.push_back(attack);
+			}
+		}
+		else
+		{
+			if (Protobot_IdleSquads.size() != 0)
+			{
+				int distanceToClosestChoke = INT_MAX;
+				BWAPI::WalkPosition areaToDefend = BWAPI::WalkPositions::Invalid;
+				const BWEM::ChokePoint* chokeToDefend;
+
+				for (const BWEM::ChokePoint* placement : ProtoBotArea_SquadPlacements)
+				{
+					if (PositionsFilled[placement] == false)
+					{
+						int distanceToChoke = 0;
+						const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(placement->Center()), &distanceToChoke);
+
+						if (distanceToChoke == -1) continue;
+
+						if (distanceToChoke < distanceToClosestChoke)
+						{
+							distanceToClosestChoke = distanceToChoke;
+							areaToDefend = placement->Center();
+							chokeToDefend = placement;
+						}
+					}
+				}
+
+				if (areaToDefend != BWAPI::WalkPositions::Invalid)
+				{
+					Action defend;
+					defend.type = Action::ACTION_DEFEND;
+					defend.defendPosition = BWAPI::Position(areaToDefend);
+					actionsToReturn.push_back(defend);
+					PositionsFilled[chokeToDefend] = true;
+				}
 			}
 		}
 	}

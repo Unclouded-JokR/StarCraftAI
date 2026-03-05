@@ -22,7 +22,7 @@ void CombatManager::onFrame() {
 	}
 
 
-#ifdef DEBUG_PRECACHE //In A-StarPathfinding.h
+#ifdef DRAW_PRECACHE //In A-StarPathfinding.h
 	MapTools map_tool = MapTools();
 	if (!precachedPositions.empty()) {
 		BWAPI::Position prevPos = precachedPositions.at(0);

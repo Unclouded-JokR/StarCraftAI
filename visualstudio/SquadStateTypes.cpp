@@ -8,7 +8,6 @@ vector<Squad*> CombatManager::IdleSquads;
 
 void AttackingState::Enter(Squad* squad) {
 	CombatManager::AttackingSquads.push_back(squad);
-
 #ifdef DEBUG_STATES
 	cout << "(" << squad->squadId << ")" << "Entered ATTACKING state" << endl;
 #endif
@@ -106,12 +105,14 @@ void ReinforcingState::Update(Squad* squad) {
 		return;
 	}
 
-	squad->leader->attack(squad->commandPos);
+	squad->leader->attack(squad->currentReinforcePosition);
 	for (BWAPI::Unit& squadMate : squad->units)
 	{
-		if (squadMate->isIdle() || squad->currentReinforcePosition != squad->commandPos) {
-			squad->currentReinforcePosition = squad->commandPos;
-			squadMate->attack(squad->commandPos);
+		if (squadMate->isIdle()) {
+			if (squad->currentReinforcePosition.getApproxDistance(squad->commandPos) > 100) {
+				squad->currentReinforcePosition = squad->commandPos;
+			}
+			squadMate->attack(squad->currentReinforcePosition);
 		}
 	}
 }

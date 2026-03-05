@@ -1037,11 +1037,13 @@ bool ScoutingProbe::planAStarPathTo(const BWAPI::Position& goal, bool interactab
     {
         ScopedMsTimer t("AStar::GeneratePath", &astarMs);
         p = AStar::GeneratePath(scout->getPosition(), scout->getType(), safeGoal, interactableEndpoint);
+        cout << "Used AStar Path in scouting" << endl;
     }
     dbgLastAStarMs = astarMs;
 
     if (p.positions.empty())
     {
+        cout << "Scout AStar Path was empty" << endl;
         plannedPath.push_back(goal);
         return true;
     }

@@ -6,6 +6,7 @@
 
 //#define DEBUG_PATH
 //#define DEBUG_PRECACHE
+//#define DRAW_PRECACHE
 //#define DEBUG_SUBPATH
 #define TIME_LIMIT_ENABLED true
 #define TIME_LIMIT_MS 500.0
