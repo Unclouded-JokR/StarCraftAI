@@ -9,19 +9,19 @@
 using namespace BWAPI;
 using namespace BWEM;
 
-namespace {
-    static inline int mapWpx() { return Broodwar->mapWidth() * 32; }
-    static inline int mapHpx() { return Broodwar->mapHeight() * 32; }
+namespace
+{
+    static inline int mapWpx()
+    {
+        return Broodwar->mapWidth() * 32;
+    }
 
-    // squared distance helper
-    int d2(const Position& a, const Position& b) {
-        const int dx = a.x - b.x, dy = a.y - b.y;
-        return dx * dx + dy * dy;
+    static inline int mapHpx()
+    {
+        return Broodwar->mapHeight() * 32;
     }
 
     static BWAPI::Position g_myMainPos = BWAPI::Positions::Invalid;
-
-    // Pathing fixes
 
     bool isWalkablePx(const BWAPI::Position& p)
     {
@@ -53,8 +53,41 @@ namespace {
             return false;
         }
 
-        const auto& path = BWEM::Map::Instance().GetPath(from, to, nullptr);
-        return !path.empty();
+        return BWAPI::Broodwar->hasPath(from, to);
+    }
+
+    static bool isResourceOrGeyser(const BWAPI::Unit u)
+    {
+        if (!u || !u->exists())
+        {
+            return false;
+        }
+
+        const auto t = u->getType();
+        return t.isMineralField() || (t == BWAPI::UnitTypes::Resource_Vespene_Geyser);
+    }
+
+    static BWAPI::Unit closestNeutralResourceTo(const BWAPI::Position& p)
+    {
+        BWAPI::Unit best = nullptr;
+        int bestD = INT_MAX;
+
+        for (auto& n : BWAPI::Broodwar->getNeutralUnits())
+        {
+            if (!isResourceOrGeyser(n))
+            {
+                continue;
+            }
+
+            const int d = n->getPosition().getApproxDistance(p);
+            if (d < bestD)
+            {
+                bestD = d;
+                best = n;
+            }
+        }
+
+        return best;
     }
 }
 
@@ -279,8 +312,15 @@ void ScoutingZealot::onFrame() {
             proxyCurTarget = proxyPoints[proxyNextIdx++];
         }
 
-        // throttle move commands using existing issueMove cooldown
-        issueMove(proxyCurTarget, /*force*/false, /*reissueDist*/64);
+        BWAPI::Position tgt = proxyCurTarget;
+
+        if (!isWalkablePx(tgt) || !hasGroundPath(zealot->getPosition(), tgt))
+        {
+            tgt = findReachableNearby(tgt);
+            proxyCurTarget = tgt;
+        }
+
+        issueMove(tgt, /*force*/false, /*reissueDist*/64);
 
         break;
     }
@@ -728,35 +768,91 @@ void ScoutingZealot::rebuildProxyPoints()
         return a == area;
     };
 
-    auto addPoint = [&](BWAPI::Position p)
+    auto pushAwayFromResources = [&](BWAPI::Position p, int clearPx) -> BWAPI::Position
+    {
+        for (int i = 0; i < 6; ++i)
         {
-            if (!p.isValid())
+            BWAPI::Unit r = closestNeutralResourceTo(p);
+            if (!r)
             {
-                return;
+                break;
             }
+
+            const BWAPI::Position rp = r->getPosition();
+            const int d = rp.getApproxDistance(p);
+
+            if (d >= clearPx)
+            {
+                break;
+            }
+
+            int vx = p.x - rp.x;
+            int vy = p.y - rp.y;
+
+            if (vx == 0 && vy == 0)
+            {
+                vx = 1;
+            }
+
+            const double len = std::max(1.0, std::sqrt(double(vx * vx + vy * vy)));
+            const int need = clearPx - d;
+
+            p = BWAPI::Position(
+                p.x + int((vx / len) * need),
+                p.y + int((vy / len) * need)
+            );
 
             p = clampToMapPx(p, 16);
+        }
 
-            if (!isWalkablePx(p))
+        return p;
+    };
+
+    auto addPoint = [&](BWAPI::Position p)
+    {
+        if (!p.isValid())
+        {
+            return;
+        }
+
+        p = clampToMapPx(p, 16);
+
+        if (!hasGroundPath(myMainCenter, p))
+        {
+            return;
+        }
+
+        if (!isWalkablePx(p))
+        {
+            // Snap to something nearby that we can actually stand on
+            p = findReachableNearby(p);
+
+            if (!p.isValid() || !hasGroundPath(myMainCenter, p))
             {
                 return;
             }
+        }
 
-            if (!hasGroundPath(myMainCenter, p))
+        p = pushAwayFromResources(p, 3 * 32);
+        p = findReachableNearby(p);
+
+        if (!p.isValid() || !hasGroundPath(myMainCenter, p))
+        {
+            return;
+        }
+
+        for (const auto& existing : proxyPoints)
+        {
+            if (isNear(existing, p, 3 * 32)) // was 5*32
             {
                 return;
             }
+        }
 
-            for (const auto& existing : proxyPoints)
-            {
-                if (isNear(existing, p, 5 * 32))
-                {
-                    return;
-                }
-            }
+        proxyPoints.push_back(p);
+    };
 
-            proxyPoints.push_back(p);
-        };
+    
 
     // 1) Main-area chokes
     for (const BWEM::ChokePoint* cp : myMainArea->ChokePoints())
@@ -843,7 +939,7 @@ void ScoutingZealot::rebuildProxyPoints()
 
     // 4) Perimeter ring: boundary tiles of our main area (proxy pylons tucked around edges)
     {
-        const int stepTiles = 4; // lower = more points;
+        const int stepTiles = 2; // lower = more points;
         const BWAPI::TilePosition topLeft = myMainArea->TopLeft();
         const BWAPI::TilePosition bottomRight = myMainArea->BottomRight();
 
@@ -875,10 +971,10 @@ void ScoutingZealot::rebuildProxyPoints()
 
     // 5) Air-close but ground-far points (cliff/maze-y proxy spots near us)
     {
-        const double kMinRatio = 1.8;
-        const int kMaxAirDist = 28 * 32;
-        const int sampleStepTiles = 6;
-        const double kMaxGroundDist = 90.0 * 32.0;
+        const double kMinRatio = 1.4;
+        const int kMaxAirDist = 40 * 32;
+        const int sampleStepTiles = 3;
+        const double kMaxGroundDist = 140.0 * 32.0;
 
         const int margin = 12;
         const BWAPI::TilePosition topLeft = myMainArea->TopLeft();
@@ -927,6 +1023,32 @@ void ScoutingZealot::rebuildProxyPoints()
             }
         }
     }
+    auto addRing = [&](BWAPI::Position center, int radius, int n)
+    {
+        for (int i = 0; i < n; ++i)
+        {
+            const double a = (6.28318530718 * i) / double(n);
+            BWAPI::Position p(
+                center.x + int(std::cos(a) * radius),
+                center.y + int(std::sin(a) * radius)
+            );
+
+            addPoint(p);
+        }
+    };
+
+    if ((int)proxyPoints.size() < 6)
+    {
+        BWAPI::Position c = myMainCenter;
+        addRing(c, 8 * 32, 12);
+        addRing(c, 12 * 32, 12);
+
+        if (bestNat.isValid())
+        {
+            addRing(bestNat, 6 * 32, 10);
+        }
+    }
+
 
     // Order: nearest-neighbor greedy starting from zealot
     std::vector<BWAPI::Position> ordered;
