@@ -737,6 +737,13 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 		return false;
 	}
 
+	// Get rid of the annoying special buildings
+	if (BWAPI::Broodwar->getUnitsOnTile(tile.x, tile.y, 
+		BWAPI::UnitTypes::Special_Psi_Disrupter 
+		|| BWAPI::UnitTypes::Special_Power_Generator).empty() == false) {
+		return false;
+	}
+
 	// If the tile is the end tile, returns true. Further processing will depend on the boolean isInteractableEndpoint set in GeneratePath()
 	if (tile == end && isInteractableEndpoint) {
 		return true;
