@@ -385,12 +385,12 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
     if (unit->getPlayer() != BWAPI::Broodwar->self())
         return;
 
-    if (unit->getType().isWorker()) std::cout << "Worker has died\n";
-
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
         if (it->getUnitReference()->getID() == unit->getID())
         {
+            std::cout << "Builder has died\n";
+
             const BWAPI::Unit unitAvalible = getUnitToBuild(it->requestedPositionToBuild);
 
             if (unitAvalible != nullptr)
