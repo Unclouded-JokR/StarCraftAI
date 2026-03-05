@@ -361,14 +361,14 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
 
     if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-    std::cout << unit->getType() << " placed down at tile position " << unit->getTilePosition() << "\n";
+    //std::cout << unit->getType() << " placed down at tile position " << unit->getTilePosition() << "\n";
 
     //Remove worker once a building is being warped in.
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
     {
         if (unit->getTilePosition() == BWAPI::TilePosition(it->requestedPositionToBuild) && unit->getType() == it->buildingToConstruct)
         {
-            std::cout << "Builder placed down " << unit->getType() << ", removing from builders\n";
+            //std::cout << "Builder placed down " << unit->getType() << ", removing from builders\n";
             it = builders.erase(it);
             break;
         }
@@ -385,16 +385,46 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
     if (unit->getPlayer() != BWAPI::Broodwar->self())
         return;
 
+    if (unit->getType().isWorker()) std::cout << "Worker has died\n";
+
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end();)
     {
         if (it->getUnitReference()->getID() == unit->getID())
         {
             const BWAPI::Unit unitAvalible = getUnitToBuild(it->requestedPositionToBuild);
+
             if (unitAvalible != nullptr)
             {
+                Path pathToLocation;
+                if (it->buildingToConstruct.isResourceDepot())
+                {
+                    //std::cout << "Trying to build Nexus\n";
+                    pathToLocation = AStar::GeneratePath(unitAvalible->getPosition(), unitAvalible->getType(), it->requestedPositionToBuild);
+                }
+                else if (it->buildingToConstruct.isRefinery())
+                {
+                    //std::cout << "Trying to build assimlator\n";
+                    pathToLocation = AStar::GeneratePath(unitAvalible->getPosition(), unitAvalible->getType(), it->requestedPositionToBuild, true);
+
+                    //Testing this for now since if we dont have A* path to location a builder wont place.
+                    //if (pathToLocation.positions.empty()) continue;
+                }
+                else
+                {
+                    //std::cout << "Trying to build regular building\n";
+                    pathToLocation = AStar::GeneratePath(unitAvalible->getPosition(), unitAvalible->getType(), it->requestedPositionToBuild);
+                }
+
                 it->setUnitReference(unitAvalible);
-                break;
+                it->updatePath(pathToLocation);
+                std::cout << "Replacement found and updated path\n";
             }
+            else
+            {
+                std::cout << "Replacement could not be found\n";
+            }
+
+            break;
             /*else
             {
                switch (it->buildingToConstruct)
@@ -464,7 +494,7 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
 {
     buildingPlacer.onUnitMorph(unit);
 
-    std::cout << "Created " << unit->getType() << " (On Morph)\n";
+    //std::cout << "Created " << unit->getType() << " (On Morph)\n";
 
     //Need to check this for tech and upgrades;
     for (ResourceRequest& request : resourceRequests)
