@@ -204,15 +204,18 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 							currentNode.tile = parent[TileToIndex(currentNode.tile)];
 						}
 						Path currentPath = Path(currentPositions, currentDistance);
-						Path toStartOfPrecache = generateSubPath(precachedPath.positions.at(0), unitType, _end);
+						Path toStartOfPrecache = generateSubPath(currentPositions.at(currentPositions.size() - 1), unitType, precachedPath.positions.at(0));
 						Path toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
-						Path finalPath = toStartOfPrecache + precachedPath + toEnd;
+						Path finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
 
 #ifdef DEBUG_PATH
 						cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
 #endif
-						if (currentPath.positions.size() == 0 || toStartOfPrecache.positions.size() == 0 || toEnd.positions.size() == 0) {
-							return Path();
+						if (currentPath.positions.size() == 0 
+							|| toStartOfPrecache.positions.size() == 0 
+							|| precachedPath.positions.size() == 0 
+							|| toEnd.positions.size() == 0) {
+							return generateSubPath(_start, unitType, _end, isInteractableEndpoint);
 						}
 
 						totalTimer.stop();

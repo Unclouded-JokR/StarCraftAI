@@ -9,7 +9,7 @@
 //#define DEBUG_SUBPATH
 #define TIME_LIMIT_ENABLED true
 #define TIME_LIMIT_MS 500.0
-#define HEURISTIC_WEIGHT 3
+#define HEURISTIC_WEIGHT 1.5
 
 using namespace std;
 namespace {
