@@ -21,6 +21,7 @@ public:
 
 	BWAPI::Position commandPos;
 	BWAPI::Position currentDefensivePosition;
+	BWAPI::Position currentReinforcePosition;
 	BWAPI::Position kitePos;
 
 	Path currentPath = Path();

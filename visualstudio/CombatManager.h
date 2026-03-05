@@ -28,6 +28,7 @@ public:
     void attack(BWAPI::Position position);
     void defend(BWAPI::Position position);
     void reinforce(BWAPI::Position position);
+    bool reinforceOutOfRange(Squad* squad, BWAPI::Position reinforcePos);
     Squad* addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(Squad* squad);
     bool assignUnit(BWAPI::Unit unit);

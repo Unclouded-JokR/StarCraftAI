@@ -603,11 +603,13 @@ std::vector<Action> StrategyManager::onFrame()
 #pragma endregion
 
 #pragma region Attack
-	bool isFinalAttack = false;
 	// If we have more than two full squads attack. 
 	const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2;
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
 	
+	// Boolean used to stop reinforcement action from triggering
+	bool isFinalAttack = false;
+
 	//Add timer on supply cap to make us attack so we dont waste time.
 	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
@@ -615,27 +617,40 @@ std::vector<Action> StrategyManager::onFrame()
 		{
 			const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
 			BWAPI::TilePosition startingLocation = BWAPI::Broodwar->self()->getStartLocation();
-			BWAPI::Position posToAttack;
+			BWAPI::Position attackPos;
+
+			// Prioritize attacking known enemy buildings
 			for (const auto& pair : commanderReference->informationManager.getKnownEnemyBuildings()) {
-				posToAttack = pair.second.lastKnownPosition;
-			}
-			
-			if (commanderReference->informationManager.getKnownEnemyBuildings().size() == 0) {
-				if (commanderReference->informationManager.getKnownEnemies().size() != 0) {
-					for (const auto& pair : commanderReference->informationManager.getTrackedEnemies()) {
-						posToAttack = pair.second.lastSeenPos;
-					}
+				if (pair.second.destroyed) {
+					cout << "Current building destroyed" << endl;
+					continue;
+				}
+
+				if (!pair.first->isVisible()) {
+					attackPos = pair.second.lastKnownPosition;
+					cout << "Moving to building fog position" << endl;
+					break;
+				}
+				else if (pair.first->exists()) {
+					attackPos = pair.first->getPosition();
+					cout << "Moving to visible position" << endl;
 				}
 			}
 
-			if (posToAttack == BWAPI::Positions::Invalid) {
-				posToAttack = BWAPI::Position(enemyBaselocations.at(0));
+			// If no valid attack position, wait at the enemy base
+			if (attackPos == BWAPI::Positions::Invalid) {
+				attackPos = BWAPI::Position(enemyBaselocations.at(0));
 			}
 
-			Action attack;
-			attack.type = Action::ACTION_ATTACK;
-			attack.attackPosition = posToAttack;
-			actionsToReturn.push_back(attack);
+			// Send action only if theres a new attack position
+			if (attackPos != lastAttackPos) {
+				Action attack;
+				attack.type = Action::ACTION_ATTACK;
+				attack.attackPosition = attackPos;
+				actionsToReturn.push_back(attack);
+
+				lastAttackPos = attackPos;
+			}
 
 			isFinalAttack = true;
 		}

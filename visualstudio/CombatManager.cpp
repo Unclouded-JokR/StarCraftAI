@@ -54,6 +54,7 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
+	// Only process new attack if command position is a new position
 	for (const auto& squad : Squads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
@@ -65,19 +66,38 @@ void CombatManager::defend(BWAPI::Position position) {
 		squad->currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
 	}
-	for (auto& squad : DefendingSquads) {
-		squad->commandPos = position;
-	}
 }
 
 void CombatManager::reinforce(BWAPI::Position position) {
 	for (auto& squad : DefendingSquads) {
+		if (reinforceOutOfRange(squad, position)) {
+			continue;
+		}
+
 		squad->commandPos = position;
 		squad->setState(ReinforcingState::getInstance());
 	}
+
 	for (auto& squad : ReinforcingSquads) {
+		if (reinforceOutOfRange(squad, position)) {
+			squad->setState(DefendingState::getInstance());
+			continue;
+		}
+
 		squad->commandPos = position;
 	}
+}
+
+// Returns true if:
+// - Current defensive position too far from reinforce position
+// - Squad leader is too far from defensive position
+bool CombatManager::reinforceOutOfRange(Squad* squad, BWAPI::Position reinforcePos) {
+	if (squad->currentDefensivePosition.getApproxDistance(reinforcePos) > MAX_REINFORCE_DIST
+		|| squad->currentDefensivePosition.getApproxDistance(squad->leader->getPosition()) > MAX_REINFORCE_DIST) {
+		return true;
+	}
+
+	return false;
 }
 
 Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {

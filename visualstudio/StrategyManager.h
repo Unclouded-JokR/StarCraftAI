@@ -120,6 +120,7 @@ public:
 	std::unordered_set<const BWEM::ChokePoint*> ProtoBotArea_SquadPlacements;
 	std::unordered_map<const BWEM::ChokePoint*, bool> PositionsFilled;
 	BWAPI::Position startingChoke;
+	BWAPI::Position lastAttackPos;
 
 	ProtoBotCommander* commanderReference;
 
