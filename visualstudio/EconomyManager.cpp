@@ -28,7 +28,6 @@ void EconomyManager::onFrame()
             {
                 nexusEconomy.workers = getWorkersToTransfer(nexusEconomy.minerals.size(), nexusEconomy);;
                 nexusEconomy.assignWorkerBulk();
-                nexusEconomy.isNew = false;
             }
         }
 
@@ -200,7 +199,7 @@ BWAPI::Unitset EconomyManager::getWorkersToTransfer(int numberOfWorkers, NexusEc
         if (nexusEconomy.nexusID == nexusEconomyRequest.nexusID) continue;
 
         //Check if a nexus economy has workers to spare.
-        if (nexusEconomy.workers.size() >= numberOfWorkers)
+        if (nexusEconomy.workers.size() != 0)
         {
             workersToTransfer = nexusEconomy.getWorkersToTransfer(numberOfWorkers);
 

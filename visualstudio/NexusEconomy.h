@@ -29,7 +29,6 @@ public:
 	int workerNums;
 	int attackingWorkers = 0;
 	bool needWorkers = true;
-	bool isNew = true;
 
 	BWAPI::Unit nexus;
 	BWAPI::Unitset workers;
