@@ -204,26 +204,39 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 							currentNode.tile = parent[TileToIndex(currentNode.tile)];
 						}
 
-						Path currentPath = Path(currentPositions, currentDistance);
-
+						Path currentPath;
 						Path toStartOfPrecache;
-						if (currentPath.positions.size() > 0) {
-							toStartOfPrecache = generateSubPath(currentPositions.at(currentPositions.size() - 1), unitType, precachedPath.positions.at(0));
-						}
+						Path toEnd;
+						Path finalPath;
 
-						Path toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+						try {
+							currentPath = Path(currentPositions, currentDistance);
 
-						Path finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
+							toStartOfPrecache;
+							if (currentPath.positions.size() > 0) {
+								toStartOfPrecache = generateSubPath(currentPositions.at(currentPositions.size() - 1), unitType, precachedPath.positions.at(0));
+							}
+
+							toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+							
+							finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
 #ifdef DEBUG_PATH
-						cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
+							cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
 #endif
-						if (toStartOfPrecache.positions.size() == 0 
-							|| precachedPath.positions.size() == 0 
-							|| toEnd.positions.size() == 0) {
-							return generateSubPath(_start, unitType, _end, isInteractableEndpoint);
+							if (toStartOfPrecache.positions.size() == 0
+								|| precachedPath.positions.size() == 0
+								|| toEnd.positions.size() == 0) 
+							{
+								return generateSubPath(_start, unitType, _end, isInteractableEndpoint);
+							}
+
+							totalTimer.stop();
+						}
+						catch (const runtime_error& e) {
+							cout << e.what() << endl;
+							return Path();
 						}
 
-						totalTimer.stop();
 						return finalPath;
 					}
 					else {
@@ -381,7 +394,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
-			return Path();
+			throw runtime_error("Path time limit exceeded");
 		}
 
 		if (!earlyExpansion) {
