@@ -755,17 +755,17 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 		return false;
 	}
 
+	// If the tile is the end tile, returns true. Further processing will depend on the boolean isInteractableEndpoint set in GeneratePath()
+	if (tile == end && isInteractableEndpoint) {
+		return true;
+	}
+
 	BWAPI::Unitset specialBuildings = BWAPI::Broodwar->getUnitsOnTile(tile.x, tile.y, BWAPI::Filter::IsSpecialBuilding);
 	// Get rid of annoying special buildings
 	for (const auto& unit : specialBuildings) {
 		if (unit) {
 			return false;
 		}
-	}
-
-	// If the tile is the end tile, returns true. Further processing will depend on the boolean isInteractableEndpoint set in GeneratePath()
-	if (tile == end && isInteractableEndpoint) {
-		return true;
 	}
 
 	// Gets measurements in terms of WalkPositions (8x8)
