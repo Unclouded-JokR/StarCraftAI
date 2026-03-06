@@ -16,6 +16,7 @@ void StrategyManager::onStart()
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
 	ProductionGoal_index = 0;
+	timer = 0;
 	mineralExcessToExpand = 1000;
 	ProtoBot_Areas.clear();
 	ProtoBotArea_SquadPlacements.clear();
