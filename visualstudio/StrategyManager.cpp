@@ -282,7 +282,7 @@ std::vector<Action> StrategyManager::onFrame()
 			}
 			
 			//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible))
+			if (canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible))
 			{
 				//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
 
