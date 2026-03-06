@@ -278,7 +278,7 @@ BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
         ScoutingProbe probe(commanderRef, this);
         // pass cache if we already know main
         if (enemyMainCache_) probe.setEnemyMain(*enemyMainCache_);
-        BWAPI::Broodwar->printf("[SM] behavior = Probe for id=%d", unit->getID());
+        //BWAPI::Broodwar->printf("[SM] behavior = Probe for id=%d", unit->getID());
         return probe;
     }
 
@@ -286,8 +286,8 @@ BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
     {
         ScoutingZealot z(commanderRef, this);
         if (enemyMainCache_) z.setEnemyMain(*enemyMainCache_);
-        BWAPI::Broodwar->printf("[SM] behavior = ZealotBehavior for %s id=%d",
-            t.c_str(), unit->getID());
+        //BWAPI::Broodwar->printf("[SM] behavior = ZealotBehavior for %s id=%d",
+          //  t.c_str(), unit->getID());
         return z;
     }
 
@@ -295,14 +295,14 @@ BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
     {
         ScoutingObserver o(commanderRef, this);
         if (enemyMainCache_) o.setEnemyMain(*enemyMainCache_);
-        BWAPI::Broodwar->printf("[SM] behavior = Observer for id=%d", unit->getID());
+        //BWAPI::Broodwar->printf("[SM] behavior = Observer for id=%d", unit->getID());
         return o;
     }
 
     // fallback
     ScoutingProbe fallback(commanderRef, this);
     if (enemyMainCache_) fallback.setEnemyMain(*enemyMainCache_);
-    BWAPI::Broodwar->printf("[SM] behavior = Fallback->Probe for id=%d", unit->getID());
+   // BWAPI::Broodwar->printf("[SM] behavior = Fallback->Probe for id=%d", unit->getID());
     return fallback;
 }
 
@@ -405,25 +405,25 @@ void ScoutingManager::drawScoutTags() const
     if (workerScout_ && workerScout_->exists()) 
     {
         const auto p = workerScout_->getPosition();
-        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Worker)");
+        //BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Worker)");
     }
     for (auto u : combatZealots_) 
     {
         if (!u || !u->exists()) continue;
         const auto p = u->getPosition();
-        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Zealot)");
+        //BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Zealot)");
     }
     for (auto u : combatDragoons_) 
     {
         if (!u || !u->exists()) continue;
         const auto p = u->getPosition();
-        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Dragoon)");
+        //BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 20, "\x07SCOUT (Dragoon)");
     }
     for (auto u : observerScouts_) 
     {
         if (!u || !u->exists()) continue;
         const auto p = u->getPosition();
-        BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 32, "\x10SCOUT (Observer)");
+        //BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 32, "\x10SCOUT (Observer)");
     }
 }
 
@@ -455,7 +455,7 @@ BWAPI::Unit ScoutingManager::getAvaliableDetectors()
         observerScouts_.erase(it);
 
         // 4) Done: return unit to combat
-        BWAPI::Broodwar->printf("[SM] Reassigning Observer %d to combat", id);
+        //BWAPI::Broodwar->printf("[SM] Reassigning Observer %d to combat", id);
         return obs;
     }
 

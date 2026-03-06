@@ -97,7 +97,7 @@ void ScoutingZealot::onStart() {
     lastMoveIssueFrame = 0;
     lastThreatFrame = -10000;
     g_myMainPos = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
-    BWAPI::Broodwar->printf("[ZealotScout] onStart()");
+    //BWAPI::Broodwar->printf("[ZealotScout] onStart()");
 }
 
 void ScoutingZealot::assign(BWAPI::Unit unit) {
@@ -105,8 +105,8 @@ void ScoutingZealot::assign(BWAPI::Unit unit) {
     if (!unit || !unit->exists()) return;
 
     zealot = unit;
-    BWAPI::Broodwar->printf("[ZealotScout] assign id=%d type=%s",
-        zealot->getID(), zealot->getType().c_str());
+    //BWAPI::Broodwar->printf("[ZealotScout] assign id=%d type=%s",
+        //zealot->getID(), zealot->getType().c_str());
 
     if (isProxyPatroller)
     {
@@ -134,7 +134,7 @@ void ScoutingZealot::setEnemyMain(const TilePosition& tp) {
     // Immediate course set to the natural edge perch (don’t step into main first)
     if (enemyNaturalPos.isValid()) {
         issueMove(pickEdgeOfVisionSpot(), /*force*/true);
-        BWAPI::Broodwar->printf("[ZealotScout] setEnemyMain (%d,%d)", tp.x, tp.y);
+        //BWAPI::Broodwar->printf("[ZealotScout] setEnemyMain (%d,%d)", tp.x, tp.y);
     }
 }
 void ScoutingZealot::onUnitDestroy(BWAPI::Unit unit) {
@@ -146,6 +146,7 @@ void ScoutingZealot::onUnitDestroy(BWAPI::Unit unit) {
 
 void ScoutingZealot::onFrame() {
     if (!zealot || !zealot->exists() || state == State::Done) return;
+    /*
     BWAPI::Broodwar->drawTextMap(zealot->getPosition(),
         "\x11Zealot[%d] %s", zealot->getID(),
            (state == State::Idle ?              "Idle" :
@@ -154,13 +155,14 @@ void ScoutingZealot::onFrame() {
             state == State::MoveToNatural ?     "MoveToNatural" :
             state == State::HoldEdge ?          "HoldEdge" :
             state == State::Reposition ?        "Reposition" : "Done"));
+    */
 
     // --- hard avoid enemy main every frame ---
     if (enemyMainTile.has_value() && zealot && zealot->exists()) {
         const auto* mainArea = BWEM::Map::Instance().GetArea(*enemyMainTile);
         const auto* hereArea = BWEM::Map::Instance().GetArea(zealot->getTilePosition());
         if (mainArea && hereArea == mainArea) {
-            BWAPI::Broodwar->drawTextMap(zealot->getPosition(), "\x08[AVOID MAIN]");
+            //BWAPI::Broodwar->drawTextMap(zealot->getPosition(), "\x08[AVOID MAIN]");
             issueMove(pickEdgeOfVisionSpot(), /*force*/true);
             return;
         }
@@ -379,8 +381,8 @@ void ScoutingZealot::computeEnemyNatural() {
     }
 
     if (enemyNaturalPos.isValid()) {
-        Broodwar->drawCircleMap(enemyNaturalPos, 10, Colors::Cyan, true);
-        Broodwar->drawTextMap(enemyNaturalPos, "nat");
+        //Broodwar->drawCircleMap(enemyNaturalPos, 10, Colors::Cyan, true);
+        //->drawTextMap(enemyNaturalPos, "nat");
     }
 
 }
@@ -883,7 +885,7 @@ void ScoutingZealot::issueMove(const BWAPI::Position& p, bool force, int reissue
         lastMoveIssueFrame = now;
     }
 
-    Broodwar->drawLineMap(zealot->getPosition(), p, Colors::Orange);
+    //Broodwar->drawLineMap(zealot->getPosition(), p, Colors::Orange);
 }
 
 BWAPI::Position ScoutingZealot::clampToMapPx(const BWAPI::Position& p, int marginPx) {
