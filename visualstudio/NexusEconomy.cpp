@@ -189,9 +189,6 @@ void NexusEconomy::onFrame()
 
 	//economyReference->commanderReference->timerManager.stopTimer(TimerManager::test);
 
-
-	std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
-	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
 	for (BWAPI::Unit worker : workers)
 	{
 		//if (worker->isIdle()) workerOrder[worker] = 0;
