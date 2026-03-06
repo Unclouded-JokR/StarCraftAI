@@ -656,24 +656,17 @@ std::vector<Action> StrategyManager::onFrame()
 	// Only check for defensive positions and actions if we're not in the final attack phase
 	if (!isFinalAttack) {
 		BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
-		BWAPI::Unitset enemyCombatUnits;
-
-		for (BWAPI::Unit unit : unitsOnVisison)
-		{
-			if (!unit->getType().isBuilding())
-			{
-				enemyCombatUnits.insert(unit);
-			}
-		}
 
 		bool enemyAttacking = false;
 		BWAPI::Unit unitToAttack;
 
-		for (const BWAPI::Unit unit : enemyCombatUnits)
+		for (const BWAPI::Unit unit : unitsOnVisison)
 		{
 			if (!unit->exists() || unit == nullptr) {
 				continue;
 			}
+
+			if (!unit->getType().isBuilding()) continue;
 
 			unitToAttack = unit;
 			const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
