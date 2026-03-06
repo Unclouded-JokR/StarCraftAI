@@ -394,7 +394,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
-			throw runtime_error("Path time limit exceeded");
+			throw runtime_error("TIME LIMIT REACHED IN PATH : Empty path returned.");
 		}
 
 		if (!earlyExpansion) {
