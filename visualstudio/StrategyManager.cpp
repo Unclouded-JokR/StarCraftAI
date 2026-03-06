@@ -140,7 +140,7 @@ std::vector<Action> StrategyManager::onFrame()
 		if (nexusEconomy.lifetime < 500) continue;
 
 		if ((nexusEconomy.vespeneGyser != nullptr && (nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())) ||
-			(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size()))
+			(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3))
 		{
 			completedNexusEconomy++;
 		}
