@@ -49,19 +49,19 @@ void Builder::onFrame()
 		if(lastPosition == unitReference->getPosition())
 		{
 			idleFrames++;
-			std::cout << "[Builder " << unitReference->getID() << " is idling] Idle Frames: " << idleFrames << "\n";
+			if(debug) std::cout << "[Builder " << unitReference->getID() << " is idling] Idle Frames: " << idleFrames << "\n";
 		}
 		else
 		{
-			idleFrames = 239;
+			idleFrames = 0;
 		}
 		lastPosition = unitReference->getPosition();
 
 		if (idleFrames >= IDLE_FRAMES_BEFORE_FORCE_NEXT_POSITION)
 		{
-			std::cout << "Builder Idling updating position index\n";
+			if (debug) std::cout << "Builder Idling updating position index\n";
 			pathIndex++;
-			idleFrames = 239;
+			idleFrames = 0;
 		}
 
 		if (pathIndex >= referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
