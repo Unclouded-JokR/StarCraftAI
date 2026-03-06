@@ -737,13 +737,13 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 		return false;
 	}
 
-	// Get rid of the annoying special buildings
-	/*BWAPI::Unitset specialBuildings = BWAPI::Broodwar->getUnitsOnTile(tile.x, tile.y, BWAPI::Filter::IsSpecialBuilding);
+	BWAPI::Unitset specialBuildings = BWAPI::Broodwar->getUnitsOnTile(tile.x, tile.y, BWAPI::Filter::IsSpecialBuilding);
+	// Get rid of annoying special buildings
 	for (const auto& unit : specialBuildings) {
-		if (unit->exists()) {
-			return false;
+		if (unit) {
+			return;
 		}
-	}*/
+	}
 
 	// If the tile is the end tile, returns true. Further processing will depend on the boolean isInteractableEndpoint set in GeneratePath()
 	if (tile == end && isInteractableEndpoint) {
