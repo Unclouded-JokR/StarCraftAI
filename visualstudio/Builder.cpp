@@ -84,7 +84,7 @@ void Builder::onFrame()
 			}
 
 			//Incase unit gets stuck
-			if (unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
+			if (unitReference->isIdle() && !(pathIndex >= referencePath.positions.size())) unitReference->rightClick(referencePath.positions.at(pathIndex));
 
 			if (debug) BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "MOVING");
 		}
