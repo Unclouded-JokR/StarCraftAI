@@ -66,3 +66,9 @@ void Builder::setUnitReference(BWAPI::Unit unit)
 {
 	unitReference = unit;
 }
+
+void Builder::updatePath(Path& path)
+{
+	pathIndex = 0;
+	referencePath = path;
+}

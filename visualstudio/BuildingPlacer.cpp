@@ -466,7 +466,7 @@ void BuildingPlacer::onStart()
         else
         {
             //This should happen but just in case.
-            std::cout << "Uh Oh couldnt find Area\n";
+            //std::cout << "Uh Oh couldnt find Area\n";
         }
 
         //Might have a bug with corners using this approach but hopefully it will be okay using reserving system
@@ -576,7 +576,7 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
     }
     else if (unit->getType() == BWAPI::UnitTypes::Protoss_Pylon && unit->getPlayer() == BWAPI::Broodwar->self())
     {
-        std::cout << "Pylon destroyed at location: " << unit->getTilePosition() << "\n";
+        //std::cout << "Pylon destroyed at location: " << unit->getTilePosition() << "\n";
 
         /*const BWAPI::TilePosition location = unit->getTilePosition();
         const int mapX_location = location.x;

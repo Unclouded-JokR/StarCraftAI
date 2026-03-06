@@ -25,5 +25,6 @@ public:
     void onFrame();
     BWAPI::Unit getUnitReference();
     void setUnitReference(BWAPI::Unit);
+    void updatePath(Path& path);
 };
 

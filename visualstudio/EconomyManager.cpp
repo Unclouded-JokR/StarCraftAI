@@ -343,7 +343,7 @@ BWAPI::Unitset EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocati
         }
     }
 
-    std::cout << mineralsToReturn.size();
+    //std::cout << mineralsToReturn.size();
     return mineralsToReturn;
 
 }
