@@ -614,7 +614,7 @@ std::vector<Action> StrategyManager::onFrame()
 		{
 			isFinalAttack = true;
 
-			const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();
+			/*const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();*/
 			BWAPI::Position attackPos;
 
 			// Prioritize attacking known enemy buildings

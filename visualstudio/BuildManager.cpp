@@ -103,7 +103,7 @@ void BuildManager::onFrame() {
     runBuildOrderOnFrame();
 
     spenderManager.OnFrame(resourceRequests);
-    //buildingPlacer.drawPoweredTiles();
+    buildingPlacer.drawPoweredTiles();
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -234,9 +234,6 @@ void BuildManager::onFrame() {
                     {
                         //std::cout << "Trying to build assimlator\n";
                         pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos, true);
-
-                        //Testing this for now since if we dont have A* path to location a builder wont place.
-                        //if (pathToLocation.positions.empty()) continue;
                     }
                     else
                     {                                                                                                                           
@@ -405,9 +402,6 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
                 {
                     //std::cout << "Trying to build assimlator\n";
                     pathToLocation = AStar::GeneratePath(unitAvalible->getPosition(), unitAvalible->getType(), it->requestedPositionToBuild, true);
-
-                    //Testing this for now since if we dont have A* path to location a builder wont place.
-                    //if (pathToLocation.positions.empty()) continue;
                 }
                 else
                 {
