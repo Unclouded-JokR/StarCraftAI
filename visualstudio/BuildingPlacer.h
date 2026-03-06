@@ -69,7 +69,7 @@ private:
 	//Adding this as fail safe to give us access to more Blocks
 	int nexusCount = 0;
 
-	bool debug = false;
+	bool debug = true;
 
 public:
 	int Powered_LargePlacements = 0;
