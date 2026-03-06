@@ -29,7 +29,18 @@ void Builder::onFrame()
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 		}
 
-		if (unitReference->isIdle()) unitReference->rightClick(requestedPositionToBuild);
+		if (unitReference->isIdle())
+		{
+			if (buildingToConstruct.isRefinery())
+			{
+				unitReference->rightClick(BWAPI::Position(requestedPositionToBuild.x - 32, requestedPositionToBuild.y));
+			}
+			else
+			{
+				unitReference->rightClick(requestedPositionToBuild);
+			}
+		}
+
 	}
 	else
 	{
