@@ -49,6 +49,9 @@ void Builder::onFrame()
 		if(lastPosition == unitReference->getPosition())
 		{
 			idleFrames++;
+
+			if (idleFrames >= IDLE_FRAMES_BEFORE_FORCE_NEXT_POSITION) idleFrames = IDLE_FRAMES_BEFORE_FORCE_NEXT_POSITION;
+
 			if(debug) std::cout << "[Builder " << unitReference->getID() << " is idling] Idle Frames: " << idleFrames << "\n";
 		}
 		else
@@ -80,11 +83,11 @@ void Builder::onFrame()
 				}
 			}
 
+			//Incase unit gets stuck
+			if (unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
+
 			if (debug) BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "MOVING");
 		}
-
-		//Incase unit gets stuck
-		if (unitReference->isIdle()) unitReference->rightClick(referencePath.positions.at(pathIndex));
 	}
 }
 
