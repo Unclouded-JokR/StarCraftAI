@@ -715,7 +715,7 @@ void BuildManager::pumpUnit()
         const BWAPI::UnitType type = unit->getType();
         if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 5)
+            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
             {
                 trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
             }
