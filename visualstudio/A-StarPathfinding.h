@@ -4,7 +4,7 @@
 #include "../../BWEM/src/bwem.h"
 #include "../visualstudio/BWEB/Source/BWEB.h"
 
-#define DEBUG_PATH
+//#define DEBUG_PATH
 //#define DEBUG_PRECACHE
 //#define DRAW_PRECACHE
 //#define DEBUG_SUBPATH
