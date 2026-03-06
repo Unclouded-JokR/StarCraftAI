@@ -76,6 +76,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 #ifdef DEBUG_PATH
 			cout << "TIME LIMIT EXCEEDED in main path: " << totalTimer.getElapsedTimeInMilliSec() << endl;
 #endif
+			totalTimer.stop();
 			return Path();
 		}
 
@@ -158,9 +159,9 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			reverse(positions.begin(), positions.end());
 
 #ifdef DEBUG_PATH
-			totalTimer.stop();
 			cout << "Milliseconds spent generating path: " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
 #endif
+			totalTimer.stop();
 			return Path(positions, finalDistance);
 		}
 
@@ -220,7 +221,10 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 #endif
 						}
 						catch (const runtime_error& e) {
+#ifdef DEBUG_PATH
 							cout << e.what() << endl;
+#endif
+							totalTimer.stop();
 							return Path();
 						}
 
@@ -228,6 +232,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 						return finalPath;
 					}
 					else {
+						totalTimer.stop();
 						return Path();
 					}
 				}
@@ -235,6 +240,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 				else {
 					Path subPath = closestCachedPath(_start, _end);
 					if (subPath == Path()) {
+						totalTimer.stop();
 						return Path();
 					}
 
@@ -250,6 +256,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 #ifdef DEBUG_PATH
 						cout << e.what() << endl;
 #endif
+						totalTimer.stop();
 						finalPath = Path();
 					}
 
@@ -260,6 +267,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 #endif
 					totalTimer.stop();
 					if (finalPath.positions.size() > 0) {
+						totalTimer.stop();
 						return finalPath;
 					}
 				}
@@ -328,6 +336,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 		neighbourTimer.stop();
 	}
 
+	totalTimer.stop();
 	return Path();
 }
 
@@ -458,6 +467,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 			subTimer.stop();
 			cout << "Milliseconds spent generating SUB path: " << subTimer.getElapsedTimeInMilliSec() << " ms" << endl;
 #endif
+			subTimer.stop();
 			return Path(positions, finalDistance);
 		}
 
@@ -523,6 +533,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		neighbourTimer.stop();
 	}
 
+	subTimer.stop();
 	return Path();
 }
 
