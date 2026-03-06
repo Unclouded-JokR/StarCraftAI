@@ -741,7 +741,7 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 	// Get rid of annoying special buildings
 	for (const auto& unit : specialBuildings) {
 		if (unit) {
-			return;
+			return false;
 		}
 	}
 
