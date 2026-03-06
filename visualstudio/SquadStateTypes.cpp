@@ -43,19 +43,18 @@ void DefendingState::Enter(Squad* squad) {
 #ifdef DEBUG_STATES
 	cout << "(" << squad->squadId << ")" << "Entered DEFENDING state" << endl;
 #endif
-}
 
-void DefendingState::Update(Squad* squad) {
+	// On enter, move towards defending state
+	// [Was a bug where spamming move to defend was making units walk past enemies w/o attacking]
 	squad->leader->attack(squad->currentDefensivePosition);
 	for (BWAPI::Unit& squadMate : squad->units)
 	{
-		if (squadMate == squad->leader) continue;
-
-		if (squadMate->getDistance(squad->leader) > 200)
-		{
-			squadMate->attack(squad->currentDefensivePosition);
-		}
+		squadMate->attack(squad->currentDefensivePosition);
 	}
+}
+
+void DefendingState::Update(Squad* squad) {
+	
 }
 
 void DefendingState::Exit(Squad* squad) {

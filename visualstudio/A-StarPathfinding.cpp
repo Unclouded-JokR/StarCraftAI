@@ -26,9 +26,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	earlyExpansionTiles.clear();
 #endif
 
-	//cout << "Actual distance: " << _start.getDistance(_end) << endl;
-	//cout << "Heuristic distance: " << chebyshevDistance(_start, _end) << endl;
-
 	vector<BWAPI::Position> positions = vector<BWAPI::Position>();
 	int finalDistance = 0;
 	// Checks if either the starting or ending tile positions are invalid
@@ -76,7 +73,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	while (openSet.size() > 0) {
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
-			cout << "TIME LIMIT REACHED IN PATH: Empty path returned." << endl;
+			cout << "Time spent in main path: " << totalTimer.getElapsedTimeInMilliSec() << endl;
 			return Path();
 		}
 
@@ -394,6 +391,7 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
+			cout << "Time spent in subpath: " << subTimer.getElapsedTimeInMilliSec() << endl;
 			throw runtime_error("TIME LIMIT REACHED IN PATH : Empty path returned.");
 		}
 
@@ -645,7 +643,14 @@ void AStar::fillAreaPathCache() {
 				subPath = ChokepointPathCache[make_pair(cp1, cp2)];
 			}
 			else {
+				try {
 				subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
+				}
+				catch (const runtime_error& e) {
+					cout << e.what() << endl;
+					// Don't add pair to chokepoint path cache 
+					continue;
+				}
 				ChokepointPathCache[make_pair(cp1, cp2)] = subPath;
 
 #ifdef DRAW_PRECACHE
