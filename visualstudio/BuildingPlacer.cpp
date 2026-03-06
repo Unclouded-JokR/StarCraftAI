@@ -57,15 +57,15 @@ BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
     BWAPI::TilePosition powerTilePosition = BWAPI::TilePositions::Invalid;
 
     std::vector<BWEB::Block> blocksToCheck;
-
-    if (nexusCount >= 3)
+    blocksToCheck = ProtoBot_Blocks;
+    /*if (nexusCount >= 3)
     {
         blocksToCheck = BWEB::Blocks::getBlocks();
     }
     else
     {
         blocksToCheck = ProtoBot_Blocks;
-    }
+    }*/
 
     for (BWEB::Block block : blocksToCheck)
     {
@@ -102,14 +102,15 @@ BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
 
     std::vector<BWEB::Block> blocksToCheck;
 
-    if (nexusCount >= 3)
+    blocksToCheck = ProtoBot_Blocks;
+    /*if (nexusCount >= 3)
     {
         blocksToCheck = BWEB::Blocks::getBlocks();
     }
     else
     {
         blocksToCheck = ProtoBot_Blocks;
-    }
+    }*/
 
     for (BWEB::Block block : blocksToCheck)
     {
@@ -219,14 +220,15 @@ BWAPI::TilePosition BuildingPlacer::findAvaliblePlacement(BWAPI::UnitType type)
 
     std::vector<BWEB::Block> blocksToCheck = {};
 
-    if (nexusCount >= 3)
+    blocksToCheck = ProtoBot_Blocks;
+    /*if (nexusCount >= 3)
     {
         blocksToCheck = BWEB::Blocks::getBlocks();
     }
     else
     {
         blocksToCheck = ProtoBot_Blocks;
-    }
+    }*/
 
     for (BWEB::Block block : blocksToCheck)
     {
@@ -266,15 +268,16 @@ void BuildingPlacer::drawPoweredTiles()
     }*/
 
     std::vector<BWEB::Block> blocksToCheck = {};
+    blocksToCheck = ProtoBot_Blocks;
 
-    if (nexusCount >= 3)
+    /*if (nexusCount >= 3)
     {
         blocksToCheck = BWEB::Blocks::getBlocks();
     }
     else
     {
         blocksToCheck = ProtoBot_Blocks;
-    }
+    }*/
 
     for (BWEB::Block block : blocksToCheck)
     {
