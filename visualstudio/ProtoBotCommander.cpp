@@ -152,27 +152,29 @@ void ProtoBotCommander::onFrame()
 
 void ProtoBotCommander::onEnd(bool isWinner)
 {
-	std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
-	(isWinner ? Overall_Wins++ : Overall_Loses++);
+	//std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
+	//(isWinner ? Overall_Wins++ : Overall_Loses++);
 
+	/*
 	switch(BWAPI::Broodwar->enemy()->getRace())
 	{
 		case BWAPI::Races::Protoss: (isWinner ? versusProtoss_Wins++ : versusProtoss_Loses++); break;
 		case BWAPI::Races::Zerg: (isWinner ? versusZerg_Wins++ : versusZerg_Loses++); break;
 		case BWAPI::Races::Terran:(isWinner ? versusTerran_Wins++ : versusTerran_Loses++); break;
 	}
+	*/
+	//const float totalGames = float(Overall_Wins + Overall_Loses);
 
-	const float totalGames = float(Overall_Wins + Overall_Loses);
+	//std::cout << "Win Percentage: " << float(Overall_Wins) / totalGames << "\n";
+	//std::cout << "Wins: " << Overall_Wins << "\n";
+	//std::cout << "Loses: " << Overall_Loses << "\n";
 
-	std::cout << "Win Percentage: " << float(Overall_Wins) / totalGames << "\n";
-	std::cout << "Wins: " << Overall_Wins << "\n";
-	std::cout << "Loses: " << Overall_Loses << "\n";
-	std::cout << "Versus Protoss Wins: " << versusProtoss_Wins << "\n";
+	/*std::cout << "Versus Protoss Wins: " << versusProtoss_Wins << "\n";
 	std::cout << "Versus Protoss Loses: " << versusProtoss_Loses << "\n";
 	std::cout << "Versus Zerg Wins: " << versusZerg_Wins << "\n";
 	std::cout << "Versus Zeg Loses: " << versusZerg_Loses << "\n";
 	std::cout << "Versus Terran Wins: " << versusTerran_Wins << "\n";
-	std::cout << "Versus Terran Loses: " << versusTerran_Loses << "\n";
+	std::cout << "Versus Terran Loses: " << versusTerran_Loses << "\n";*/
 
 
     // Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
@@ -273,7 +275,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		if (scoutingManager.canAcceptCombatScout(unit_type))
 		{
 			scoutingManager.assignScout(unit);
-			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
+			//BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
 			return;
 		}
 	}
@@ -463,7 +465,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 void ProtoBotCommander::onEnemyMainFound(const BWAPI::TilePosition& tp) {
 	enemy_.main = tp;
 	enemy_.frameLastUpdateMain = BWAPI::Broodwar->getFrameCount();
-	BWAPI::Broodwar->printf("[Commander] Enemy main set to (%d,%d)", tp.x, tp.y);
+	//BWAPI::Broodwar->printf("[Commander] Enemy main set to (%d,%d)", tp.x, tp.y);
 
 	// StrategyManager.onEnemyMain(tp);
 }
@@ -471,7 +473,7 @@ void ProtoBotCommander::onEnemyMainFound(const BWAPI::TilePosition& tp) {
 void ProtoBotCommander::onEnemyNaturalFound(const BWAPI::TilePosition& tp) {
 	enemy_.natural = tp;
 	enemy_.frameLastUpdateNat = BWAPI::Broodwar->getFrameCount();
-	BWAPI::Broodwar->printf("[Commander] Enemy natural set to (%d,%d)", tp.x, tp.y);
+	//BWAPI::Broodwar->printf("[Commander] Enemy natural set to (%d,%d)", tp.x, tp.y);
 
 	// StrategyManager.onEnemyNaturalFound(tp)
 }

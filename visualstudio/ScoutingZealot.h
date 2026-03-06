@@ -92,8 +92,10 @@ private:
     BWAPI::Position homeRetreatPoint() const;
     void computeEnemyNatural();
     BWAPI::Position pickEdgeOfVisionSpot();
+    BWAPI::Position pickNaturalChokeSpot();
     BWAPI::Position findReachableNearby(const BWAPI::Position& desired) const;
-    
+    BWAPI::Position pushAwayFromResources(const BWAPI::Position& p, int clearPx) const;
+
     bool threatenedNow() const;
     void issueMove(const BWAPI::Position& p, bool force = false, int reissueDist = 32);
 

@@ -230,12 +230,13 @@ void ScoutingObserver::onFrame() {
     }
 
     // tiny debug
+    /*
     Broodwar->drawTextMap(observer->getPosition(), "\x11OBS slot %d", slotIndex);
     for (int i = 0; i < (int)posts.size(); ++i) {
         auto c = (i == 0) ? Colors::Yellow : (i == 1 ? Colors::Cyan : (i == 2 ? Colors::Purple : Colors::Orange));
         Broodwar->drawCircleMap(posts[i], 8, c, true);
         Broodwar->drawTextMap(posts[i], "#%d", i);
-    }
+    }*/
 }
 
 /* ------------ helpers ------------- */
@@ -310,7 +311,7 @@ void ScoutingObserver::issueMove(const BWAPI::Position& p, bool force, int reiss
         observer->move(p);
         lastMoveFrame = now;
     }
-    Broodwar->drawLineMap(observer->getPosition(), p, Colors::White);
+   //Broodwar->drawLineMap(observer->getPosition(), p, Colors::White);
 }
 
 bool ScoutingObserver::detectorThreat(BWAPI::Position& avoidTo) const 

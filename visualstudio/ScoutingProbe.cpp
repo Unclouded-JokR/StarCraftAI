@@ -77,7 +77,7 @@ namespace {
             return;
         }
         lastPrintFrame = now;
-        BWAPI::Broodwar->printf("%s", msg.c_str());
+        //BWAPI::Broodwar->printf("%s", msg.c_str());
     }
 
     static bool shouldPrintEveryNFrames(int& lastPrintFrame, int everyNFrames)
@@ -111,13 +111,13 @@ namespace {
         }
 
         const std::string msg = buildMsg();
-        BWAPI::Broodwar->printf("%s", msg.c_str());
+        //BWAPI::Broodwar->printf("%s", msg.c_str());
     }
 }
 
 void ScoutingProbe::onStart() {
     if (!Map::Instance().Initialized()) {
-        Broodwar->printf("ScoutingProbe: BWEM not initialized.");
+        //Broodwar->printf("ScoutingProbe: BWEM not initialized.");
         return;
     }
     buildStartTargets();
@@ -145,7 +145,7 @@ void ScoutingProbe::assign(BWAPI::Unit unit) {
     if (!unit || !unit->exists()) return;
     scout = unit;
     scout->stop();
-    Broodwar->printf("[Scouting] Assigned scout: %s (id=%d)", scout->getType().c_str(), scout->getID());
+    //Broodwar->printf("[Scouting] Assigned scout: %s (id=%d)", scout->getType().c_str(), scout->getID());
     lastHP = scout->getHitPoints();
     lastShields = scout->getShields();
     aStarEscapeUntilFrame = 0;
@@ -159,7 +159,7 @@ void ScoutingProbe::assign(BWAPI::Unit unit) {
 
 void ScoutingProbe::onUnitDestroy(BWAPI::Unit unit) {
     if (unit && scout && unit == scout) {
-        Broodwar->printf("[Scouting] Scout destroyed. Clearing assignment.");
+        //Broodwar->printf("[Scouting] Scout destroyed. Clearing assignment.");
         scout = nullptr;
         state = State::Done;
     }
@@ -216,7 +216,7 @@ void ScoutingProbe::onFrame() {
 
         if (seeAnyEnemyBuildingNear(goal, 800))
         {
-            Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
+            //Broodwar->printf("[Scouting] Enemy main at (%d,%d)", tp.x, tp.y);
 
             if (manager && !manager->getEnemyMain().has_value())
             {
@@ -339,7 +339,7 @@ void ScoutingProbe::handleReturningCargoState() {
             }
         }
     }
-    Broodwar->drawTextMap(scout->getPosition(), "Returning cargo...");
+    //Broodwar->drawTextMap(scout->getPosition(), "Returning cargo...");
 }
 
 BWAPI::Unit ScoutingProbe::findClosestDepot(const BWAPI::Position& from) const {
@@ -369,7 +369,7 @@ void ScoutingProbe::buildStartTargets() {
             return Position(myStart).getDistance(Position(a)) <
                 Position(myStart).getDistance(Position(b));
         });
-    Broodwar->printf("[Scouting] %d start targets.", static_cast<int>(startTargets.size()));
+    //Broodwar->printf("[Scouting] %d start targets.", static_cast<int>(startTargets.size()));
 }
 
 void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool force)
@@ -413,7 +413,7 @@ void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool for
         lastMoveIssueFrame = Broodwar->getFrameCount();
     }
 
-    Broodwar->drawLineMap(scout->getPosition(), target, Colors::Yellow);
+    //Broodwar->drawLineMap(scout->getPosition(), target, Colors::Yellow);
 }
 
 
@@ -551,7 +551,7 @@ bool ScoutingProbe::tryGasSteal()
         gasStealRequested = true;
         gasStealRequestFrame = now;
         nextCheesePollFrame = now;
-        Broodwar->printf("[GasSteal] Requested Assimilator cheese (unit=%d).", scout->getID());
+        //Broodwar->printf("[GasSteal] Requested Assimilator cheese (unit=%d).", scout->getID());
     }
 
     // 4) Poll approval (throttle to avoid spamming)
@@ -595,14 +595,14 @@ bool ScoutingProbe::tryGasSteal()
     // Try to issue the build (may take multiple frames)
     if (BWAPI::Unit a = findAssimilatorOnTargetGeyser())
     {
-        BWAPI::Broodwar->printf("[GasSteal] Assimilator started (id=%d).", a->getID());
+        //BWAPI::Broodwar->printf("[GasSteal] Assimilator started (id=%d).", a->getID());
         gasStealDone = true;
         return true;
     }
 
     if (scout->build(BWAPI::UnitTypes::Protoss_Assimilator, gtp))
     {
-        BWAPI::Broodwar->printf("[GasSteal] Build command accepted at (%d,%d). Waiting for start...", gtp.x, gtp.y);
+        //BWAPI::Broodwar->printf("[GasSteal] Build command accepted at (%d,%d). Waiting for start...", gtp.x, gtp.y);
         nextGasStealRetryFrame = now + 12; // short retry window while we wait for it to appear
         return true;
     }
@@ -630,7 +630,7 @@ bool ScoutingProbe::tryHarassWorker() {
         scout->attack(best);
         lastMoveIssueFrame = Broodwar->getFrameCount();
     }
-    Broodwar->drawCircleMap(best->getPosition(), 10, Colors::Red, true);
+    //Broodwar->drawCircleMap(best->getPosition(), 10, Colors::Red, true);
     return true;
 }
 
@@ -1272,7 +1272,7 @@ bool ScoutingProbe::tryConfirmEnemyMainByStartLocations()
         manager->setEnemyMain(foundTp);
     }
 
-    BWAPI::Broodwar->printf("[Scouting] Enemy main confirmed near start (%d,%d)", foundTp.x, foundTp.y);
+    //BWAPI::Broodwar->printf("[Scouting] Enemy main confirmed near start (%d,%d)", foundTp.x, foundTp.y);
     state = State::GasSteal;
     return true;
 }

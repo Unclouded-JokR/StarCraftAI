@@ -386,7 +386,7 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
     {
         if (it->getUnitReference()->getID() == unit->getID())
         {
-            std::cout << "Builder has died\n";
+            //std::cout << "Builder has died\n";
 
             const BWAPI::Unit unitAvalible = getUnitToBuild(it->requestedPositionToBuild);
 
@@ -411,11 +411,11 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
 
                 it->setUnitReference(unitAvalible);
                 it->updatePath(pathToLocation);
-                std::cout << "Replacement found and updated path\n";
+                //std::cout << "Replacement found and updated path\n";
             }
             else
             {
-                std::cout << "Replacement could not be found\n";
+                //std::cout << "Replacement could not be found\n";
             }
 
             break;
@@ -715,7 +715,7 @@ void BuildManager::pumpUnit()
         const BWAPI::UnitType type = unit->getType();
         if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
         {
-            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 5)
+            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
             {
                 trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
             }
@@ -948,7 +948,7 @@ void BuildManager::overrideBuildOrder(int buildOrderId)
             activeBuildOrderStep = 0;
             buildOrderActive = true;
             buildOrderCompleted = false;
-            std::cout << "Overriding Build Order: " << buildOrderNameToString(buildOrders[i].name) << "\n";
+            //std::cout << "Overriding Build Order: " << buildOrderNameToString(buildOrders[i].name) << "\n";
             return;
         }
     }
@@ -983,7 +983,7 @@ void BuildManager::runBuildOrderOnFrame()
     {
         buildOrderCompleted = true;
         buildOrderActive = false;
-        std::cout << "Build Order Completed: " << buildOrderNameToString(bo.name) << "\n";
+        //std::cout << "Build Order Completed: " << buildOrderNameToString(bo.name) << "\n";
         return;
     }
 

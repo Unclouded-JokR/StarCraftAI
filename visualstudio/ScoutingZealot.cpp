@@ -97,7 +97,7 @@ void ScoutingZealot::onStart() {
     lastMoveIssueFrame = 0;
     lastThreatFrame = -10000;
     g_myMainPos = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
-    BWAPI::Broodwar->printf("[ZealotScout] onStart()");
+    //BWAPI::Broodwar->printf("[ZealotScout] onStart()");
 }
 
 void ScoutingZealot::assign(BWAPI::Unit unit) {
@@ -105,8 +105,8 @@ void ScoutingZealot::assign(BWAPI::Unit unit) {
     if (!unit || !unit->exists()) return;
 
     zealot = unit;
-    BWAPI::Broodwar->printf("[ZealotScout] assign id=%d type=%s",
-        zealot->getID(), zealot->getType().c_str());
+    //BWAPI::Broodwar->printf("[ZealotScout] assign id=%d type=%s",
+        //zealot->getID(), zealot->getType().c_str());
 
     if (isProxyPatroller)
     {
@@ -134,7 +134,7 @@ void ScoutingZealot::setEnemyMain(const TilePosition& tp) {
     // Immediate course set to the natural edge perch (don’t step into main first)
     if (enemyNaturalPos.isValid()) {
         issueMove(pickEdgeOfVisionSpot(), /*force*/true);
-        BWAPI::Broodwar->printf("[ZealotScout] setEnemyMain (%d,%d)", tp.x, tp.y);
+        //BWAPI::Broodwar->printf("[ZealotScout] setEnemyMain (%d,%d)", tp.x, tp.y);
     }
 }
 void ScoutingZealot::onUnitDestroy(BWAPI::Unit unit) {
@@ -146,6 +146,7 @@ void ScoutingZealot::onUnitDestroy(BWAPI::Unit unit) {
 
 void ScoutingZealot::onFrame() {
     if (!zealot || !zealot->exists() || state == State::Done) return;
+    /*
     BWAPI::Broodwar->drawTextMap(zealot->getPosition(),
         "\x11Zealot[%d] %s", zealot->getID(),
            (state == State::Idle ?              "Idle" :
@@ -154,13 +155,14 @@ void ScoutingZealot::onFrame() {
             state == State::MoveToNatural ?     "MoveToNatural" :
             state == State::HoldEdge ?          "HoldEdge" :
             state == State::Reposition ?        "Reposition" : "Done"));
+    */
 
     // --- hard avoid enemy main every frame ---
     if (enemyMainTile.has_value() && zealot && zealot->exists()) {
         const auto* mainArea = BWEM::Map::Instance().GetArea(*enemyMainTile);
         const auto* hereArea = BWEM::Map::Instance().GetArea(zealot->getTilePosition());
         if (mainArea && hereArea == mainArea) {
-            BWAPI::Broodwar->drawTextMap(zealot->getPosition(), "\x08[AVOID MAIN]");
+            //BWAPI::Broodwar->drawTextMap(zealot->getPosition(), "\x08[AVOID MAIN]");
             issueMove(pickEdgeOfVisionSpot(), /*force*/true);
             return;
         }
@@ -220,7 +222,7 @@ void ScoutingZealot::onFrame() {
 
         if (enemyNaturalPos.isValid())
         {
-            const BWAPI::Position perch = pickEdgeOfVisionSpot();
+            const BWAPI::Position perch = pickNaturalChokeSpot();
             issueMove(perch);
 
             if (zealot->getDistance(perch) < 96)
@@ -267,12 +269,12 @@ void ScoutingZealot::onFrame() {
         {
             if (returnStateAfterReposition == State::MoveToNatural)
             {
-                issueMove(pickEdgeOfVisionSpot(), true);
+                issueMove(pickNaturalChokeSpot(), true);
                 state = State::MoveToNatural;
             }
             else
             {
-                issueMove(pickEdgeOfVisionSpot(), true);
+                issueMove(pickNaturalChokeSpot(), true);
                 state = State::HoldEdge;
             }
 
@@ -379,8 +381,8 @@ void ScoutingZealot::computeEnemyNatural() {
     }
 
     if (enemyNaturalPos.isValid()) {
-        Broodwar->drawCircleMap(enemyNaturalPos, 10, Colors::Cyan, true);
-        Broodwar->drawTextMap(enemyNaturalPos, "nat");
+        //Broodwar->drawCircleMap(enemyNaturalPos, 10, Colors::Cyan, true);
+        //->drawTextMap(enemyNaturalPos, "nat");
     }
 
 }
@@ -510,6 +512,121 @@ BWAPI::Position ScoutingZealot::pickEdgeOfVisionSpot()
     return cachedPerch;
 }
 
+BWAPI::Position ScoutingZealot::pickNaturalChokeSpot()
+{
+    if (!zealot || !zealot->exists())
+    {
+        return BWAPI::Positions::Invalid;
+    }
+
+    if (!enemyNaturalPos.isValid())
+    {
+        return enemyNaturalPos;
+    }
+
+    const int now = BWAPI::Broodwar->getFrameCount();
+
+    if (cachedPerch.isValid())
+    {
+        const bool recent = (now - cachedPerchFrame) < kPerchRecalcFrames;
+        const bool closeEnough = zealot->getDistance(cachedPerch) <= 96;
+
+        if (recent || closeEnough)
+        {
+            return cachedPerch;
+        }
+    }
+
+    const BWAPI::Position myCenter = g_myMainPos.isValid()
+        ? g_myMainPos
+        : BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
+
+    const BWEM::Area* natArea = BWEM::Map::Instance().GetArea(enemyNaturalTile);
+    if (!natArea)
+    {
+        BWAPI::Position fallback = findReachableNearby(clampToMapPx(enemyNaturalPos, 8));
+        cachedPerch = fallback;
+        cachedPerchFrame = now;
+        return cachedPerch;
+    }
+
+    BWAPI::Position best = BWAPI::Positions::Invalid;
+    double bestScore = 1e30;
+
+    for (const BWEM::ChokePoint* cp : natArea->ChokePoints())
+    {
+        if (!cp)
+        {
+            continue;
+        }
+
+        BWAPI::Position c(cp->Center());
+        c = clampToMapPx(c, 8);
+
+        if (!c.isValid())
+        {
+            continue;
+        }
+
+        if (!hasGroundPath(myCenter, c))
+        {
+            continue;
+        }
+
+        // Score:
+        //  - close to natural
+        //  - also "toward our base" by preferring shorter ground path to our base
+        const double dn = groundPathLengthPx(enemyNaturalPos, c);
+        const double dh = groundPathLengthPx(myCenter, c);
+
+        const double score = dn + (0.45 * dh);
+
+        if (score < bestScore)
+        {
+            bestScore = score;
+            best = c;
+        }
+    }
+
+    if (!best.isValid())
+    {
+        BWAPI::Position fallback = findReachableNearby(clampToMapPx(enemyNaturalPos, 8));
+        cachedPerch = fallback;
+        cachedPerchFrame = now;
+        return cachedPerch;
+    }
+
+    // Nudge the choke point a little toward our base so we stay on "our side"
+    {
+        int vx = myCenter.x - best.x;
+        int vy = myCenter.y - best.y;
+
+        if (vx == 0 && vy == 0)
+        {
+            vx = 1;
+        }
+
+        const double len = std::max(1.0, std::sqrt(double(vx * vx + vy * vy)));
+        const int stepPx = 3 * 32; // 3 tiles toward home
+
+        best = BWAPI::Position(
+            best.x + int((vx / len) * stepPx),
+            best.y + int((vy / len) * stepPx)
+        );
+
+        best = clampToMapPx(best, 8);
+    }
+
+    // Avoid silly spots around geysers/minerals, then snap to reachable
+    best = pushAwayFromResources(best, 3 * 32);
+    best = findReachableNearby(best);
+
+    cachedPerch = best;
+    cachedPerchFrame = now;
+
+    return cachedPerch;
+}
+
 BWAPI::Position ScoutingZealot::findReachableNearby(const BWAPI::Position& desired) const
 {
     if (!zealot || !zealot->exists())
@@ -579,6 +696,55 @@ BWAPI::Position ScoutingZealot::findReachableNearby(const BWAPI::Position& desir
     // Give up, return desired (caller may still handle stuck)
     return desired;
 }
+
+BWAPI::Position ScoutingZealot::pushAwayFromResources(const BWAPI::Position& start, int clearPx) const
+{
+    BWAPI::Position p = start;
+
+    if (!p.isValid())
+    {
+        return p;
+    }
+
+    for (int i = 0; i < 6; ++i)
+    {
+        BWAPI::Unit r = closestNeutralResourceTo(p);
+        if (!r)
+        {
+            break;
+        }
+
+        const BWAPI::Position rp = r->getPosition();
+        const int d = rp.getApproxDistance(p);
+
+        if (d >= clearPx)
+        {
+            break;
+        }
+
+        int vx = p.x - rp.x;
+        int vy = p.y - rp.y;
+
+        if (vx == 0 && vy == 0)
+        {
+            vx = 1;
+        }
+
+        const double len = std::max(1.0, std::sqrt(double(vx * vx + vy * vy)));
+        const int need = clearPx - d;
+
+        p = BWAPI::Position(
+            p.x + int((vx / len) * need),
+            p.y + int((vy / len) * need)
+        );
+
+        p = clampToMapPx(p, 16);
+    }
+
+    return p;
+}
+
+
 
 double ScoutingZealot::groundPathLengthPx(const BWAPI::Position& from, const BWAPI::Position& to)
 {
@@ -719,7 +885,7 @@ void ScoutingZealot::issueMove(const BWAPI::Position& p, bool force, int reissue
         lastMoveIssueFrame = now;
     }
 
-    Broodwar->drawLineMap(zealot->getPosition(), p, Colors::Orange);
+    //Broodwar->drawLineMap(zealot->getPosition(), p, Colors::Orange);
 }
 
 BWAPI::Position ScoutingZealot::clampToMapPx(const BWAPI::Position& p, int marginPx) {
@@ -766,46 +932,6 @@ void ScoutingZealot::rebuildProxyPoints()
 
         const BWEM::Area* a = BWEM::Map::Instance().GetArea(t);
         return a == area;
-    };
-
-    auto pushAwayFromResources = [&](BWAPI::Position p, int clearPx) -> BWAPI::Position
-    {
-        for (int i = 0; i < 6; ++i)
-        {
-            BWAPI::Unit r = closestNeutralResourceTo(p);
-            if (!r)
-            {
-                break;
-            }
-
-            const BWAPI::Position rp = r->getPosition();
-            const int d = rp.getApproxDistance(p);
-
-            if (d >= clearPx)
-            {
-                break;
-            }
-
-            int vx = p.x - rp.x;
-            int vy = p.y - rp.y;
-
-            if (vx == 0 && vy == 0)
-            {
-                vx = 1;
-            }
-
-            const double len = std::max(1.0, std::sqrt(double(vx * vx + vy * vy)));
-            const int need = clearPx - d;
-
-            p = BWAPI::Position(
-                p.x + int((vx / len) * need),
-                p.y + int((vy / len) * need)
-            );
-
-            p = clampToMapPx(p, 16);
-        }
-
-        return p;
     };
 
     auto addPoint = [&](BWAPI::Position p)
