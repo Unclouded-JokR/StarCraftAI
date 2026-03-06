@@ -247,7 +247,9 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 						endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
 					}
 					catch (const runtime_error& e) {
+#ifdef DEBUG_PATH
 						cout << e.what() << endl;
+#endif
 						finalPath = Path();
 					}
 
@@ -643,7 +645,9 @@ void AStar::fillAreaPathCache() {
 				subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
 				}
 				catch (const runtime_error& e) {
+#ifdef DEBUG_PATH
 					cout << e.what() << endl;
+#endif
 					// Don't add pair to chokepoint path cache 
 					continue;
 				}
