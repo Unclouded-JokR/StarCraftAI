@@ -73,7 +73,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	while (openSet.size() > 0) {
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
-			cout << "Time spent in main path: " << totalTimer.getElapsedTimeInMilliSec() << endl;
+			cout << "TIME LIMIT EXCEEDED in main path: " << totalTimer.getElapsedTimeInMilliSec() << endl;
 			return Path();
 		}
 
@@ -87,8 +87,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 		// Check if path is finishedx
 		if (currentNode.tile == end) {
-			Timer endTimer = Timer();
-			endTimer.start();
 			BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
 			BWAPI::Position dir;
 			BWAPI::Position currentWaypoint;
@@ -158,8 +156,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			reverse(positions.begin(), positions.end());
 
 #ifdef DEBUG_PATH
-			endTimer.stop();
-			cout << "Time spent backtracking + smoothing path: " << endTimer.getElapsedTimeInMilliSec() << endl;
 			totalTimer.stop();
 			cout << "Milliseconds spent generating path: " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
 #endif
@@ -220,20 +216,13 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 #ifdef DEBUG_PATH
 							cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
 #endif
-							if (toStartOfPrecache.positions.size() == 0
-								|| precachedPath.positions.size() == 0
-								|| toEnd.positions.size() == 0) 
-							{
-								return generateSubPath(_start, unitType, _end, isInteractableEndpoint);
-							}
-
-							totalTimer.stop();
 						}
 						catch (const runtime_error& e) {
 							cout << e.what() << endl;
 							return Path();
 						}
 
+						totalTimer.stop();
 						return finalPath;
 					}
 					else {
@@ -247,24 +236,27 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 						return Path();
 					}
 
-					Path startPath = generateSubPath(_start, unitType, subPath.positions.at(0));
-					Path endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
+					Path startPath;
+					Path endPath;
+					Path finalPath;
 
-					vector<BWAPI::Position> finalVec;
-					// Attatching start
-					finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
-					// Attatching precache
-					finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
-					// Attatching end
-					finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
-					const int finalDist = startPath.distance + subPath.distance + endPath.distance;
+					try {
+						startPath = generateSubPath(_start, unitType, subPath.positions.at(0));
+						endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
+					}
+					catch (const runtime_error& e) {
+						cout << e.what() << endl;
+						finalPath = Path();
+					}
+
+					finalPath = startPath + subPath + endPath;
 
 #ifdef DEBUG_PATH
 					cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
 #endif
 					totalTimer.stop();
-					if (finalVec.size() > 0) {
-						return Path(finalVec, finalDist);
+					if (finalPath.positions.size() > 0) {
+						return finalPath;
 					}
 				}
 			}
@@ -760,11 +752,15 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 		return true;
 	}
 
-	BWAPI::Unitset specialBuildings = BWAPI::Broodwar->getUnitsOnTile(tile.x, tile.y, BWAPI::Filter::IsSpecialBuilding);
-	// Get rid of annoying special buildings
-	for (const auto& unit : specialBuildings) {
-		if (unit) {
-			return false;
+	for (const auto& staticBuilding : bwem_map.StaticBuildings()) {
+		BWAPI::TilePosition topLeft = staticBuilding.get()->TopLeft();
+		BWAPI::TilePosition bottomRight = staticBuilding.get()->BottomRight();
+
+		// check if tile is in this static building's tiles
+		if (tile.x >= topLeft.x && tile.x <= bottomRight.x) {
+			if (tile.y >= topLeft.y && tile.x <= bottomRight.y) {
+				return false;
+			}
 		}
 	}
 

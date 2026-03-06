@@ -5,7 +5,6 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor)
 	this->leader = leader;
 	this->squadId = squadId;
 	this->squadColor = squadColor;
-	this->currentState = &IdleState::getInstance();
 }
 
 void Squad::onFrame() {
@@ -229,6 +228,18 @@ void Squad::addUnit(BWAPI::Unit unit) {
 	}
 
 	units.push_back(unit);
+
+	// Unit should do whatever the squad is currently doing
+	if (currentState == &DefendingState::getInstance()) {
+		unit->attack(currentDefensivePosition);
+	}
+	if (currentState == &ReinforcingState::getInstance()) {
+		unit->attack(currentReinforcePosition);
+	}
+	if (currentState == &AttackingState::getInstance()) {
+		unit->attack(currentAttackPosition);
+	}
+
 	BWAPI::Broodwar->printf("Unit %d added to Squad %d", unit->getID(), squadId);
 }
 

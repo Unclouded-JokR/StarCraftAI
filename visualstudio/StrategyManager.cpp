@@ -610,11 +610,11 @@ std::vector<Action> StrategyManager::onFrame()
 	//Add timer on supply cap to make us attack so we dont waste time.
 	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * 4) && enemyBaselocations.size() != 0)
+		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * NUM_SQUADS_TO_ATTACK))
 		{
 			isFinalAttack = true;
 
-			/*const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();*/
+			
 			BWAPI::Position attackPos;
 
 			// Prioritize attacking known enemy buildings
@@ -634,13 +634,13 @@ std::vector<Action> StrategyManager::onFrame()
 				}
 			}
 
-			// If no valid attack position, pick enemy base first
-			if (attackPos == BWAPI::Positions::Invalid) {
-				attackPos = BWAPI::Position(enemyBaselocations.at(0));
+			// If no valid attack position, pick enemy base first if there is any
+			if (attackPos == BWAPI::Positions::Invalid && enemyBaselocations.size() > 0){
+				attackPos = enemyBaselocations.at(enemyBaselocations.size()-1);
 			}
 
-			// Send action only if theres a new attack position
-			if (attackPos != lastAttackPos) {
+			// Send action only if theres a new, valid attack position
+			if (attackPos != lastAttackPos && attackPos != BWAPI::Positions::Invalid) {
 				Action attack;
 				attack.type = Action::ACTION_ATTACK;
 				attack.attackPosition = attackPos;
@@ -666,7 +666,7 @@ std::vector<Action> StrategyManager::onFrame()
 				continue;
 			}
 
-			if (!unit->getType().isBuilding()) continue;
+			if (unit->getType().isBuilding()) continue;
 
 			unitToAttack = unit;
 			const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());

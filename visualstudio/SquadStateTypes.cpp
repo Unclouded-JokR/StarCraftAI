@@ -12,19 +12,22 @@ void AttackingState::Enter(Squad* squad) {
 	cout << "(" << squad->squadId << ")" << "Entered ATTACKING state" << endl;
 #endif
 }
+
 void AttackingState::Update(Squad* squad) {
+
+	if (squad->currentAttackPosition == squad->commandPos) {
+		return;
+	}
+
+	squad->currentAttackPosition = squad->commandPos;
 	for (BWAPI::Unit& squadMate : squad->units)
 	{
-		if (squadMate->isIdle()) {
-			squadMate->attack(squad->commandPos);
-		}
+		squadMate->attack(squad->currentAttackPosition);
 	}
 }
+
 void AttackingState::Exit(Squad* squad) {
 	CombatManager::AttackingSquads.erase(remove(CombatManager::AttackingSquads.begin(), CombatManager::AttackingSquads.end(), squad), CombatManager::AttackingSquads.end());
-	squad->kitePos = BWAPI::Positions::Invalid;
-	squad->currentPath = Path();
-	squad->currentPathIdx = 0;
 
 #ifdef DEBUG_STATES
 	cout << "(" << squad->squadId << ")" << "Exited ATTACKING state" << endl;
@@ -59,9 +62,6 @@ void DefendingState::Update(Squad* squad) {
 
 void DefendingState::Exit(Squad* squad) {
 	CombatManager::DefendingSquads.erase(remove(CombatManager::DefendingSquads.begin(), CombatManager::DefendingSquads.end(), squad), CombatManager::DefendingSquads.end());
-	squad->kitePos = BWAPI::Positions::Invalid;
-	squad->currentPath = Path();
-	squad->currentPathIdx = 0;
 
 #ifdef DEBUG_STATES
 	cout << "(" << squad->squadId << ")" << "Exited DEFENDING state" << endl;
@@ -85,14 +85,14 @@ void ReinforcingState::Enter(Squad* squad) {
 
 void ReinforcingState::Update(Squad* squad) {
 	// Every frame, check if squad is out of range
-	if (squad->currentDefensivePosition.getApproxDistance(squad->commandPos) > MAX_REINFORCE_DIST
-		|| squad->currentDefensivePosition.getApproxDistance(squad->leader->getPosition()) > MAX_REINFORCE_DIST) {
+	if (squad->currentDefensivePosition != BWAPI::Positions::Invalid 
+		&& squad->currentDefensivePosition.getApproxDistance(squad->commandPos) > MAX_REINFORCE_DIST) {
 		squad->setState(DefendingState::getInstance());
 		return;
 	}
 
 	// If no enemies are left but still in range, return to defending state
-	int searchRadius = 200;
+	int searchRadius = 100;
 	BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsInRadius(squad->commandPos, searchRadius, BWAPI::Filter::IsEnemy);
 
 #ifdef DEBUG_STATES
@@ -104,14 +104,20 @@ void ReinforcingState::Update(Squad* squad) {
 		return;
 	}
 
-	squad->leader->attack(squad->currentReinforcePosition);
-	for (BWAPI::Unit& squadMate : squad->units)
-	{
-		if (squadMate->isIdle()) {
-			if (squad->currentReinforcePosition.getApproxDistance(squad->commandPos) > 100) {
-				squad->currentReinforcePosition = squad->commandPos;
-			}
+	if (squad->currentReinforcePosition == BWAPI::Positions::Invalid) {
+		squad->currentReinforcePosition = squad->commandPos;
+		for (BWAPI::Unit& squadMate : squad->units)
+		{
 			squadMate->attack(squad->currentReinforcePosition);
+		}
+	}
+	else if (squad->currentReinforcePosition != squad->commandPos) {
+		if (squad->currentReinforcePosition.getApproxDistance(squad->commandPos) > 100) {
+			squad->currentReinforcePosition = squad->commandPos;
+			for (BWAPI::Unit& squadMate : squad->units)
+			{
+				squadMate->attack(squad->currentReinforcePosition);
+			}
 		}
 	}
 }
