@@ -10,6 +10,8 @@ Builder::Builder(BWAPI::Unit unitReference, BWAPI::UnitType buildingToConstruct,
 	if (referencePath.positions.empty() && debug) std::cout << "Path is empty to place " << buildingToConstruct << " at " << positionToBuild << "\n";
 
 	unitReference->stop();
+
+	lastPosition = unitReference->getPosition();
 }
 
 Builder::~Builder() 
@@ -44,7 +46,25 @@ void Builder::onFrame()
 	}
 	else
 	{
-		if (pathIndex == referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
+		if(lastPosition == unitReference->getPosition())
+		{
+			idleFrames++;
+			std::cout << "[Builder " << unitReference->getID() << " is idling] Idle Frames: " << idleFrames << "\n";
+		}
+		else
+		{
+			idleFrames = 239;
+		}
+		lastPosition = unitReference->getPosition();
+
+		if (idleFrames >= IDLE_FRAMES_BEFORE_FORCE_NEXT_POSITION)
+		{
+			std::cout << "Builder Idling updating position index\n";
+			pathIndex++;
+			idleFrames = 239;
+		}
+
+		if (pathIndex >= referencePath.positions.size() || unitReference->getDistance(requestedPositionToBuild) < CONSTRUCT_DISTANCE_THRESHOLD)
 		{
 			unitReference->build(buildingToConstruct, BWAPI::TilePosition(requestedPositionToBuild));
 			if(debug) BWAPI::Broodwar->drawTextMap(unitReference->getPosition(), "BUILDING");
