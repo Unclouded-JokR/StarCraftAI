@@ -73,7 +73,9 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	while (openSet.size() > 0) {
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
+#ifdef DEBUG_PATH
 			cout << "TIME LIMIT EXCEEDED in main path: " << totalTimer.getElapsedTimeInMilliSec() << endl;
+#endif
 			return Path();
 		}
 
@@ -383,7 +385,9 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
+#ifdef DEBUG_PATH
 			cout << "Time spent in subpath: " << subTimer.getElapsedTimeInMilliSec() << endl;
+#endif
 			throw runtime_error("TIME LIMIT REACHED IN PATH : Empty path returned.");
 		}
 
