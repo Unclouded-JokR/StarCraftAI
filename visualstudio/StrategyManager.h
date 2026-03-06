@@ -12,6 +12,7 @@
 #define MIDGAME_TIME 5
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
+#define NUM_SQUADS_TO_ATTACK 4
 
 //If we sit at same supply level for 4 minutes, all in with squads to end the game.
 #define FRAMES_UNTIL_SUPPLY_ALL_IN 5760

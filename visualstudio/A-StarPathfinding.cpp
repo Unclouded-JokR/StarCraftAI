@@ -26,9 +26,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	earlyExpansionTiles.clear();
 #endif
 
-	//cout << "Actual distance: " << _start.getDistance(_end) << endl;
-	//cout << "Heuristic distance: " << chebyshevDistance(_start, _end) << endl;
-
 	vector<BWAPI::Position> positions = vector<BWAPI::Position>();
 	int finalDistance = 0;
 	// Checks if either the starting or ending tile positions are invalid
@@ -76,7 +73,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 	while (openSet.size() > 0) {
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && totalTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
-			cout << "TIME LIMIT REACHED IN PATH: Empty path returned." << endl;
+			cout << "TIME LIMIT EXCEEDED in main path: " << totalTimer.getElapsedTimeInMilliSec() << endl;
 			return Path();
 		}
 
@@ -90,8 +87,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 
 		// Check if path is finishedx
 		if (currentNode.tile == end) {
-			Timer endTimer = Timer();
-			endTimer.start();
 			BWAPI::Position prevPos = BWAPI::Position(currentNode.tile);
 			BWAPI::Position dir;
 			BWAPI::Position currentWaypoint;
@@ -161,8 +156,6 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 			reverse(positions.begin(), positions.end());
 
 #ifdef DEBUG_PATH
-			endTimer.stop();
-			cout << "Time spent backtracking + smoothing path: " << endTimer.getElapsedTimeInMilliSec() << endl;
 			totalTimer.stop();
 			cout << "Milliseconds spent generating path: " << totalTimer.getElapsedTimeInMilliSec() << " ms" << endl;
 #endif
@@ -204,23 +197,29 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 							currentNode.tile = parent[TileToIndex(currentNode.tile)];
 						}
 
-						Path currentPath = Path(currentPositions, currentDistance);
-
+						Path currentPath;
 						Path toStartOfPrecache;
-						if (currentPath.positions.size() > 0) {
-							toStartOfPrecache = generateSubPath(currentPositions.at(currentPositions.size() - 1), unitType, precachedPath.positions.at(0));
-						}
+						Path toEnd;
+						Path finalPath;
 
-						Path toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+						try {
+							currentPath = Path(currentPositions, currentDistance);
 
-						Path finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
+							toStartOfPrecache;
+							if (currentPath.positions.size() > 0) {
+								toStartOfPrecache = generateSubPath(currentPositions.at(currentPositions.size() - 1), unitType, precachedPath.positions.at(0));
+							}
+
+							toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
+							
+							finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
 #ifdef DEBUG_PATH
-						cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
+							cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
 #endif
-						if (toStartOfPrecache.positions.size() == 0 
-							|| precachedPath.positions.size() == 0 
-							|| toEnd.positions.size() == 0) {
-							return generateSubPath(_start, unitType, _end, isInteractableEndpoint);
+						}
+						catch (const runtime_error& e) {
+							cout << e.what() << endl;
+							return Path();
 						}
 
 						totalTimer.stop();
@@ -237,24 +236,27 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 						return Path();
 					}
 
-					Path startPath = generateSubPath(_start, unitType, subPath.positions.at(0));
-					Path endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
+					Path startPath;
+					Path endPath;
+					Path finalPath;
 
-					vector<BWAPI::Position> finalVec;
-					// Attatching start
-					finalVec.insert(finalVec.end(), startPath.positions.begin(), startPath.positions.end());
-					// Attatching precache
-					finalVec.insert(finalVec.end(), precachedPath.positions.begin(), precachedPath.positions.end());
-					// Attatching end
-					finalVec.insert(finalVec.end(), endPath.positions.begin(), endPath.positions.end());
-					const int finalDist = startPath.distance + subPath.distance + endPath.distance;
+					try {
+						startPath = generateSubPath(_start, unitType, subPath.positions.at(0));
+						endPath = generateSubPath(subPath.positions.at(subPath.positions.size() - 1), unitType, _end);
+					}
+					catch (const runtime_error& e) {
+						cout << e.what() << endl;
+						finalPath = Path();
+					}
+
+					finalPath = startPath + subPath + endPath;
 
 #ifdef DEBUG_PATH
 					cout << "Connected to nearby cached path: " << startPath.positions.size() << " | " << precachedPath.positions.size() << " | " << endPath.positions.size() << endl;
 #endif
 					totalTimer.stop();
-					if (finalVec.size() > 0) {
-						return Path(finalVec, finalDist);
+					if (finalPath.positions.size() > 0) {
+						return finalPath;
 					}
 				}
 			}
@@ -381,7 +383,8 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 		// Time limit for path generations
 		if (TIME_LIMIT_ENABLED && subTimer.getElapsedTimeInMilliSec() > TIME_LIMIT_MS) {
 			subTimer.stop();
-			return Path();
+			cout << "Time spent in subpath: " << subTimer.getElapsedTimeInMilliSec() << endl;
+			throw runtime_error("TIME LIMIT REACHED IN PATH : Empty path returned.");
 		}
 
 		if (!earlyExpansion) {
@@ -632,7 +635,14 @@ void AStar::fillAreaPathCache() {
 				subPath = ChokepointPathCache[make_pair(cp1, cp2)];
 			}
 			else {
+				try {
 				subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
+				}
+				catch (const runtime_error& e) {
+					cout << e.what() << endl;
+					// Don't add pair to chokepoint path cache 
+					continue;
+				}
 				ChokepointPathCache[make_pair(cp1, cp2)] = subPath;
 
 #ifdef DRAW_PRECACHE
@@ -737,17 +747,21 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 		return false;
 	}
 
-	BWAPI::Unitset specialBuildings = BWAPI::Broodwar->getUnitsOnTile(tile.x, tile.y, BWAPI::Filter::IsSpecialBuilding);
-	// Get rid of annoying special buildings
-	for (const auto& unit : specialBuildings) {
-		if (unit) {
-			return false;
-		}
-	}
-
 	// If the tile is the end tile, returns true. Further processing will depend on the boolean isInteractableEndpoint set in GeneratePath()
 	if (tile == end && isInteractableEndpoint) {
 		return true;
+	}
+
+	for (const auto& staticBuilding : bwem_map.StaticBuildings()) {
+		BWAPI::TilePosition topLeft = staticBuilding.get()->TopLeft();
+		BWAPI::TilePosition bottomRight = staticBuilding.get()->BottomRight();
+
+		// check if tile is in this static building's tiles
+		if (tile.x >= topLeft.x && tile.x <= bottomRight.x) {
+			if (tile.y >= topLeft.y && tile.x <= bottomRight.y) {
+				return false;
+			}
+		}
 	}
 
 	// Gets measurements in terms of WalkPositions (8x8)

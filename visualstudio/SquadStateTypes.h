@@ -3,7 +3,7 @@
 #include "Squad.h"
 #include "CombatManager.h"
 
-//#define DEBUG_STATES
+#define DEBUG_STATES
 #define MAX_REINFORCE_DIST 1500
 
 // AttackingState occurs when the squad is specifically told to attack a location (i.e. base, etc.)

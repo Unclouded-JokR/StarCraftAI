@@ -54,7 +54,6 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
-	// Only process new attack if command position is a new position
 	for (const auto& squad : Squads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
@@ -66,38 +65,30 @@ void CombatManager::defend(BWAPI::Position position) {
 		squad->currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
 	}
+
+	// If half of the attack force is dead, return to defending
+	if (Squads.size() < (int) floor(NUM_SQUADS_TO_ATTACK / 2)) {
+		for (auto& squad : AttackingSquads) {
+			squad->currentDefensivePosition = position;
+			squad->setState(DefendingState::getInstance());
+		}
+	}
 }
 
 void CombatManager::reinforce(BWAPI::Position position) {
 	for (auto& squad : DefendingSquads) {
-		if (reinforceOutOfRange(squad, position)) {
+		if (squad->currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
 			continue;
 		}
-
-		squad->commandPos = position;
-		squad->setState(ReinforcingState::getInstance());
+		else {
+			squad->commandPos = position;
+			squad->setState(ReinforcingState::getInstance());
+		}
 	}
 
 	for (auto& squad : ReinforcingSquads) {
-		if (reinforceOutOfRange(squad, position)) {
-			squad->setState(DefendingState::getInstance());
-			continue;
-		}
-
 		squad->commandPos = position;
 	}
-}
-
-// Returns true if:
-// - Current defensive position too far from reinforce position
-// - Squad leader is too far from defensive position
-bool CombatManager::reinforceOutOfRange(Squad* squad, BWAPI::Position reinforcePos) {
-	if (squad->currentDefensivePosition.getApproxDistance(reinforcePos) > MAX_REINFORCE_DIST
-		|| squad->currentDefensivePosition.getApproxDistance(squad->leader->getPosition()) > MAX_REINFORCE_DIST) {
-		return true;
-	}
-
-	return false;
 }
 
 Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
@@ -113,7 +104,9 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 
 	Squad* newSquad = new Squad(leaderUnit, id, randomColor);
 	Squads.push_back(newSquad);
-	IdleSquads.push_back(newSquad);
+
+	newSquad->currentState = &IdleState::getInstance();
+	newSquad->setState(IdleState::getInstance());
 
 #ifdef DEBUG_CM
 	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
@@ -156,6 +149,7 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 		return false; // refuse: unit is a scout
 	}
 
+	// Assigning to an existing squad if available
 	for (auto& squad : Squads) {
 		if (squad->units.size() < MAX_SQUAD_SIZE) {
 			squad->addUnit(unit);
