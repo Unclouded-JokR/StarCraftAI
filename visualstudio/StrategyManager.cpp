@@ -146,9 +146,6 @@ std::vector<Action> StrategyManager::onFrame()
 		}
 	}
 
-	//This is the normal formula we would use for calculting saturation but we will focus on purely gateways
-	//saturatedNexus = (ProtoBot_buildings.gateway / 4) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.stargate) + ((ProtoBot_buildings.gateway / 2) + ProtoBot_buildings.roboticsFacility);
-
 	//4 Gateways per nexus should be built
 	saturatedNexus = (ProtoBot_buildings.gateway / 4);
 
@@ -239,7 +236,7 @@ std::vector<Action> StrategyManager::onFrame()
 				//Not expanding properlly after having enough gateways
 				if (ProtoBot_buildings.nexus == saturatedNexus)
 				{
-					std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
 					Action expand;
 					expand.type = Action::ACTION_EXPAND;
 					expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
@@ -253,7 +250,7 @@ std::vector<Action> StrategyManager::onFrame()
 				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
 				{
 					mineralExcessToExpand *= 2;
-					std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
 
 					Action expand;
 					expand.type = Action::ACTION_EXPAND;
@@ -267,7 +264,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
-					std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
 
 					Action expand;
