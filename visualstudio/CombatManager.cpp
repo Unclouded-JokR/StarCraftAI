@@ -236,8 +236,6 @@ void CombatManager::handleTextCommand(std::string text) {
 		centerPos = BWAPI::Position(690, 362);
 	}
 
-	cout << "Map name: " << BWAPI::Broodwar->mapName() << endl;
-
 	for (auto& squad : Squads) {
 		const BWAPI::Position leaderPos = squad->leader->getPosition();
 		const BWAPI::UnitType leaderType = squad->leader->getType();

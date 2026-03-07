@@ -94,7 +94,9 @@ void Squad::flockingHandler() {
 			// Alignment Vector
 			double neighborvelocity_x = neighbor->getVelocityX();
 			double neighborvelocity_y = neighbor->getVelocityY();
+#ifdef DEBUG_FLOCKING
 			BWAPI::Broodwar->printf("Neighbor Velocity: X: %f, Y: %f", neighborvelocity_x, neighborvelocity_y);
+#endif
 			averageVelocity += VectorPos(neighborvelocity_x, neighborvelocity_y);
 		}
 
@@ -145,12 +147,14 @@ void Squad::flockingHandler() {
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec, BWAPI::Colors::Purple);
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec, BWAPI::Colors::Blue);
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + finalDirection, BWAPI::Colors::Green);
-		
+
+#ifdef DEBUG_FLOCKING
 		BWAPI::Broodwar->printf("Separation magnitude: %f", BWAPI::Position(0,0).getDistance(separationVec));
 		BWAPI::Broodwar->printf("Cohesion magnitude: %f", BWAPI::Position(0,0).getDistance(cohesionVec));
 		BWAPI::Broodwar->printf("Alignment magnitude: %f", BWAPI::Position(0,0).getDistance(alignmentVec));
 		BWAPI::Broodwar->printf("Leader magnitude: %f", BWAPI::Position(0,0).getDistance(leaderDirection));
 		BWAPI::Broodwar->printf("FinalDirection magnitude: %f", BWAPI::Position(0,0).getDistance(finalDirection));
+#endif
 
 		//unit->attack(unitPos + finalDirection);
 	}
@@ -239,8 +243,9 @@ void Squad::addUnit(BWAPI::Unit unit) {
 	if (currentState == &AttackingState::getInstance()) {
 		unit->attack(currentAttackPosition);
 	}
-
+#ifdef DEBUG_SQUAD
 	BWAPI::Broodwar->printf("Unit %d added to Squad %d", unit->getID(), squadId);
+#endif
 }
 
 // Despite the name, this method is not about attack-moving
