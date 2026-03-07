@@ -134,7 +134,7 @@ void NexusEconomy::onFrame()
 	//make this solution better.
 	if (lifetime < 500) int y = addMissedResources();
 
-
+	//BWAPI::Unitset WorkersToBeKicked;
 
 	/*
 		===========================
@@ -148,8 +148,8 @@ void NexusEconomy::onFrame()
 	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));*/
 
 	//Problem start here
-	/*
 	
+	/*
 	for (BWAPI::Unit mineral : minerals)
 	{
 		BWAPI::Broodwar->drawLineMap(nexus->getPosition(), mineral->getPosition(), BWAPI::Color(0, 0, 255));
@@ -162,8 +162,8 @@ void NexusEconomy::onFrame()
 	
 	//std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
 	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
+	
 	*/
-
 	//Problem end here
 
 	/*if (BWAPI::Broodwar->getFrameCount() % 500 == 0 && BWAPI::Broodwar->getFrameCount() != 0)
@@ -196,10 +196,7 @@ void NexusEconomy::onFrame()
 
 		if (minerals.size() == 0) break;
 
-		if (worker->isIdle())
-		{
-			workerOrder[worker] = 0;
-		}
+
 
 
 		//If a worker is constructing skip over them until they are done.
@@ -226,7 +223,7 @@ void NexusEconomy::onFrame()
 				workerOrder[worker] = 1;
 
 			}
-			else if (assignedResource.find(worker) == assignedResource.end())
+			else if (assignedResource.find(worker) == assignedResource.end() || workerOrder[worker] == 0)
 			{
 				//std::cout << "reached this point\n";
 				BWAPI::Unit closestMineral = GetClosestMineralToWorker(worker);
@@ -236,6 +233,7 @@ void NexusEconomy::onFrame()
 
 					worker->gather(closestMineral);
 					workerOrder[worker] = 1;
+					//std::cout << "worker " << worker->getID() << " assigned to mineral " << closestMineral->getID() << "\n";
 
 
 				}
@@ -251,6 +249,7 @@ void NexusEconomy::onFrame()
 			{
 				worker->rightClick(assignedResource[worker]);
 			}
+			
 			//continue;
 		}
 
@@ -295,8 +294,8 @@ void NexusEconomy::onFrame()
 	//{
 	//	std::cout << BWAPI::Broodwar->getFrameCount() << " test: " << BWAPI::Broodwar->self()->gatheredMinerals() << "\n";
 	//}
-
-
+	
+	
 
 }
 
@@ -384,6 +383,26 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 		//::cout << "Gyser Depleted...\n";
 		//assimilator = nullptr;
 		resourceWorkerCount[assimilator] = 0;
+		BWAPI::Unitset workersToRelocate;
+		for (BWAPI::Unit worker : workers)
+		{
+			if (workersToRelocate.size() == 3) break;
+
+			if (assignedResource[worker] == vespeneGyser)
+			{
+				workersToRelocate.insert(worker);
+			}
+			
+		}
+
+		//std::cout << "Worker size before: " << workers.size() << "\n";
+		for (BWAPI::Unit worker : workersToRelocate)
+		{
+			workers.erase(worker);
+		}
+		//std::cout << "Worker size after: " << workers.size() << "\n";
+
+		economyReference->resourcesDepletedTranfer(workersToRelocate, *this);
 		return true;
 	}
 
@@ -706,6 +725,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 		BWAPI::Unit appended;
 		for (int ii = 0; ii < 3; ii++)
 		{
+			largeDist = 999;
 			for (auto u : minerals)
 			{
 				//compare = nexus->getPosition().getApproxDistance(u->getPosition());
@@ -713,6 +733,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 				if (compare < largeDist && !closestMinerals.contains(u))
 				{
 					appended = u;
+					largeDist = compare;
 				}
 			}
 

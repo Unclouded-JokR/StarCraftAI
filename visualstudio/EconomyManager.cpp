@@ -228,7 +228,7 @@ void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, 
     {
         if (nexusEconomy.nexusID == transferFrom.nexusID) continue;
 
-        if (nexusEconomy.workers.size() < nexusEconomy.optimalWorkerAmount)
+        if (nexusEconomy.workers.size()+1 < nexusEconomy.optimalWorkerAmount || (nexusEconomy.workers.size() < nexusEconomy.optimalWorkerAmount && nexusEconomy.nexus->getTrainingQueue().empty()))
         {
             //std::cout << "Moving workers from Nexus Economy " << transferFrom.nexusID << " to Nexus Economy " << nexusEconomy.nexusID << "\n";
             //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size before: " << nexusEconomy.workers.size() << "\n";
@@ -240,7 +240,7 @@ void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, 
 
                 //std::cout << "Adding worker\n";
 
-                if (nexusEconomy.workers.size() == nexusEconomy.optimalWorkerAmount || workersAdded.size() == workersToTransfer.size())
+                if ((nexusEconomy.workers.size()+1 == nexusEconomy.optimalWorkerAmount && !nexusEconomy.nexus->getTrainingQueue().empty())|| workersAdded.size() == workersToTransfer.size() || nexusEconomy.workers.size() == nexusEconomy.optimalWorkerAmount)
                 {
                     break;
                 }
@@ -250,13 +250,16 @@ void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, 
 
             //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
         }
+
+        //Remove workers added.
+        for (BWAPI::Unit worker : workersAdded)
+        {
+            workersToTransfer.erase(worker);
+        }
+        workersAdded.clear();
     }
 
-    //Remove workers added.
-    for (BWAPI::Unit worker : workersAdded)
-    {
-        workersToTransfer.erase(worker);
-    }
+   
 
     //std::cout << "Workers left to transfer: " << workersToTransfer.size() << "\n";
 
@@ -274,8 +277,14 @@ void EconomyManager::resourcesDepletedTranfer(BWAPI::Unitset workersToTransfer, 
             for (BWAPI::Unit worker : workersToTransfer)
             {
                 nexusEconomy.assignWorker(worker);
+                workersAdded.insert(worker);
             }
             //std::cout << "Nexus Economy " << nexusEconomy.nexusID << " size after: " << nexusEconomy.workers.size() << "\n";
+            for (BWAPI::Unit worker : workersAdded)
+            {
+                workersToTransfer.erase(worker);
+            }
+            workersAdded.clear();
         }
     }
 
