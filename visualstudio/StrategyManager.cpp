@@ -70,7 +70,7 @@ std::vector<Action> StrategyManager::onFrame()
 	std::vector<Action> actionsToReturn;
 
 	//Debug: Drawing choke points to get an idea on where the BWEM can have us position squads
-	for (const BWEM::ChokePoint* choke : ProtoBotArea_SquadPlacements)
+	/*for (const BWEM::ChokePoint* choke : ProtoBotArea_SquadPlacements)
 	{
 		if (PositionsFilled[choke])
 		{
@@ -81,7 +81,7 @@ std::vector<Action> StrategyManager::onFrame()
 			BWAPI::Broodwar->drawCircleMap(BWAPI::Position(choke->Center()), 10, BWAPI::Colors::Red, true);
 		}
 		
-	}
+	}*/
 
 	//In-Game Time book keeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
@@ -155,7 +155,7 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		if (building.type.isResourceDepot())
 		{
-			BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
+			//BWAPI::Broodwar->drawCircleMap(building.lastKnownPosition, 5, BWAPI::Colors::Red, true);
 			enemyBaselocations.push_back(building.lastKnownPosition);
 		}
 	}
@@ -193,7 +193,7 @@ std::vector<Action> StrategyManager::onFrame()
 	}
 
 	//Debug
-	BWAPI::Broodwar->drawTextScreen(0, 50, "Strategy Unit Production Debug:");
+	/*BWAPI::Broodwar->drawTextScreen(0, 50, "Strategy Unit Production Debug:");
 	if (!buildOrderCompleted)
 	{
 		BWAPI::Broodwar->drawTextScreen(0, 60, "Strategy Production Phase: %s", "Build Order");
@@ -202,7 +202,7 @@ std::vector<Action> StrategyManager::onFrame()
 	{
 		BWAPI::Broodwar->drawTextScreen(0, 60, "Strategy Production Phase: %s", (ProtoBot_ProductionFocus == 0 ? "Expanding Influence" : "Unit Production"));
 	}
-	BWAPI::Broodwar->drawTextScreen(0, 70, "Production goal index: %d", ProductionGoal_index);
+	BWAPI::Broodwar->drawTextScreen(0, 70, "Production goal index: %d", ProductionGoal_index);*/
 
 	//First is minerals avalible
 	//Second is gas avalible
@@ -434,7 +434,7 @@ std::vector<Action> StrategyManager::onFrame()
 			}
 			else
 			{
-				std::cout << "Met Production Goal\n";
+				//std::cout << "Met Production Goal\n";
 				timer = 0;
 				ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 				ProductionGoal_index++;
@@ -447,7 +447,7 @@ std::vector<Action> StrategyManager::onFrame()
 				//Not expanding properlly after having enough gateways
 				if (ProtoBot_buildings.nexus == saturatedNexus)
 				{
-					std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
 					Action expand;
 					expand.type = Action::ACTION_EXPAND;
 					expand.expansionToConstruct = BWAPI::UnitTypes::Protoss_Nexus;
@@ -458,7 +458,7 @@ std::vector<Action> StrategyManager::onFrame()
 				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
 				{
 					mineralExcessToExpand *= 2;
-					std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
 
 					Action expand;
 					expand.type = Action::ACTION_EXPAND;
@@ -469,7 +469,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
-					std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
 
 					Action expand;
@@ -518,7 +518,7 @@ std::vector<Action> StrategyManager::onFrame()
 			//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
 			{
-				std::cout << "BUILD ACTION: Requesting to warp Forge\n";
+				//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 				Action action;
 				action.type = Action::ACTION_BUILD;
 				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Forge;
@@ -529,7 +529,7 @@ std::vector<Action> StrategyManager::onFrame()
 			//Only need 1 cybernetics core
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
 			{
-				std::cout << "build action: requesting to warp forge\n";
+				//std::cout << "build action: requesting to warp forge\n";
 				Action action;
 				action.type = Action::ACTION_BUILD;
 				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
@@ -540,7 +540,7 @@ std::vector<Action> StrategyManager::onFrame()
 			//Should only build 1 robotics facility
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 			{
-				std::cout << "build action: requesting to warp robotics facility\n";
+				//std::cout << "build action: requesting to warp robotics facility\n";
 				Action action;
 				action.type = Action::ACTION_BUILD;
 				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Robotics_Facility;
@@ -551,7 +551,7 @@ std::vector<Action> StrategyManager::onFrame()
 			//Only 1 observatory
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
 			{
-				std::cout << "Build Action: requesting to warp observatory\n";
+				//std::cout << "Build Action: requesting to warp observatory\n";
 				Action action;
 				action.type = Action::ACTION_BUILD;
 				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Observatory;
@@ -563,7 +563,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 			{
-				std::cout << "build action: requesting to warp citadel of adun\n";
+				//std::cout << "build action: requesting to warp citadel of adun\n";
 				Action action;
 				action.type = Action::ACTION_BUILD;
 				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
@@ -573,7 +573,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
 			{
-				std::cout << "build action: requesting to warp templar archives\n";
+				//std::cout << "build action: requesting to warp templar archives\n";
 				Action action;
 				action.type = Action::ACTION_BUILD;
 				action.buildingToConstruct = BWAPI::UnitTypes::Protoss_Templar_Archives;
