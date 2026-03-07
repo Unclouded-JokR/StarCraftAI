@@ -113,6 +113,7 @@ void ScoutingZealot::assign(BWAPI::Unit unit) {
         proxyPoints.clear();
         proxyNextIdx = 0;
         proxyCurTarget = BWAPI::Positions::Invalid;
+        proxyRebuildReadyFrame = BWAPI::Broodwar->getFrameCount() + 1;
         state = State::ProxyPatrol;
         return;
     }
@@ -175,7 +176,7 @@ void ScoutingZealot::onFrame() {
         // wait until we know the main
         if (isProxyPatroller)
         {
-            rebuildProxyPoints();
+            proxyRebuildReadyFrame = BWAPI::Broodwar->getFrameCount() + 1;
             state = State::ProxyPatrol;
         }
         else
@@ -290,7 +291,7 @@ void ScoutingZealot::onFrame() {
         const int now = Broodwar->getFrameCount();
 
         // If zealot is missing points, rebuild here.
-        if (proxyPoints.empty())
+        if (proxyPoints.empty() && now >= proxyRebuildReadyFrame)
         {
             rebuildProxyPoints();
         }
@@ -335,8 +336,9 @@ void ScoutingZealot::onFrame() {
     }
 
     // tiny debug
-    if (enemyNaturalPos.isValid())
+    /*if (enemyNaturalPos.isValid())
         Broodwar->drawCircleMap(enemyNaturalPos, 12, Colors::Cyan, true);
+        */
 }
 
 /* -------- helpers -------- */
@@ -904,6 +906,13 @@ bool ScoutingZealot::isNear(const BWAPI::Position& a, const BWAPI::Position& b, 
 
 void ScoutingZealot::rebuildProxyPoints()
 {
+    if (proxyPointsBuiltOnce && !cachedProxyPoints.empty())
+    {
+        proxyPoints = cachedProxyPoints;
+        proxyNextIdx = 0;
+        proxyCurTarget = BWAPI::Positions::Invalid;
+        return;
+    }
     proxyPoints.clear();
     proxyNextIdx = 0;
     proxyCurTarget = BWAPI::Positions::Invalid;
@@ -978,6 +987,7 @@ void ScoutingZealot::rebuildProxyPoints()
         }
 
         proxyPoints.push_back(p);
+
     };
 
     
@@ -1067,7 +1077,7 @@ void ScoutingZealot::rebuildProxyPoints()
 
     // 4) Perimeter ring: boundary tiles of our main area (proxy pylons tucked around edges)
     {
-        const int stepTiles = 2; // lower = more points;
+        const int stepTiles = 4; // lower = more points;
         const BWAPI::TilePosition topLeft = myMainArea->TopLeft();
         const BWAPI::TilePosition bottomRight = myMainArea->BottomRight();
 
@@ -1096,7 +1106,7 @@ void ScoutingZealot::rebuildProxyPoints()
             }
         }
     }
-
+    /*
     // 5) Air-close but ground-far points (cliff/maze-y proxy spots near us)
     {
         const double kMinRatio = 1.4;
@@ -1150,7 +1160,7 @@ void ScoutingZealot::rebuildProxyPoints()
                 }
             }
         }
-    }
+    }*/
     auto addRing = [&](BWAPI::Position center, int radius, int n)
     {
         for (int i = 0; i < n; ++i)
@@ -1207,6 +1217,10 @@ void ScoutingZealot::rebuildProxyPoints()
     
 
     proxyPoints = std::move(ordered);
+
+
+    cachedProxyPoints = proxyPoints;
+    proxyPointsBuiltOnce = !cachedProxyPoints.empty();
 }
 
 

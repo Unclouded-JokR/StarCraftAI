@@ -97,6 +97,8 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Strategy);
 	std::vector<Action> actions = strategyManager.onFrame();
 
+	bool issuedScoutThisFrame = false;
+
 	for (const Action& action : actions)
 	{
 		switch (action.type)
@@ -108,7 +110,14 @@ void ProtoBotCommander::onFrame()
 				requestBuild(action.buildingToConstruct);
 				break;
 			case Action::ACTION_SCOUT:
-				getUnitToScout();
+				if (!issuedScoutThisFrame)
+				{
+					BWAPI::Unit scout = getUnitToScout();
+					if (scout)
+					{
+						issuedScoutThisFrame = true;
+					}
+				}
 				break;
 			case Action::ACTION_ATTACK:
 				combatManager.attack(action.attackPosition);

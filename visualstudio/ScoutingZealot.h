@@ -67,6 +67,7 @@ private:
     static constexpr int kProxyArriveDist = 96;
     static constexpr int kProxyMinBetweenMoves = 12;
     static constexpr double kMaxGroundDist = 180 * 32;
+    int proxyRebuildReadyFrame = 0;
 
     std::vector<BWAPI::Position> proxyPoints;
     int proxyNextIdx = 0;
@@ -74,6 +75,8 @@ private:
     int proxyNextMoveFrame = 0;
     BWAPI::Position proxyCurTarget = BWAPI::Positions::Invalid;
     bool isProxyPatroller = false;
+    std::vector<BWAPI::Position> cachedProxyPoints;
+    bool proxyPointsBuiltOnce = false;
 
     // --- Scout Stuck fix --- 
 
