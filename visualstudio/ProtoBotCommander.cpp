@@ -272,7 +272,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	if (unit_type == BWAPI::UnitTypes::Protoss_Observer)
 	{
-		if (scoutingManager.canAcceptObserverScout(unit_type))
+		if (scoutingManager.canAcceptObserverScout())
 		{
 			scoutingManager.assignScout(unit);
 			//BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
