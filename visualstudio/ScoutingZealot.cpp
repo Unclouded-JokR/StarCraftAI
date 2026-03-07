@@ -110,7 +110,9 @@ void ScoutingZealot::assign(BWAPI::Unit unit) {
 
     if (isProxyPatroller)
     {
-        rebuildProxyPoints();
+        proxyPoints.clear();
+        proxyNextIdx = 0;
+        proxyCurTarget = BWAPI::Positions::Invalid;
         state = State::ProxyPatrol;
         return;
     }

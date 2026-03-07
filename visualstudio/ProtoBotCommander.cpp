@@ -270,7 +270,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 
 	if (unit_type == BWAPI::UnitTypes::Protoss_Observer)
 	{
-		if (scoutingManager.canAcceptCombatScout(unit_type))
+		if (scoutingManager.canAcceptObserverScout(unit_type))
 		{
 			scoutingManager.assignScout(unit);
 			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
@@ -394,66 +394,82 @@ int ProtoBotCommander::checkAvailableSupply()
 //Also get rid of the self get Units, eco should return a unit, not a null ptr.
 BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
-	auto isValidUnit = [](BWAPI::Unit u) {
-		return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self();
+	auto isValidUnit = [](BWAPI::Unit u)
+		{
+			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self();
 		};
 
 	const int frame = BWAPI::Broodwar->getFrameCount();
 
-	// Switch to combat scouting at/after the threshold exactly once
-	if (frame >= kCombatScoutFrame && !scoutingManager.combatScoutingStarted()) {
+	if (frame >= kCombatScoutFrame && !scoutingManager.combatScoutingStarted())
+	{
 		scoutingManager.setCombatScoutingStarted(true);
 	}
 
-	// 1) Before combat-scouting: keep exactly 1 worker scout
-	if (!scoutingManager.combatScoutingStarted()) {
-		if (scoutingManager.canAcceptWorkerScout()) {
-			if (BWAPI::Unit w = economyManager.getUnitScout(); isValidUnit(w)) {
+	// Before combat scouting: keep exactly one worker scout
+	if (!scoutingManager.combatScoutingStarted())
+	{
+		if (scoutingManager.canAcceptWorkerScout())
+		{
+			BWAPI::Unit w = economyManager.getUnitScout();
+			if (isValidUnit(w))
+			{
 				scoutingManager.assignScout(w);
-				//std::cout << "Assigned worker scout " << w->getID() << "\n";
+				return w;
 			}
 		}
+
 		return nullptr;
 	}
 
-	// 2) After combat-scouting starts: never request worker scouts again.
-	// Fill up to max combat scouts using combat units.
-	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Zealot))
+	// After combat scouting starts, assign at most one scout per call.
+
+	if (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Zealot))
 	{
 		BWAPI::Unit u = combatManager.getAvailableUnit(
-			[](BWAPI::Unit x) {
+			[](BWAPI::Unit x)
+			{
 				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Zealot;
 			}
 		);
-		if (!isValidUnit(u)) break;
-		scoutingManager.assignScout(u);
-		//std::cout << "Assigned combat scout (Zealot) " << u->getID() << "\n";
+
+		if (isValidUnit(u))
+		{
+			scoutingManager.assignScout(u);
+			return u;
+		}
 	}
 
-	while (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Dragoon))
+	if (scoutingManager.canAcceptCombatScout(BWAPI::UnitTypes::Protoss_Dragoon))
 	{
 		BWAPI::Unit u = combatManager.getAvailableUnit(
-			[](BWAPI::Unit x) {
+			[](BWAPI::Unit x)
+			{
 				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Dragoon;
 			}
 		);
-		if (!isValidUnit(u)) break;
-		scoutingManager.assignScout(u);
-		//std::cout << "Assigned combat scout (Dragoon) " << u->getID() << "\n";
+
+		if (isValidUnit(u))
+		{
+			scoutingManager.assignScout(u);
+			return u;
+		}
 	}
 
-	while (scoutingManager.canAcceptObserverScout())
+	if (scoutingManager.canAcceptObserverScout())
 	{
-		BWAPI::Unit u = combatManager.getAvailableUnit
-		(
+		BWAPI::Unit u = combatManager.getAvailableUnit(
 			[](BWAPI::Unit x)
 			{
 				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Observer;
 			}
 		);
-		if (!u) break;
-		scoutingManager.assignScout(u);
-		//std::cout << "Assigned observer scout " << u->getID() << "\n";
+
+		if (isValidUnit(u))
+		{
+			scoutingManager.assignScout(u);
+			return u;
+		}
 	}
 
 	return nullptr;
