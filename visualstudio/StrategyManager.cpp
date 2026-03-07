@@ -16,6 +16,7 @@ void StrategyManager::onStart()
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
 	ProductionGoal_index = 0;
+	timer = 0;
 	mineralExcessToExpand = 1000;
 	ProtoBot_Areas.clear();
 	ProtoBotArea_SquadPlacements.clear();
@@ -610,11 +611,11 @@ std::vector<Action> StrategyManager::onFrame()
 	//Add timer on supply cap to make us attack so we dont waste time.
 	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * 4) && enemyBaselocations.size() != 0)
+		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * NUM_SQUADS_TO_ATTACK))
 		{
 			isFinalAttack = true;
 
-			/*const BWAPI::Unitset enemyUnits = BWAPI::Broodwar->enemy()->getUnits();*/
+			
 			BWAPI::Position attackPos;
 
 			// Prioritize attacking known enemy buildings
@@ -634,13 +635,13 @@ std::vector<Action> StrategyManager::onFrame()
 				}
 			}
 
-			// If no valid attack position, pick enemy base first
-			if (attackPos == BWAPI::Positions::Invalid) {
-				attackPos = BWAPI::Position(enemyBaselocations.at(0));
+			// If no valid attack position, pick enemy base first if there is any
+			if (attackPos == BWAPI::Positions::Invalid && enemyBaselocations.size() > 0){
+				attackPos = enemyBaselocations.at(enemyBaselocations.size()-1);
 			}
 
-			// Send action only if theres a new attack position
-			if (attackPos != lastAttackPos) {
+			// Send action only if theres a new, valid attack position
+			if (attackPos != lastAttackPos && attackPos != BWAPI::Positions::Invalid) {
 				Action attack;
 				attack.type = Action::ACTION_ATTACK;
 				attack.attackPosition = attackPos;
@@ -656,24 +657,17 @@ std::vector<Action> StrategyManager::onFrame()
 	// Only check for defensive positions and actions if we're not in the final attack phase
 	if (!isFinalAttack) {
 		BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
-		BWAPI::Unitset enemyCombatUnits;
-
-		for (BWAPI::Unit unit : unitsOnVisison)
-		{
-			if (!unit->getType().isBuilding())
-			{
-				enemyCombatUnits.insert(unit);
-			}
-		}
 
 		bool enemyAttacking = false;
 		BWAPI::Unit unitToAttack;
 
-		for (const BWAPI::Unit unit : enemyCombatUnits)
+		for (const BWAPI::Unit unit : unitsOnVisison)
 		{
 			if (!unit->exists() || unit == nullptr) {
 				continue;
 			}
+
+			if (unit->getType().isBuilding()) continue;
 
 			unitToAttack = unit;
 			const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
