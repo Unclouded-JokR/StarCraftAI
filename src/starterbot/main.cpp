@@ -1,6 +1,6 @@
 #include <BWAPI.h>
 #include <BWAPI/Client.h>
-#include "../../visualstudio/ProtoBotCommander.h"
+#include "..\protobot\ProtoBotCommander.h"
 #include "ReplayParser.h"
 #include <iostream>
 #include <thread>

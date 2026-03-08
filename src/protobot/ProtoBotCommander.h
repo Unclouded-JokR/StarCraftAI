@@ -1,0 +1,108 @@
+#pragma once
+#include <BWAPI.h>
+#include <vector> 
+#include <cstdlib>
+#include <variant>
+
+#include "StrategyManager.h"
+#include "EconomyManager.h"
+#include "InformationManager.h"
+#include "ScoutingManager.h"
+#include "CombatManager.h"
+#include "TimerManager.h"
+#include "BuildManager.h"
+#include "../starterbot/MapTools.h"
+#include "../starterbot/Tools.h"
+#include "BWEM/src/bwem.h"
+
+#define FRAMES_PER_SECOND 24
+
+using namespace BWEM;
+
+namespace
+{
+	auto& theMap = BWEM::Map::Instance();
+
+	// 2:15 in frames
+	constexpr int kCombatScoutFrame = 3240;
+}
+
+struct EnemyLocations {
+	std::optional<BWAPI::TilePosition> main;
+	std::optional<BWAPI::TilePosition> natural;
+	int frameLastUpdateMain = -1;
+	int frameLastUpdateNat = -1;
+};
+
+struct ThreatQueryResult;
+
+class ProtoBotCommander
+{
+
+public:
+	MapTools m_mapTools;
+	TimerManager timerManager;
+	EconomyManager economyManager;
+	InformationManager informationManager;
+	ScoutingManager scoutingManager;
+	BuildManager buildManager;
+	CombatManager combatManager;
+	StrategyManager strategyManager;
+
+	ProtoBotCommander();
+
+	/*
+	* BWAPI specific methods
+	*/
+	void onStart();
+	void onFrame();
+	void onEnd(bool isWinner);
+	void onUnitDestroy(BWAPI::Unit unit);
+	void onUnitMorph(BWAPI::Unit unit);
+	void onSendText(std::string text);
+	void onUnitCreate(BWAPI::Unit unit);
+	void onUnitComplete(BWAPI::Unit unit);
+	void onUnitShow(BWAPI::Unit unit);
+	void onUnitHide(BWAPI::Unit unit);
+	void onUnitRenegade(BWAPI::Unit unit);
+	void drawDebugInformation();
+
+	//Ecconomy Manager Methods
+	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
+	std::vector<NexusEconomy> getNexusEconomies();
+
+	//Information Manager Methods
+	const std::set<BWAPI::Unit>& getKnownEnemyUnits();
+	const std::map<BWAPI::Unit, EnemyBuildingInfo>& getKnownEnemyBuildings();
+	const EnemyLocations& enemy() const { return enemy_; }
+	EnemyLocations& enemy() { return enemy_; }
+	void onEnemyMainFound(const BWAPI::TilePosition& tp);
+	void onEnemyNaturalFound(const BWAPI::TilePosition& tp);
+	int getEnemyGroundThreatAt(BWAPI::Position p) const;
+	int getEnemyDetectionAt(BWAPI::Position p) const;
+	ThreatQueryResult queryThreatAt(const BWAPI::Position& pos) const;
+	bool isAirThreatened(const BWAPI::Position& pos, int threshold) const;
+	bool isDetectorThreatened(const BWAPI::Position& pos) const;
+
+	//Build Manager Methods
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
+	bool checkUnitIsPlanned(BWAPI::UnitType building);
+	bool buildOrderCompleted();
+	bool requestedBuilding(BWAPI::UnitType building);
+	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
+	void requestBuild(BWAPI::UnitType building);
+	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
+	bool checkCheeseRequest(BWAPI::Unit);
+	bool alreadySentRequest(int unitID);
+	bool checkWorkerIsConstructing(BWAPI::Unit);
+	int checkAvailableSupply();
+
+	// Scouting Manager Methods
+	BWAPI::Unit getUnitToScout();
+
+	// Strategy Manager Methods
+	bool shouldGasSteal();
+
+private:
+	EnemyLocations enemy_;
+};
