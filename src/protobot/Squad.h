@@ -48,13 +48,8 @@ public:
 	}
 
 private:
-
-	void simpleFlock();
-	void flockingHandler();
 	void pathHandler();
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
 	void attackUnit(BWAPI::Unit unit, BWAPI::Unit target);
 	void kitingAttack(BWAPI::Unit unit, BWAPI::Unit target);
-	double getMagnitude(BWAPI::Position vector);
-	VectorPos normalize(VectorPos vector);
 };

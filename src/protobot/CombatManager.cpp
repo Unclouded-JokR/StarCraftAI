@@ -7,8 +7,10 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
+#ifndef BWEM_DISABLED
 	AStar::clearPathCache();
 	AStar::fillUncachedAreaPairs();
+#endif
 }
 
 void CombatManager::onFrame() {
@@ -17,9 +19,12 @@ void CombatManager::onFrame() {
 		squad->onFrame();
 	}
 
+#ifndef BWEM_DISABLED
+
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
 		AStar::fillAreaPathCache();
 	}
+#endif
 
 
 #ifdef DRAW_PRECACHE //In A-StarPathfinding.h

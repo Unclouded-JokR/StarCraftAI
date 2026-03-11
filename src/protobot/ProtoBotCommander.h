@@ -16,6 +16,7 @@
 #include "BWEM/src/bwem.h"
 
 #define FRAMES_PER_SECOND 24
+#define BWEM_DISABLED
 
 using namespace BWEM;
 

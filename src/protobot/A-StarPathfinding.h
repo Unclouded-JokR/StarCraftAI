@@ -13,6 +13,7 @@
 #define HEURISTIC_WEIGHT 1.5
 
 using namespace std;
+
 namespace {
 	auto& bwem_map = BWEM::Map::Instance();
 }
