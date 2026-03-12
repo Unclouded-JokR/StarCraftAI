@@ -15,8 +15,10 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
-	for (const auto& squad : Squads) {
-		BOIDS::squadFlock(squad);
+	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_BOIDS) == 0) {
+		for (const auto& squad : Squads) {
+			BOIDS::squadFlock(squad);
+		}
 	}
 
 #ifndef BWEM_DISABLED
@@ -153,6 +155,10 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 	if (commanderReference->scoutingManager.isScout(unit)) {
 		return false; // refuse: unit is a scout
 	}
+	
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Pylon || unit->getType() == BWAPI::UnitTypes::Protoss_Nexus) {
+		return false;
+	}
 
 	// Assigning to an existing squad if available
 	for (auto& squad : Squads) {
@@ -253,21 +259,36 @@ void CombatManager::handleTextCommand(std::string text) {
 		const BWAPI::UnitType leaderType = squad->leader->getType();
 		vector<BWAPI::Position> tiles;
 		if (text == "left") {
+			squad->leader->attack(leftPos);
+#ifdef ASTAR_COMMANDING
 			squad->currentPathIdx = 0;
 			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, leftPos);
+#endif
 		}
 		if (text == "right") {
+			squad->leader->attack(rightPos);
+#ifdef ASTAR_COMMANDING
 			squad->currentPathIdx = 0;
 			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, rightPos);
+#endif
 		}if (text == "up") {
+			squad->leader->attack(upPos);
+#ifdef ASTAR_COMMANDING
 			squad->currentPathIdx = 0;
 			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, upPos);
+#endif
 		}if (text == "down") {
+			squad->leader->attack(downPos);
+#ifdef ASTAR_COMMANDING
 			squad->currentPathIdx = 0;
 			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, downPos);
+#endif
 		}if (text == "center") {
+			squad->leader->attack(centerPos);
+#ifdef ASTAR_COMMANDING
 			squad->currentPathIdx = 0;
 			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
+#endif
 		}
 
 		vector<BWAPI::Position> positions = squad->currentPath.positions;

@@ -3,7 +3,11 @@
 
 class VectorPos : public BWAPI::Point<double, 1> {
 public:
-	VectorPos(double _x, double _y) : BWAPI::Point<double, 1>(_x, _y) {
+	VectorPos(int _x, int _y) {
+		this->x = (double) _x;
+		this->y = (double) _y;
+	};
+	VectorPos(double _x, double _y){
 		this->x = _x;
 		this->y = _y;
 	};

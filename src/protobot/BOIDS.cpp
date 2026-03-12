@@ -16,6 +16,9 @@ void BOIDS::squadFlock(Squad* squad) {
 			continue;
 		}
 
+		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_NEIGHBOUR_DISTANCE, BWAPI::Colors::Grey);
+		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_SEPARATION_DISTANCE, BWAPI::Colors::Red);
+
 		const double unitSpeed = unit->getType().topSpeed();
 		const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
 		const VectorPos unitVelocity = VectorPos(unit->getVelocityX(), unit->getVelocityY());
@@ -25,8 +28,6 @@ void BOIDS::squadFlock(Squad* squad) {
 
 		// Grab all neighbors that are too close
 		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_NEIGHBOUR_DISTANCE, BWAPI::Filter::IsAlly);
-		BWAPI::Broodwar->drawCircleMap(unitPos, MIN_NEIGHBOUR_DISTANCE, BWAPI::Colors::Grey);
-		BWAPI::Broodwar->drawCircleMap(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Colors::Red);
 
 		// Cohesion Vector
 		const VectorPos neighborAvgPos = VectorPos(neighbors.getPosition().x, neighbors.getPosition().y);
@@ -83,11 +84,11 @@ void BOIDS::squadFlock(Squad* squad) {
 		const VectorPos finalDirection = separationDirection + cohesionDirection + alignmentDirection + leaderDirection;
 
 #ifdef DEBUG_FLOCKING
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec, BWAPI::Colors::Red);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec, BWAPI::Colors::Yellow);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec, BWAPI::Colors::Purple);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec, BWAPI::Colors::Blue);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + finalDirection, BWAPI::Colors::Green);
+		/*BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 10, BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 10, BWAPI::Colors::Yellow);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec * 10, BWAPI::Colors::Purple);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec * 10, BWAPI::Colors::Blue);
+		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + finalDirection * 10, BWAPI::Colors::Green);*/
 		BWAPI::Broodwar->printf("Separation magnitude: %f", BWAPI::Position(0, 0).getDistance(separationVec));
 		BWAPI::Broodwar->printf("Cohesion magnitude: %f", BWAPI::Position(0, 0).getDistance(cohesionVec));
 		BWAPI::Broodwar->printf("Alignment magnitude: %f", BWAPI::Position(0, 0).getDistance(alignmentVec));
