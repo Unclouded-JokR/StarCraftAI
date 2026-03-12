@@ -8,6 +8,16 @@ public:
 		this->y = _y;
 	};
 
+	VectorPos(BWAPI::Position pos){
+		this->x = pos.x;
+		this->y = pos.y;
+	};
+
+	VectorPos() {
+		this->x = 0.0;
+		this->y = 0.0;
+	};
+
 	VectorPos& operator=(const VectorPos& other) noexcept(true) {
 		this->x = other.x;
 		this->y = other.y;

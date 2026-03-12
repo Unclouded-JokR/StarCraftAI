@@ -9,8 +9,6 @@
 //#define DEBUG_SQUAD
 //#define DEBUG_FLOCKING
 #define MAX_SQUAD_SIZE 12
-#define MIN_NEIGHBOUR_DISTANCE 80
-#define MIN_SEPARATION_DISTANCE 30
 
 class SquadState;
 

@@ -1,6 +1,6 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
-#include "Squad.h"
+#include "BOIDS.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -15,8 +15,8 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
-	for (auto& squad : Squads) {
-		squad->onFrame();
+	for (const auto& squad : Squads) {
+		BOIDS::squadFlock(squad);
 	}
 
 #ifndef BWEM_DISABLED
@@ -240,8 +240,15 @@ void CombatManager::handleTextCommand(std::string text) {
 		rightPos = BWAPI::Position(1056, 192);
 		centerPos = BWAPI::Position(690, 362);
 	}
+	if (BWAPI::Broodwar->mapName() == "BOIDSTesting") {
+		leftPos = BWAPI::Position(1481, 1842);
+		rightPos = BWAPI::Position(2654, 1822);
+		upPos = BWAPI::Position(2047, 1505);
+		downPos = BWAPI::Position(2047, 2302);
+		centerPos = BWAPI::Position(2047, 1855);
+	}
 
-	for (auto& squad : Squads) {
+	for (const auto& squad : Squads) {
 		const BWAPI::Position leaderPos = squad->leader->getPosition();
 		const BWAPI::UnitType leaderType = squad->leader->getType();
 		vector<BWAPI::Position> tiles;

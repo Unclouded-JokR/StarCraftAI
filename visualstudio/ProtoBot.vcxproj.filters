@@ -10,7 +10,6 @@
     <ClCompile Include="..\src\protobot\BuildingPlacer.cpp" />
     <ClCompile Include="..\src\protobot\BuildManager.cpp" />
     <ClCompile Include="..\src\protobot\BuildOrder.cpp" />
-	<ClCompile Include="..\src\protobot\BOIDS.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\Block.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\BWEB.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\PathFind.cpp" />
@@ -52,6 +51,7 @@
     <ClCompile Include="..\src\protobot\BWEM\src\tiles.cpp" />
     <ClCompile Include="..\src\protobot\BWEM\src\utils.cpp" />
     <ClCompile Include="..\src\protobot\BWEM\src\winutils.cpp" />
+    <ClCompile Include="..\src\protobot\BOIDS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -63,7 +63,6 @@
     <ClInclude Include="..\src\protobot\BuildingPlacer.h" />
     <ClInclude Include="..\src\protobot\BuildManager.h" />
     <ClInclude Include="..\src\protobot\BuildOrder.h" />
-	<ClCompile Include="..\src\protobot\BOIDS.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\Block.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\BWEB.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\JPS.h" />
@@ -109,5 +108,6 @@
     <ClInclude Include="..\src\protobot\BWEM\src\tiles.h" />
     <ClInclude Include="..\src\protobot\BWEM\src\utils.h" />
     <ClInclude Include="..\src\protobot\BWEM\src\winutils.h" />
+    <ClInclude Include="..\src\protobot\BOIDS.h" />
   </ItemGroup>
 </Project>
