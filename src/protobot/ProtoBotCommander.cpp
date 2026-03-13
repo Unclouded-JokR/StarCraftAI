@@ -38,7 +38,7 @@ void ProtoBotCommander::onStart()
 
 	//std::cout << "Map initialization...\n";
 
-#ifndef BWEM_DISABLED	
+#ifndef USING_CUSTOM_MAP	
 	//theMap = BWEM::Map::Instance();
 	theMap.Initialize();
 	theMap.EnableAutomaticPathAnalysis();
@@ -66,7 +66,7 @@ void ProtoBotCommander::onStart()
 	/*
 	* Protobot Modules
 	*/
-#ifndef BWEM_DISABLED
+#ifndef USING_CUSTOM_MAP
 	informationManager.onStart();
 	strategyManager.onStart();
 	economyManager.onStart();
@@ -96,7 +96,7 @@ void ProtoBotCommander::onFrame()
 	* Protobot Modules
 	*/
 
-#ifndef BWEM_DISABLED
+#ifndef USING_CUSTOM_MAP
 	//timerManager.startTimer(TimerManager::Information);
 	informationManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Information);
@@ -110,31 +110,31 @@ void ProtoBotCommander::onFrame()
 	{
 		switch (action.type)
 		{
-			case Action::ACTION_EXPAND:
-				requestBuild(action.expansionToConstruct);
-				break;
-			case Action::ACTION_BUILD:
-				requestBuild(action.buildingToConstruct);
-				break;
-			case Action::ACTION_SCOUT:
-				if (!issuedScoutThisFrame)
+		case Action::ACTION_EXPAND:
+			requestBuild(action.expansionToConstruct);
+			break;
+		case Action::ACTION_BUILD:
+			requestBuild(action.buildingToConstruct);
+			break;
+		case Action::ACTION_SCOUT:
+			if (!issuedScoutThisFrame)
+			{
+				BWAPI::Unit scout = getUnitToScout();
+				if (scout)
 				{
-					BWAPI::Unit scout = getUnitToScout();
-					if (scout)
-					{
-						issuedScoutThisFrame = true;
-					}
+					issuedScoutThisFrame = true;
 				}
-				break;
-			case Action::ACTION_ATTACK:
-				combatManager.attack(action.attackPosition);
-				break;
-			case Action::ACTION_DEFEND:
-				combatManager.defend(action.defendPosition);
-				break;
-			case Action::ACTION_REINFORCE:
-				combatManager.reinforce(action.reinforcePosition);
-				break;
+			}
+			break;
+		case Action::ACTION_ATTACK:
+			combatManager.attack(action.attackPosition);
+			break;
+		case Action::ACTION_DEFEND:
+			combatManager.defend(action.defendPosition);
+			break;
+		case Action::ACTION_REINFORCE:
+			combatManager.reinforce(action.reinforcePosition);
+			break;
 		}
 	}
 	//timerManager.stopTimer(TimerManager::Strategy);
@@ -194,8 +194,8 @@ void ProtoBotCommander::onEnd(bool isWinner)
 	std::cout << "Versus Terran Loses: " << versusTerran_Loses << "\n";*/
 
 
-    // Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
-    BWEB::Map::onEnd();
+	// Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
+	BWEB::Map::onEnd();
 }
 
 /*
@@ -234,7 +234,7 @@ void ProtoBotCommander::onSendText(std::string text)
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
-#ifndef BWEM_DISABLED
+#ifndef USING_CUSTOM_MAP
 	buildManager.onUnitCreate(unit);
 	informationManager.onUnitCreate(unit);
 	strategyManager.onUnitCreate(unit);
@@ -243,7 +243,7 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-#ifndef BWEM_DISABLED
+#ifndef USING_CUSTOM_MAP
 	//std::cout << "ProtoBot onUnitComplete: " << unit->getType() << "\n";
 
 	strategyManager.onUnitComplete(unit);

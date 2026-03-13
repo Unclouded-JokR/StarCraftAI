@@ -16,7 +16,7 @@
 #include "BWEM/src/bwem.h"
 
 #define FRAMES_PER_SECOND 24
-#define BWEM_DISABLED
+#define USING_CUSTOM_MAP
 
 using namespace BWEM;
 
