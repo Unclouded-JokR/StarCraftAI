@@ -4,8 +4,8 @@
 class VectorPos : public BWAPI::Point<double, 1> {
 public:
 	VectorPos(int _x, int _y) {
-		this->x = (double) _x;
-		this->y = (double) _y;
+		this->x = _x;
+		this->y = _y;
 	};
 	VectorPos(double _x, double _y){
 		this->x = _x;
@@ -49,5 +49,10 @@ public:
 	}
 	VectorPos operator*(const int& scalar) const {
 		return VectorPos(this->x * scalar, this->y * scalar);
+	}
+
+	std::ostream& operator<<(std::ostream& out) {
+		out << "VectorPos(" << this->x << ", " << this->y << ")";
+		return out; // Enable chaining
 	}
 };

@@ -34,7 +34,8 @@ void BOIDS::squadFlock(Squad* squad) {
 
 		VectorPos averageVelocity = VectorPos(0, 0);
 		for (const auto& neighbor : neighbors) {
-			if (neighbor == unit) {
+			// If neighbor is the current unit or neighbor is not a unit of the squad, dont process
+			if (neighbor == unit || std::find(squad->units.begin(), squad->units.end(), neighbor) != squad->units.end()) {
 				continue;
 			}
 
@@ -76,36 +77,48 @@ void BOIDS::squadFlock(Squad* squad) {
 
 		cohesionVec = neighborAvgPos - unitPos;
 
-		const VectorPos separationDirection = normalize(separationVec) * unitSpeed * SEPARATION_STRENGTH;
-		const VectorPos cohesionDirection = normalize(cohesionVec) * unitSpeed * COHESION_STRENGTH;
-		const VectorPos alignmentDirection = normalize(alignmentVec) * unitSpeed * ALIGNMENT_STRENGTH;
-		const VectorPos leaderDirection = normalize(leaderVec) * unitSpeed * LEADER_STRENGTH;
+		cout << "Separation Vector: " << separationVec << endl;
+		cout << "Cohesion Vector: " << cohesionVec << endl;
+		cout << "Alignment Vector: " << alignmentVec << endl;
+		cout << "Leader Vector: " << leaderVec << endl;
 
-		const VectorPos finalDirection = separationDirection + cohesionDirection + alignmentDirection + leaderDirection;
+		const VectorPos separationDirection = normalize(separationVec) * SEPARATION_STRENGTH;
+		const VectorPos cohesionDirection = normalize(cohesionVec) * COHESION_STRENGTH;
+		const VectorPos alignmentDirection = normalize(alignmentVec) * ALIGNMENT_STRENGTH;
+		const VectorPos leaderDirection = normalize(leaderVec) * LEADER_STRENGTH;
+
+		const VectorPos boidsVector = separationDirection + cohesionDirection + alignmentDirection + leaderDirection;
 
 #ifdef DEBUG_FLOCKING
-		/*BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 10, BWAPI::Colors::Red);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 10, BWAPI::Colors::Yellow);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec * 10, BWAPI::Colors::Purple);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec * 10, BWAPI::Colors::Blue);
-		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + finalDirection * 10, BWAPI::Colors::Green);*/
-		BWAPI::Broodwar->printf("Separation magnitude: %f", BWAPI::Position(0, 0).getDistance(separationVec));
-		BWAPI::Broodwar->printf("Cohesion magnitude: %f", BWAPI::Position(0, 0).getDistance(cohesionVec));
-		BWAPI::Broodwar->printf("Alignment magnitude: %f", BWAPI::Position(0, 0).getDistance(alignmentVec));
-		BWAPI::Broodwar->printf("Leader magnitude: %f", BWAPI::Position(0, 0).getDistance(leaderDirection));
-		BWAPI::Broodwar->printf("FinalDirection magnitude: %f", BWAPI::Position(0, 0).getDistance(finalDirection));
+		cout << "Separation Vector (normalized) : " << separationDirection << endl;
+		cout << "Cohesion Vector (normalized) : " << cohesionDirection << endl;
+		cout << "Alignment Vector (normalized) : " << alignmentDirection << endl;
+		cout << "Leader Vector (normalized) : " << leaderDirection << endl;
+		cout << "Unit Position: " << unitPos << endl;
+		cout << "Final Vector (normalized) : " << boidsVector << endl;
+		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 10, BWAPI::Colors::Red);
+		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 10, BWAPI::Colors::Yellow);
+		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec * 10, BWAPI::Colors::Purple);
+		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + leaderVec * 10, BWAPI::Colors::Blue);
+		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + finalDirection * 10, BWAPI::Colors::Green);
+		//BWAPI::Broodwar->printf("Separation magnitude: %f", BWAPI::Position(0, 0).getDistance(separationVec));
+		//BWAPI::Broodwar->printf("Cohesion magnitude: %f", BWAPI::Position(0, 0).getDistance(cohesionVec));
+		//BWAPI::Broodwar->printf("Alignment magnitude: %f", BWAPI::Position(0, 0).getDistance(alignmentVec));
+		//BWAPI::Broodwar->printf("Leader magnitude: %f", BWAPI::Position(0, 0).getDistance(leaderDirection));
+		//BWAPI::Broodwar->printf("FinalDirection magnitude: %f", unitPos.getDistance(finalDirection));
 #endif
 
-		//unit->attack(unitPos + finalDirection);
+		unit->attack(unitPos + boidsVector);
 	}
 }
 
-double BOIDS::getMagnitude(BWAPI::Position vector) {
-	return sqrt(pow(vector.x, 2) + pow(vector.y, 2));
-}
-
 VectorPos BOIDS::normalize(VectorPos vector) {
-	return VectorPos(vector.x / vector.getApproxDistance(BWAPI::Position(0, 0)),
-		vector.y / vector.getApproxDistance(BWAPI::Position(0, 0))
-	);
+	// Avoid division by 0
+	const double magnitude = vector.getDistance(BWAPI::Position(0, 0));
+
+	if (magnitude == 0) {
+		return VectorPos(0, 0);
+	}
+
+	return VectorPos(vector.x / magnitude, vector.y / magnitude);
 }
