@@ -28,13 +28,13 @@ public:
 		return *this;
 	}
 	VectorPos& operator=(const BWAPI::Point<int, 1> other) noexcept(true) {
-		this->x = (double)other.x;
-		this->y = (double)other.y;
+		this->x = other.x;
+		this->y = other.y;
 		return *this;
 	}
 	VectorPos& operator=(const BWAPI::Point<double, 1> other) noexcept(true) {
-		this->x = (double)other.x;
-		this->y = (double)other.y;
+		this->x = other.x;
+		this->y = other.y;
 		return *this;
 	}
 
@@ -47,8 +47,11 @@ public:
 	VectorPos operator*(const double& scalar) const {
 		return VectorPos(this->x * scalar, this->y * scalar);
 	}
-	VectorPos operator*(const int& scalar) const {
-		return VectorPos(this->x * scalar, this->y * scalar);
+	bool operator==(const VectorPos& rhs) const {
+		return this->x == rhs.x && this->y == rhs.y;
+	}
+	bool operator!=(const VectorPos& rhs) const {
+		return !(this->x == rhs.x && this->y == rhs.y);
 	}
 
 	std::ostream& operator<<(std::ostream& out) {
