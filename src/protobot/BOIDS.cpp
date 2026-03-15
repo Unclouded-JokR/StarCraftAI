@@ -22,6 +22,7 @@ void BOIDS::squadFlock(Squad* squad) {
 		}
 
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_NEIGHBOUR_DISTANCE, BWAPI::Colors::Grey);
+		//BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_ALIGNMENT_DISTANCE, BWAPI::Colors::Yellow);
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_SEPARATION_DISTANCE, BWAPI::Colors::Red);
 
 		// Need current unit's info to use with neighbor vectors
@@ -32,13 +33,9 @@ void BOIDS::squadFlock(Squad* squad) {
 		const VectorPos leaderPos = VectorPos(squad->leader->getPosition().x, squad->leader->getPosition().y);
 		leaderVec = leaderPos - unitPos;
 
-		// Grab all neighbors that are too close
-		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_NEIGHBOUR_DISTANCE, BWAPI::Filter::IsAlly);
+		// Grab close neigbors for separation vector
+		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Filter::IsAlly);
 
-		// Use average position of neighbors for cohesion vector
-		const VectorPos neighborAvgPos = VectorPos(neighbors.getPosition().x, neighbors.getPosition().y);
-
-		VectorPos averageVelocity = VectorPos(0, 0);
 		for (const auto& neighbor : neighbors) {
 			// If neighbor is the current unit or neighbor is not a unit of the squad, dont process
 			if (neighbor == unit || std::find(squad->units.begin(), squad->units.end(), neighbor) == squad->units.end()) {
@@ -52,28 +49,7 @@ void BOIDS::squadFlock(Squad* squad) {
 			if (distance < MIN_SEPARATION_DISTANCE) {
 				separationVec = separationVec + (unitPos - neighborPos);
 			}
-
-			// ALIGNMENT VECTOR
-			const double neighborvelocity_x = neighbor->getVelocityX();
-			const double neighborvelocity_y = neighbor->getVelocityY();
-
-			averageVelocity = averageVelocity + VectorPos(neighborvelocity_x, neighborvelocity_y);
 		}
-
-		// Average out the velocity
-		if (neighbors.size() > 0) {
-			averageVelocity /= neighbors.size();
-		}
-
-		if (averageVelocity == VectorPos(0, 0)) {
-			alignmentVec = VectorPos(0, 0);
-		}
-		else {
-			alignmentVec = averageVelocity - unitVelocity;
-		}
-
-		// COHESION VECTOR
-		cohesionVec = neighborAvgPos - unitPos;
 
 #ifdef DEBUG_FLOCKING
 		cout << "------ UNIT " << unit->getID() << " ------" << endl;
@@ -84,17 +60,9 @@ void BOIDS::squadFlock(Squad* squad) {
 #endif
 
 		const VectorPos separationDirection = normalize(separationVec) * SEPARATION_STRENGTH;
-		const VectorPos cohesionDirection = normalize(cohesionVec) * COHESION_STRENGTH;
-		const VectorPos alignmentDirection = normalize(alignmentVec) * ALIGNMENT_STRENGTH;
 		const VectorPos leaderDirection = normalize(leaderVec) * LEADER_STRENGTH;
 
-		VectorPos boidsVector = separationDirection + cohesionDirection + alignmentDirection + leaderDirection;
-		if (boidsVector.getDistance(VectorPos(0, 0)) < MIN_BOIDS_VECTOR_LENGTH) {
-			const double xNeg = boidsVector.x / abs(boidsVector.x);
-			const double yNeg = boidsVector.y / abs(boidsVector.y);
-
-			boidsVector = VectorPos(xNeg * MIN_BOIDS_VECTOR_LENGTH, yNeg * MIN_BOIDS_VECTOR_LENGTH);
-		}
+		VectorPos boidsVector = separationDirection + leaderDirection;
 		cout << "Boids Vector: " << boidsVector << endl;
 
 #ifdef DEBUG_FLOCKING
@@ -117,7 +85,7 @@ void BOIDS::squadFlock(Squad* squad) {
 #endif
 
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + boidsVector, BWAPI::Colors::Green);
-		unit->attack(unitPos + (boidsVector * MIN_BOIDS_VECTOR_LENGTH));
+		unit->attack(unitPos + unitVelocity + boidsVector);
 	}
 }
 
