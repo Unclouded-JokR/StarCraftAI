@@ -1,16 +1,17 @@
 #include "BOIDS.h"
 
+
 // Uses BOIDS algorithm to maintain formation while leader is moving
-// leaderVec keeps units close to leader
-// cohesionVec keeps units close to each other
-// separationVec keeps units from crowding each other
-// alignmentVec keeps units moving in same direction
+// leaderVec keeps units surround the leader
+// separationVec keeps units from crowding too tightly
 void BOIDS::squadFlock(Squad* squad) {
 	VectorPos separationVec = VectorPos(0, 0);
-	VectorPos cohesionVec = VectorPos(0, 0);
-	VectorPos alignmentVec = VectorPos(0, 0);
 	VectorPos leaderVec = VectorPos(0, 0);
 
+	const int unitSpacing = 32; // tile size spacing
+	const double PI = 3.14159265358979323846;
+	// Used for defining the size of the surround radius for the leader (dynamically changes based on the squad's size)
+	const int leaderSurroundRadius = max(MIN_LEADER_SURROUND_RADIUS, (squad->units.size() * unitSpacing) / (2 * PI));
 	for (const auto& unit : squad->units) {
 		if (!unit->exists()) {
 			continue;
@@ -21,14 +22,12 @@ void BOIDS::squadFlock(Squad* squad) {
 			continue;
 		}
 
-		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_NEIGHBOUR_DISTANCE, BWAPI::Colors::Grey);
-		//BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_ALIGNMENT_DISTANCE, BWAPI::Colors::Yellow);
+		// For drawing radiuses
 		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_SEPARATION_DISTANCE, BWAPI::Colors::Red);
+		BWAPI::Broodwar->drawCircleMap(unit->getPosition(), leaderSurroundRadius, BWAPI::Colors::Green);
 
 		// Need current unit's info to use with neighbor vectors
-		const double unitSpeed = unit->getType().topSpeed();
 		const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
-		const VectorPos unitVelocity = VectorPos(unit->getVelocityX(), unit->getVelocityY());
 
 		const VectorPos leaderPos = VectorPos(squad->leader->getPosition().x, squad->leader->getPosition().y);
 		leaderVec = leaderPos - unitPos;
@@ -36,6 +35,7 @@ void BOIDS::squadFlock(Squad* squad) {
 		// Grab close neigbors for separation vector
 		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Filter::IsAlly);
 
+		// SEPARATION VECTOR
 		for (const auto& neighbor : neighbors) {
 			// If neighbor is the current unit or neighbor is not a unit of the squad, dont process
 			if (neighbor == unit || std::find(squad->units.begin(), squad->units.end(), neighbor) == squad->units.end()) {
@@ -44,12 +44,15 @@ void BOIDS::squadFlock(Squad* squad) {
 
 			const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
 
-			// SEPARATION VECTOR
+			// Need to scale separation strength by how close/far the neighbor is
 			const double distance = unitPos.getApproxDistance(neighborPos);
-			if (distance < MIN_SEPARATION_DISTANCE) {
-				separationVec = separationVec + (unitPos - neighborPos);
-			}
+			const double scale = (MIN_SEPARATION_DISTANCE - distance) / MIN_SEPARATION_DISTANCE;
+			separationVec = separationVec + ((unitPos - neighborPos) * scale);
 		}
+
+		// LEADER VECTOR
+		const double distToLeader = unitPos.getApproxDistance(leaderPos);
+		const VectorPos surroundForce = leaderVec;
 
 #ifdef DEBUG_FLOCKING
 		cout << "------ UNIT " << unit->getID() << " ------" << endl;
@@ -60,9 +63,10 @@ void BOIDS::squadFlock(Squad* squad) {
 #endif
 
 		const VectorPos separationDirection = normalize(separationVec) * SEPARATION_STRENGTH;
-		const VectorPos leaderDirection = normalize(leaderVec) * LEADER_STRENGTH;
+		const VectorPos surroundDirection = normalize(surroundForce) * LEADER_STRENGTH;
 
-		VectorPos boidsVector = separationDirection + leaderDirection;
+
+		VectorPos boidsVector = separationDirection + surroundDirection;
 		cout << "Boids Vector: " << boidsVector << endl;
 
 #ifdef DEBUG_FLOCKING
@@ -85,7 +89,8 @@ void BOIDS::squadFlock(Squad* squad) {
 #endif
 
 		BWAPI::Broodwar->drawLineMap(unitPos, unitPos + boidsVector, BWAPI::Colors::Green);
-		unit->attack(unitPos + unitVelocity + boidsVector);
+		const VectorPos unitVelocity = VectorPos(unit->getVelocityX(), unit->getVelocityY());
+		unit->attack(unitPos + unitVelocity + boidsVector * FRAMES_BETWEEN_BOIDS);
 	}
 }
 

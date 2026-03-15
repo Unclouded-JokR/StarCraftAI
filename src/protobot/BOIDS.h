@@ -4,16 +4,18 @@
 #include "Squad.h"
 #include <algorithm>
 
+// DEBUG
 //#define DEBUG_FLOCKING
 
-#define MIN_NEIGHBOUR_DISTANCE 150
-#define MIN_SEPARATION_DISTANCE 60
-#define MIN_ALIGNMENT_DISTANCE 70
-#define SEPARATION_STRENGTH 10
-#define COHESION_STRENGTH 1
-#define ALIGNMENT_STRENGTH 1
-#define LEADER_STRENGTH 2
-#define MIN_BOIDS_VECTOR_LENGTH 3
+// Frame frequency
+#define FRAMES_BETWEEN_BOIDS 10
+
+// Algorithm calibration
+#define MIN_SEPARATION_DISTANCE 45.0
+#define MIN_LEADER_SURROUND_RADIUS 60.0
+#define SEPARATION_STRENGTH 5.0
+#define LEADER_STRENGTH 2.0	
+#define MIN_BOIDS_VECTOR_LENGTH 3.0
 
 
 using namespace std;

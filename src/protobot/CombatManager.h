@@ -6,7 +6,6 @@
 #define DEBUG_CM
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 5
-#define FRAMES_BETWEEN_BOIDS 1
 using namespace std;
 
 class ProtoBotCommander;
