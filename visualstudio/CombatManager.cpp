@@ -15,6 +15,16 @@ void CombatManager::onFrame() {
 		squad->onFrame();
 	}
 
+<<<<<<< Updated upstream:visualstudio/CombatManager.cpp
+=======
+	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
+		AStar::fillAreaPathCache();
+	}
+
+	AStar::drawCachedPaths();
+
+#ifdef DEBUG_CM
+>>>>>>> Stashed changes:src/protobot/CombatManager.cpp
 	drawDebugInfo();
 }
 

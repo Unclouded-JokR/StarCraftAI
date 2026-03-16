@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <algorithm>
+#include <climits>
 #include <string>
 #include <BWAPI.h>
 #include <fstream>
@@ -95,6 +97,7 @@ public:
     BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
     bool enqueueSupplyAtNaturalRamp();
     bool enqueueNaturalWallAtChoke();
+    bool requestNaturalWallBuild(bool resetPlan = false);
     BWAPI::TilePosition findNaturalChokePylonTile() const;
     void resetNaturalWallPlan();
     void trainUnit(BWAPI::UnitType, BWAPI::Unit);
@@ -126,7 +129,12 @@ private:
     bool naturalWallPylonEnqueued = false;
     bool naturalWallGatewaysEnqueued = false;
     BWAPI::TilePosition naturalWallPylonTile = BWAPI::TilePositions::Invalid;
+    BWAPI::TilePosition naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
+    BWAPI::TilePosition naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
     std::vector<BWAPI::TilePosition> naturalWallGatewayTiles;
+    std::vector<BWAPI::TilePosition> naturalWallCannonTiles;
+    std::vector<BWAPI::TilePosition> naturalWallPathTiles;
+    bool naturalWallStartLogged = false;
 
     bool isRestrictedTechBuilding(BWAPI::UnitType type) const;
     std::string buildOrderNameToString(int name) const;
