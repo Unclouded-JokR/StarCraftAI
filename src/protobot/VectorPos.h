@@ -47,6 +47,9 @@ public:
 	VectorPos operator*(const double& scalar) const {
 		return VectorPos(this->x * scalar, this->y * scalar);
 	}
+	VectorPos operator/(const double& scalar) const {
+		return VectorPos(this->x / scalar, this->y / scalar);
+	}
 	bool operator==(const VectorPos& rhs) const {
 		return this->x == rhs.x && this->y == rhs.y;
 	}

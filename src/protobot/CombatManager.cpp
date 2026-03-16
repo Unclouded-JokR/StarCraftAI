@@ -15,10 +15,8 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
-	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_BOIDS) == 0) {
-		for (const auto& squad : Squads) {
-			BOIDS::squadFlock(squad);
-		}
+	for (const auto& squad : Squads) {
+		BOIDS::squadFlock(squad);
 	}
 
 #ifndef USING_CUSTOM_MAP
