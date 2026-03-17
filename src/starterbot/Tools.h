@@ -1,7 +1,6 @@
 #pragma once
 
 #include <BWAPI.h>
-#include "../../visualstudio/BWEB/Source/BWEB.h"
 
 namespace Tools
 {

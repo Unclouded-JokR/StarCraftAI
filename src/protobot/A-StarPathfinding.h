@@ -132,7 +132,6 @@ private:
 public:
 	static Path GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);
 	static void drawPath(Path path);
-	static void drawCachedPaths();
 	static void fillUncachedAreaPairs();
 	static void fillAreaPathCache();
 	static void clearPathCache();
