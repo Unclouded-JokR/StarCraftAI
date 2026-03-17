@@ -698,6 +698,8 @@ void AStar::clearPathCache() {
 	AreaPathCache.clear();
 	ChokepointPathCache.clear();
 	UncachedAreaPairs.clear();
+	failedAreaPairs.clear();
+	precachedPositions.clear();
 }
 
 // Assumes you've already checked if the area that these two positions are in are neighbours
@@ -837,18 +839,29 @@ double AStar::octileDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
 	return (D1 * max(dx, dy)) + ((D2 - D1) * min(dx, dy));
 }
 
+
+void AStar::drawCachedPaths() {
+	for (const auto& [_, path] : ChokepointPathCache) {
+		drawPath(path);
+	}
+}
+
 void AStar::drawPath(Path path) {
-	if (path.positions.size() <= 1) {
+	if (path.positions.empty()) {
 		return;
 	}
 
-	BWAPI::Position prevPos = path.positions.at(0);
 	for (const BWAPI::Position pos : path.positions) {
-		BWAPI::Broodwar->drawLineMap(prevPos, pos, BWAPI::Colors::Yellow);
-		BWAPI::Broodwar->drawCircleMap(pos, 3, BWAPI::Colors::Black, true);
-		prevPos = pos;
+		const BWAPI::TilePosition tile(pos);
+		if (!tile.isValid()) {
+			continue;
+		}
+
+		const BWAPI::Position topLeft(tile);
+		const BWAPI::Position bottomRight = topLeft + BWAPI::Position(32, 32);
+		BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, BWAPI::Colors::Red, false);
 	}
 
-	BWAPI::Broodwar->drawCircleMap(path.positions.at(0), 5, BWAPI::Colors::Green, true);
-	BWAPI::Broodwar->drawCircleMap(path.positions.at(path.positions.size() - 1), 5, BWAPI::Colors::Red, true);
+	BWAPI::Broodwar->drawCircleMap(path.positions.front(), 5, BWAPI::Colors::Green, true);
+	BWAPI::Broodwar->drawCircleMap(path.positions.back(), 5, BWAPI::Colors::Red, true);
 }

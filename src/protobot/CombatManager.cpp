@@ -21,17 +21,7 @@ void CombatManager::onFrame() {
 		AStar::fillAreaPathCache();
 	}
 
-
-#ifdef DRAW_PRECACHE //In A-StarPathfinding.h
-	MapTools map_tool = MapTools();
-	if (!precachedPositions.empty()) {
-		BWAPI::Position prevPos = precachedPositions.at(0);
-		for (const auto& pos : precachedPositions) {
-			map_tool.drawTile(BWAPI::TilePosition(pos).x, BWAPI::TilePosition(pos).y, BWAPI::Colors::Red);
-			prevPos = pos;
-		}
-	}
-#endif
+	AStar::drawCachedPaths();
 
 #ifdef DEBUG_CM
 	drawDebugInfo();
