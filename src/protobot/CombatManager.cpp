@@ -7,10 +7,8 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 }
 
 void CombatManager::onStart(){
-#ifndef USING_CUSTOM_MAP
 	AStar::clearPathCache();
 	AStar::fillUncachedAreaPairs();
-#endif
 }
 
 void CombatManager::onFrame() {
@@ -19,12 +17,9 @@ void CombatManager::onFrame() {
 		BOIDS::squadFlock(squad);
 	}
 
-#ifndef USING_CUSTOM_MAP
-
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
 		AStar::fillAreaPathCache();
 	}
-#endif
 
 
 #ifdef DRAW_PRECACHE //In A-StarPathfinding.h

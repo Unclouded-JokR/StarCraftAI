@@ -38,7 +38,6 @@ void ProtoBotCommander::onStart()
 
 	//std::cout << "Map initialization...\n";
 
-#ifndef USING_CUSTOM_MAP	
 	//theMap = BWEM::Map::Instance();
 	theMap.Initialize();
 	theMap.EnableAutomaticPathAnalysis();
@@ -49,7 +48,6 @@ void ProtoBotCommander::onStart()
 	BWEB::Blocks::findBlocks();
 
 	m_mapTools.onStart();
-#endif
 
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
@@ -66,13 +64,11 @@ void ProtoBotCommander::onStart()
 	/*
 	* Protobot Modules
 	*/
-#ifndef USING_CUSTOM_MAP
 	informationManager.onStart();
 	strategyManager.onStart();
 	economyManager.onStart();
 	scoutingManager.onStart();
 	buildManager.onStart();
-#endif
 
 	combatManager.onStart();
 
@@ -96,7 +92,6 @@ void ProtoBotCommander::onFrame()
 	* Protobot Modules
 	*/
 
-#ifndef USING_CUSTOM_MAP
 	//timerManager.startTimer(TimerManager::Information);
 	informationManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Information);
@@ -152,7 +147,6 @@ void ProtoBotCommander::onFrame()
 	//timerManager.startTimer(TimerManager::Scouting);
 	scoutingManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Scouting);
-#endif
 
 	//timerManager.startTimer(TimerManager::Combat);
 	combatManager.onFrame();
@@ -234,16 +228,13 @@ void ProtoBotCommander::onSendText(std::string text)
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
-#ifndef USING_CUSTOM_MAP
 	buildManager.onUnitCreate(unit);
 	informationManager.onUnitCreate(unit);
 	strategyManager.onUnitCreate(unit);
-#endif
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 {
-#ifndef USING_CUSTOM_MAP
 	//std::cout << "ProtoBot onUnitComplete: " << unit->getType() << "\n";
 
 	strategyManager.onUnitComplete(unit);
@@ -299,7 +290,6 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 			return;
 		}
 	}
-#endif
 
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);

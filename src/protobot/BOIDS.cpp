@@ -24,6 +24,12 @@ void BOIDS::squadFlock(Squad* squad) {
 		const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
 		const VectorPos leaderPos = VectorPos(squad->leader->getPosition().x, squad->leader->getPosition().y);
 
+		// Don't worry about flocking if unit is too far away from the leader
+		if (unitPos.getApproxDistance(leaderPos) > BOIDS_RANGE) {
+			unit->attack(leaderPos);
+			continue;
+		}
+
 		// Velocity info
 		const VectorPos unitVelocity = VectorPos(unit->getVelocityX(), unit->getVelocityY());
 		const VectorPos leaderVelocity = VectorPos(squad->leader->getVelocityX(), squad->leader->getVelocityY());
@@ -38,11 +44,6 @@ void BOIDS::squadFlock(Squad* squad) {
 		const int spacing = 30;
 		const double outer_radius = max(inner_radius * 1.5, spacing + sqrt(squad->units.size()) * spacing);
 
-//#ifdef DEBUG_FLOCKING
-		BWAPI::Broodwar->drawCircleMap(leaderPos, INNER_LEADER_RADIUS, BWAPI::Colors::Green);
-		BWAPI::Broodwar->drawCircleMap(leaderPos, outer_radius, BWAPI::Colors::Yellow);
-//#endif
-
 		// if unit too far, pull in
 		// if unit too close, push away
 		if (dist > outer_radius) {
@@ -53,6 +54,12 @@ void BOIDS::squadFlock(Squad* squad) {
 		}
 
 		leaderVec = normalize(leaderVelocity) + normalize(leaderVec) * LEADER_STRENGTH;
+
+//#ifdef DEBUG_FLOCKING
+		BWAPI::Broodwar->drawCircleMap(leaderPos, BOIDS_RANGE, BWAPI::Colors::Grey);
+		BWAPI::Broodwar->drawCircleMap(leaderPos, INNER_LEADER_RADIUS, BWAPI::Colors::Green);
+		BWAPI::Broodwar->drawCircleMap(leaderPos, outer_radius, BWAPI::Colors::Yellow);
+//#endif
 
 		// SEPARATION VECTOR
 		VectorPos separationVec = getSeparationVector(unit) * SEPARATION_STRENGTH;
