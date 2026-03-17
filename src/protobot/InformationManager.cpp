@@ -107,7 +107,6 @@ void InformationManager::onFrame()
     }
 
     updateEnemyBuildingCounter();
-    buildGuesser();
 
     //TestDrawBaseOwnership();
     if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
@@ -120,6 +119,10 @@ void InformationManager::onFrame()
 		//printEnemyBuildingCounter();
 		//printEnemyResearch();
 		//printEnemyUpgrades();
+		if (IsEnemyEarlyPush())
+        {
+            std::cout << "Enemy is doing an early push!\n";
+        }
     }
 }
 
@@ -1506,62 +1509,80 @@ bool InformationManager::enemyHasCloakTech() const
     return false;
 }
 
-void InformationManager::buildGuesser()
+bool InformationManager::IsEnemyEarlyPush() const
 {
-    int aggro = 0;
-	int macro = 0;
-    int tech = 0;
-    tech += enemyBuildingCounter.arbiterTribunal;
-    tech += enemyBuildingCounter.assimilator;
-    tech += enemyBuildingCounter.citadelOfAdun;
-    tech += enemyBuildingCounter.cyberneticsCore;
-    tech += enemyBuildingCounter.fleetBeacon;
-    aggro += enemyBuildingCounter.forge;
-    aggro += enemyBuildingCounter.gateway;
-    macro += enemyBuildingCounter.nexus;
-    tech += enemyBuildingCounter.observatory;
-    aggro += enemyBuildingCounter.photonCannon;
-    macro += enemyBuildingCounter.pylon;
-    tech += enemyBuildingCounter.roboticsFacility;
-    tech += enemyBuildingCounter.roboticsSupportBay;
-    macro += enemyBuildingCounter.shieldBattery;
-    tech += enemyBuildingCounter.stargate;
-    tech += enemyBuildingCounter.templarArchives;
-    tech += enemyBuildingCounter.terranAcademy;
-    tech += enemyBuildingCounter.terranArmory;
-    aggro += enemyBuildingCounter.terranBarracks;
-    aggro += enemyBuildingCounter.terranBunker;
-    macro += enemyBuildingCounter.terranCommandCenter;
-    tech += enemyBuildingCounter.terranEngineeringBay;
-    tech += enemyBuildingCounter.terranFactory;
-    aggro += enemyBuildingCounter.terranMissileTurret;
-    tech += enemyBuildingCounter.terranRefinery;
-    tech += enemyBuildingCounter.terranScienceFacility;
-    tech += enemyBuildingCounter.terranStarport;
-    macro += enemyBuildingCounter.terranSupplyDepot;
-    aggro += enemyBuildingCounter.zergCreepColony;
-    tech += enemyBuildingCounter.zergDefilerMound;
-    tech += enemyBuildingCounter.zergEvolutionChamber;
-    tech += enemyBuildingCounter.zergExtractor;
-    tech += enemyBuildingCounter.zergGreaterSpire;
-    macro += enemyBuildingCounter.zergHatchery;
-    tech += enemyBuildingCounter.zergHive;
-    tech += enemyBuildingCounter.zergHydraliskDen;
-    tech += enemyBuildingCounter.zergInfestedCommandCenter;
-    tech += enemyBuildingCounter.zergLair;
-    tech += enemyBuildingCounter.zergNydusCanal;
-    tech += enemyBuildingCounter.zergQueensNest;
-    aggro += enemyBuildingCounter.zergSpawningPool;
-    tech += enemyBuildingCounter.zergSpire;
-    aggro += enemyBuildingCounter.zergSporeColony;
-    aggro += enemyBuildingCounter.zergSunkenColony;
-    tech += enemyBuildingCounter.zergUltraliskCavern;
+    int frame = BWAPI::Broodwar->getFrameCount();
 
-    if (aggro > tech && aggro > macro)
-		playstyle = Playstyle::Aggro;
-    else if (macro > tech && macro > aggro)
-		playstyle = Playstyle::Macro;
-    else if (tech > aggro && tech > macro)
-		playstyle = Playstyle::Tech;
+    int totalEnemyUnits = 0;
+    int enemyCombatUnits = 0;
+    int enemyZerglings = 0;
+    int enemyMarines = 0;
+    int enemyZealots = 0;
+    int enemyProdBuildings = 0;
+
+    std::vector<BWAPI::Position> ourBases;
+    for (const BWEM::Base* b : FindPlayerOwnedBases())
+    {
+        if (!b) continue;
+        ourBases.push_back(b->Center());
+    }
+    const int nearBaseRadius = 96;
+    int enemyUnitsNearBase = 0;
+
+    for (const auto &kv : trackedEnemies)
+    {
+        const TrackedEnemy &te = kv.second;
+        if (te.destroyed) continue;
+
+        ++totalEnemyUnits;
+
+        BWAPI::UnitType t = te.type;
+
+        if (t.isValid() && !t.isWorker() && !t.isBuilding()) ++enemyCombatUnits;
+
+        if (t == BWAPI::UnitTypes::Zerg_Zergling) ++enemyZerglings;
+        if (t == BWAPI::UnitTypes::Terran_Marine) ++enemyMarines;
+        if (t == BWAPI::UnitTypes::Protoss_Zealot) ++enemyZealots;
+
+        // proximity check using lastSeenPos
+        for (const auto &bp : ourBases)
+        {
+            if (bp.getApproxDistance(te.lastSeenPos) <= nearBaseRadius)
+            {
+                ++enemyUnitsNearBase;
+                break;
+            }
+        }
+    }
+
+    // Count known enemy production buildings using _knownEnemyBuildings
+    for (const auto &kv : _knownEnemyBuildings)
+    {
+        const EnemyBuildingInfo &info = kv.second;
+        if (info.destroyed) continue;
+        BWAPI::UnitType t = info.type;
+        if (!t.isValid()) continue;
+
+        if (t == BWAPI::UnitTypes::Terran_Barracks || t == BWAPI::UnitTypes::Terran_Factory || t == BWAPI::UnitTypes::Terran_Starport
+            || t == BWAPI::UnitTypes::Protoss_Gateway || t == BWAPI::UnitTypes::Protoss_Stargate || t == BWAPI::UnitTypes::Protoss_Robotics_Facility
+            || t == BWAPI::UnitTypes::Zerg_Hatchery || t == BWAPI::UnitTypes::Zerg_Lair || t == BWAPI::UnitTypes::Zerg_Hive)
+        {
+            ++enemyProdBuildings;
+        }
+    }
+
+    if (frame <= 10000)
+    {
+        if (enemyUnitsNearBase >= 6) return true;
+        if (enemyZerglings >= 6) return true;
+        if (enemyMarines >= 6) return true;
+        if (enemyZealots >= 6) return true;
+		if (enemyProdBuildings >= 2) return true;
+        if (enemyCombatUnits >= 8 && enemyProdBuildings >= 1) return true;
+    }
+
+    // Fallback: if enemy is pressing bases substantially at any time
+    if (enemyUnitsNearBase >= 8) return true;
+
+    return false;
 }
-

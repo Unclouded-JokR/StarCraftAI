@@ -348,5 +348,5 @@ public:
     int getEnemyDetectionAt(BWAPI::Position p) const;
     ThreatQueryResult queryThreatAt(const BWAPI::Position& pos) const;
 
-    void buildGuesser();
+    bool IsEnemyEarlyPush() const;
 };
