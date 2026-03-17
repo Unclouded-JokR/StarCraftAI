@@ -42,6 +42,80 @@ static bool isTerrainBuildable(BWAPI::UnitType type, const BWAPI::TilePosition& 
     return true;
 }
 
+static bool footprintContainsTile(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const BWAPI::TilePosition& tile)
+{
+    return tile.x >= topLeft.x && tile.x < (topLeft.x + type.tileWidth())
+        && tile.y >= topLeft.y && tile.y < (topLeft.y + type.tileHeight());
+}
+
+static int footprintPathOverlapCount(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const std::vector<BWAPI::TilePosition>& pathTiles)
+{
+    int overlap = 0;
+    for (const auto& tile : pathTiles)
+    {
+        if (footprintContainsTile(type, topLeft, tile))
+            overlap++;
+    }
+    return overlap;
+}
+
+static int minTileDistanceToPath(const BWAPI::TilePosition& tile, const std::vector<BWAPI::TilePosition>& pathTiles)
+{
+    if (!tile.isValid() || pathTiles.empty())
+        return INT_MAX / 4;
+
+    int best = INT_MAX / 4;
+    for (const auto& pt : pathTiles)
+        best = std::min(best, std::abs(pt.x - tile.x) + std::abs(pt.y - tile.y));
+    return best;
+}
+
+static int footprintDistanceToTile(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const BWAPI::TilePosition& tile)
+{
+    if (!topLeft.isValid() || !tile.isValid())
+        return INT_MAX / 4;
+
+    int best = INT_MAX / 4;
+    for (int dx = 0; dx < type.tileWidth(); dx++)
+    {
+        for (int dy = 0; dy < type.tileHeight(); dy++)
+        {
+            const BWAPI::TilePosition footprintTile(topLeft.x + dx, topLeft.y + dy);
+            best = std::min(best, std::abs(footprintTile.x - tile.x) + std::abs(footprintTile.y - tile.y));
+        }
+    }
+    return best;
+}
+
+static int wallDistanceToAnchor(BWEB::Wall* wall, const BWAPI::TilePosition& anchor)
+{
+    if (!wall || !anchor.isValid())
+        return INT_MAX / 4;
+
+    int best = INT_MAX / 4;
+    for (const auto& t : wall->getSmallTiles())
+        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Pylon, t, anchor));
+    for (const auto& t : wall->getMediumTiles())
+        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, t, anchor));
+    for (const auto& t : wall->getLargeTiles())
+        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, t, anchor));
+    return best;
+}
+
+static std::vector<BWAPI::TilePosition> uniquePathTiles(const Path& path)
+{
+    std::vector<BWAPI::TilePosition> tiles;
+    for (const auto& pos : path.positions)
+    {
+        const BWAPI::TilePosition tile(pos);
+        if (!tile.isValid())
+            continue;
+        if (std::find(tiles.begin(), tiles.end(), tile) == tiles.end())
+            tiles.push_back(tile);
+    }
+    return tiles;
+}
+
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -104,6 +178,57 @@ void BuildManager::onFrame() {
 
     spenderManager.OnFrame(resourceRequests);
     buildingPlacer.drawPoweredTiles();
+
+    const auto* naturalChoke = BWEB::Map::getNaturalChoke();
+    if (naturalChoke)
+    {
+
+        if (naturalWallOpeningTile.isValid())
+        {
+            BWAPI::Broodwar->drawBoxMap(BWAPI::Position(naturalWallOpeningTile), BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(32, 32), BWAPI::Colors::Orange, false);
+            BWAPI::Broodwar->drawTextMap(BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(4, 4), "Wall gap / A*");
+        }
+
+        for (const auto& t : naturalWallPathTiles)
+        {
+            if (!t.isValid())
+                continue;
+
+            const BWAPI::Position tl = BWAPI::Position(t);
+            const BWAPI::Position br = tl + BWAPI::Position(32, 32);
+            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Yellow, false);
+        }
+
+        if (naturalWallPylonTile.isValid())
+        {
+            const BWAPI::Position tl = BWAPI::Position(naturalWallPylonTile);
+            const BWAPI::Position br = tl + BWAPI::Position(64, 64);
+            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Green, false);
+            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall pylon");
+        }
+
+        for (const auto& t : naturalWallCannonTiles)
+        {
+            if (!t.isValid())
+                continue;
+
+            const BWAPI::Position tl = BWAPI::Position(t);
+            const BWAPI::Position br = tl + BWAPI::Position(64, 64);
+            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Purple, false);
+            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall cannon");
+        }
+
+        for (const auto& t : naturalWallGatewayTiles)
+        {
+            if (!t.isValid())
+                continue;
+
+            const BWAPI::Position tl = BWAPI::Position(t);
+            const BWAPI::Position br = tl + BWAPI::Position(128, 96);
+            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Red, false);
+            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall gateway");
+        }
+    }
 
     for (ResourceRequest& request : resourceRequests)
     {
@@ -1090,8 +1215,13 @@ void BuildManager::resetNaturalWallPlan()
     naturalWallPlanned = false;
     naturalWallPylonEnqueued = false;
     naturalWallGatewaysEnqueued = false;
+    naturalWallStartLogged = false;
     naturalWallPylonTile = BWAPI::TilePositions::Invalid;
+    naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
+    naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
     naturalWallGatewayTiles.clear();
+    naturalWallCannonTiles.clear();
+    naturalWallPathTiles.clear();
 }
 
 // Find a good pylon tile very near the natural choke for wall power.
@@ -1102,6 +1232,7 @@ BWAPI::TilePosition BuildManager::findNaturalChokePylonTile() const
 
     const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
     const BWAPI::TilePosition anchor(BWEB::Map::getClosestChokeTile(choke, mainPos));
+    const BWAPI::TilePosition centerTarget = naturalWallOpeningTile.isValid() ? naturalWallOpeningTile : anchor;
 
     const auto pylon = BWAPI::UnitTypes::Protoss_Pylon;
     const int w = pylon.tileWidth();
@@ -1114,51 +1245,34 @@ BWAPI::TilePosition BuildManager::findNaturalChokePylonTile() const
             && (t.y + h) <= BWAPI::Broodwar->mapHeight();
     };
 
-    // Prefer main-side area if possible
-    const BWEM::Area* mainArea = BWEB::Map::getMainArea();
+    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
+    int bestScore = INT_MAX;
 
-    // Ring search around anchor
-    for (int r = 0; r <= 10; r++) {
+    for (int r = 0; r <= 12; r++) {
         for (int dx = -r; dx <= r; dx++) {
             for (int dy = -r; dy <= r; dy++) {
                 if (std::abs(dx) != r && std::abs(dy) != r) continue;
-                BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
+                BWAPI::TilePosition t = centerTarget + BWAPI::TilePosition(dx, dy);
                 if (!inBounds(t)) continue;
+                if (!BWAPI::Broodwar->canBuildHere(t, pylon)) continue;
+                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None) continue;
 
-                if (mainArea && BWEB::Map::mapBWEM.GetArea(t) != mainArea)
-                    continue;
+                const int gapDist = footprintDistanceToTile(pylon, t, centerTarget);
+                const int pathOverlap = footprintPathOverlapCount(pylon, t, naturalWallPathTiles);
+                int score = gapDist * 1000 + pathOverlap * 10;
+                if (gapDist > 1)
+                    score += 100000;
 
-                if (!BWAPI::Broodwar->canBuildHere(t, pylon))
-                    continue;
-
-                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None)
-                    continue;
-
-                return t;
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = t;
+                }
             }
         }
     }
 
-    // Fallback: allow non-main area
-    for (int r = 0; r <= 10; r++) {
-        for (int dx = -r; dx <= r; dx++) {
-            for (int dy = -r; dy <= r; dy++) {
-                if (std::abs(dx) != r && std::abs(dy) != r) continue;
-                BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
-                if (!inBounds(t)) continue;
-
-                if (!BWAPI::Broodwar->canBuildHere(t, pylon))
-                    continue;
-
-                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None)
-                    continue;
-
-                return t;
-            }
-        }
-    }
-
-    return BWAPI::TilePositions::Invalid;
+    return best;
 }
 
 bool BuildManager::enqueueSupplyAtNaturalRamp()
@@ -1189,6 +1303,13 @@ bool BuildManager::enqueueSupplyAtNaturalRamp()
 }
 
 
+// Call to request walling outside the build order
+bool BuildManager::requestNaturalWallBuild(bool resetPlan)
+{
+    if (resetPlan)
+        resetNaturalWallPlan();
+    return enqueueNaturalWallAtChoke();
+}
 
 bool BuildManager::enqueueNaturalWallAtChoke()
 {
@@ -1203,104 +1324,208 @@ bool BuildManager::enqueueNaturalWallAtChoke()
     // If we haven't planned the wall layout yet, generate it once (and cache tiles)
     if (!naturalWallPlanned)
     {
+        naturalWallChokeAnchorTile = BWAPI::TilePosition(BWEB::Map::getClosestChokeTile(choke, BWEB::Map::getMainPosition()));
+
+        const Path chokePath = AStar::GeneratePath(BWEB::Map::getMainPosition(), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(choke->Center()));
+        const std::vector<BWAPI::TilePosition> pathTiles = uniquePathTiles(chokePath);
+        naturalWallPathTiles = pathTiles;
+
+        bool hasCompletedForge = false;
+        for (auto u : BWAPI::Broodwar->self()->getUnits())
+        {
+            if (u->getType() == BWAPI::UnitTypes::Protoss_Forge && u->isCompleted())
+            {
+                hasCompletedForge = true;
+                break;
+            }
+        }
+        // Could be formatted better, list possible permutations of gateways and pylons wall layout, with or w/o cannons
         std::vector<std::vector<BWAPI::UnitType>> candidates = {
+            // 2 Gate + 1 Pylon wall options
             { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon },
             { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway },
             { BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway },
-            // fallback smaller wall : 1 gate + pylon
-            { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon }
+            { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon },
+
+            // Custom 1 Pylon + 3 Gateway wall options
+            { BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway },
+            { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway },
+            { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway },
+            { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon }
         };
 
-        BWEB::Wall* wall = nullptr;
-        for (auto& b : candidates)
+        if (hasCompletedForge)
         {
-            wall = BWEB::Walls::createWall(b, area, choke, BWAPI::UnitTypes::None, {}, true, false);
-            if (wall) break;
+            std::vector<std::vector<BWAPI::UnitType>> cannonCandidates = {
+                { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Photon_Cannon },
+                { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Pylon },
+                { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon },
+                { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Photon_Cannon },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Pylon },
+                { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon },
+                { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Photon_Cannon },
+                { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Pylon }
+            };
+            candidates.insert(candidates.end(), cannonCandidates.begin(), cannonCandidates.end());
+        }
+		// Score above candidates based on multiple factors: path overlap (avoid blocking A* path), distance of wall pieces to choke, distance of wall opening to choke
+        std::vector<BWAPI::UnitType> bestCandidate;
+        int bestScore = INT_MAX;
+        const std::vector<BWAPI::UnitType> emptyBuildings;
+
+        for (std::vector<std::vector<BWAPI::UnitType>>::iterator it = candidates.begin(); it != candidates.end(); ++it)
+        {
+            std::vector<BWAPI::UnitType> mutableCandidate = *it;
+            BWEB::Wall* testWall = BWEB::Walls::createWall(mutableCandidate, area, choke, BWAPI::UnitTypes::None, emptyBuildings, true, false);
+            if (!testWall)
+                continue;
+
+            int overlapPenalty = 0;
+            for (const auto& t : testWall->getMediumTiles())
+                overlapPenalty += footprintPathOverlapCount(BWAPI::UnitTypes::Protoss_Gateway, t, pathTiles);
+            for (const auto& t : testWall->getLargeTiles())
+                overlapPenalty += footprintPathOverlapCount(BWAPI::UnitTypes::Protoss_Gateway, t, pathTiles);
+            for (const auto& t : testWall->getSmallTiles())
+                overlapPenalty += footprintPathOverlapCount(BWAPI::UnitTypes::Protoss_Pylon, t, pathTiles);
+
+            const BWAPI::TilePosition opening = testWall->getOpening();
+            const int openingDist = minTileDistanceToPath(opening, pathTiles);
+            const int wallAnchorDist = wallDistanceToAnchor(testWall, naturalWallChokeAnchorTile);
+            const int openingAnchorDist = naturalWallChokeAnchorTile.isValid() && opening.isValid()
+                ? std::abs(opening.x - naturalWallChokeAnchorTile.x) + std::abs(opening.y - naturalWallChokeAnchorTile.y)
+                : INT_MAX / 4;
+
+            // First anchor the wall on the choke, then keep the A* path as the gap (as much as possible)
+            const int score = (wallAnchorDist * 100000)
+                + (openingAnchorDist * 5000)
+                + (overlapPenalty * 1000)
+                + (openingDist * 100);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                bestCandidate = mutableCandidate;
+            }
         }
 
+        if (bestCandidate.empty())
+            return false;
+
+        std::vector<BWAPI::UnitType> mutableBestCandidate = bestCandidate;
+        BWEB::Wall* wall = BWEB::Walls::createWall(mutableBestCandidate, area, choke, BWAPI::UnitTypes::None, emptyBuildings, true, false);
         if (!wall)
             return false;
 
-        // Choose pylon tile (small tile closest to choke center)
+        naturalWallOpeningTile = wall->getOpening();
+        naturalWallGatewayTiles.clear();
+        naturalWallCannonTiles.clear();
+
+        // pick the pylon tile closest to the A* gap, treat remaining small tiles as cannons.
         if (!wall->getSmallTiles().empty())
         {
-            const auto& small = wall->getSmallTiles();
-            if (small.empty()) return false;
-
-            const BWAPI::TilePosition chokeTile(BWAPI::TilePosition(choke->Center()));
-            const BWEM::Area* mainArea = BWEB::Map::getMainArea();
-
-            auto score = [&](const BWAPI::TilePosition& t) {
-                return std::abs(t.x - chokeTile.x) + std::abs(t.y - chokeTile.y);
-            };
+            std::vector<BWAPI::TilePosition> small(wall->getSmallTiles().begin(), wall->getSmallTiles().end());
 
             BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-            int bestDist = INT_MAX;
+            int bestPylonScore = INT_MAX;
 
             for (const auto& t : small)
             {
-                if (mainArea && BWEB::Map::mapBWEM.GetArea(t) != mainArea)
-                    continue;
                 if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
                     continue;
 
-                const int d = score(t);
-                if (d > 4)
-                    continue;
+                const int gapDist = naturalWallOpeningTile.isValid()
+                    ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Pylon, t, naturalWallOpeningTile)
+                    : INT_MAX / 4;
+                const int pathOverlap = footprintPathOverlapCount(BWAPI::UnitTypes::Protoss_Pylon, t, pathTiles);
 
-                if (d < bestDist)
+                int score = (gapDist * 1000) + pathOverlap;
+                if (gapDist > 1)
+                    score += 100000;
+
+                if (score < bestPylonScore)
                 {
-                    bestDist = d;
+                    bestPylonScore = score;
                     best = t;
                 }
             }
 
-            if (!best.isValid())
-            {
-                for (const auto& t : small)
-                {
-                    if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
-                        continue;
-                    const int d = score(t);
-                    if (d > 4) continue;
-                    if (d < bestDist)
-                    {
-                        bestDist = d;
-                        best = t;
-                    }
-                }
-            }
-
-            if (!best.isValid())
-            {
-                bestDist = INT_MAX;
-                for (const auto& t : small)
-                {
-                    if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
-                        continue;
-                    const int d = score(t);
-                    if (d < bestDist)
-                    {
-                        bestDist = d;
-                        best = t;
-                    }
-                }
-            }
-
-            // If still invalid, we will fall back to findNaturalChokePylonTile() later
             naturalWallPylonTile = best.isValid() ? best : BWAPI::TilePositions::Invalid;
+
+            int cannonCount = 0;
+            bool hasCompletedForgeForCannons = false;
+            for (auto u : BWAPI::Broodwar->self()->getUnits())
+            {
+                if (u->getType() == BWAPI::UnitTypes::Protoss_Forge && u->isCompleted())
+                {
+                    hasCompletedForgeForCannons = true;
+                    break;
+                }
+            }
+            if (hasCompletedForgeForCannons)
+            {
+                for (std::vector<BWAPI::UnitType>::const_iterator it = mutableBestCandidate.begin(); it != mutableBestCandidate.end(); ++it)
+                {
+                    if (*it == BWAPI::UnitTypes::Protoss_Photon_Cannon)
+                        cannonCount++;
+                }
+            }
+
+            if (cannonCount > 0)
+            {
+                std::sort(small.begin(), small.end(), [&](const BWAPI::TilePosition& a, const BWAPI::TilePosition& b) {
+                    const int da = naturalWallOpeningTile.isValid() ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Photon_Cannon, a, naturalWallOpeningTile) : 0;
+                    const int db = naturalWallOpeningTile.isValid() ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Photon_Cannon, b, naturalWallOpeningTile) : 0;
+                    return da < db;
+                });
+
+                for (const auto& t : small)
+                {
+                    if (t == naturalWallPylonTile)
+                        continue;
+                    if ((int)naturalWallCannonTiles.size() >= cannonCount)
+                        break;
+                    naturalWallCannonTiles.push_back(t);
+                }
+            }
         }
 
-        // Get gateway tiles
-        naturalWallGatewayTiles.clear();
-        for (const auto& t : wall->getMediumTiles())
-            naturalWallGatewayTiles.push_back(t);
-        for (const auto& t : wall->getLargeTiles())
-            naturalWallGatewayTiles.push_back(t);
+        // Get gateway tiles and prioritize the pieces that stay off the A* path
+        for (std::set<BWAPI::TilePosition>::iterator it = wall->getMediumTiles().begin(); it != wall->getMediumTiles().end(); ++it)
+            naturalWallGatewayTiles.push_back(*it);
+        for (std::set<BWAPI::TilePosition>::iterator it = wall->getLargeTiles().begin(); it != wall->getLargeTiles().end(); ++it)
+            naturalWallGatewayTiles.push_back(*it);
+
+        std::sort(naturalWallGatewayTiles.begin(), naturalWallGatewayTiles.end(), [&](const BWAPI::TilePosition& a, const BWAPI::TilePosition& b) {
+            const int overlapA = footprintPathOverlapCount(BWAPI::UnitTypes::Protoss_Gateway, a, pathTiles);
+            const int overlapB = footprintPathOverlapCount(BWAPI::UnitTypes::Protoss_Gateway, b, pathTiles);
+            if (overlapA != overlapB)
+                return overlapA < overlapB;
+
+            const int anchorA = naturalWallChokeAnchorTile.isValid() ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, a, naturalWallChokeAnchorTile) : 0;
+            const int anchorB = naturalWallChokeAnchorTile.isValid() ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, b, naturalWallChokeAnchorTile) : 0;
+            if (anchorA != anchorB)
+                return anchorA < anchorB;
+
+            const int distA = naturalWallOpeningTile.isValid() ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, a, naturalWallOpeningTile) : 0;
+            const int distB = naturalWallOpeningTile.isValid() ? footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, b, naturalWallOpeningTile) : 0;
+            return distA < distB;
+        });
 
         naturalWallPlanned = true;
         naturalWallPylonEnqueued = false;
         naturalWallGatewaysEnqueued = false;
+        naturalWallStartLogged = false;
     }
 
     if (!naturalWallPylonEnqueued)
@@ -1324,6 +1549,20 @@ bool BuildManager::enqueueNaturalWallAtChoke()
         resourceRequests.push_back(req);
         naturalWallPylonEnqueued = true;
         naturalWallPylonTile = pylonTile;
+
+        if (!naturalWallStartLogged)
+        {
+            const int supply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+            std::cout << "[WallDebug] Starting wall construction at supply " << supply
+                      << " | pylon tile (" << pylonTile.x << "," << pylonTile.y << ")";
+            if (naturalWallOpeningTile.isValid())
+                std::cout << " | gap tile (" << naturalWallOpeningTile.x << "," << naturalWallOpeningTile.y << ")";
+            std::cout << std::endl;
+
+            BWAPI::Broodwar->printf("[WallDebug] Starting wall construction at supply %d", supply);
+            naturalWallStartLogged = true;
+        }
+
         return false;
     }
 
@@ -1347,8 +1586,7 @@ bool BuildManager::enqueueNaturalWallAtChoke()
     {
         bool enqueuedAny = false;
 
-        
-auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
+        auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
         {
             if (!t.isValid()) return;
 
@@ -1427,16 +1665,23 @@ auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
             enqueuedAny = true;
         };
 
-        if (naturalWallGatewayTiles.empty())
-            return false;
-
-        int placed = 0;
-        for (const auto& t : naturalWallGatewayTiles)
+        bool hasCompletedForgeForCannons = false;
+        for (auto u : BWAPI::Broodwar->self()->getUnits())
         {
-            enqueueForced(BWAPI::UnitTypes::Protoss_Gateway, t);
-            placed++;
-            if (placed >= 2) break;
+            if (u->getType() == BWAPI::UnitTypes::Protoss_Forge && u->isCompleted())
+            {
+                hasCompletedForgeForCannons = true;
+                break;
+            }
         }
+        if (hasCompletedForgeForCannons)
+        {
+            for (const auto& t : naturalWallCannonTiles)
+                enqueueForced(BWAPI::UnitTypes::Protoss_Photon_Cannon, t);
+        }
+
+        for (const auto& t : naturalWallGatewayTiles)
+            enqueueForced(BWAPI::UnitTypes::Protoss_Gateway, t);
 
         if (!enqueuedAny)
             return false;

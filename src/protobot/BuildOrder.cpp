@@ -20,13 +20,14 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 14} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 15} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 16} });
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 21} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 25} });
-            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 27} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 29} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 31} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 38} });
 
+            
             buildOrders.push_back(std::move(bo));
         }
 
@@ -43,6 +44,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Assimilator, 1, {BuildTriggerType::AtSupply, 12} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 14} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 16} });
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 20} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 21} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 26} });
@@ -65,6 +67,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 9} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -82,6 +85,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 17} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 17} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -97,6 +101,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Assimilator, 1, {BuildTriggerType::AtSupply, 11} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 13} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 15} });
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 24} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Nexus, 1, {BuildTriggerType::AtSupply, 28} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 29} });
@@ -117,6 +122,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 9} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -132,6 +138,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 10} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -146,8 +153,8 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 10} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 12} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 15} });
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 21} });
-
             buildOrders.push_back(std::move(bo));
         }
 
@@ -163,6 +170,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 9} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -178,6 +186,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 10} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -193,6 +202,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 12} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 16} });
 
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             buildOrders.push_back(std::move(bo));
         }
 
@@ -208,6 +218,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 12} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Assimilator, 1, {BuildTriggerType::AtSupply, 16} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 17} });
+            //bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 22} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 3, {BuildTriggerType::AtSupply, 31} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 33} });
