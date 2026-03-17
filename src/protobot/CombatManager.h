@@ -15,7 +15,7 @@ public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset allUnits;
-	map<BWAPI::Unit, Squad*> unitSquadMap;
+	static map<BWAPI::Unit, Squad*> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;

@@ -1,5 +1,7 @@
 #include "BOIDS.h"
 
+map<BWAPI::Unit, Squad*> CombatManager::unitSquadMap;
+unordered_map<BWAPI::Unit, double, unitHash> BOIDS::leaderRadiusMap;
 
 // Uses BOIDS algorithm to maintain formation while leader is moving
 // leaderVec keeps units surround the leader
@@ -40,16 +42,19 @@ void BOIDS::squadFlock(Squad* squad) {
 		// LEADER VECTOR
 		VectorPos leaderVec = VectorPos(0, 0);
 		const double dist = unit->getDistance(leaderPos);
-		const double inner_radius = INNER_LEADER_RADIUS;
-		const int spacing = 30;
-		const double outer_radius = max(inner_radius * 1.5, spacing + sqrt(squad->units.size()) * spacing);
+		const double outer_radius = max(INNER_LEADER_RADIUS * 1.5, MIN_SEPARATION_DISTANCE + sqrt(squad->units.size()) * MIN_SEPARATION_DISTANCE);
+
+		// Update leader radii map if needed
+		if (leaderRadiusMap.find(squad->leader) == leaderRadiusMap.end() || leaderRadiusMap[squad->leader] != outer_radius) {
+			leaderRadiusMap[squad->leader] = outer_radius;
+		}
 
 		// if unit too far, pull in
 		// if unit too close, push away
 		if (dist > outer_radius) {
 			leaderVec = leaderPos - unitPos;
 		}
-		else if (dist < inner_radius){
+		else if (dist < INNER_LEADER_RADIUS){
 			leaderVec = unitPos - leaderPos;
 		}
 
@@ -62,7 +67,33 @@ void BOIDS::squadFlock(Squad* squad) {
 //#endif
 
 		// SEPARATION VECTOR
-		VectorPos separationVec = getSeparationVector(unit) * SEPARATION_STRENGTH;
+		// Grab close neigbors for separation vector
+		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Filter::IsAlly);
+		VectorPos separationVec = VectorPos(0, 0);
+
+		for (const auto& neighbor : neighbors) {
+			// If neighbor is the current unit, dont process
+			if (neighbor == unit) {
+				continue;
+			}
+
+			// Don't apply separation to self if neighbor is a unit settling into their leader's radius
+			BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
+			int dist = neighbor->getPosition().getApproxDistance(neighborLeader->getPosition());
+			if (dist > INNER_LEADER_RADIUS && dist < leaderRadiusMap[neighborLeader]) {
+				separationVec = VectorPos(0, 0);
+				continue;
+			}
+
+			const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
+
+			// Need to scale separation strength by how close/far the neighbor is
+			const double distance = unitPos.getDistance(neighborPos);
+			const double scale = 1 / distance;
+			separationVec += (unitPos - neighborPos) * scale;
+		}
+
+		separationVec = normalize(separationVec);
 
 		// TERRAIN VECTOR
 		VectorPos terrainVec = getTerrainVector(unit, squad->leader) * TERRAIN_STRENGTH;
@@ -78,7 +109,7 @@ void BOIDS::squadFlock(Squad* squad) {
 			continue;
 		}
 
-		VectorPos finalTarget = unitPos + (unitVelocity * VELOCITY_DAMPENING) + (boidsVector * LOOKAHEAD_LENGTH);
+		VectorPos finalTarget = unitPos + (unitVelocity * VELOCITY_DAMPENING) + (boidsVector * unit->getType().topSpeed() * FRAMES_BETWEEN_BOIDS);
 		unit->attack(finalTarget);
 
 #ifdef DEBUG_FLOCKING
@@ -99,30 +130,6 @@ void BOIDS::squadFlock(Squad* squad) {
 		//BWAPI::Broodwar->printf("FinalDirection magnitude: %f", unitPos.getDistance(finalDirection));
 #endif
 	}
-}
-
-VectorPos BOIDS::getSeparationVector(BWAPI::Unit unit) {
-	// Grab close neigbors for separation vector
-	const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
-	const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Filter::IsAlly);
-	VectorPos separationVec = VectorPos(0, 0);
-
-	// SEPARATION VECTOR
-	for (const auto& neighbor : neighbors) {
-		// If neighbor is the current unit, dont process
-		if (neighbor == unit) {
-			continue;
-		}
-
-		const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
-
-		// Need to scale separation strength by how close/far the neighbor is
-		const double distance = unitPos.getDistance(neighborPos);
-		const double scale = 1 / distance;
-		separationVec += (unitPos - neighborPos) * scale;
-	}
-
-	return normalize(separationVec);
 }
 
 VectorPos BOIDS::getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader) {
