@@ -13,9 +13,9 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
-	for (const auto& squad : Squads) {
-		BOIDS::squadFlock(squad);
-	}
+	//for (const auto& squad : Squads) {
+	//	BOIDS::squadFlock(squad);
+	//}
 
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
 		AStar::fillAreaPathCache();
