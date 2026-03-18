@@ -15,6 +15,7 @@ void BOIDS::squadFlock(Squad* squad) {
 
 		// Ignore leader or if unit is attacking
 		if (unit == squad->leader || unit->isAttackFrame()) {
+			BWAPI::Broodwar->drawCircleMap(unit->getPosition(), MIN_SEPARATION_DISTANCE, BWAPI::Colors::Red);
 			continue;
 		}
 
@@ -42,7 +43,8 @@ void BOIDS::squadFlock(Squad* squad) {
 		// LEADER VECTOR
 		VectorPos leaderVec = VectorPos(0, 0);
 		const double dist = unit->getDistance(leaderPos);
-		const double outer_radius = max(INNER_LEADER_RADIUS * 1.5, MIN_SEPARATION_DISTANCE + sqrt(squad->units.size()) * MIN_SEPARATION_DISTANCE);
+		const double spacing = 25.0;
+		const double outer_radius = max(spacing * 1.5, spacing + sqrt(squad->units.size()) * spacing);
 
 		// Update leader radii map if needed
 		if (leaderRadiusMap.find(squad->leader) == leaderRadiusMap.end() || leaderRadiusMap[squad->leader] != outer_radius) {
@@ -54,15 +56,11 @@ void BOIDS::squadFlock(Squad* squad) {
 		if (dist > outer_radius) {
 			leaderVec = leaderPos - unitPos;
 		}
-		else if (dist < INNER_LEADER_RADIUS){
-			leaderVec = unitPos - leaderPos;
-		}
 
 		leaderVec = normalize(leaderVelocity) + normalize(leaderVec) * LEADER_STRENGTH;
 
 //#ifdef DEBUG_FLOCKING
 		BWAPI::Broodwar->drawCircleMap(leaderPos, BOIDS_RANGE, BWAPI::Colors::Grey);
-		BWAPI::Broodwar->drawCircleMap(leaderPos, INNER_LEADER_RADIUS, BWAPI::Colors::Green);
 		BWAPI::Broodwar->drawCircleMap(leaderPos, outer_radius, BWAPI::Colors::Yellow);
 //#endif
 
@@ -78,11 +76,20 @@ void BOIDS::squadFlock(Squad* squad) {
 			}
 
 			// Don't apply separation to self if neighbor is a unit settling into their leader's radius
-			BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
-			int dist = neighbor->getPosition().getApproxDistance(neighborLeader->getPosition());
-			if (dist > INNER_LEADER_RADIUS && dist < leaderRadiusMap[neighborLeader]) {
-				separationVec = VectorPos(0, 0);
-				continue;
+			// If neighbor is a leader, apply separation to self 
+			if (CombatManager::unitSquadMap.find(neighbor) != CombatManager::unitSquadMap.end()) { // neighbor has a squad
+				if (neighbor != CombatManager::unitSquadMap[neighbor]->leader) { // neighbor is not a leader
+					BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
+					int neighborDist = neighbor->getPosition().getApproxDistance(neighborLeader->getPosition());
+					int unitDist = unit->getPosition().getApproxDistance(squad->leader->getPosition());
+					// if neighbor is settled in their leader's radius, don't push unit away
+					if (neighborDist <= leaderRadiusMap[neighborLeader]){
+						if (unitDist >= leaderRadiusMap[squad->leader]) {
+							separationVec = VectorPos(0, 0);
+							continue;
+						}
+					}
+				}
 			}
 
 			const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
