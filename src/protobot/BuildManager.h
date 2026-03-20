@@ -147,9 +147,12 @@ private:
     bool naturalWallPlanned = false;
     bool naturalWallPylonEnqueued = false;
     bool naturalWallGatewaysEnqueued = false;
+    bool naturalWallCannonsEnqueued = false;
     BWAPI::TilePosition naturalWallPylonTile = BWAPI::TilePositions::Invalid;
+    std::vector<BWAPI::TilePosition> naturalWallPylonTiles;
     BWAPI::TilePosition naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
     BWAPI::TilePosition naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
+    std::vector<BWAPI::TilePosition> naturalWallForgeTiles;
     std::vector<BWAPI::TilePosition> naturalWallGatewayTiles;
     std::vector<BWAPI::TilePosition> naturalWallCannonTiles;
     std::vector<BWAPI::TilePosition> naturalWallPathTiles;
