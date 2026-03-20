@@ -12,8 +12,10 @@ int versusTerran_Wins = 0;
 int versusTerran_Loses = 0;
 
 
-ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(this), economyManager(this), scoutingManager(this), combatManager(this), informationManager(this)
+ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(this), economyManager(this), scoutingManager(this), combatManager(this)
 {
+	// Initialize singleton InformationManager with this commander reference
+	InformationManager::Instance().SetCommander(this);
 
 }
 
@@ -64,7 +66,7 @@ void ProtoBotCommander::onStart()
 	/*
 	* Protobot Modules
 	*/
-	informationManager.onStart();
+    InformationManager::Instance().onStart();
 	strategyManager.onStart();
 	economyManager.onStart();
 	scoutingManager.onStart();
@@ -93,7 +95,7 @@ void ProtoBotCommander::onFrame()
 	*/
 
 	//timerManager.startTimer(TimerManager::Information);
-	informationManager.onFrame();
+    InformationManager::Instance().onFrame();
 	//timerManager.stopTimer(TimerManager::Information);
 
 	//timerManager.startTimer(TimerManager::Strategy);
@@ -206,13 +208,13 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 
 	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
-	informationManager.onUnitDestroy(unit);
+ InformationManager::Instance().onUnitDestroy(unit);
 	buildManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
-	informationManager.onUnitMorph(unit);
+   InformationManager::Instance().onUnitMorph(unit);
 	buildManager.onUnitMorph(unit);
 }
 
@@ -229,7 +231,7 @@ void ProtoBotCommander::onSendText(std::string text)
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
-	informationManager.onUnitCreate(unit);
+  InformationManager::Instance().onUnitCreate(unit);
 	strategyManager.onUnitCreate(unit);
 }
 
@@ -238,7 +240,7 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 	//std::cout << "ProtoBot onUnitComplete: " << unit->getType() << "\n";
 
 	strategyManager.onUnitComplete(unit);
-	informationManager.onUnitComplete(unit);
+    InformationManager::Instance().onUnitComplete(unit);
 
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
@@ -349,12 +351,12 @@ void ProtoBotCommander::requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit b
 
 const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
 {
-	return informationManager.getKnownEnemies();
+    return InformationManager::Instance().getKnownEnemies();
 }
 
 const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemyBuildings()
 {
-	return informationManager.getKnownEnemyBuildings();
+    return InformationManager::Instance().getKnownEnemyBuildings();
 }
 
 void ProtoBotCommander::requestCheese(BWAPI::UnitType building, BWAPI::Unit unit)
@@ -506,16 +508,16 @@ void ProtoBotCommander::onEnemyNaturalFound(const BWAPI::TilePosition& tp) {
 }
 
 int ProtoBotCommander::getEnemyGroundThreatAt(BWAPI::Position p) const {
-	return informationManager.getEnemyGroundThreatAt(p);
+    return InformationManager::Instance().getEnemyGroundThreatAt(p);
 }
 
 int ProtoBotCommander::getEnemyDetectionAt(BWAPI::Position p) const {
-	return informationManager.getEnemyDetectionAt(p);
+    return InformationManager::Instance().getEnemyDetectionAt(p);
 }
 
 ThreatQueryResult ProtoBotCommander::queryThreatAt(const BWAPI::Position& pos) const
 {
-	return informationManager.queryThreatAt(pos);
+    return InformationManager::Instance().queryThreatAt(pos);
 }
 
 bool ProtoBotCommander::isAirThreatened(const BWAPI::Position& pos, int threshold) const

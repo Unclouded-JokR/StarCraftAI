@@ -704,9 +704,9 @@ bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
 
 void BuildManager::pumpUnit()
 {
-    const FriendlyUnitCounter ProtoBot_Units = commanderReference->informationManager.getFriendlyUnitCounter();
-    const FriendlyBuildingCounter ProtoBot_Buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
-    const FriendlyUpgradeCounter ProtoBot_Upgrades = commanderReference->informationManager.getFriendlyUpgradeCounter();
+    const FriendlyUnitCounter ProtoBot_Units = InformationManager::Instance().getFriendlyUnitCounter();
+    const FriendlyBuildingCounter ProtoBot_Buildings = InformationManager::Instance().getFriendlyBuildingCounter();
+    const FriendlyUpgradeCounter ProtoBot_Upgrades = InformationManager::Instance().getFriendlyUpgradeCounter();
     const int totalMinerals = BWAPI::Broodwar->self()->minerals();
     const int totalGas = BWAPI::Broodwar->self()->gas();
 
