@@ -144,15 +144,7 @@ private:
     bool naturalWallPlanned = false;
     bool naturalWallPylonEnqueued = false;
     bool naturalWallGatewaysEnqueued = false;
-    bool naturalWallCannonsEnqueued = false;
     BWAPI::TilePosition naturalWallPylonTile = BWAPI::TilePositions::Invalid;
-<<<<<<< Updated upstream
-=======
-    std::vector<BWAPI::TilePosition> naturalWallPylonTiles;
-    BWAPI::TilePosition naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
-    BWAPI::TilePosition naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
-    std::vector<BWAPI::TilePosition> naturalWallForgeTiles;
->>>>>>> Stashed changes
     std::vector<BWAPI::TilePosition> naturalWallGatewayTiles;
 
     bool isRestrictedTechBuilding(BWAPI::UnitType type) const;

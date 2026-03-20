@@ -42,157 +42,6 @@ static bool isTerrainBuildable(BWAPI::UnitType type, const BWAPI::TilePosition& 
     return true;
 }
 
-<<<<<<< Updated upstream
-=======
-static bool footprintContainsTile(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const BWAPI::TilePosition& tile)
-{
-    return tile.x >= topLeft.x && tile.x < (topLeft.x + type.tileWidth())
-        && tile.y >= topLeft.y && tile.y < (topLeft.y + type.tileHeight());
-}
-
-static int footprintPathOverlapCount(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    int overlap = 0;
-    for (const auto& tile : pathTiles)
-    {
-        if (footprintContainsTile(type, topLeft, tile))
-            overlap++;
-    }
-    return overlap;
-}
-
-static int minTileDistanceToPath(const BWAPI::TilePosition& tile, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    if (!tile.isValid() || pathTiles.empty())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (const auto& pt : pathTiles)
-        best = std::min(best, std::abs(pt.x - tile.x) + std::abs(pt.y - tile.y));
-    return best;
-}
-
-static int footprintDistanceToTile(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const BWAPI::TilePosition& tile)
-{
-    if (!topLeft.isValid() || !tile.isValid())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (int dx = 0; dx < type.tileWidth(); dx++)
-    {
-        for (int dy = 0; dy < type.tileHeight(); dy++)
-        {
-            const BWAPI::TilePosition footprintTile(topLeft.x + dx, topLeft.y + dy);
-            best = std::min(best, std::abs(footprintTile.x - tile.x) + std::abs(footprintTile.y - tile.y));
-        }
-    }
-    return best;
-}
-
-static int wallDistanceToAnchor(BWEB::Wall* wall, const BWAPI::TilePosition& anchor)
-{
-    if (!wall || !anchor.isValid())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (const auto& t : wall->getSmallTiles())
-        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Pylon, t, anchor));
-    for (const auto& t : wall->getMediumTiles())
-        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, t, anchor));
-    for (const auto& t : wall->getLargeTiles())
-        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, t, anchor));
-    return best;
-}
-
-static std::vector<BWAPI::TilePosition> uniquePathTiles(const Path& path)
-{
-    std::vector<BWAPI::TilePosition> tiles;
-    for (const auto& pos : path.positions)
-    {
-        const BWAPI::TilePosition tile(pos);
-        if (!tile.isValid())
-            continue;
-        if (std::find(tiles.begin(), tiles.end(), tile) == tiles.end())
-            tiles.push_back(tile);
-    }
-    return tiles;
-}
-
-static BWAPI::TilePosition chooseWallGapOnPath(BWEB::Wall* wall, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    if (!wall)
-        return BWAPI::TilePositions::Invalid;
-
-    const BWAPI::TilePosition opening = wall->getOpening();
-    const BWAPI::TilePosition centroid = BWAPI::TilePosition(wall->getCentroid());
-
-    if (pathTiles.empty())
-        return opening.isValid() ? opening : centroid;
-
-    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-    int bestScore = INT_MAX;
-
-    auto consider = [&](const BWAPI::TilePosition& candidate) {
-        if (!candidate.isValid())
-            return;
-
-        bool blocked = false;
-        for (const auto& t : wall->getSmallTiles()) {
-            if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Pylon, t, candidate)) {
-                blocked = true;
-                break;
-            }
-        }
-        if (!blocked) {
-            for (const auto& t : wall->getMediumTiles()) {
-                if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Gateway, t, candidate)) {
-                    blocked = true;
-                    break;
-                }
-            }
-        }
-        if (!blocked) {
-            for (const auto& t : wall->getLargeTiles()) {
-                if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Gateway, t, candidate)) {
-                    blocked = true;
-                    break;
-                }
-            }
-        }
-        if (blocked)
-            return;
-
-        int score = 0;
-        if (opening.isValid())
-            score += 10 * (std::abs(candidate.x - opening.x) + std::abs(candidate.y - opening.y));
-        if (centroid.isValid())
-            score += std::abs(candidate.x - centroid.x) + std::abs(candidate.y - centroid.y);
-
-        if (score < bestScore)
-        {
-            bestScore = score;
-            best = candidate;
-        }
-    };
-
-    for (const auto& pt : pathTiles)
-    {
-        const int openingDist = opening.isValid() ? (std::abs(pt.x - opening.x) + std::abs(pt.y - opening.y)) : 0;
-        const int centroidDist = centroid.isValid() ? (std::abs(pt.x - centroid.x) + std::abs(pt.y - centroid.y)) : 0;
-        if (openingDist <= 3 || centroidDist <= 2)
-            consider(pt);
-    }
-
-    if (best.isValid())
-        return best;
-
-    for (const auto& pt : pathTiles)
-        consider(pt);
-
-    return best.isValid() ? best : (opening.isValid() ? opening : centroid);
-}
-
->>>>>>> Stashed changes
 
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -253,82 +102,9 @@ void BuildManager::onFrame() {
 
     runBuildOrderOnFrame();
 
-    if (naturalWallPlanned && (!naturalWallGatewaysEnqueued || !naturalWallPylonEnqueued))
-        enqueueNaturalWallAtChoke();
-
     spenderManager.OnFrame(resourceRequests);
     buildingPlacer.drawPoweredTiles();
 
-<<<<<<< Updated upstream
-=======
-    const auto* naturalChoke = BWEB::Map::getNaturalChoke();
-    if (naturalChoke)
-    {
-
-        if (naturalWallOpeningTile.isValid())
-        {
-            BWAPI::Broodwar->drawBoxMap(BWAPI::Position(naturalWallOpeningTile), BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(32, 32), BWAPI::Colors::Orange, false);
-            BWAPI::Broodwar->drawTextMap(BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(4, 4), "Wall gap / A*");
-        }
-
-        for (const auto& t : naturalWallPathTiles)
-        {
-            if (!t.isValid())
-                continue;
-
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(32, 32);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Yellow, false);
-        }
-
-        BWEB::Walls::draw();
-
-        for (const auto& pylonTile : naturalWallPylonTiles)
-        {
-            if (!pylonTile.isValid())
-                continue;
-
-            const BWAPI::Position tl = BWAPI::Position(pylonTile);
-            const BWAPI::Position br = tl + BWAPI::Position(64, 64);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Green, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall pylon");
-        }
-
-        for (const auto& t : naturalWallCannonTiles)
-        {
-            if (!t.isValid())
-                continue;
-
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(64, 64);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Purple, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall cannon");
-        }
-
-        for (const auto& t : naturalWallForgeTiles)
-        {
-            if (!t.isValid())
-                continue;
-
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(96, 64);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Cyan, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall forge");
-        }
-
-        for (const auto& t : naturalWallGatewayTiles)
-        {
-            if (!t.isValid())
-                continue;
-
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(128, 96);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Red, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall gateway");
-        }
-    }
-
->>>>>>> Stashed changes
     for (ResourceRequest& request : resourceRequests)
     {
         if (request.state != ResourceRequest::State::Approved_InProgress)
@@ -1314,17 +1090,7 @@ void BuildManager::resetNaturalWallPlan()
     naturalWallPlanned = false;
     naturalWallPylonEnqueued = false;
     naturalWallGatewaysEnqueued = false;
-<<<<<<< Updated upstream
     naturalWallPylonTile = BWAPI::TilePositions::Invalid;
-=======
-    naturalWallCannonsEnqueued = false;
-    naturalWallStartLogged = false;
-    naturalWallPylonTile = BWAPI::TilePositions::Invalid;
-    naturalWallPylonTiles.clear();
-    naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
-    naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
-    naturalWallForgeTiles.clear();
->>>>>>> Stashed changes
     naturalWallGatewayTiles.clear();
 }
 
@@ -1423,75 +1189,31 @@ bool BuildManager::enqueueSupplyAtNaturalRamp()
 }
 
 
-<<<<<<< Updated upstream
 
-=======
-// Call to request walling outside the build order
-bool BuildManager::requestNaturalWallBuild(bool resetPlan)
-{
-    if (resetPlan)
-        resetNaturalWallPlan();
-    return enqueueNaturalWallAtChoke();
-}
->>>>>>> Stashed changes
 bool BuildManager::enqueueNaturalWallAtChoke()
 {
     if (BWAPI::Broodwar->self()->getRace() != BWAPI::Races::Protoss)
         return false;
 
     const auto* choke = BWEB::Map::getNaturalChoke();
-    const auto* area = BWEB::Map::getNaturalArea();
+    const auto* area  = BWEB::Map::getNaturalArea();
     if (!choke || !area)
         return false;
 
+    // If we haven't planned the wall layout yet, generate it once (and cache tiles)
     if (!naturalWallPlanned)
     {
-<<<<<<< Updated upstream
         std::vector<std::vector<BWAPI::UnitType>> candidates = {
             { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon },
             { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway },
             { BWAPI::UnitTypes::Protoss_Pylon,   BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway },
             // fallback smaller wall : 1 gate + pylon
             { BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Pylon }
-=======
-        resetNaturalWallPlan();
-        naturalWallChokeAnchorTile = BWAPI::TilePosition(BWEB::Map::getClosestChokeTile(choke, BWEB::Map::getNaturalPosition()));
-
-        const bool hasCompletedForge = [&]() {
-            for (auto u : BWAPI::Broodwar->self()->getUnits())
-            {
-                if (u->getType() == BWAPI::UnitTypes::Protoss_Forge && u->isCompleted())
-                    return true;
-            }
-            return false;
-        }();
-
-        struct WallLayoutSpec
-        {
-            std::vector<BWAPI::UnitType> buildings;
-            std::vector<BWAPI::UnitType> defenses;
-        };
-
-        std::vector<WallLayoutSpec> layouts = {
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Gateway }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Pylon }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Forge }, { BWAPI::UnitTypes::Protoss_Photon_Cannon } },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway, BWAPI::UnitTypes::Protoss_Forge }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Forge }, { BWAPI::UnitTypes::Protoss_Photon_Cannon } },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Forge }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon, BWAPI::UnitTypes::Protoss_Gateway }, {} },
-            { { BWAPI::UnitTypes::Protoss_Pylon }, {} }
->>>>>>> Stashed changes
         };
 
         BWEB::Wall* wall = nullptr;
         for (auto& b : candidates)
         {
-<<<<<<< Updated upstream
             wall = BWEB::Walls::createWall(b, area, choke, BWAPI::UnitTypes::None, {}, true, false);
             if (wall) break;
         }
@@ -1547,37 +1269,6 @@ bool BuildManager::enqueueNaturalWallAtChoke()
                         best = t;
                     }
                 }
-=======
-            layouts.push_back({ { BWAPI::UnitTypes::Protoss_Pylon }, { BWAPI::UnitTypes::Protoss_Photon_Cannon, BWAPI::UnitTypes::Protoss_Photon_Cannon } });
-            layouts.push_back({ { BWAPI::UnitTypes::Protoss_Pylon }, { BWAPI::UnitTypes::Protoss_Photon_Cannon } });
-        }
-
-        naturalWallPathTiles.clear();
-        Path naturalPath = AStar::GeneratePath(BWEB::Map::getMainPosition(), BWAPI::UnitTypes::Protoss_Probe, BWEB::Map::getNaturalPosition());
-        naturalWallPathTiles = uniquePathTiles(naturalPath);
-
-        BWEB::Wall* wall = BWEB::Walls::getWall(choke);
-        if (!wall)
-        {
-            BWEB::Walls::onEnd();
-            for (const auto& layout : layouts)
-            {
-                std::vector<BWAPI::UnitType> buildings = layout.buildings;
-                wall = BWEB::Walls::createWall(buildings, area, choke, BWAPI::UnitTypes::None, layout.defenses, true, false);
-                if (!wall)
-                    wall = BWEB::Walls::getWall(choke);
-                if (!wall)
-                    wall = BWEB::Walls::getClosestWall(BWAPI::TilePosition(BWEB::Map::getNaturalPosition()));
-
-                if (wall && wall->getChokePoint() == choke)
-                {
-                    std::cout << "[WallDebug] Created natural wall using " << wall->getRawBuildings().size() << " pieces" << std::endl;
-                    break;
-                }
-
-                wall = nullptr;
-                BWEB::Walls::onEnd();
->>>>>>> Stashed changes
             }
 
             if (!best.isValid())
@@ -1599,15 +1290,7 @@ bool BuildManager::enqueueNaturalWallAtChoke()
             // If still invalid, we will fall back to findNaturalChokePylonTile() later
             naturalWallPylonTile = best.isValid() ? best : BWAPI::TilePositions::Invalid;
         }
-        if (!wall)
-        {
-            const int supply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-            std::cout << "[WallDebug] Failed to create natural wall at supply " << supply << std::endl;
-            BWAPI::Broodwar->printf("[WallDebug] Failed to create natural wall at supply %d", supply);
-            return false;
-        }
 
-<<<<<<< Updated upstream
         // Get gateway tiles
         naturalWallGatewayTiles.clear();
         for (const auto& t : wall->getMediumTiles())
@@ -1618,94 +1301,45 @@ bool BuildManager::enqueueNaturalWallAtChoke()
         naturalWallPlanned = true;
         naturalWallPylonEnqueued = false;
         naturalWallGatewaysEnqueued = false;
-=======
-        naturalWallPylonTiles.assign(wall->getSmallTiles().begin(), wall->getSmallTiles().end());
-        naturalWallForgeTiles.assign(wall->getMediumTiles().begin(), wall->getMediumTiles().end());
-        naturalWallGatewayTiles.assign(wall->getLargeTiles().begin(), wall->getLargeTiles().end());
-        naturalWallCannonTiles.assign(wall->getDefenses(0).begin(), wall->getDefenses(0).end());
-        naturalWallOpeningTile = chooseWallGapOnPath(wall, naturalWallPathTiles);
-        if (!naturalWallOpeningTile.isValid())
-            naturalWallOpeningTile = wall->getOpening();
-        naturalWallPylonTile = naturalWallPylonTiles.empty() ? BWAPI::TilePositions::Invalid : naturalWallPylonTiles.front();
-        naturalWallPlanned = true;
-        naturalWallPylonEnqueued = false;
-        naturalWallGatewaysEnqueued = false;
-        naturalWallCannonsEnqueued = false;
-        naturalWallStartLogged = false;
-
-        const BWAPI::TilePosition centroidTile = BWAPI::TilePosition(wall->getCentroid());
-        const BWAPI::TilePosition rawOpeningTile = wall->getOpening();
-        std::cout << "[WallDebug] Planned natural wall at opening (" << naturalWallOpeningTile.x << "," << naturalWallOpeningTile.y
-                  << ") raw opening (" << rawOpeningTile.x << "," << rawOpeningTile.y << ") centroid (" << centroidTile.x << "," << centroidTile.y << ") using "
-                  << wall->getRawBuildings().size() << " pieces" << std::endl;
->>>>>>> Stashed changes
     }
 
     if (!naturalWallPylonEnqueued)
     {
-        bool enqueuedAny = false;
-        for (const auto& pylonTile : naturalWallPylonTiles)
-        {
-            if (!isValidBuildTile(BWAPI::UnitTypes::Protoss_Pylon, pylonTile))
-                continue;
-
-            ResourceRequest req;
-            req.type = ResourceRequest::Type::Building;
-            req.unit = BWAPI::UnitTypes::Protoss_Pylon;
-            req.fromBuildOrder = true;
-            req.useForcedTile = true;
-            req.forcedTile = pylonTile;
-            req.priority = 0;
-            resourceRequests.push_back(req);
-            BWEB::Map::addReserve(pylonTile, req.unit.tileWidth(), req.unit.tileHeight());
-            enqueuedAny = true;
-        }
-
-        if (!enqueuedAny)
-        {
-            const int supply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-            std::cout << "[WallDebug] Natural wall exists but no pylon tile was buildable at supply " << supply << std::endl;
-            BWAPI::Broodwar->printf("[WallDebug] Natural wall exists but no pylon tile was buildable at supply %d", supply);
+        // If BWEB didn't provide a good pylon tile, fall back to searching near choke
+        BWAPI::TilePosition pylonTile = naturalWallPylonTile.isValid() ? naturalWallPylonTile : findNaturalChokePylonTile();
+        if (!pylonTile.isValid() || !isValidBuildTile(BWAPI::UnitTypes::Protoss_Pylon, pylonTile))
             return false;
-        }
 
+        ResourceRequest req;
+        req.type = ResourceRequest::Type::Building;
+        req.unit = BWAPI::UnitTypes::Protoss_Pylon;
+        req.fromBuildOrder = true;
+        req.useForcedTile = true;
+        req.forcedTile = pylonTile;
+        req.priority = 0;
+
+        // Then reserve
+        BWEB::Map::addReserve(pylonTile, req.unit.tileWidth(), req.unit.tileHeight());
+
+        resourceRequests.push_back(req);
         naturalWallPylonEnqueued = true;
-<<<<<<< Updated upstream
         naturalWallPylonTile = pylonTile;
         return false;
-=======
-
-        if (!naturalWallStartLogged)
-        {
-            const int supply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-            std::cout << "[WallDebug] Starting wall construction at supply " << supply << std::endl;
-            BWAPI::Broodwar->printf("[WallDebug] Starting wall construction at supply %d", supply);
-            naturalWallStartLogged = true;
-        }
-
-        return true;
->>>>>>> Stashed changes
     }
 
+    // Wait for the pylon to be completed so gateways can be powered
     bool pylonComplete = false;
     for (auto u : BWAPI::Broodwar->self()->getUnits())
     {
-        if (u->getType() != BWAPI::UnitTypes::Protoss_Pylon || !u->isCompleted())
-            continue;
-
-        const BWAPI::TilePosition unitTile = u->getTilePosition();
-        for (const auto& pylonTile : naturalWallPylonTiles)
+        if (u->getType() == BWAPI::UnitTypes::Protoss_Pylon && u->isCompleted())
         {
-            if (unitTile == pylonTile)
+            if (BWAPI::TilePosition(u->getPosition()).getDistance(naturalWallPylonTile) <= 3)
             {
                 pylonComplete = true;
                 break;
             }
         }
-        if (pylonComplete)
-            break;
     }
-
     if (!pylonComplete)
         return false;
 
@@ -1716,10 +1350,70 @@ bool BuildManager::enqueueNaturalWallAtChoke()
         
 auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
         {
-            if (!t.isValid())
+            if (!t.isValid()) return;
+
+            // Check if reachable
+            if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
                 return;
             if (!isTerrainBuildable(ut, t))
                 return;
+
+            if (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && ut.requiresPsi())
+            {
+                // nudge placement around the choke a bit if invalid or unpowered
+                if (!BWAPI::Broodwar->hasPower(t, ut))
+                {
+                    bool found = false;
+                    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
+                    int bestD = INT_MAX;
+
+                    for (int r = 1; r <= 5 && !found; r++)
+                    {
+                        for (int dx = -r; dx <= r; dx++)
+                        {
+                            for (int dy = -r; dy <= r; dy++)
+                            {
+                                if (std::abs(dx) != r && std::abs(dy) != r) continue;
+
+                                BWAPI::TilePosition tt = t + BWAPI::TilePosition(dx, dy);
+                                if (!tt.isValid()) continue;
+
+                                if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(tt) + BWAPI::Position(16, 16)))
+                                    continue;
+
+                                if (!isTerrainBuildable(ut, tt))
+                                    continue;
+
+                                if (!BWAPI::Broodwar->hasPower(tt, ut))
+                                    continue;
+
+                                int d = std::abs(tt.x - naturalWallPylonTile.x) + std::abs(tt.y - naturalWallPylonTile.y);
+                                if (d < bestD)
+                                {
+                                    bestD = d;
+                                    best = tt;
+                                }
+                                found = true;
+                            }
+                        }
+                    }
+
+                    if (best.isValid())
+                    {
+                        ResourceRequest req;
+                        req.type = ResourceRequest::Type::Building;
+                        req.unit = ut;
+                        req.fromBuildOrder = true;
+                        req.useForcedTile = true;
+                        req.forcedTile = best;
+                        req.priority = 0;
+
+                        resourceRequests.push_back(req);
+                        enqueuedAny = true;
+                    }
+                    return;
+                }
+            }
 
             ResourceRequest req;
             req.type = ResourceRequest::Type::Building;
@@ -1728,12 +1422,11 @@ auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
             req.useForcedTile = true;
             req.forcedTile = t;
             req.priority = 0;
+
             resourceRequests.push_back(req);
-            BWEB::Map::addReserve(t, ut.tileWidth(), ut.tileHeight());
             enqueuedAny = true;
         };
 
-<<<<<<< Updated upstream
         if (naturalWallGatewayTiles.empty())
             return false;
 
@@ -1750,81 +1443,6 @@ auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
 
         naturalWallGatewaysEnqueued = true;
         return true;
-=======
-        for (const auto& t : naturalWallForgeTiles)
-            enqueueForced(BWAPI::UnitTypes::Protoss_Forge, t);
-        for (const auto& t : naturalWallGatewayTiles)
-            enqueueForced(BWAPI::UnitTypes::Protoss_Gateway, t);
-
-        if (!enqueuedAny && naturalWallCannonTiles.empty())
-        {
-            const int supply = BWAPI::Broodwar->self()->supplyUsed() / 2;
-            std::cout << "[WallDebug] Wall pylon finished but no follow-up wall building was buildable at supply " << supply << std::endl;
-            BWAPI::Broodwar->printf("[WallDebug] Wall pylon finished but no follow-up wall building was buildable at supply %d", supply);
-            return false;
-        }
-
-        naturalWallGatewaysEnqueued = true;
-    }
-
-    bool forgeReadyForCannons = false;
-    if (naturalWallForgeTiles.empty())
-    {
-        for (auto u : BWAPI::Broodwar->self()->getUnits())
-        {
-            if (u->getType() == BWAPI::UnitTypes::Protoss_Forge && u->isCompleted())
-            {
-                forgeReadyForCannons = true;
-                break;
-            }
-        }
-    }
-    else
-    {
-        for (auto u : BWAPI::Broodwar->self()->getUnits())
-        {
-            if (u->getType() != BWAPI::UnitTypes::Protoss_Forge || !u->isCompleted())
-                continue;
-
-            const BWAPI::TilePosition unitTile = u->getTilePosition();
-            for (const auto& forgeTile : naturalWallForgeTiles)
-            {
-                if (unitTile == forgeTile)
-                {
-                    forgeReadyForCannons = true;
-                    break;
-                }
-            }
-            if (forgeReadyForCannons)
-                break;
-        }
-    }
-
-    if (!naturalWallCannonsEnqueued && forgeReadyForCannons)
-    {
-        bool enqueuedAny = false;
-        for (const auto& t : naturalWallCannonTiles)
-        {
-            if (!t.isValid())
-                continue;
-            if (!isTerrainBuildable(BWAPI::UnitTypes::Protoss_Photon_Cannon, t))
-                continue;
-
-            ResourceRequest req;
-            req.type = ResourceRequest::Type::Building;
-            req.unit = BWAPI::UnitTypes::Protoss_Photon_Cannon;
-            req.fromBuildOrder = true;
-            req.useForcedTile = true;
-            req.forcedTile = t;
-            req.priority = 0;
-            resourceRequests.push_back(req);
-            BWEB::Map::addReserve(t, req.unit.tileWidth(), req.unit.tileHeight());
-            enqueuedAny = true;
-        }
-
-        if (enqueuedAny)
-            naturalWallCannonsEnqueued = true;
->>>>>>> Stashed changes
     }
 
     return true;
