@@ -3,9 +3,9 @@
 #include "Squad.h"
 #include "A-StarPathfinding.h"
 
-//#define DEBUG_CM
+#define DEBUG_CM
+//#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 5
-
 using namespace std;
 
 class ProtoBotCommander;
@@ -15,7 +15,7 @@ public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset allUnits;
-	map<BWAPI::Unit, Squad*> unitSquadMap;
+	static map<BWAPI::Unit, Squad*> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;

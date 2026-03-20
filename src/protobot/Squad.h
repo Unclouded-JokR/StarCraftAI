@@ -9,8 +9,6 @@
 //#define DEBUG_SQUAD
 //#define DEBUG_FLOCKING
 #define MAX_SQUAD_SIZE 12
-#define MIN_NEIGHBOUR_DISTANCE 80
-#define MIN_SEPARATION_DISTANCE 30
 
 class SquadState;
 
@@ -48,13 +46,8 @@ public:
 	}
 
 private:
-
-	void simpleFlock();
-	void flockingHandler();
 	void pathHandler();
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
 	void attackUnit(BWAPI::Unit unit, BWAPI::Unit target);
 	void kitingAttack(BWAPI::Unit unit, BWAPI::Unit target);
-	double getMagnitude(BWAPI::Position vector);
-	VectorPos normalize(VectorPos vector);
 };

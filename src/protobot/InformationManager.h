@@ -286,8 +286,13 @@ private:
 public:
     ProtoBotCommander* commanderReference;
 
+    // Singleton access
+    static InformationManager& Instance();
+    void SetCommander(ProtoBotCommander* commander);
+
     std::vector<BWAPI::Position> EnemyBaseLocations;
 
+    InformationManager();
     InformationManager(ProtoBotCommander* commanderReference);
     void onStart();
     void onFrame();
@@ -348,5 +353,5 @@ public:
     int getEnemyDetectionAt(BWAPI::Position p) const;
     ThreatQueryResult queryThreatAt(const BWAPI::Position& pos) const;
 
-    bool IsEnemyEarlyPush() const;
+    bool isEnemyEarlyPush() const;
 };

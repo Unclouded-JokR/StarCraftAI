@@ -24,6 +24,7 @@
     <ClInclude Include="..\src\protobot\BuildingPlacer.h" />
     <ClInclude Include="..\src\protobot\BuildManager.h" />
     <ClInclude Include="..\src\protobot\BuildOrder.h" />
+    <ClInclude Include="..\src\protobot\BOIDS.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\Block.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\BWEB.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\JPS.h" />
@@ -80,6 +81,7 @@
     <ClCompile Include="..\src\protobot\BuildingPlacer.cpp" />
     <ClCompile Include="..\src\protobot\BuildManager.cpp" />
     <ClCompile Include="..\src\protobot\BuildOrder.cpp" />
+    <ClCompile Include="..\src\protobot\BOIDS.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\Block.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\BWEB.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\PathFind.cpp" />

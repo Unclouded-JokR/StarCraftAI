@@ -51,6 +51,7 @@
     <ClCompile Include="..\src\protobot\BWEM\src\tiles.cpp" />
     <ClCompile Include="..\src\protobot\BWEM\src\utils.cpp" />
     <ClCompile Include="..\src\protobot\BWEM\src\winutils.cpp" />
+    <ClCompile Include="..\src\protobot\BOIDS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\starterbot\Grid.hpp" />
@@ -107,5 +108,6 @@
     <ClInclude Include="..\src\protobot\BWEM\src\tiles.h" />
     <ClInclude Include="..\src\protobot\BWEM\src\utils.h" />
     <ClInclude Include="..\src\protobot\BWEM\src\winutils.h" />
+    <ClInclude Include="..\src\protobot\BOIDS.h" />
   </ItemGroup>
 </Project>

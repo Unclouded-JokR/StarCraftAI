@@ -93,11 +93,11 @@ std::vector<Action> StrategyManager::onFrame()
 
 	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted) minutesPassedIndex++;
 
-	//ProtoBot unit information
-	const FriendlyBuildingCounter ProtoBot_buildings = commanderReference->informationManager.getFriendlyBuildingCounter();
-	const FriendlyUnitCounter ProtoBot_units = commanderReference->informationManager.getFriendlyUnitCounter();
-	const FriendlyUpgradeCounter ProtoBot_upgrade = commanderReference->informationManager.getFriendlyUpgradeCounter();
-	const FriendlyTechCounter ProtoBot_tech = commanderReference->informationManager.getFriendlyTechCounter();
+    //ProtoBot unit information
+	const FriendlyBuildingCounter ProtoBot_buildings = InformationManager::Instance().getFriendlyBuildingCounter();
+	const FriendlyUnitCounter ProtoBot_units = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUpgradeCounter ProtoBot_upgrade = InformationManager::Instance().getFriendlyUpgradeCounter();
+	const FriendlyTechCounter ProtoBot_tech = InformationManager::Instance().getFriendlyTechCounter();
 	std::vector<Squad*> Protobot_IdleSquads = commanderReference->combatManager.IdleSquads;
 	std::vector<Squad*> Protobot_Squads = commanderReference->combatManager.Squads;
 	int numberFullSquads = 0;
@@ -124,7 +124,7 @@ std::vector<Action> StrategyManager::onFrame()
 	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2);
 
 	//Get Enemy Building information.
-	const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = commanderReference->informationManager.getKnownEnemyBuildings();
+    const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = InformationManager::Instance().getKnownEnemyBuildings();
 
 	//Check how many of our Nexus Economies are completed and saturated.
 	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
@@ -620,7 +620,7 @@ std::vector<Action> StrategyManager::onFrame()
 
 			// Prioritize attacking known enemy buildings
 			
-			for (const auto& pair : commanderReference->informationManager.getKnownEnemyBuildings()) {
+            for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
 				if (pair.second.destroyed) {
 					continue;
 				}

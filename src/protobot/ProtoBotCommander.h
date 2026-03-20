@@ -43,7 +43,6 @@ public:
 	MapTools m_mapTools;
 	TimerManager timerManager;
 	EconomyManager economyManager;
-	InformationManager informationManager;
 	ScoutingManager scoutingManager;
 	BuildManager buildManager;
 	CombatManager combatManager;
