@@ -233,6 +233,7 @@ void NexusEconomy::onFrame()
 
 
 	//Train unit if we are not at optimal worker count
+	//Need to remove this but need to change flow of functions to strategy for first deliverable.
 	if (!nexus->isTraining()
 		&& workers.size() < ((OPTIMAL_WORKERS_PER_MINERAL * minerals.size()) + (vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0))
 		&& !economyReference->checkRequestAlreadySent(nexus->getID()) && needWorkers)
