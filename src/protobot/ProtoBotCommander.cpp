@@ -204,14 +204,32 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 
 	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
- InformationManager::Instance().onUnitDestroy(unit);
+	InformationManager::Instance().onUnitDestroy(unit);
 	buildManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
-   InformationManager::Instance().onUnitMorph(unit);
+	InformationManager::Instance().onUnitMorph(unit);
 	buildManager.onUnitMorph(unit);
+
+	if (unit->getPlayer() == BWAPI::Broodwar->self())
+	{
+		//Need to check this for tech and upgrades;
+		for (ResourceRequest& request : resourceRequests)
+		{
+			if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+		}
+	}
 }
 
 void ProtoBotCommander::onSendText(std::string text)
@@ -227,8 +245,26 @@ void ProtoBotCommander::onSendText(std::string text)
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
 	buildManager.onUnitCreate(unit);
-  InformationManager::Instance().onUnitCreate(unit);
+	InformationManager::Instance().onUnitCreate(unit);
 	strategyManager.onUnitCreate(unit);
+
+	//Update requests
+	if (unit->getPlayer() == BWAPI::Broodwar->self())
+	{
+		for (ResourceRequest& request : resourceRequests)
+		{
+			if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+		}
+	}
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
@@ -326,6 +362,50 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
+
+bool ProtoBotCommander::alreadySentRequest(int unitID)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (request.requestedBuilding != nullptr)
+		{
+			if (unitID == request.requestedBuilding->getID()) return true;
+		}
+	}
+	return false;
+}
+
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (building == request.unit && !request.isCheese) return true;
+	}
+	return false;
+}
+
+bool ProtoBotCommander::upgradeAlreadyRequested(BWAPI::Unit building)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (request.requestedBuilding != nullptr)
+		{
+			if (building->getID() == request.requestedBuilding->getID()) return true;
+		}
+	}
+	return false;
+}
+
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
+	}
+	return false;
+}
+
+
 void ProtoBotCommander::drawDebugInformation()
 {
 	// Display the game frame rate as text in the upper left area of the screen
@@ -373,34 +453,34 @@ const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemy
     return InformationManager::Instance().getKnownEnemyBuildings();
 }
 
+//Move this command into the strategy manager to keep the flow of data consistent.
 void ProtoBotCommander::requestCheese(BWAPI::UnitType building, BWAPI::Unit unit)
 {
-	buildManager.buildBuilding(building, unit);
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Building;
+	request.unit = building;
+	request.scoutToPlaceBuilding = unit;
+	request.isCheese = true;
+	request.fromBuildOrder = false;
+
+	resourceRequests.push_back(request);
 }
 
 bool ProtoBotCommander::checkCheeseRequest(BWAPI::Unit unit)
 {
-	return buildManager.cheeseIsApproved(unit);
+	for (ResourceRequest& request : resourceRequests)
+	{
+		if (request.type != ResourceRequest::Type::Building && request.isCheese) continue;
+
+		if (request.scoutToPlaceBuilding == unit && request.state == ResourceRequest::State::Approved_BeingBuilt) return true;
+	}
+
+	return false;
 }
 
 bool ProtoBotCommander::buildOrderCompleted()
 {
 	return buildManager.isBuildOrderCompleted();
-}
-
-bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
-{
-	return buildManager.requestedBuilding(building);
-}
-
-bool ProtoBotCommander::alreadySentRequest(int unitID)
-{
-	return buildManager.alreadySentRequest(unitID);
-}
-
-bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
-{
-	return buildManager.checkUnitIsPlanned(building);
 }
 
 std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()

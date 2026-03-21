@@ -41,7 +41,7 @@ struct ResourceRequest
 	enum Type { Unit, Building, Upgrade, Tech };
 	Type type;
 
-	int priority;
+	int priority = 1;
 
 	//Approved_InProgress only applies to Buildings since this requires a unit to take the time to place it.
 	//Add approved killed state. To capture a request that is waiting for a builder.
@@ -124,6 +124,7 @@ public:
 	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
 	bool checkUnitIsPlanned(BWAPI::UnitType building);
 	bool buildOrderCompleted();
+	bool upgradeAlreadyRequested(BWAPI::Unit building);
 	bool requestedBuilding(BWAPI::UnitType building);
 	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
 	void requestBuild(BWAPI::UnitType building);

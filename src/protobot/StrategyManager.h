@@ -34,6 +34,7 @@ class ProtoBotCommander;
 struct FriendlyBuildingCounter;
 struct ResourceRequest;
 
+enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
 enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
 enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
 

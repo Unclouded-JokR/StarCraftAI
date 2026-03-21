@@ -426,21 +426,6 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
         }
     }
 
-    //Need to check this for tech and upgrades;
-    for (ResourceRequest& request : resourceRequests)
-    {
-        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-    }
-
     if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
     //std::cout << unit->getType() << " placed down at tile position " << unit->getTilePosition() << "\n";
@@ -575,21 +560,6 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
 
     //std::cout << "Created " << unit->getType() << " (On Morph)\n";
 
-    //Need to check this for tech and upgrades;
-    for (ResourceRequest& request : resourceRequests)
-    {
-        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-    }
-
     if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit->getPlayer() == BWAPI::Broodwar->self())
     {
         for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
@@ -666,81 +636,6 @@ void BuildManager::buildBuilding(BWAPI::UnitType building)
     resourceRequests.push_back(request);
 }
 
-void BuildManager::buildBuilding(BWAPI::UnitType building, BWAPI::Unit scout)
-{
-
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Building;
-    request.unit = building;
-    request.scoutToPlaceBuilding = scout;
-    request.isCheese = true;
-    request.fromBuildOrder = false;
-
-    resourceRequests.push_back(request);
-}
-
-void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
-{
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Unit;
-    request.unit = unitToTrain;
-    request.requestedBuilding = unit;
-
-    resourceRequests.push_back(request);
-}
-
-void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
-{
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Upgrade;
-    request.upgrade = upgrade;
-    request.requestedBuilding = unit;
-
-    resourceRequests.push_back(request);
-}
-
-bool BuildManager::alreadySentRequest(int unitID)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (request.requestedBuilding != nullptr)
-        {
-            if (unitID == request.requestedBuilding->getID()) return true;
-        }
-    }
-    return false;
-}
-
-bool BuildManager::requestedBuilding(BWAPI::UnitType building)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (building == request.unit && !request.isCheese) return true;
-    }
-    return false;
-}
-
-bool BuildManager::upgradeAlreadyRequested(BWAPI::Unit building)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (request.requestedBuilding != nullptr)
-        {
-            if (building->getID() == request.requestedBuilding->getID()) return true;
-        }
-    }
-    return false;
-}
-
-bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
-    }
-    return false;
-}
-
 bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
     for (Builder& builder : builders)
@@ -775,23 +670,6 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit)
     return false;
 }
 
-bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
-{
-    for (ResourceRequest& request : resourceRequests)
-    {
-        if (request.type != ResourceRequest::Type::Building && request.isCheese) continue;
-        
-        if (request.scoutToPlaceBuilding == unit && request.state == ResourceRequest::State::Approved_BeingBuilt) return true;
-    }
-
-    return false;
-}
-
-std::pair<int, int> BuildManager::getPlannedResources()
-{
-    return std::make_pair(spenderManager.getPlannedMinerals(resourceRequests), spenderManager.getPlannedGas(resourceRequests));
-}
-
 BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
 {
     return commanderReference->getUnitToBuild(position);
@@ -801,7 +679,6 @@ std::vector<NexusEconomy> BuildManager::getNexusEconomies()
 {
     return commanderReference->getNexusEconomies();
 }
-
 
 // ---------------------------
 // Build order helpers / runner

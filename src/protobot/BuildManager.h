@@ -52,7 +52,6 @@ public:
     //Spender Manager Request methods
     // External requests from StrategyManager / commander
     void buildBuilding(BWAPI::UnitType);
-    void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
 
     // Build order lifecycle
     void initBuildOrdersOnStart();
@@ -70,14 +69,12 @@ public:
     bool enqueueNaturalWallAtChoke();
     BWAPI::TilePosition findNaturalChokePylonTile() const;
     void resetNaturalWallPlan();
+
     void trainUnit(BWAPI::UnitType, BWAPI::Unit);
     void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
-
     bool cheeseIsApproved(BWAPI::Unit scout);
-    bool alreadySentRequest(int unitID);
-    bool requestedBuilding(BWAPI::UnitType);
-    bool upgradeAlreadyRequested(BWAPI::Unit);
-    bool checkUnitIsPlanned(BWAPI::UnitType);
+    void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
+
     bool checkWorkerIsConstructing(BWAPI::Unit);
     int checkAvailableSupply();
 
@@ -88,7 +85,6 @@ public:
     std::vector<NexusEconomy> getNexusEconomies();
 
     void pumpUnit();
-    std::pair <int, int> getPlannedResources();
 private:
     std::vector<BuildOrder> buildOrders;
     int activeBuildOrderIndex = -1;
