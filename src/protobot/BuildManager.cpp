@@ -293,25 +293,25 @@ void BuildManager::pumpUnit()
         {
             if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
             {
-                commanderReference->trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
+                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
             }
             else
             {
-                commanderReference->trainUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
+                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
             }
         }
         else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
         {
             if (ProtoBot_Units.observer < 4)
             {
-                commanderReference->trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
+                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
             }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
         {
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !commanderReference->upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
             {
-                commanderReference->buildUpgadeType(unit, BWAPI::UpgradeTypes::Singularity_Charge);
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
             }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
@@ -320,7 +320,7 @@ void BuildManager::pumpUnit()
 
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !commanderReference->upgradeAlreadyRequested(unit))
             {
-                commanderReference->buildUpgadeType(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
             }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
@@ -329,18 +329,18 @@ void BuildManager::pumpUnit()
 
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !commanderReference->upgradeAlreadyRequested(unit))
             {
-                commanderReference->buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
             }
 
             if (ProtoBot_Upgrades.singularityCharge != 1) continue;
 
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !commanderReference->upgradeAlreadyRequested(unit))
             {
-                commanderReference->buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
             }
             else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !commanderReference->upgradeAlreadyRequested(unit))
             {
-                commanderReference->buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
             }
         }
         else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
@@ -640,7 +640,7 @@ void BuildManager::clearBuildOrder(bool clearPendingRequests)
     buildOrderActive = false;
     buildOrderCompleted = true;
 
-    if (clearPendingRequests)
+    /*if (clearPendingRequests)
     {
         // Remove any pending build-order building requests that haven't started
         for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
@@ -650,19 +650,19 @@ void BuildManager::clearBuildOrder(bool clearPendingRequests)
             else
                 ++it;
         }
-    }
+    }*/
 }
 
 void BuildManager::overrideBuildOrder(int buildOrderId)
 {
     // Current setup: clear current build order requests, then replace with another chosen build order ID
-    for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
+    /*for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
     {
         if (it->fromBuildOrder && it->state == ResourceRequest::State::PendingApproval)
             it = resourceRequests.erase(it);
         else
             ++it;
-    }
+    }*/
 
     for (int i = 0; i < (int)buildOrders.size(); i++)
     {
@@ -684,12 +684,13 @@ bool BuildManager::enqueueBuildOrderBuilding(BWAPI::UnitType type, int count)
 {
     for (int i = 0; i < count; i++)
     {
-        ResourceRequest req;
+        /*ResourceRequest req;
         req.type = ResourceRequest::Type::Building;
         req.unit = type;
         req.fromBuildOrder = true;
-        req.priority = 0;
-        resourceRequests.push_back(req);
+        resourceRequests.push_back(req);*/
+
+        commanderReference->requestBuilding(type, true);
     }
     return true;
 }
@@ -896,19 +897,17 @@ bool BuildManager::enqueueSupplyAtNaturalRamp()
     if (!isValidBuildTile(type, t))
         return false;
 
-    ResourceRequest req;
+    /*ResourceRequest req;
     req.type = ResourceRequest::Type::Building;
     req.unit = type;
     req.fromBuildOrder = true;
-    req.priority = 0;
-
     req.useForcedTile = true;
-    req.forcedTile = t;
+    req.forcedTile = t;*/
 
     // Reserve immediately so other placement logic doesn't steal the spot
     BWEB::Map::addReserve(t, type.tileWidth(), type.tileHeight());
 
-    resourceRequests.push_back(req);
+    commanderReference->requestBuilding(type, true, true, t);
     return true;
 }
 
@@ -1034,18 +1033,18 @@ bool BuildManager::enqueueNaturalWallAtChoke()
         if (!pylonTile.isValid() || !isValidBuildTile(BWAPI::UnitTypes::Protoss_Pylon, pylonTile))
             return false;
 
-        ResourceRequest req;
+        /*ResourceRequest req;
         req.type = ResourceRequest::Type::Building;
         req.unit = BWAPI::UnitTypes::Protoss_Pylon;
         req.fromBuildOrder = true;
         req.useForcedTile = true;
-        req.forcedTile = pylonTile;
-        req.priority = 0;
+        req.forcedTile = pylonTile;*/
 
         // Then reserve
-        BWEB::Map::addReserve(pylonTile, req.unit.tileWidth(), req.unit.tileHeight());
+        BWEB::Map::addReserve(pylonTile, BWAPI::UnitTypes::Protoss_Pylon.tileWidth(), BWAPI::UnitTypes::Protoss_Pylon.tileHeight());
 
-        resourceRequests.push_back(req);
+        commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Pylon, true, true, pylonTile);
+
         naturalWallPylonEnqueued = true;
         naturalWallPylonTile = pylonTile;
         return false;
@@ -1124,30 +1123,28 @@ auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
 
                     if (best.isValid())
                     {
-                        ResourceRequest req;
+                        /*ResourceRequest req;
                         req.type = ResourceRequest::Type::Building;
                         req.unit = ut;
                         req.fromBuildOrder = true;
                         req.useForcedTile = true;
-                        req.forcedTile = best;
-                        req.priority = 0;
+                        req.forcedTile = best;*/
 
-                        resourceRequests.push_back(req);
+                        commanderReference->requestBuilding(ut, true, true, best);
                         enqueuedAny = true;
                     }
                     return;
                 }
             }
 
-            ResourceRequest req;
+            /*ResourceRequest req;
             req.type = ResourceRequest::Type::Building;
             req.unit = ut;
             req.fromBuildOrder = true;
             req.useForcedTile = true;
-            req.forcedTile = t;
-            req.priority = 0;
+            req.forcedTile = t;*/
 
-            resourceRequests.push_back(req);
+            commanderReference->requestBuilding(ut, true, true, t);
             enqueuedAny = true;
         };
 

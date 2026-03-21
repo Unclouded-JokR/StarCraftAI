@@ -113,8 +113,17 @@ public:
 	void onUnitRenegade(BWAPI::Unit unit);
 	void drawDebugInformation();
 
+	//Resource Requests Methods
 	void removeApprovedRequests();
-	void requestBuilding(BWAPI::UnitType building);
+	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool useForcedTile = false, BWAPI::TilePosition forcedtile = BWAPI::TilePositions::Invalid);
+	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain);
+	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade);
+	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
+
+	bool upgradeAlreadyRequested(BWAPI::Unit building);
+	bool requestedBuilding(BWAPI::UnitType building);
+	bool checkCheeseRequest(BWAPI::Unit);
+	bool alreadySentRequest(int unitID);
 
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
@@ -137,11 +146,6 @@ public:
 	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
 	bool checkUnitIsPlanned(BWAPI::UnitType building);
 	bool buildOrderCompleted();
-	bool upgradeAlreadyRequested(BWAPI::Unit building);
-	bool requestedBuilding(BWAPI::UnitType building);
-	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
-	bool checkCheeseRequest(BWAPI::Unit);
-	bool alreadySentRequest(int unitID);
 	bool checkWorkerIsConstructing(BWAPI::Unit);
 
 	// Scouting Manager Methods

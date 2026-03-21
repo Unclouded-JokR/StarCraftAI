@@ -29,7 +29,6 @@ class BuildManager
 public:
     ProtoBotCommander* commanderReference;
     BuildingPlacer buildingPlacer;
-    ProtoBotRequestCounter requestCounter;
 
     std::vector<Builder> builders;
 

@@ -71,8 +71,9 @@ void ProtoBotCommander::onStart()
 	economyManager.onStart();
 	scoutingManager.onStart();
 	buildManager.onStart();
-
 	combatManager.onStart();
+
+	resourceRequests.clear();
 
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
@@ -407,7 +408,7 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
-void ProtoBotCommander::requestBuilding(BWAPI::UnitType building)
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool useForcedTile, BWAPI::TilePosition forcedtile)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
@@ -443,6 +444,26 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building)
 		default:
 			break;
 	}
+
+	resourceRequests.push_back(request);
+}
+
+void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain)
+{
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Unit;
+	request.unit = unit;
+	request.requestedBuilding = buildingToTrain;
+
+	resourceRequests.push_back(request);
+}
+
+void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
+{
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Upgrade;
+	request.upgrade = upgrade;
+	request.requestedBuilding = unit;
 
 	resourceRequests.push_back(request);
 }

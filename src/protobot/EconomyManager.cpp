@@ -366,7 +366,7 @@ std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
 #pragma region Commander Requests
 void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 {
-    commanderReference->requestUnitToTrain(worker, nexus);
+    commanderReference->requestUnit(worker, nexus);
 }
 
 bool EconomyManager::checkRequestAlreadySent(int unitID)
