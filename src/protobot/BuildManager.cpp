@@ -75,7 +75,6 @@ void BuildManager::onStart()
 
     resetNaturalWallPlan();
 
-    spenderManager.onStart();
     buildingPlacer.onStart();
     builders.clear();
 
@@ -84,27 +83,14 @@ void BuildManager::onStart()
 }
 
 
-void BuildManager::onFrame() {
-    for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
-    {
-        if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
-        {
-            //if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
-            //if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
-
-            it = resourceRequests.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
-
+void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests) 
+{
     runBuildOrderOnFrame();
 
-    spenderManager.OnFrame(resourceRequests);
     buildingPlacer.drawPoweredTiles();
 
+    //Have to have loop that can check if a building can create a unit and is powered.
+    //Might also need to have some data that shows what each building is doing but might be too complictaed for this approach.
     for (ResourceRequest& request : resourceRequests)
     {
         if (request.state != ResourceRequest::State::Approved_InProgress)
@@ -190,7 +176,7 @@ void BuildManager::onFrame() {
                             switch (flag_info)
                             {
                             case PlacementInfo::NO_POWER:
-                                //should create a new pylon request
+                                //should create a new pylon request by inserting a pylon in the front of the queue.
                                 //std::cout << "FAILED: NO POWER\n";
                                 break;
                             case PlacementInfo::NO_BLOCKS:
@@ -282,79 +268,118 @@ void BuildManager::onFrame() {
         builder.onFrame();
     }
 
+    pumpUnit();
+
     //Debug
     //Will most likely need to add a building data class to make this easier to be able to keep track of buildings and what units they are creating.
     /*for (BWAPI::Unit building : buildings)
     {
         BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
     }*/
+}
 
-    pumpUnit();
+void BuildManager::pumpUnit()
+{
+    const FriendlyUnitCounter ProtoBot_Units = InformationManager::Instance().getFriendlyUnitCounter();
+    const FriendlyBuildingCounter ProtoBot_Buildings = InformationManager::Instance().getFriendlyBuildingCounter();
+    const FriendlyUpgradeCounter ProtoBot_Upgrades = InformationManager::Instance().getFriendlyUpgradeCounter();
+    const int totalMinerals = BWAPI::Broodwar->self()->minerals();
+    const int totalGas = BWAPI::Broodwar->self()->gas();
+
+    for (BWAPI::Unit unit : buildings)
+    {
+        const BWAPI::UnitType type = unit->getType();
+        if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()))
+        {
+            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
+            {
+                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
+            }
+            else
+            {
+                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
+            }
+        }
+        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
+        {
+            if (ProtoBot_Units.observer < 4)
+            {
+                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
+        {
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !commanderReference->upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
+            {
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
+        {
+            if (ProtoBot_Buildings.gateway < 8 || ProtoBot_Buildings.templarArchives < 1) continue;
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !commanderReference->upgradeAlreadyRequested(unit))
+            {
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
+        {
+            if (ProtoBot_Buildings.gateway < 8) continue;
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !commanderReference->upgradeAlreadyRequested(unit))
+            {
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+            }
+
+            if (ProtoBot_Upgrades.singularityCharge != 1) continue;
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !commanderReference->upgradeAlreadyRequested(unit))
+            {
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
+            }
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !commanderReference->upgradeAlreadyRequested(unit))
+            {
+                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
+            }
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
+        {
+            /*if (unit->canUpgrade(BWAPI::TechTypes::Psionic_Storm))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
+                continue;
+            }
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+                continue;
+            }
+
+            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
+                continue;
+            }*/
+        }
+        else if (type == BWAPI::UnitTypes::Protoss_Observatory)
+        {
+            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
+            }
+            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
+            {
+                buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
+            }*/
+        }
+    }
 }
 
 void BuildManager::onUnitCreate(BWAPI::Unit unit)
 {
-    if (unit == nullptr) return;
-
     buildingPlacer.onUnitCreate(unit);
-
-    if (unit->getPlayer() == BWAPI::Broodwar->self())
-    {
-        switch (unit->getType())
-        {
-            case BWAPI::UnitTypes::Protoss_Gateway:
-                if (requestCounter.gateway_requests > 0)
-                    --requestCounter.gateway_requests;
-                break;
-            case BWAPI::UnitTypes::Protoss_Nexus:
-                if (requestCounter.nexus_requests > 0)
-                    --requestCounter.nexus_requests;
-                break;
-            case BWAPI::UnitTypes::Protoss_Forge:
-                if (requestCounter.forge_requests > 0)
-                    --requestCounter.forge_requests;
-                break;
-            case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-                if (requestCounter.cybernetics_requests > 0)
-                    --requestCounter.cybernetics_requests;
-                break;
-            case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-                if (requestCounter.robotics_requests > 0)
-                    --requestCounter.robotics_requests;
-                break;
-            case BWAPI::UnitTypes::Protoss_Observatory:
-                if (requestCounter.observatory_requests > 0)
-                    --requestCounter.observatory_requests;
-                break;
-
-            case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-                if (requestCounter.citadel_requests > 0)
-                    --requestCounter.citadel_requests;
-                break;
-
-            case BWAPI::UnitTypes::Protoss_Templar_Archives:
-                if (requestCounter.templarArchives_requests > 0)
-                    --requestCounter.templarArchives_requests;
-                break;
-            default:
-                break;
-        }
-    }
-
-    //Need to check this for tech and upgrades;
-    for (ResourceRequest& request : resourceRequests)
-    {
-        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-    }
 
     if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
@@ -419,51 +444,6 @@ void BuildManager::onUnitDestroy(BWAPI::Unit unit)
             }
 
             break;
-            /*else
-            {
-               switch (it->buildingToConstruct)
-               {
-                    case BWAPI::UnitTypes::Protoss_Gateway:
-                        if (requestCounter.gateway_requests > 0)
-                            --requestCounter.gateway_requests;
-                        break;
-                    case BWAPI::UnitTypes::Protoss_Nexus:
-                        if (requestCounter.nexus_requests > 0)
-                            --requestCounter.nexus_requests;
-                        break;
-                    case BWAPI::UnitTypes::Protoss_Forge:
-                        if (requestCounter.forge_requests > 0)
-                            --requestCounter.forge_requests;
-                        break;
-                    case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-                        if (requestCounter.cybernetics_requests > 0)
-                            --requestCounter.cybernetics_requests;
-                        break;
-                    case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-                        if (requestCounter.robotics_requests > 0)
-                            --requestCounter.robotics_requests;
-                        break;
-                    case BWAPI::UnitTypes::Protoss_Observatory:
-                        if (requestCounter.observatory_requests > 0)
-                            --requestCounter.observatory_requests;
-                        break;
-
-                    case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-                        if (requestCounter.citadel_requests > 0)
-                            --requestCounter.citadel_requests;
-                        break;
-
-                    case BWAPI::UnitTypes::Protoss_Templar_Archives:
-                        if (requestCounter.templarArchives_requests > 0)
-                            --requestCounter.templarArchives_requests;
-                        break;
-                    default:
-                        break;
-               }
-
-
-            }
-            */
         }
 
         it++;
@@ -489,21 +469,6 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
     buildingPlacer.onUnitMorph(unit);
 
     //std::cout << "Created " << unit->getType() << " (On Morph)\n";
-
-    //Need to check this for tech and upgrades;
-    for (ResourceRequest& request : resourceRequests)
-    {
-        if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-        else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-            request.unit == unit->getType())
-        {
-            request.state = ResourceRequest::State::Accepted_Completed;
-        }
-    }
 
     if (unit->getType() == BWAPI::UnitTypes::Protoss_Assimilator && unit->getPlayer() == BWAPI::Broodwar->self())
     {
@@ -532,130 +497,6 @@ void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 #pragma endregion
 
 #pragma region Spender Manager Methods
-/// <summary>
-/// Using these methods for now to get this working but it should be refactored later.
-/// </summary>
-/// <param name="building"></param>
-void BuildManager::buildBuilding(BWAPI::UnitType building)
-{
-    if (isBuildOrderActive() && isRestrictedTechBuilding(building))
-    {
-        return;
-    }
-
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Building;
-    request.unit = building;
-    request.fromBuildOrder = false;
-
-    switch (building)
-    {
-        case BWAPI::UnitTypes::Protoss_Gateway: 
-            requestCounter.gateway_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Nexus: 
-            requestCounter.nexus_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Forge: 
-            requestCounter.forge_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Cybernetics_Core: 
-            requestCounter.cybernetics_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Robotics_Facility: 
-            requestCounter.robotics_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Observatory: 
-            requestCounter.observatory_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Citadel_of_Adun: 
-            requestCounter.citadel_requests++; 
-            break;
-        case BWAPI::UnitTypes::Protoss_Templar_Archives: 
-            requestCounter.templarArchives_requests++; 
-            break;
-        default: 
-            break;
-    }
-
-    resourceRequests.push_back(request);
-}
-
-void BuildManager::buildBuilding(BWAPI::UnitType building, BWAPI::Unit scout)
-{
-
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Building;
-    request.unit = building;
-    request.scoutToPlaceBuilding = scout;
-    request.isCheese = true;
-    request.fromBuildOrder = false;
-
-    resourceRequests.push_back(request);
-}
-
-void BuildManager::trainUnit(BWAPI::UnitType unitToTrain, BWAPI::Unit unit)
-{
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Unit;
-    request.unit = unitToTrain;
-    request.requestedBuilding = unit;
-
-    resourceRequests.push_back(request);
-}
-
-void BuildManager::buildUpgadeType(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
-{
-    ResourceRequest request;
-    request.type = ResourceRequest::Type::Upgrade;
-    request.upgrade = upgrade;
-    request.requestedBuilding = unit;
-
-    resourceRequests.push_back(request);
-}
-
-bool BuildManager::alreadySentRequest(int unitID)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (request.requestedBuilding != nullptr)
-        {
-            if (unitID == request.requestedBuilding->getID()) return true;
-        }
-    }
-    return false;
-}
-
-bool BuildManager::requestedBuilding(BWAPI::UnitType building)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (building == request.unit && !request.isCheese) return true;
-    }
-    return false;
-}
-
-bool BuildManager::upgradeAlreadyRequested(BWAPI::Unit building)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (request.requestedBuilding != nullptr)
-        {
-            if (building->getID() == request.requestedBuilding->getID()) return true;
-        }
-    }
-    return false;
-}
-
-bool BuildManager::checkUnitIsPlanned(BWAPI::UnitType building)
-{
-    for (const ResourceRequest& request : resourceRequests)
-    {
-        if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
-    }
-    return false;
-}
-
 bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
     for (Builder& builder : builders)
@@ -666,9 +507,9 @@ bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
     return false;
 }
 
-int BuildManager::checkAvailableSupply()
+BWAPI::Unitset BuildManager::getBuildings()
 {
-    return spenderManager.plannedSupply(resourceRequests, buildings);
+    return buildings;
 }
 #pragma endregion
 
@@ -690,122 +531,6 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit)
     return false;
 }
 
-bool BuildManager::cheeseIsApproved(BWAPI::Unit unit)
-{
-    for (ResourceRequest& request : resourceRequests)
-    {
-        if (request.type != ResourceRequest::Type::Building && request.isCheese) continue;
-        
-        if (request.scoutToPlaceBuilding == unit && request.state == ResourceRequest::State::Approved_BeingBuilt) return true;
-    }
-
-    return false;
-}
-
-void BuildManager::pumpUnit()
-{
-    const FriendlyUnitCounter ProtoBot_Units = InformationManager::Instance().getFriendlyUnitCounter();
-    const FriendlyBuildingCounter ProtoBot_Buildings = InformationManager::Instance().getFriendlyBuildingCounter();
-    const FriendlyUpgradeCounter ProtoBot_Upgrades = InformationManager::Instance().getFriendlyUpgradeCounter();
-    const int totalMinerals = BWAPI::Broodwar->self()->minerals();
-    const int totalGas = BWAPI::Broodwar->self()->gas();
-
-    for (BWAPI::Unit unit : buildings)
-    {
-        const BWAPI::UnitType type = unit->getType();
-        if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !alreadySentRequest(unit->getID()))
-        {
-            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
-            {
-                trainUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
-            }
-            else
-            {
-                trainUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
-            }
-        }
-        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
-        {
-            if (ProtoBot_Units.observer < 4)
-            {
-                trainUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
-        {
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Singularity_Charge);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
-        {
-            if (ProtoBot_Buildings.gateway < 8 || ProtoBot_Buildings.templarArchives < 1) continue;
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Leg_Enhancements) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Leg_Enhancements);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Forge && !unit->isUpgrading())
-        {
-            if (ProtoBot_Buildings.gateway < 8) continue;
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
-            }
-            
-            if (ProtoBot_Upgrades.singularityCharge != 1) continue;
-            
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Armor) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
-            }
-            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
-        {
-            /*if (unit->canUpgrade(BWAPI::TechTypes::Psionic_Storm))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
-                continue;
-            }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
-                continue;
-            }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
-                continue;
-            }*/
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Observatory)
-        {
-            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
-            }
-            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
-            }*/
-        }
-    }
-}
-
-std::pair<int, int> BuildManager::getPlannedResources()
-{
-    return std::make_pair(spenderManager.getPlannedMinerals(resourceRequests), spenderManager.getPlannedGas(resourceRequests));
-}
-
 BWAPI::Unit BuildManager::getUnitToBuild(BWAPI::Position position)
 {
     return commanderReference->getUnitToBuild(position);
@@ -815,7 +540,6 @@ std::vector<NexusEconomy> BuildManager::getNexusEconomies()
 {
     return commanderReference->getNexusEconomies();
 }
-
 
 // ---------------------------
 // Build order helpers / runner
@@ -916,7 +640,7 @@ void BuildManager::clearBuildOrder(bool clearPendingRequests)
     buildOrderActive = false;
     buildOrderCompleted = true;
 
-    if (clearPendingRequests)
+    /*if (clearPendingRequests)
     {
         // Remove any pending build-order building requests that haven't started
         for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
@@ -926,19 +650,19 @@ void BuildManager::clearBuildOrder(bool clearPendingRequests)
             else
                 ++it;
         }
-    }
+    }*/
 }
 
 void BuildManager::overrideBuildOrder(int buildOrderId)
 {
     // Current setup: clear current build order requests, then replace with another chosen build order ID
-    for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
+    /*for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
     {
         if (it->fromBuildOrder && it->state == ResourceRequest::State::PendingApproval)
             it = resourceRequests.erase(it);
         else
             ++it;
-    }
+    }*/
 
     for (int i = 0; i < (int)buildOrders.size(); i++)
     {
@@ -960,12 +684,13 @@ bool BuildManager::enqueueBuildOrderBuilding(BWAPI::UnitType type, int count)
 {
     for (int i = 0; i < count; i++)
     {
-        ResourceRequest req;
+        /*ResourceRequest req;
         req.type = ResourceRequest::Type::Building;
         req.unit = type;
         req.fromBuildOrder = true;
-        req.priority = 0;
-        resourceRequests.push_back(req);
+        resourceRequests.push_back(req);*/
+
+        commanderReference->requestBuilding(type, true);
     }
     return true;
 }
@@ -1172,19 +897,17 @@ bool BuildManager::enqueueSupplyAtNaturalRamp()
     if (!isValidBuildTile(type, t))
         return false;
 
-    ResourceRequest req;
+    /*ResourceRequest req;
     req.type = ResourceRequest::Type::Building;
     req.unit = type;
     req.fromBuildOrder = true;
-    req.priority = 0;
-
     req.useForcedTile = true;
-    req.forcedTile = t;
+    req.forcedTile = t;*/
 
     // Reserve immediately so other placement logic doesn't steal the spot
     BWEB::Map::addReserve(t, type.tileWidth(), type.tileHeight());
 
-    resourceRequests.push_back(req);
+    commanderReference->requestBuilding(type, true, true, t);
     return true;
 }
 
@@ -1310,18 +1033,18 @@ bool BuildManager::enqueueNaturalWallAtChoke()
         if (!pylonTile.isValid() || !isValidBuildTile(BWAPI::UnitTypes::Protoss_Pylon, pylonTile))
             return false;
 
-        ResourceRequest req;
+        /*ResourceRequest req;
         req.type = ResourceRequest::Type::Building;
         req.unit = BWAPI::UnitTypes::Protoss_Pylon;
         req.fromBuildOrder = true;
         req.useForcedTile = true;
-        req.forcedTile = pylonTile;
-        req.priority = 0;
+        req.forcedTile = pylonTile;*/
 
         // Then reserve
-        BWEB::Map::addReserve(pylonTile, req.unit.tileWidth(), req.unit.tileHeight());
+        BWEB::Map::addReserve(pylonTile, BWAPI::UnitTypes::Protoss_Pylon.tileWidth(), BWAPI::UnitTypes::Protoss_Pylon.tileHeight());
 
-        resourceRequests.push_back(req);
+        commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Pylon, true, true, pylonTile);
+
         naturalWallPylonEnqueued = true;
         naturalWallPylonTile = pylonTile;
         return false;
@@ -1400,30 +1123,28 @@ auto enqueueForced = [&](BWAPI::UnitType ut, const BWAPI::TilePosition& t)
 
                     if (best.isValid())
                     {
-                        ResourceRequest req;
+                        /*ResourceRequest req;
                         req.type = ResourceRequest::Type::Building;
                         req.unit = ut;
                         req.fromBuildOrder = true;
                         req.useForcedTile = true;
-                        req.forcedTile = best;
-                        req.priority = 0;
+                        req.forcedTile = best;*/
 
-                        resourceRequests.push_back(req);
+                        commanderReference->requestBuilding(ut, true, true, best);
                         enqueuedAny = true;
                     }
                     return;
                 }
             }
 
-            ResourceRequest req;
+            /*ResourceRequest req;
             req.type = ResourceRequest::Type::Building;
             req.unit = ut;
             req.fromBuildOrder = true;
             req.useForcedTile = true;
-            req.forcedTile = t;
-            req.priority = 0;
+            req.forcedTile = t;*/
 
-            resourceRequests.push_back(req);
+            commanderReference->requestBuilding(ut, true, true, t);
             enqueuedAny = true;
         };
 

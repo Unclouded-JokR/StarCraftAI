@@ -4,6 +4,7 @@
 #include <vector>
 #include <bwem.h>
 #include "../starterbot/Tools.h"
+#include "SpenderManager.h"
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 3
@@ -21,7 +22,6 @@
 #define FRAMES_BEFORE_FORCE_EXPANDING_INFLUENCE 3600
 
 //1:30 minutes
-//2160
 #define UNIT_PRODUCTION_TIME 2160
 
 //30 seconds
@@ -29,6 +29,26 @@
 
 //Adjust this time so enemy bots are not able to continue researching since we wouldnt scale as well as them. Kinda high for an start craft game time.
 #define FRAMES_TO_ALL_IN 57600
+
+class ProtoBotCommander;
+struct FriendlyBuildingCounter;
+struct ResourceRequest;
+
+enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
+enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
+enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
+
+struct ProductionGoals
+{
+	int nexusCount = 0;
+	int gatewayCount = 0;
+	int forgeCount = 0;
+	int cyberneticsCount = 0;
+	int roboticsCount = 0;
+	int observatoryCount = 0;
+	int citadelCount = 0;
+	int templarArchivesCount = 0;
+};
 
 struct IncompleteBuildingCounter
 {
@@ -50,23 +70,13 @@ struct IncompleteBuildingCounter
 	int templarArchives = 0;
 };
 
-class ProtoBotCommander;
-struct FriendlyBuildingCounter;
+struct Action {
+	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
+	ActionType type = ACTION_NONE;
 
-enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION};
-enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
-enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
-
-struct ProductionGoals
-{
-	int nexusCount = 0;
-	int gatewayCount = 0;
-	int forgeCount = 0;
-	int cyberneticsCount = 0;
-	int roboticsCount = 0;
-	int observatoryCount = 0;
-	int citadelCount = 0;
-	int templarArchivesCount = 0;
+	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
+	BWAPI::Position defendPosition = BWAPI::Positions::Invalid;
+	BWAPI::Position reinforcePosition = BWAPI::Positions::Invalid;
 };
 
 //Making gateway amount lower than I would like since the BWEB doesnt make a full 16 blocks for gateways sometimes.
@@ -85,17 +95,6 @@ const ProductionGoals productionGoalLate =
 	4, 8, 3, 1, 1, 1, 1, 1
 };
 
-struct Action {
-	enum ActionType { ACTION_EXPAND, ACTION_SCOUT, ACTION_BUILD, ACTION_ATTACK, ACTION_DEFEND, ACTION_NONE, ACTION_REINFORCE};
-	ActionType type = ACTION_NONE;
-
-	BWAPI::UnitType expansionToConstruct = BWAPI::UnitTypes::None;
-	BWAPI::UnitType buildingToConstruct = BWAPI::UnitTypes::None;
-	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
-	BWAPI::Position defendPosition = BWAPI::Positions::Invalid;
-	BWAPI::Position reinforcePosition = BWAPI::Positions::Invalid;
-};
-
 class StrategyManager
 {
 private:
@@ -107,6 +106,8 @@ private:
 	int timer = 0;
 
 	IncompleteBuildingCounter incompleteBuildings;
+
+	SpenderManager spenderManager;
 
 	//If we have excess minerals something is most likely wrong.
 	int mineralExcessToExpand = 1000;
@@ -126,8 +127,9 @@ public:
 	ProtoBotCommander* commanderReference;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);
+
 	void onStart();
-	std::vector<Action> onFrame();
+	std::vector<Action> onFrame(std::vector<ResourceRequest> &resourceRequests);
 	void onUnitDestroy(BWAPI::Unit); //for buildings and workers
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitMorph(BWAPI::Unit);

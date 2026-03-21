@@ -71,8 +71,9 @@ void ProtoBotCommander::onStart()
 	economyManager.onStart();
 	scoutingManager.onStart();
 	buildManager.onStart();
-
 	combatManager.onStart();
+
+	resourceRequests.clear();
 
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
@@ -90,6 +91,8 @@ void ProtoBotCommander::onFrame()
 	//m_mapTools.onFrame();
 	//timerManager.stopTimer(TimerManager::MapTools);
 
+	removeApprovedRequests();
+
 	/*
 	* Protobot Modules
 	*/
@@ -99,7 +102,7 @@ void ProtoBotCommander::onFrame()
 	//timerManager.stopTimer(TimerManager::Information);
 
 	//timerManager.startTimer(TimerManager::Strategy);
-	std::vector<Action> actions = strategyManager.onFrame();
+	std::vector<Action> actions = strategyManager.onFrame(resourceRequests);
 
 	bool issuedScoutThisFrame = false;
 
@@ -107,12 +110,6 @@ void ProtoBotCommander::onFrame()
 	{
 		switch (action.type)
 		{
-		case Action::ACTION_EXPAND:
-			requestBuild(action.expansionToConstruct);
-			break;
-		case Action::ACTION_BUILD:
-			requestBuild(action.buildingToConstruct);
-			break;
 		case Action::ACTION_SCOUT:
 			if (!issuedScoutThisFrame)
 			{
@@ -137,7 +134,7 @@ void ProtoBotCommander::onFrame()
 	//timerManager.stopTimer(TimerManager::Strategy);
 
 	//timerManager.startTimer(TimerManager::Build);
-	buildManager.onFrame();
+	buildManager.onFrame(resourceRequests);
 	//timerManager.stopTimer(TimerManager::Build);
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
@@ -208,14 +205,32 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 
 	//Managers that deal with unit information updates
 	strategyManager.onUnitDestroy(unit);
- InformationManager::Instance().onUnitDestroy(unit);
+	InformationManager::Instance().onUnitDestroy(unit);
 	buildManager.onUnitDestroy(unit);
 }
 
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
-   InformationManager::Instance().onUnitMorph(unit);
+	InformationManager::Instance().onUnitMorph(unit);
 	buildManager.onUnitMorph(unit);
+
+	if (unit->getPlayer() == BWAPI::Broodwar->self())
+	{
+		//Need to check this for tech and upgrades;
+		for (ResourceRequest& request : resourceRequests)
+		{
+			if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+		}
+	}
 }
 
 void ProtoBotCommander::onSendText(std::string text)
@@ -230,9 +245,72 @@ void ProtoBotCommander::onSendText(std::string text)
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
+	if (unit == nullptr) return;
+
 	buildManager.onUnitCreate(unit);
-  InformationManager::Instance().onUnitCreate(unit);
+	InformationManager::Instance().onUnitCreate(unit);
 	strategyManager.onUnitCreate(unit);
+
+	//Update requests
+	if (unit->getPlayer() == BWAPI::Broodwar->self())
+	{
+		for (ResourceRequest& request : resourceRequests)
+		{
+			if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+				request.unit == unit->getType())
+			{
+				request.state = ResourceRequest::State::Accepted_Completed;
+			}
+		}
+	}
+
+	if (unit->getPlayer() == BWAPI::Broodwar->self())
+	{
+		switch (unit->getType())
+		{
+		case BWAPI::UnitTypes::Protoss_Gateway:
+			if (requestCounter.gateway_requests > 0)
+				--requestCounter.gateway_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Nexus:
+			if (requestCounter.nexus_requests > 0)
+				--requestCounter.nexus_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Forge:
+			if (requestCounter.forge_requests > 0)
+				--requestCounter.forge_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+			if (requestCounter.cybernetics_requests > 0)
+				--requestCounter.cybernetics_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+			if (requestCounter.robotics_requests > 0)
+				--requestCounter.robotics_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observatory:
+			if (requestCounter.observatory_requests > 0)
+				--requestCounter.observatory_requests;
+			break;
+
+		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+			if (requestCounter.citadel_requests > 0)
+				--requestCounter.citadel_requests;
+			break;
+
+		case BWAPI::UnitTypes::Protoss_Templar_Archives:
+			if (requestCounter.templarArchives_requests > 0)
+				--requestCounter.templarArchives_requests;
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
@@ -312,6 +390,126 @@ void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 
 }
 
+void ProtoBotCommander::removeApprovedRequests()
+{
+	for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
+	{
+		if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
+		{
+			//if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
+			//if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+
+			it = resourceRequests.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+}
+
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool useForcedTile, BWAPI::TilePosition forcedtile)
+{
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Building;
+	request.unit = building;
+	request.fromBuildOrder = false;
+
+	switch (building)
+	{
+		case BWAPI::UnitTypes::Protoss_Gateway:
+			requestCounter.gateway_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Nexus:
+			requestCounter.nexus_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Forge:
+			requestCounter.forge_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+			requestCounter.cybernetics_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+			requestCounter.robotics_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observatory:
+			requestCounter.observatory_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+			requestCounter.citadel_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Templar_Archives:
+			requestCounter.templarArchives_requests++;
+			break;
+		default:
+			break;
+	}
+
+	resourceRequests.push_back(request);
+}
+
+void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain)
+{
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Unit;
+	request.unit = unit;
+	request.requestedBuilding = buildingToTrain;
+
+	resourceRequests.push_back(request);
+}
+
+void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
+{
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Upgrade;
+	request.upgrade = upgrade;
+	request.requestedBuilding = unit;
+
+	resourceRequests.push_back(request);
+}
+
+bool ProtoBotCommander::alreadySentRequest(int unitID)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (request.requestedBuilding != nullptr)
+		{
+			if (unitID == request.requestedBuilding->getID()) return true;
+		}
+	}
+	return false;
+}
+
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (building == request.unit && !request.isCheese) return true;
+	}
+	return false;
+}
+
+bool ProtoBotCommander::upgradeAlreadyRequested(BWAPI::Unit building)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (request.requestedBuilding != nullptr)
+		{
+			if (building->getID() == request.requestedBuilding->getID()) return true;
+		}
+	}
+	return false;
+}
+
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
+{
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
+	}
+	return false;
+}
+
 void ProtoBotCommander::drawDebugInformation()
 {
 	// Display the game frame rate as text in the upper left area of the screen
@@ -339,16 +537,6 @@ BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)
 	return economyManager.getAvalibleWorker(buildLocation);
 }
 
-void ProtoBotCommander::requestBuild(BWAPI::UnitType building)
-{
-	buildManager.buildBuilding(building);
-}
-
-void ProtoBotCommander::requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building)
-{
-	buildManager.trainUnit(worker, building);
-}
-
 const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
 {
     return InformationManager::Instance().getKnownEnemies();
@@ -359,34 +547,34 @@ const std::map<BWAPI::Unit, EnemyBuildingInfo>& ProtoBotCommander::getKnownEnemy
     return InformationManager::Instance().getKnownEnemyBuildings();
 }
 
+//Move this command into the strategy manager to keep the flow of data consistent.
 void ProtoBotCommander::requestCheese(BWAPI::UnitType building, BWAPI::Unit unit)
 {
-	buildManager.buildBuilding(building, unit);
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Building;
+	request.unit = building;
+	request.scoutToPlaceBuilding = unit;
+	request.isCheese = true;
+	request.fromBuildOrder = false;
+
+	resourceRequests.push_back(request);
 }
 
 bool ProtoBotCommander::checkCheeseRequest(BWAPI::Unit unit)
 {
-	return buildManager.cheeseIsApproved(unit);
+	for (ResourceRequest& request : resourceRequests)
+	{
+		if (request.type != ResourceRequest::Type::Building && request.isCheese) continue;
+
+		if (request.scoutToPlaceBuilding == unit && request.state == ResourceRequest::State::Approved_BeingBuilt) return true;
+	}
+
+	return false;
 }
 
 bool ProtoBotCommander::buildOrderCompleted()
 {
 	return buildManager.isBuildOrderCompleted();
-}
-
-bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
-{
-	return buildManager.requestedBuilding(building);
-}
-
-bool ProtoBotCommander::alreadySentRequest(int unitID)
-{
-	return buildManager.alreadySentRequest(unitID);
-}
-
-bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
-{
-	return buildManager.checkUnitIsPlanned(building);
 }
 
 std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()
@@ -397,11 +585,6 @@ std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()
 bool ProtoBotCommander::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
 	return buildManager.checkWorkerIsConstructing(unit);
-}
-
-int ProtoBotCommander::checkAvailableSupply()
-{
-	return buildManager.checkAvailableSupply();
 }
 
 //[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
