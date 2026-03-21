@@ -6,6 +6,7 @@
 
 struct ResourceRequest;
 
+//Do we need this?
 struct ProtoBotRequestCounter {
     int gateway_requests = 0;
     int nexus_requests = 0;

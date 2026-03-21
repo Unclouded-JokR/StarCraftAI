@@ -22,7 +22,6 @@
 #define FRAMES_BEFORE_FORCE_EXPANDING_INFLUENCE 3600
 
 //1:30 minutes
-//2160
 #define UNIT_PRODUCTION_TIME 2160
 
 //30 seconds
@@ -35,7 +34,6 @@ class ProtoBotCommander;
 struct FriendlyBuildingCounter;
 struct ResourceRequest;
 
-enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION};
 enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
 enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
 
@@ -75,8 +73,6 @@ struct Action {
 	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
 	ActionType type = ACTION_NONE;
 
-	BWAPI::UnitType expansionToConstruct = BWAPI::UnitTypes::None;
-	BWAPI::UnitType buildingToConstruct = BWAPI::UnitTypes::None;
 	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
 	BWAPI::Position defendPosition = BWAPI::Positions::Invalid;
 	BWAPI::Position reinforcePosition = BWAPI::Positions::Invalid;
