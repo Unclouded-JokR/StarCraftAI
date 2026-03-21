@@ -29,7 +29,7 @@ public:
 	void resourcesDepletedTranfer(BWAPI::Unitset workers, NexusEconomy& nexusEconomy);
 	BWAPI::Unit getAvalibleWorker(BWAPI::Position buildLocation);
 	BWAPI::Unit getUnitScout();
-	BWAPI::Unitset getMineralsAtBase(BWAPI::TilePosition nexusLocation);
+	void getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusEconomy& nexusEconomy);
 	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	int newMinerals;
 	int totalWorkers = 0;

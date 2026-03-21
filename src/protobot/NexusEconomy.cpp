@@ -13,7 +13,7 @@ NexusEconomy::~NexusEconomy()
 
 }
 
-int NexusEconomy::addMissedResources()
+void NexusEconomy::checkGasSteal()
 {
 	const int left = nexus->getPosition().x - 300;
 	const int top = nexus->getPosition().y - 300;
@@ -26,33 +26,6 @@ int NexusEconomy::addMissedResources()
 	//Should be better way to do this but this works for now.
 	for (const BWAPI::Unit unit : resourcesInRectangle)
 	{
-		if (vespeneGyser == nullptr && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser)
-		{
-			vespeneGyser = unit;
-		}
-		/*else if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field
-			|| unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field_Type_2
-			|| unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field_Type_3)
-		{
-			bool alreadyInserted = false;
-			if (minerals.size() != 0)
-			{
-				for (BWAPI::Unit mineral : minerals)
-				{
-					if (mineral->getID() == unit->getID())
-						alreadyInserted = true;
-				}
-
-				if (alreadyInserted == false)
-				{
-					newMinerals.insert(unit);
-				}
-			}
-			else
-			{
-				newMinerals.insert(unit);
-			}
-		}*/
 
 		if (unit->getType().isRefinery() && !unit->isBeingConstructed() && unit->getPlayer() != BWAPI::Broodwar->self()) {
 			//std::cout << "Gas steal detected...\n";
@@ -66,6 +39,23 @@ int NexusEconomy::addMissedResources()
 			attackingWorkers = 0;
 		}
 
+	}
+}
+
+void NexusEconomy::defendWorker()
+{
+	const int left = nexus->getPosition().x - 300;
+	const int top = nexus->getPosition().y - 300;
+	const int right = nexus->getPosition().x + 300;
+	const int bottom = nexus->getPosition().y + 300;
+
+	BWAPI::Unitset resourcesInRectangle = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(left, top), BWAPI::Position(right, bottom));
+	BWAPI::Unitset newMinerals;
+
+	//Should be better way to do this but this works for now.
+	for (const BWAPI::Unit unit : resourcesInRectangle)
+	{
+
 		if (unit->isAttacking() && unit->getPlayer() != BWAPI::Broodwar->self()) {
 			for (auto u : workers)
 			{
@@ -77,44 +67,7 @@ int NexusEconomy::addMissedResources()
 			attackingWorkers = 0;
 		}
 
-		/*for (auto& u : BWAPI::Broodwar->enemy()->getUnits()) {
-			if (u->getType().isRefinery() && u->getPlayer() != BWAPI::Broodwar->self()) {
-				for (auto u : workers)
-				{
-					if (u->getType().isWorker() && attackingWorkers < 8) {
-						u->attack(unit);
-						attackingWorkers += 1;
-					}
-				}
-			}
-		}*/
 	}
-
-	if (minerals.size() == 0) return minerals.size();
-
-	/*for (BWAPI::Unit mineral : newMinerals)
-	{
-		minerals.insert(mineral);
-		resourceWorkerCount[mineral] = 0;
-	}*/
-
-	optimalWorkerAmount = minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
-	maximumWorkers = optimalWorkerAmount + (vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
-
-	return minerals.size();
-
-	/*
-	if (nexusID > 1)
-	{
-		BWAPI::Unitset incomingWorkers = economyReference->getWorkersToTransfer(newMinerals.size(), *this);
-
-		for (BWAPI::Unit worker : incomingWorkers)
-		{
-			assignWorker(worker);
-		}
-	}*/
-
-	//std::cout << "Total Minerals: " << minerals.size() << "\n";
 }
 
 
@@ -122,17 +75,17 @@ int NexusEconomy::addMissedResources()
 void NexusEconomy::onFrame()
 {
 
-	lifetime += 1;
-	if (lifetime >= 500) lifetime = 500;
-	moveTimer += 1;
+	
+	if (lifetime < 500) lifetime += 1;
+	//moveTimer += 1;
 
-	if (lifetime == 500 && BWAPI::Broodwar->getFrameCount() % 150 == 0)
+	if (BWAPI::Broodwar->getFrameCount() % 150 == 0)
 	{
-		int kill = addMissedResources();
+		checkGasSteal();
 	}
 
 	//make this solution better.
-	if (lifetime < 500) int y = addMissedResources();
+	//if (lifetime < 500) int y = addMissedResources();
 
 	//BWAPI::Unitset WorkersToBeKicked;
 
@@ -148,8 +101,8 @@ void NexusEconomy::onFrame()
 	BWAPI::Broodwar->drawBoxMap(BWAPI::Position(left, top), BWAPI::Position(right, bottom), BWAPI::Color(255, 0, 0));*/
 
 	//Problem start here
-	
 	/*
+	
 	for (BWAPI::Unit mineral : minerals)
 	{
 		BWAPI::Broodwar->drawLineMap(nexus->getPosition(), mineral->getPosition(), BWAPI::Color(0, 0, 255));
@@ -162,8 +115,8 @@ void NexusEconomy::onFrame()
 	
 	//std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
 	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y + 40), temp.c_str());
-	
 	*/
+	
 	//Problem end here
 
 	/*if (BWAPI::Broodwar->getFrameCount() % 500 == 0 && BWAPI::Broodwar->getFrameCount() != 0)
@@ -194,9 +147,12 @@ void NexusEconomy::onFrame()
 		//if (worker->isIdle()) workerOrder[worker] = 0;
 		//BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
 
+		if (worker->isUnderAttack() && !worker->isAttacking())
+		{
+			defendWorker();
+		}
+
 		if (minerals.size() == 0) break;
-
-
 
 
 		//If a worker is constructing skip over them until they are done.
@@ -284,10 +240,11 @@ void NexusEconomy::onFrame()
 		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
 	}
 
+	/*
 	if (moveTimer >= 5)
 	{
 		moveTimer = 0;
-	}
+	}*/
 
 
 	//if (BWAPI::Broodwar->getFrameCount() % 500 == 0)
