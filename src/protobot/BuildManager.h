@@ -49,9 +49,7 @@ public:
     void onUnitComplete(BWAPI::Unit);
     void onUnitDiscover(BWAPI::Unit);
 
-    //Spender Manager Request methods
-    // External requests from StrategyManager / commander
-    void buildBuilding(BWAPI::UnitType);
+    BWAPI::Unitset getBuildings();
 
     // Build order lifecycle
     void initBuildOrdersOnStart();
@@ -69,15 +67,7 @@ public:
     bool enqueueNaturalWallAtChoke();
     BWAPI::TilePosition findNaturalChokePylonTile() const;
     void resetNaturalWallPlan();
-
-    void trainUnit(BWAPI::UnitType, BWAPI::Unit);
-    void buildUpgadeType(BWAPI::Unit, BWAPI::UpgradeType);
-    bool cheeseIsApproved(BWAPI::Unit scout);
-    void buildBuilding(BWAPI::UnitType, BWAPI::Unit scout);
-
     bool checkWorkerIsConstructing(BWAPI::Unit);
-    int checkAvailableSupply();
-
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
 

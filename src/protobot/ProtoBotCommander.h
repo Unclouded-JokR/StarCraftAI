@@ -69,6 +69,17 @@ struct ResourceRequest
 	bool useForcedTile = false;
 };
 
+struct ProtoBotRequestCounter {
+	int gateway_requests = 0;
+	int nexus_requests = 0;
+	int forge_requests = 0;
+	int cybernetics_requests = 0;
+	int robotics_requests = 0;
+	int observatory_requests = 0;
+	int citadel_requests = 0;
+	int templarArchives_requests = 0;
+};
+
 class ProtoBotCommander
 {
 
@@ -80,6 +91,7 @@ public:
 	BuildManager buildManager;
 	CombatManager combatManager;
 	StrategyManager strategyManager;
+	ProtoBotRequestCounter requestCounter;
 
 	std::vector<ResourceRequest> resourceRequests;
 
@@ -102,6 +114,7 @@ public:
 	void drawDebugInformation();
 
 	void removeApprovedRequests();
+	void requestBuilding(BWAPI::UnitType building);
 
 	//Ecconomy Manager Methods
 	BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);
@@ -126,13 +139,10 @@ public:
 	bool buildOrderCompleted();
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
 	bool requestedBuilding(BWAPI::UnitType building);
-	void requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building);
-	void requestBuild(BWAPI::UnitType building);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
 	bool checkCheeseRequest(BWAPI::Unit);
 	bool alreadySentRequest(int unitID);
 	bool checkWorkerIsConstructing(BWAPI::Unit);
-	int checkAvailableSupply();
 
 	// Scouting Manager Methods
 	BWAPI::Unit getUnitToScout();

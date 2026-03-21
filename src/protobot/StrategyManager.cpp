@@ -101,6 +101,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	const FriendlyTechCounter ProtoBot_tech = InformationManager::Instance().getFriendlyTechCounter();
 	std::vector<Squad*> Protobot_IdleSquads = commanderReference->combatManager.IdleSquads;
 	std::vector<Squad*> Protobot_Squads = commanderReference->combatManager.Squads;
+	BWAPI::Unitset buildings = commanderReference->buildManager.getBuildings();
+
 	int numberFullSquads = 0;
 
 	for (const Squad* squad : Protobot_Squads)
@@ -164,14 +166,11 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	if (buildOrderCompleted)
 	{
 		//Pylon requests, Once build order is completed run this method to make sure we have enough supply to do things.
-		if (commanderReference->checkAvailableSupply() <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
+		if (spenderManager.plannedSupply(resourceRequests, buildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
 		{
 			//std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
 
-			ResourceRequest buildPylon;
-			buildPylon.type = ResourceRequest::Type::Building;
-			buildPylon.unit = BWAPI::UnitTypes::Protoss_Pylon;
-			resourceRequests.push_back(buildPylon);
+			commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Pylon);
 		}
 
 		//Assimilators for nexus's as well if we need any.
@@ -185,17 +184,14 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			{
 				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
 
-				ResourceRequest buildAssimilator;
-				buildAssimilator.type = ResourceRequest::Type::Building;
-				buildAssimilator.unit = BWAPI::UnitTypes::Protoss_Assimilator;
-				resourceRequests.push_back(buildAssimilator);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Assimilator);
 			}
 		}
 	}
 
 	//First is minerals avalible, Second is gas avalible
 	std::pair<int, int> resourcesAvalible = std::make_pair(spenderManager.getPlannedMinerals(resourceRequests), spenderManager.getPlannedGas(resourceRequests));
-	const ProtoBotRequestCounter requests = commanderReference->buildManager.requestCounter;
+	const ProtoBotRequestCounter& requests = commanderReference->requestCounter;
 
 	/*std::cout
 	<< "ProtoBotRequestCounter {\n"
@@ -226,41 +222,30 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				if (ProtoBot_buildings.nexus == saturatedNexus)
 				{
 					//std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 
-					resourcesAvalible.first -= buildNexus.unit.mineralPrice();
-					resourcesAvalible.second -= buildNexus.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
 				}
 
 				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
 				{
 					mineralExcessToExpand *= 2;
 					//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
-
-					resourcesAvalible.first -= buildNexus.unit.mineralPrice();
-					resourcesAvalible.second -= buildNexus.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
 				}
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
 					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
-
-					resourcesAvalible.first -= buildNexus.unit.mineralPrice();
-					resourcesAvalible.second -= buildNexus.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
 				}
 			}
 			
@@ -273,13 +258,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
 				{
 					//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
-					ResourceRequest buildGateway;
-					buildGateway.type = ResourceRequest::Type::Building;
-					buildGateway.unit = BWAPI::UnitTypes::Protoss_Gateway;
-					resourceRequests.push_back(buildGateway);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Gateway);
 
-					resourcesAvalible.first -= buildGateway.unit.mineralPrice();
-					resourcesAvalible.second -= buildGateway.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Gateway.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Gateway.gasPrice();
 				}
 			}
 
@@ -294,13 +276,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				//On expanding influence we should create a new nexus immedietly
 				if (ProtoBot_buildings.nexus + incompleteBuildings.nexus + requests.nexus_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).nexusCount)
 				{
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 
-					resourcesAvalible.first -= buildNexus.unit.mineralPrice();
-					resourcesAvalible.second -= buildNexus.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
 				}
 
 				//Gateway
@@ -309,13 +288,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible) &&
 					ProtoBot_buildings.nexus >= ProtoBot_ProductionGoals.at(ProductionGoal_index).nexusCount)
 				{
-					ResourceRequest buildGateway;
-					buildGateway.type = ResourceRequest::Type::Building;
-					buildGateway.unit = BWAPI::UnitTypes::Protoss_Gateway;
-					resourceRequests.push_back(buildGateway);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Gateway);
 
-					resourcesAvalible.first -= buildGateway.unit.mineralPrice();
-					resourcesAvalible.second -= buildGateway.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Gateway.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Gateway.gasPrice();
 				}
 
 				//Forge
@@ -324,13 +300,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Forge, resourcesAvalible) &&
 					ProtoBot_buildings.gateway >= ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount)
 				{
-					ResourceRequest buildForge;
-					buildForge.type = ResourceRequest::Type::Building;
-					buildForge.unit = BWAPI::UnitTypes::Protoss_Forge;
-					resourceRequests.push_back(buildForge);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Forge);
 
-					resourcesAvalible.first -= buildForge.unit.mineralPrice();
-					resourcesAvalible.second -= buildForge.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Forge.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Forge.gasPrice();
 				}
 
 				//Cybernetics
@@ -339,13 +312,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Cybernetics_Core, resourcesAvalible) &&
 					ProtoBot_buildings.forge >= ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount)
 				{
-					ResourceRequest buildCybernetics;
-					buildCybernetics.type = ResourceRequest::Type::Building;
-					buildCybernetics.unit = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
-					resourceRequests.push_back(buildCybernetics);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
 
-					resourcesAvalible.first -= buildCybernetics.unit.mineralPrice();
-					resourcesAvalible.second -= buildCybernetics.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Cybernetics_Core.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Cybernetics_Core.gasPrice();
 				}
 
 				//Robotics
@@ -354,13 +324,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Robotics_Facility, resourcesAvalible) &&
 					ProtoBot_buildings.cyberneticsCore >= ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount)
 				{
-					ResourceRequest buildRobotics;
-					buildRobotics.type = ResourceRequest::Type::Building;
-					buildRobotics.unit = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-					resourceRequests.push_back(buildRobotics);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Robotics_Facility);
 
-					resourcesAvalible.first -= buildRobotics.unit.mineralPrice();
-					resourcesAvalible.second -= buildRobotics.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Robotics_Facility.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Robotics_Facility.gasPrice();
 				}
 
 				//Observatory
@@ -369,13 +336,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Observatory, resourcesAvalible) &&
 					ProtoBot_buildings.roboticsFacility >= ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount)
 				{
-					ResourceRequest buildObservatory;
-					buildObservatory.type = ResourceRequest::Type::Building;
-					buildObservatory.unit = BWAPI::UnitTypes::Protoss_Observatory;
-					resourceRequests.push_back(buildObservatory);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Observatory);
 
-					resourcesAvalible.first -= buildObservatory.unit.mineralPrice();
-					resourcesAvalible.second -= buildObservatory.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Observatory.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Observatory.gasPrice();
 				}
 
 				//Citadel
@@ -384,13 +348,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, resourcesAvalible) &&
 					ProtoBot_buildings.observatory >= ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount)
 				{
-					ResourceRequest buildCitadel;
-					buildCitadel.type = ResourceRequest::Type::Building;
-					buildCitadel.unit = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
-					resourceRequests.push_back(buildCitadel);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Citadel_of_Adun);
 
-					resourcesAvalible.first -= buildCitadel.unit.mineralPrice();
-					resourcesAvalible.second -= buildCitadel.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Citadel_of_Adun.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Citadel_of_Adun.gasPrice();
 				}
 
 				//Templar Archives
@@ -399,13 +360,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					canAfford(BWAPI::UnitTypes::Protoss_Templar_Archives, resourcesAvalible) &&
 					ProtoBot_buildings.citadelOfAdun >= ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount)
 				{
-					ResourceRequest buildTemplarArchives;
-					buildTemplarArchives.type = ResourceRequest::Type::Building;
-					buildTemplarArchives.unit = BWAPI::UnitTypes::Protoss_Templar_Archives;
-					resourceRequests.push_back(buildTemplarArchives);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Templar_Archives);
 
-					resourcesAvalible.first -= buildTemplarArchives.unit.mineralPrice();
-					resourcesAvalible.second -= buildTemplarArchives.unit.gasPrice();
+					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Templar_Archives.mineralPrice();
+					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Templar_Archives.gasPrice();
 				}
 			}
 			else
@@ -424,32 +382,21 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				if (ProtoBot_buildings.nexus == saturatedNexus)
 				{
 					//std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 				}
 
 				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
 				{
 					mineralExcessToExpand *= 2;
 					//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
-
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 				}
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
 					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
-
-					ResourceRequest buildNexus;
-					buildNexus.type = ResourceRequest::Type::Building;
-					buildNexus.unit = BWAPI::UnitTypes::Protoss_Nexus;
-					resourceRequests.push_back(buildNexus);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Nexus);
 				}
 			}
 
@@ -463,10 +410,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 					&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 				{
 					//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
-					ResourceRequest buildAssimilator;
-					buildAssimilator.type = ResourceRequest::Type::Building;
-					buildAssimilator.unit = BWAPI::UnitTypes::Protoss_Assimilator;
-					resourceRequests.push_back(buildAssimilator);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Assimilator);
 				}
 			}
 
@@ -479,11 +423,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
 				{
 					//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
-
-					ResourceRequest buildGateway;
-					buildGateway.type = ResourceRequest::Type::Building;
-					buildGateway.unit = BWAPI::UnitTypes::Protoss_Gateway;
-					resourceRequests.push_back(buildGateway);
+					commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Gateway);
 				}
 			}
 
@@ -492,10 +432,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			{
 				//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 
-				ResourceRequest buildForge;
-				buildForge.type = ResourceRequest::Type::Building;
-				buildForge.unit = BWAPI::UnitTypes::Protoss_Forge;
-				resourceRequests.push_back(buildForge);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Forge);
 			}
 
 			//Only need 1 cybernetics core
@@ -503,10 +440,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			{
 				//std::cout << "build action: requesting to warp forge\n";
 
-				ResourceRequest buildCybernetics;
-				buildCybernetics.type = ResourceRequest::Type::Building;
-				buildCybernetics.unit = BWAPI::UnitTypes::Protoss_Cybernetics_Core;
-				resourceRequests.push_back(buildCybernetics);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
 			}
 
 			//Should only build 1 robotics facility
@@ -514,10 +448,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			{
 				//std::cout << "build action: requesting to warp robotics facility\n";
 
-				ResourceRequest buildRobotics;
-				buildRobotics.type = ResourceRequest::Type::Building;
-				buildRobotics.unit = BWAPI::UnitTypes::Protoss_Robotics_Facility;
-				resourceRequests.push_back(buildRobotics);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Robotics_Facility);
 			}
 
 			//Only 1 observatory
@@ -525,10 +456,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			{
 				//std::cout << "Build Action: requesting to warp observatory\n";
 
-				ResourceRequest buildObservatory;
-				buildObservatory.type = ResourceRequest::Type::Building;
-				buildObservatory.unit = BWAPI::UnitTypes::Protoss_Observatory;
-				resourceRequests.push_back(buildObservatory);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Observatory);
 			}
 
 			//2/3 Forge upgrade units
@@ -537,20 +465,14 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			{
 				//std::cout << "build action: requesting to warp citadel of adun\n";
 
-				ResourceRequest buildCitadel;
-				buildCitadel.type = ResourceRequest::Type::Building;
-				buildCitadel.unit = BWAPI::UnitTypes::Protoss_Citadel_of_Adun;
-				resourceRequests.push_back(buildCitadel);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Citadel_of_Adun);
 			}
 
 			if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
 			{
 				//std::cout << "build action: requesting to warp templar archives\n";
 
-				ResourceRequest buildTemplarArchives;
-				buildTemplarArchives.type = ResourceRequest::Type::Building;
-				buildTemplarArchives.unit = BWAPI::UnitTypes::Protoss_Templar_Archives;
-				resourceRequests.push_back(buildTemplarArchives);
+				commanderReference->requestBuild(BWAPI::UnitTypes::Protoss_Templar_Archives);
 			}
 		}
 	}

@@ -244,6 +244,8 @@ void ProtoBotCommander::onSendText(std::string text)
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 {
+	if (unit == nullptr) return;
+
 	buildManager.onUnitCreate(unit);
 	InformationManager::Instance().onUnitCreate(unit);
 	strategyManager.onUnitCreate(unit);
@@ -263,6 +265,49 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 			{
 				request.state = ResourceRequest::State::Accepted_Completed;
 			}
+		}
+	}
+
+	if (unit->getPlayer() == BWAPI::Broodwar->self())
+	{
+		switch (unit->getType())
+		{
+		case BWAPI::UnitTypes::Protoss_Gateway:
+			if (requestCounter.gateway_requests > 0)
+				--requestCounter.gateway_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Nexus:
+			if (requestCounter.nexus_requests > 0)
+				--requestCounter.nexus_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Forge:
+			if (requestCounter.forge_requests > 0)
+				--requestCounter.forge_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+			if (requestCounter.cybernetics_requests > 0)
+				--requestCounter.cybernetics_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+			if (requestCounter.robotics_requests > 0)
+				--requestCounter.robotics_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observatory:
+			if (requestCounter.observatory_requests > 0)
+				--requestCounter.observatory_requests;
+			break;
+
+		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+			if (requestCounter.citadel_requests > 0)
+				--requestCounter.citadel_requests;
+			break;
+
+		case BWAPI::UnitTypes::Protoss_Templar_Archives:
+			if (requestCounter.templarArchives_requests > 0)
+				--requestCounter.templarArchives_requests;
+			break;
+		default:
+			break;
 		}
 	}
 }
@@ -362,6 +407,45 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building)
+{
+	ResourceRequest request;
+	request.type = ResourceRequest::Type::Building;
+	request.unit = building;
+	request.fromBuildOrder = false;
+
+	switch (building)
+	{
+		case BWAPI::UnitTypes::Protoss_Gateway:
+			requestCounter.gateway_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Nexus:
+			requestCounter.nexus_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Forge:
+			requestCounter.forge_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+			requestCounter.cybernetics_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+			requestCounter.robotics_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observatory:
+			requestCounter.observatory_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+			requestCounter.citadel_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Templar_Archives:
+			requestCounter.templarArchives_requests++;
+			break;
+		default:
+			break;
+	}
+
+	resourceRequests.push_back(request);
+}
 
 bool ProtoBotCommander::alreadySentRequest(int unitID)
 {
@@ -405,7 +489,6 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 	return false;
 }
 
-
 void ProtoBotCommander::drawDebugInformation()
 {
 	// Display the game frame rate as text in the upper left area of the screen
@@ -431,16 +514,6 @@ BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)
 {
 	//Will not check for null, we expect to get a unit that is able to build. We may also be able to add a command once they return a mineral.
 	return economyManager.getAvalibleWorker(buildLocation);
-}
-
-void ProtoBotCommander::requestBuild(BWAPI::UnitType building)
-{
-	buildManager.buildBuilding(building);
-}
-
-void ProtoBotCommander::requestUnitToTrain(BWAPI::UnitType worker, BWAPI::Unit building)
-{
-	buildManager.trainUnit(worker, building);
 }
 
 const std::set<BWAPI::Unit>& ProtoBotCommander::getKnownEnemyUnits()
@@ -491,11 +564,6 @@ std::vector<NexusEconomy> ProtoBotCommander::getNexusEconomies()
 bool ProtoBotCommander::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
 	return buildManager.checkWorkerIsConstructing(unit);
-}
-
-int ProtoBotCommander::checkAvailableSupply()
-{
-	return buildManager.checkAvailableSupply();
 }
 
 //[TODO] change this to to ask the economy manager to get a worker that can scout, getAvalibleWorker() is a method that gets a builder
