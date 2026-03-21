@@ -27,14 +27,14 @@ namespace
 	constexpr int kCombatScoutFrame = 3240;
 }
 
+struct ThreatQueryResult;
+
 struct EnemyLocations {
 	std::optional<BWAPI::TilePosition> main;
 	std::optional<BWAPI::TilePosition> natural;
 	int frameLastUpdateMain = -1;
 	int frameLastUpdateNat = -1;
 };
-
-struct ThreatQueryResult;
 
 struct ResourceRequest
 {
@@ -52,10 +52,6 @@ struct ResourceRequest
 
 	BWAPI::Unit scoutToPlaceBuilding = nullptr; //Used if a scout requests a gas steal
 	bool isCheese = false;
-
-	//For now buildings will request to make units but we should remove this later
-	//The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
-	BWAPI::Unit requestedBuilding = nullptr;
 
 	//Use this to try requests again and see if we need to kill it.
 	int framesSinceLastCheck = 0;

@@ -72,7 +72,7 @@ struct IncompleteBuildingCounter
 };
 
 struct Action {
-	enum ActionType { ACTION_EXPAND, ACTION_SCOUT, ACTION_BUILD, ACTION_ATTACK, ACTION_DEFEND, ACTION_NONE, ACTION_REINFORCE };
+	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
 	ActionType type = ACTION_NONE;
 
 	BWAPI::UnitType expansionToConstruct = BWAPI::UnitTypes::None;

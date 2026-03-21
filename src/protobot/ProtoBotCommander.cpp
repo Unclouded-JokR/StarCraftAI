@@ -90,6 +90,8 @@ void ProtoBotCommander::onFrame()
 	//m_mapTools.onFrame();
 	//timerManager.stopTimer(TimerManager::MapTools);
 
+	removeApprovedRequests();
+
 	/*
 	* Protobot Modules
 	*/
@@ -99,7 +101,7 @@ void ProtoBotCommander::onFrame()
 	//timerManager.stopTimer(TimerManager::Information);
 
 	//timerManager.startTimer(TimerManager::Strategy);
-	std::vector<Action> actions = strategyManager.onFrame();
+	std::vector<Action> actions = strategyManager.onFrame(resourceRequests);
 
 	bool issuedScoutThisFrame = false;
 
@@ -107,12 +109,6 @@ void ProtoBotCommander::onFrame()
 	{
 		switch (action.type)
 		{
-		case Action::ACTION_EXPAND:
-			requestBuild(action.expansionToConstruct);
-			break;
-		case Action::ACTION_BUILD:
-			requestBuild(action.buildingToConstruct);
-			break;
 		case Action::ACTION_SCOUT:
 			if (!issuedScoutThisFrame)
 			{
@@ -137,7 +133,7 @@ void ProtoBotCommander::onFrame()
 	//timerManager.stopTimer(TimerManager::Strategy);
 
 	//timerManager.startTimer(TimerManager::Build);
-	buildManager.onFrame();
+	buildManager.onFrame(resourceRequests);
 	//timerManager.stopTimer(TimerManager::Build);
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
@@ -310,6 +306,24 @@ void ProtoBotCommander::onUnitHide(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitRenegade(BWAPI::Unit unit)
 {
 
+}
+
+void ProtoBotCommander::removeApprovedRequests()
+{
+	for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
+	{
+		if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
+		{
+			//if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
+			//if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+
+			it = resourceRequests.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
 }
 
 void ProtoBotCommander::drawDebugInformation()

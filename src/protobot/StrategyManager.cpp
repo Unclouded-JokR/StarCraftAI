@@ -53,9 +53,7 @@ void StrategyManager::onStart()
 
 	//std::cout << "ProtoBot areas: " << ProtoBot_Areas.size() << "\n";
 
-	startingChoke = BWAPI::Position(BWEB::Map::getNaturalChoke()->Center());
-
-	//std::cout << "Starting choke located at " << startingChoke << "\n";	
+	spenderManager.onStart();
 }
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
@@ -65,8 +63,11 @@ bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
 			|| commanderReference->checkUnitIsPlanned(type)));
 }
 
-std::vector<Action> StrategyManager::onFrame()
+std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resourceRequests)
 {
+	//Might need to move this.
+	spenderManager.OnFrame(resourceRequests);
+
 	std::vector<Action> actionsToReturn;
 
 	//Debug: Drawing choke points to get an idea on where the BWEM can have us position squads

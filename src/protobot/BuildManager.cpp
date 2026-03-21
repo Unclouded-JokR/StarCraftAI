@@ -75,7 +75,6 @@ void BuildManager::onStart()
 
     resetNaturalWallPlan();
 
-    spenderManager.onStart();
     buildingPlacer.onStart();
     builders.clear();
 
@@ -84,27 +83,14 @@ void BuildManager::onStart()
 }
 
 
-void BuildManager::onFrame() {
-    for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
-    {
-        if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
-        {
-            //if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
-            //if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
-
-            it = resourceRequests.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
-
+void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests) 
+{
     runBuildOrderOnFrame();
 
-    spenderManager.OnFrame(resourceRequests);
     buildingPlacer.drawPoweredTiles();
 
+    //Have to have loop that can check if a building can create a unit and is powered.
+    //Might also need to have some data that shows what each building is doing but might be too complictaed for this approach.
     for (ResourceRequest& request : resourceRequests)
     {
         if (request.state != ResourceRequest::State::Approved_InProgress)
