@@ -1,5 +1,6 @@
 #include "BOIDS.h"
 
+// Static variables
 map<BWAPI::Unit, Squad*> CombatManager::unitSquadMap;
 unordered_map<BWAPI::Unit, double, unitHash> BOIDS::leaderRadiusMap;
 
@@ -26,6 +27,7 @@ void BOIDS::squadFlock(Squad* squad) {
 		// Position info
 		const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
 		const VectorPos leaderPos = VectorPos(squad->leader->getPosition().x, squad->leader->getPosition().y);
+		const double distUnitToLeader = unitPos.getDistance(leaderPos);
 
 		// Don't worry about flocking if unit is too far away from the leader
 		if (unitPos.getApproxDistance(leaderPos) > BOIDS_RANGE) {
@@ -42,7 +44,6 @@ void BOIDS::squadFlock(Squad* squad) {
 
 		// LEADER VECTOR
 		VectorPos leaderVec = VectorPos(0, 0);
-		const double dist = unit->getDistance(leaderPos);
 		const double spacing = 25.0;
 		const double outer_radius = max(spacing * 1.5, spacing + sqrt(squad->units.size()) * spacing);
 
@@ -52,20 +53,18 @@ void BOIDS::squadFlock(Squad* squad) {
 		}
 
 		// if unit too far, pull in
-		// if unit too close, push away
-		if (dist > outer_radius) {
-			leaderVec = leaderPos - unitPos;
+		if (distUnitToLeader > outer_radius) {
+			leaderVec = leaderVelocity + (leaderPos - unitPos);
 		}
 
-		leaderVec = normalize(leaderVelocity) + normalize(leaderVec) * LEADER_STRENGTH;
+		leaderVec = leaderVec.normalize() * LEADER_STRENGTH;
 
-//#ifdef DEBUG_FLOCKING
+		//#ifdef DEBUG_FLOCKING
 		BWAPI::Broodwar->drawCircleMap(leaderPos, BOIDS_RANGE, BWAPI::Colors::Grey);
 		BWAPI::Broodwar->drawCircleMap(leaderPos, outer_radius, BWAPI::Colors::Yellow);
-//#endif
+		//#endif
 
-		// SEPARATION VECTOR
-		// Grab close neigbors for separation vector
+				// SEPARATION VECTOR
 		const BWAPI::Unitset neighbors = BWAPI::Broodwar->getUnitsInRadius(unitPos, MIN_SEPARATION_DISTANCE, BWAPI::Filter::IsAlly);
 		VectorPos separationVec = VectorPos(0, 0);
 
@@ -75,32 +74,27 @@ void BOIDS::squadFlock(Squad* squad) {
 				continue;
 			}
 
+			const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
+
 			// Don't apply separation to self if neighbor is a unit settling into their leader's radius
 			// If neighbor is a leader, apply separation to self 
 			if (CombatManager::unitSquadMap.find(neighbor) != CombatManager::unitSquadMap.end()) { // neighbor has a squad
 				if (neighbor != CombatManager::unitSquadMap[neighbor]->leader) { // neighbor is not a leader
 					BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
-					int neighborDist = neighbor->getPosition().getApproxDistance(neighborLeader->getPosition());
-					int unitDist = unit->getPosition().getApproxDistance(squad->leader->getPosition());
-					// if neighbor is settled in their leader's radius, don't push unit away
-					if (neighborDist <= leaderRadiusMap[neighborLeader]){
-						if (unitDist >= leaderRadiusMap[squad->leader]) {
-							separationVec = VectorPos(0, 0);
-							continue;
-						}
+					const double distToNeighbor = unitPos.getDistance(neighborPos);
+
+					// if both units have the same leader and are both in the radius, calculate separation normally
+					if (inLeaderRadius(neighbor, neighborLeader) && !inLeaderRadius(unit, squad->leader)) {
+						separationVec += VectorPos(0, 0);
+					}
+					else {
+						separationVec += (unitPos - neighborPos) * 1 / distToNeighbor;
 					}
 				}
 			}
-
-			const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
-
-			// Need to scale separation strength by how close/far the neighbor is
-			const double distance = unitPos.getDistance(neighborPos);
-			const double scale = 1 / distance;
-			separationVec += (unitPos - neighborPos) * scale;
 		}
 
-		separationVec = normalize(separationVec);
+		separationVec = separationVec.normalize() * SEPARATION_STRENGTH;
 
 		// TERRAIN VECTOR
 		VectorPos terrainVec = getTerrainVector(unit, squad->leader) * TERRAIN_STRENGTH;
@@ -109,22 +103,26 @@ void BOIDS::squadFlock(Squad* squad) {
 		VectorPos boidsVector = leaderVec + separationVec + terrainVec;
 
 		// normalize final boids vector if not VectorPos(0,0)
-		boidsVector = normalize(boidsVector);
+		boidsVector = boidsVector.normalize();
 
 		// If the adjustment is not significant enough, don't move the unit
 		if (boidsVector.getDistance(VectorPos(0, 0)) < 0.2) {
 			continue;
 		}
 
-		VectorPos finalTarget = unitPos + (unitVelocity * VELOCITY_DAMPENING) + (boidsVector * unit->getType().topSpeed() * FRAMES_BETWEEN_BOIDS);
+		// unit speed is pixels per frame so its scaled by frames skipped between boids calculations
+		const int minDistance = 10;
+		cout << "Unit speed: " << unit->getType().topSpeed() << endl;
+		const VectorPos finalTarget = unitPos + (boidsVector * unit->getType().topSpeed() * (FRAMES_BETWEEN_BOIDS + 1) * minDistance);
+
 		unit->attack(finalTarget);
 
 #ifdef DEBUG_FLOCKING
-		cout << "Separation Vector : " << separationVec << endl;
-		cout << "Terrain Vector : " << terrainVec << endl;
-		cout << "Leader Vector : " << leaderVec << endl;
-		cout << "Boids Vector : " << boidsVector << endl;
-		cout << "Final Vector : " << finalTarget << endl;
+		//cout << "Separation Vector : " << separationVec << endl;
+		//cout << "Terrain Vector : " << terrainVec << endl;
+		//cout << "Leader Vector : " << leaderVec << endl;
+		//cout << "Boids Vector : " << boidsVector << endl;
+		//cout << "Final Vector : " << finalTarget << endl;
 		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 10, BWAPI::Colors::Red);
 		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 10, BWAPI::Colors::Yellow);
 		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + alignmentVec * 10, BWAPI::Colors::Purple);
@@ -141,10 +139,12 @@ void BOIDS::squadFlock(Squad* squad) {
 
 VectorPos BOIDS::getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader) {
 	VectorPos terrainVec = VectorPos(0, 0);
+	VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
 
-	const VectorPos forward = normalize(VectorPos(unit->getVelocityX(), unit->getVelocityY()));
-	const VectorPos unitPos = VectorPos(unit->getPosition().x, unit->getPosition().y);
-	VectorPos forwardCheck = unitPos + forward * TERRAIN_LOOKAHEAD_LENGTH; // where unit will be
+	const VectorPos forward = unitPos.normalize();
+	const VectorPos unitVelocity = VectorPos(unit->getVelocityX(), unit->getVelocityY());
+	const VectorPos forwardCheck = unitPos + unitVelocity + forward * TERRAIN_LOOKAHEAD_LENGTH; // lookahead check for terrain
+	BWAPI::Broodwar->drawLineMap(unitPos, forwardCheck, BWAPI::Colors::Green);
 
 	if (!BWAPI::Broodwar->isWalkable(BWAPI::WalkPosition(forwardCheck))) {
 		// Rotate forward 90 degrees for side position
@@ -175,17 +175,15 @@ VectorPos BOIDS::getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader) {
 	return terrainVec;
 }
 
-VectorPos BOIDS::normalize(VectorPos vector) {
-	// Avoid division by 0
-	const double magnitude = vector.getDistance(BWAPI::Position(0, 0));
-
-	if (magnitude < 1 && magnitude > 0) {
-		return vector;
+bool BOIDS::inLeaderRadius(BWAPI::Unit unit, BWAPI::Unit leader) {
+	if (unit == nullptr) {
+		return false;
 	}
 
-	if (magnitude == 0) {
-		return VectorPos(0, 0);
+	if (unit->getPosition().getApproxDistance(leader->getPosition()) <= leaderRadiusMap[leader]) {
+		return true;
 	}
-
-	return vector / magnitude;
+	else {
+		return false;
+	}
 }

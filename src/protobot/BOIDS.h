@@ -5,20 +5,20 @@
 #include <algorithm>
 
 // DEBUG
-//#define DEBUG_FLOCKING
+#define DEBUG_FLOCKING
 
 // Frame frequency
-#define FRAMES_BETWEEN_BOIDS 8
+#define FRAMES_BETWEEN_BOIDS 1
 
 // Algorithm calibration
 #define BOIDS_RANGE 300.0
 #define MIN_SEPARATION_DISTANCE 35.0
 #define INNER_LEADER_RADIUS 50.0
+#define VELOCITY_DAMPENING 0.85
 
 #define SEPARATION_STRENGTH 50.0
 #define LEADER_STRENGTH 30.0
 #define TERRAIN_STRENGTH 80.0
-#define VELOCITY_DAMPENING 0.85
 
 #define TERRAIN_LOOKAHEAD_LENGTH 80.0
 
@@ -38,5 +38,6 @@ public:
 private:
 	static VectorPos getSeparationVector(BWAPI::Unit unit, BWAPI::Unit leader);
 	static VectorPos getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader);
+	static bool inLeaderRadius(BWAPI::Unit unit, BWAPI::Unit leader);
 	static VectorPos normalize(VectorPos vector);
 };

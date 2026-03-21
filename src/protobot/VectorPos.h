@@ -22,6 +22,20 @@ public:
 		this->y = 0.0;
 	};
 
+	VectorPos normalize() {
+		// Avoid division by 0
+		const double magnitude = this->getDistance(BWAPI::Position(0, 0));
+		if (magnitude < 1 && magnitude > 0) {
+			return VectorPos(this->x, this->y);
+		}
+
+		if (magnitude == 0) {
+			return VectorPos(0, 0);
+		}
+
+		return VectorPos(this->x, this->y) / magnitude;
+	}
+
 	VectorPos& operator=(const VectorPos& other) noexcept(true) {
 		this->x = other.x;
 		this->y = other.y;
