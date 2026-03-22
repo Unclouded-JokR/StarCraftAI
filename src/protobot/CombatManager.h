@@ -15,12 +15,14 @@ public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset allUnits;
-	static map<BWAPI::Unit, Squad*> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
+	static map<BWAPI::Unit, Squad*> unitSquadMap;
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
     static vector<Squad*> IdleSquads;
+    BWAPI::Position globalAttackPosition = BWAPI::Positions::Invalid;
+    bool attacking = false;
 
     void onStart();
     void onFrame();

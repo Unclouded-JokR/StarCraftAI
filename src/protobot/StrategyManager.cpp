@@ -505,12 +505,12 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	//Add timer on supply cap to make us attack so we dont waste time.
 	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * NUM_SQUADS_TO_ATTACK))
+		if (commanderReference->combatManager.allUnits.size() >= (MAX_SQUAD_SIZE * NUM_SQUADS_TO_ATTACK)
+			&& Protobot_Squads.size() > (int)floor(NUM_SQUADS_TO_ATTACK / 2))
 		{
 			isFinalAttack = true;
-
 			
-			BWAPI::Position attackPos;
+			BWAPI::Position attackPos = BWAPI::Positions::Invalid;
 
 			// Prioritize attacking known enemy buildings
 			

@@ -17,6 +17,10 @@ void CombatManager::onFrame() {
 	//	BOIDS::squadFlock(squad);
 	//}
 
+	for (const auto& squad : Squads) {
+		squad->onFrame();
+	}
+
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
 		AStar::fillAreaPathCache();
 	}
@@ -54,6 +58,9 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
+	attacking = true;
+	globalAttackPosition = position;
+	
 	for (const auto& squad : Squads) {
 		squad->commandPos = position;
 		squad->setState(AttackingState::getInstance());
@@ -61,21 +68,15 @@ void CombatManager::attack(BWAPI::Position position) {
 }
 
 void CombatManager::defend(BWAPI::Position position) {
+	attacking = false;
 	for (auto& squad : IdleSquads) {
 		squad->currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
 	}
-
-	// If half of the attack force is dead, return to defending
-	if (Squads.size() < (int) floor(NUM_SQUADS_TO_ATTACK / 2)) {
-		for (auto& squad : AttackingSquads) {
-			squad->currentDefensivePosition = position;
-			squad->setState(DefendingState::getInstance());
-		}
-	}
 }
 
 void CombatManager::reinforce(BWAPI::Position position) {
+	attacking = false;
 	for (auto& squad : DefendingSquads) {
 		if (squad->currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
 			continue;
@@ -107,6 +108,11 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 
 	newSquad->currentState = &IdleState::getInstance();
 	newSquad->setState(IdleState::getInstance());
+
+	if (attacking) {
+		newSquad->commandPos = globalAttackPosition;
+		newSquad->setState(AttackingState::getInstance());
+	}
 
 #ifdef DEBUG_CM
 	BWAPI::Broodwar->printf("Created new Squad %d with leader Unit %d", id, leaderUnit->getID());
@@ -145,12 +151,12 @@ void CombatManager::removeSquad(Squad* squad) {
 
 bool CombatManager::assignUnit(BWAPI::Unit unit)
 {
+	if (!unit->exists()) {
+		return false;
+	}
+
 	if (commanderReference->scoutingManager.isScout(unit)) {
 		return false; // refuse: unit is a scout
-	}
-	
-	if (unit->getType() == BWAPI::UnitTypes::Protoss_Pylon || unit->getType() == BWAPI::UnitTypes::Protoss_Nexus) {
-		return false;
 	}
 
 	// Assigning to an existing squad if available
@@ -220,6 +226,10 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 }
 
 void CombatManager::handleTextCommand(std::string text) {
+	if (text == "/attackPosition") {
+		cout << "Attacking: " << globalAttackPosition << endl;
+	}
+
 	//PRESET POSITIONS FOR USE IN CUSTOM MAPS
 	BWAPI::Position leftPos = BWAPI::Position(0, 0);
 	BWAPI::Position rightPos = BWAPI::Position(0, 0);
@@ -308,8 +318,6 @@ bool CombatManager::detachUnit(BWAPI::Unit unit) {
 	Squad* squad = itMap->second;
 
 	squad->removeUnit(unit);
-	unitSquadMap.erase(unit);
-	allUnits.erase(unit);
 
 	if (squad->units.empty()) {
 		removeSquad(squad);
