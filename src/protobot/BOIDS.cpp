@@ -84,8 +84,10 @@ void BOIDS::squadFlock(Squad* squad) {
 			if (CombatManager::unitSquadMap.find(neighbor) != CombatManager::unitSquadMap.end()) { // neighbor has a squad
 				BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
 				double distToNeighbor;
-				// unitDistanceCache keeps distances between neighbors and units for this frame.
-				// Helps lessen the use of getDistance() between units per frame which gets intensive at higher unit counts.
+
+				// unitDistanceCache keeps distances between units for this frame.
+				// If neighbor has not seen another unit yet or if the neighbor has not seen this unit, then this unit should store the distance first
+				// Otherwise the neighbor has seen this unit before and has tracked the distance already so use that distance.
 				if (unitDistanceCache.find(neighbor) != unitDistanceCache.end()) {
 					if (unitDistanceCache[neighbor].find(unit) != unitDistanceCache[neighbor].end()) {
 						cout << "Using cached distance: " << unitDistanceCache[neighbor][unit] << endl;
@@ -93,10 +95,12 @@ void BOIDS::squadFlock(Squad* squad) {
 					}
 					else {
 						distToNeighbor = unitPos.getDistance(neighborPos);
+						unitDistanceCache[unit][neighbor] = distToNeighbor;
 					}
 				}
 				else {
-					unitDistanceCache[neighbor][unit] = unitPos.getDistance(neighborPos);
+					distToNeighbor = unitPos.getDistance(neighborPos);
+					unitDistanceCache[unit][neighbor] = distToNeighbor;
 				}
 
 				// if both units have the same leader and are both in the radius, calculate separation normally
