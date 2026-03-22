@@ -3,12 +3,15 @@
 // Static variables
 map<BWAPI::Unit, Squad*> CombatManager::unitSquadMap;
 unordered_map<BWAPI::Unit, double, unitHash> BOIDS::leaderRadiusMap;
+unordered_map<BWAPI::Unit, unordered_map<BWAPI::Unit, double, unitHash>, unitHash> BOIDS::unitDistanceCache;
 
 // Uses BOIDS algorithm to maintain formation while leader is moving
 // leaderVec keeps units surround the leader
 // separationVec keeps units from crowding too tightly
 // terrainVec keeps units away from terrain
 void BOIDS::squadFlock(Squad* squad) {
+	unitDistanceCache.clear();
+
 	for (const auto& unit : squad->units) {
 		if (!unit->exists()) {
 			continue;
@@ -79,17 +82,29 @@ void BOIDS::squadFlock(Squad* squad) {
 			// Don't apply separation to self if neighbor is a unit settling into their leader's radius
 			// If neighbor is a leader, apply separation to self 
 			if (CombatManager::unitSquadMap.find(neighbor) != CombatManager::unitSquadMap.end()) { // neighbor has a squad
-				if (neighbor != CombatManager::unitSquadMap[neighbor]->leader) { // neighbor is not a leader
-					BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
-					const double distToNeighbor = unitPos.getDistance(neighborPos);
-
-					// if both units have the same leader and are both in the radius, calculate separation normally
-					if (inLeaderRadius(neighbor, neighborLeader) && !inLeaderRadius(unit, squad->leader)) {
-						separationVec += VectorPos(0, 0);
+				BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
+				double distToNeighbor;
+				// unitDistanceCache keeps distances between neighbors and units for this frame.
+				// Helps lessen the use of getDistance() between units per frame which gets intensive at higher unit counts.
+				if (unitDistanceCache.find(neighbor) != unitDistanceCache.end()) {
+					if (unitDistanceCache[neighbor].find(unit) != unitDistanceCache[neighbor].end()) {
+						cout << "Using cached distance: " << unitDistanceCache[neighbor][unit] << endl;
+						distToNeighbor = unitDistanceCache[neighbor][unit];
 					}
 					else {
-						separationVec += (unitPos - neighborPos) * 1 / distToNeighbor;
+						distToNeighbor = unitPos.getDistance(neighborPos);
 					}
+				}
+				else {
+					unitDistanceCache[neighbor][unit] = unitPos.getDistance(neighborPos);
+				}
+
+				// if both units have the same leader and are both in the radius, calculate separation normally
+				if (inLeaderRadius(neighbor, neighborLeader) && !inLeaderRadius(unit, squad->leader)) {
+					separationVec += VectorPos(0, 0);
+				}
+				else {
+					separationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
 				}
 			}
 		}
@@ -111,9 +126,8 @@ void BOIDS::squadFlock(Squad* squad) {
 		}
 
 		// unit speed is pixels per frame so its scaled by frames skipped between boids calculations
-		const int minDistance = 10;
-		cout << "Unit speed: " << unit->getType().topSpeed() << endl;
-		const VectorPos finalTarget = unitPos + (boidsVector * unit->getType().topSpeed() * (FRAMES_BETWEEN_BOIDS + 1) * minDistance);
+		const double scale = max(unit->getType().topSpeed() * (FRAMES_BETWEEN_BOIDS + 1), MIN_FINAL_VECTOR_LENGTH);
+		const VectorPos finalTarget = unitPos + (boidsVector * scale);
 
 		unit->attack(finalTarget);
 

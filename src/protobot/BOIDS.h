@@ -13,6 +13,7 @@
 // Algorithm calibration
 #define BOIDS_RANGE 300.0
 #define MIN_SEPARATION_DISTANCE 35.0
+#define MIN_FINAL_VECTOR_LENGTH 25.0
 #define INNER_LEADER_RADIUS 50.0
 #define VELOCITY_DAMPENING 0.85
 
@@ -35,6 +36,7 @@ class BOIDS {
 public:
 	static void squadFlock(Squad* squad);
 	static unordered_map<BWAPI::Unit, double, unitHash> leaderRadiusMap;
+	static unordered_map<BWAPI::Unit, unordered_map<BWAPI::Unit, double, unitHash>, unitHash> unitDistanceCache;
 private:
 	static VectorPos getSeparationVector(BWAPI::Unit unit, BWAPI::Unit leader);
 	static VectorPos getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader);
