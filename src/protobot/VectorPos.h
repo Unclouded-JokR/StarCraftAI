@@ -22,7 +22,7 @@ public:
 		this->y = 0.0;
 	};
 
-	VectorPos normalize() {
+	VectorPos normalized() {
 		// Avoid division by 0
 		const double magnitude = this->getDistance(BWAPI::Position(0, 0));
 		if (magnitude < 1 && magnitude > 0) {

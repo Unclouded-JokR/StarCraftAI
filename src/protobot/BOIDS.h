@@ -7,18 +7,16 @@
 // DEBUG
 #define DEBUG_FLOCKING
 
-// Frame frequency
-#define FRAMES_BETWEEN_BOIDS 1
-
 // Algorithm calibration
 #define BOIDS_RANGE 300.0
-#define MIN_SEPARATION_DISTANCE 35.0
-#define MIN_FINAL_VECTOR_LENGTH 25.0
-#define INNER_LEADER_RADIUS 50.0
-#define VELOCITY_DAMPENING 0.85
+#define MIN_SEPARATION_DISTANCE 37.0
+#define MIN_FORCE 10.0
+#define MAX_FORCE 20.0
+#define VELOCITY_DAMPENING 0.35
 
-#define SEPARATION_STRENGTH 50.0
-#define LEADER_STRENGTH 30.0
+#define SEPARATION_STRENGTH 60.0
+#define LEADER_SEPARATION_STRENGTH 80.0
+#define LEADER_STRENGTH 10.0
 #define TERRAIN_STRENGTH 80.0
 
 #define TERRAIN_LOOKAHEAD_LENGTH 80.0
@@ -37,9 +35,10 @@ public:
 	static void squadFlock(Squad* squad);
 	static unordered_map<BWAPI::Unit, double, unitHash> leaderRadiusMap;
 	static unordered_map<BWAPI::Unit, unordered_map<BWAPI::Unit, double, unitHash>, unitHash> unitDistanceCache;
+	static unordered_map<BWAPI::Unit, VectorPos, unitHash> previousBOIDSMap;
 private:
 	static VectorPos getSeparationVector(BWAPI::Unit unit, BWAPI::Unit leader);
 	static VectorPos getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader);
-	static bool inLeaderRadius(BWAPI::Unit unit, BWAPI::Unit leader);
+	static bool inLeaderRadius(VectorPos unitPos, VectorPos leaderPos, double leaderRadius);
 	static VectorPos normalize(VectorPos vector);
 };
