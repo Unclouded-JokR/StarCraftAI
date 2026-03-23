@@ -151,6 +151,7 @@ private:
     BWAPI::TilePosition naturalWallPylonTile = BWAPI::TilePositions::Invalid;
     std::vector<BWAPI::TilePosition> naturalWallPylonTiles;
     BWAPI::TilePosition naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
+    std::vector<BWAPI::TilePosition> naturalWallGapTiles;
     BWAPI::TilePosition naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
     std::vector<BWAPI::TilePosition> naturalWallForgeTiles;
     std::vector<BWAPI::TilePosition> naturalWallGatewayTiles;

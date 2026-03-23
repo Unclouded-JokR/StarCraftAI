@@ -2,6 +2,19 @@
 
 namespace BuildOrders
 {
+    namespace {
+        void insertNaturalWallAtSupply20(BuildOrder& bo)
+        {
+            BuildOrderStep wallStep{ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} };
+            std::vector<BuildOrderStep>::iterator it = bo.steps.begin();
+            for (; it != bo.steps.end(); ++it)
+            {
+                if (it->trigger.type == BuildTriggerType::AtSupply && it->trigger.value > 20)
+                    break;
+            }
+            bo.steps.insert(it, wallStep);
+        }
+    }
     std::vector<BuildOrder> createAll()
     {
         std::vector<BuildOrder> buildOrders;
@@ -27,7 +40,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 31} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 38} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -51,7 +64,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 29} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 33} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -67,7 +80,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 9} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -85,7 +98,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 17} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 17} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -107,7 +120,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 32} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 33} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -122,7 +135,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 9} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -138,7 +151,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 10} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -155,7 +168,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 15} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 21} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -171,7 +184,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 9} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -187,7 +200,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 10} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 13} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -203,7 +216,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 12} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 16} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
 
@@ -224,7 +237,7 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 33} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 41} });
 
-            bo.steps.push_back({ BuildStepType::NaturalWall, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 20} });
+            insertNaturalWallAtSupply20(bo);
             buildOrders.push_back(std::move(bo));
         }
         return buildOrders;
