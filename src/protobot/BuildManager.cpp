@@ -43,502 +43,6 @@ static bool isTerrainBuildable(BWAPI::UnitType type, const BWAPI::TilePosition& 
 }
 
 
-static bool footprintContainsTile(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const BWAPI::TilePosition& tile)
-{
-    return tile.x >= topLeft.x && tile.x < (topLeft.x + type.tileWidth())
-        && tile.y >= topLeft.y && tile.y < (topLeft.y + type.tileHeight());
-}
-
-static int footprintPathOverlapCount(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    int overlap = 0;
-    for (const auto& tile : pathTiles)
-    {
-        if (footprintContainsTile(type, topLeft, tile))
-            overlap++;
-    }
-    return overlap;
-}
-
-static int minTileDistanceToPath(const BWAPI::TilePosition& tile, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    if (!tile.isValid() || pathTiles.empty())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (const auto& pt : pathTiles)
-        best = std::min(best, std::abs(pt.x - tile.x) + std::abs(pt.y - tile.y));
-    return best;
-}
-
-static int footprintDistanceToTile(BWAPI::UnitType type, const BWAPI::TilePosition& topLeft, const BWAPI::TilePosition& tile)
-{
-    if (!topLeft.isValid() || !tile.isValid())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (int dx = 0; dx < type.tileWidth(); dx++)
-    {
-        for (int dy = 0; dy < type.tileHeight(); dy++)
-        {
-            const BWAPI::TilePosition footprintTile(topLeft.x + dx, topLeft.y + dy);
-            best = std::min(best, std::abs(footprintTile.x - tile.x) + std::abs(footprintTile.y - tile.y));
-        }
-    }
-    return best;
-}
-
-static int wallDistanceToAnchor(BWEB::Wall* wall, const BWAPI::TilePosition& anchor)
-{
-    if (!wall || !anchor.isValid())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (const auto& t : wall->getSmallTiles())
-        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Pylon, t, anchor));
-    for (const auto& t : wall->getMediumTiles())
-        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, t, anchor));
-    for (const auto& t : wall->getLargeTiles())
-        best = std::min(best, footprintDistanceToTile(BWAPI::UnitTypes::Protoss_Gateway, t, anchor));
-    return best;
-}
-
-static std::vector<BWAPI::TilePosition> uniquePathTiles(const Path& path)
-{
-    std::vector<BWAPI::TilePosition> tiles;
-    for (const auto& pos : path.positions)
-    {
-        const BWAPI::TilePosition tile(pos);
-        if (!tile.isValid())
-            continue;
-        if (std::find(tiles.begin(), tiles.end(), tile) == tiles.end())
-            tiles.push_back(tile);
-    }
-    return tiles;
-}
-
-static BWAPI::TilePosition chooseWallGapOnPath(BWEB::Wall* wall, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    if (!wall)
-        return BWAPI::TilePositions::Invalid;
-
-    const BWAPI::TilePosition opening = wall->getOpening();
-    const BWAPI::TilePosition centroid = BWAPI::TilePosition(wall->getCentroid());
-
-    if (pathTiles.empty())
-        return opening.isValid() ? opening : centroid;
-
-    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-    int bestScore = INT_MAX;
-
-    auto consider = [&](const BWAPI::TilePosition& candidate) {
-        if (!candidate.isValid())
-            return;
-
-        bool blocked = false;
-        for (const auto& t : wall->getSmallTiles()) {
-            if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Pylon, t, candidate)) {
-                blocked = true;
-                break;
-            }
-        }
-        if (!blocked) {
-            for (const auto& t : wall->getMediumTiles()) {
-                if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Gateway, t, candidate)) {
-                    blocked = true;
-                    break;
-                }
-            }
-        }
-        if (!blocked) {
-            for (const auto& t : wall->getLargeTiles()) {
-                if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Gateway, t, candidate)) {
-                    blocked = true;
-                    break;
-                }
-            }
-        }
-        if (blocked)
-            return;
-
-        int score = 0;
-        if (opening.isValid())
-            score += 10 * (std::abs(candidate.x - opening.x) + std::abs(candidate.y - opening.y));
-        if (centroid.isValid())
-            score += std::abs(candidate.x - centroid.x) + std::abs(candidate.y - centroid.y);
-
-        if (score < bestScore)
-        {
-            bestScore = score;
-            best = candidate;
-        }
-    };
-
-    for (const auto& pt : pathTiles)
-    {
-        const int openingDist = opening.isValid() ? (std::abs(pt.x - opening.x) + std::abs(pt.y - opening.y)) : 0;
-        const int centroidDist = centroid.isValid() ? (std::abs(pt.x - centroid.x) + std::abs(pt.y - centroid.y)) : 0;
-        if (openingDist <= 3 || centroidDist <= 2)
-            consider(pt);
-    }
-
-    if (best.isValid())
-        return best;
-
-    for (const auto& pt : pathTiles)
-        consider(pt);
-
-    return best.isValid() ? best : (opening.isValid() ? opening : centroid);
-}
-
-static bool footprintOverlapsProtectedTiles(BWAPI::UnitType type, const BWAPI::TilePosition& tile, const std::vector<BWAPI::TilePosition>& protectedTiles)
-{
-    for (const auto& pt : protectedTiles)
-    {
-        if (footprintContainsTile(type, tile, pt))
-            return true;
-    }
-    return false;
-}
-
-static int footprintMinDistanceToProtectedTiles(BWAPI::UnitType type, const BWAPI::TilePosition& tile, const std::vector<BWAPI::TilePosition>& protectedTiles)
-{
-    if (!tile.isValid() || protectedTiles.empty())
-        return INT_MAX / 4;
-
-    int best = INT_MAX / 4;
-    for (int dx = 0; dx < type.tileWidth(); ++dx)
-    {
-        for (int dy = 0; dy < type.tileHeight(); ++dy)
-        {
-            const BWAPI::TilePosition ft(tile.x + dx, tile.y + dy);
-            for (const auto& pt : protectedTiles)
-                best = std::min(best, std::abs(ft.x - pt.x) + std::abs(ft.y - pt.y));
-        }
-    }
-    return best;
-}
-
-static std::vector<BWAPI::TilePosition> chooseProtectedGapCorridor(const BWAPI::TilePosition& openingTile, const std::vector<BWAPI::TilePosition>& pathTiles)
-{
-    std::vector<BWAPI::TilePosition> result;
-    if (!openingTile.isValid())
-        return result;
-
-    const auto addUnique = [&](const BWAPI::TilePosition& tile) {
-        if (!tile.isValid())
-            return;
-        if (tile.x < 0 || tile.y < 0 || tile.x >= BWAPI::Broodwar->mapWidth() || tile.y >= BWAPI::Broodwar->mapHeight())
-            return;
-        if (std::find(result.begin(), result.end(), tile) == result.end())
-            result.push_back(tile);
-    };
-
-    // Attempt to keep the wall gap one tile wide for units to pass through
-    addUnique(openingTile);
-
-    if (pathTiles.empty())
-        return result;
-
-    int bestIndex = -1;
-    int bestDistance = INT_MAX;
-    for (int i = 0; i < (int)pathTiles.size(); ++i)
-    {
-        const auto& pt = pathTiles[i];
-        if (!pt.isValid())
-            continue;
-
-        const int d = std::abs(pt.x - openingTile.x) + std::abs(pt.y - openingTile.y);
-        if (d < bestDistance)
-        {
-            bestDistance = d;
-            bestIndex = i;
-        }
-    }
-
-    if (bestIndex < 0)
-        return result;
-
-    const int corridorHalfLength = 4;
-    for (int i = std::max(0, bestIndex - corridorHalfLength); i <= std::min((int)pathTiles.size() - 1, bestIndex + corridorHalfLength); ++i)
-    {
-        const auto& pt = pathTiles[i];
-        if (!pt.isValid())
-            continue;
-        addUnique(pt);
-    }
-
-    return result;
-}
-
-static bool overlapsExistingWallPiece(BWAPI::UnitType type, const BWAPI::TilePosition& tile, const BWAPI::TilePosition& pylonTile, const std::vector<BWAPI::TilePosition>& forgeTiles, const std::vector<BWAPI::TilePosition>& gatewayTiles)
-{
-    for (int dx = 0; dx < type.tileWidth(); ++dx)
-    {
-        for (int dy = 0; dy < type.tileHeight(); ++dy)
-        {
-            const BWAPI::TilePosition ft(tile.x + dx, tile.y + dy);
-            if (pylonTile.isValid() && footprintContainsTile(BWAPI::UnitTypes::Protoss_Pylon, pylonTile, ft))
-                return true;
-            for (const auto& forgeTile : forgeTiles)
-                if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Forge, forgeTile, ft))
-                    return true;
-            for (const auto& gatewayTile : gatewayTiles)
-                if (footprintContainsTile(BWAPI::UnitTypes::Protoss_Gateway, gatewayTile, ft))
-                    return true;
-        }
-    }
-    return false;
-}
-
-static BWAPI::TilePosition chooseCompactWallForgeTile(const BWAPI::TilePosition& pylonTile, const std::vector<BWAPI::TilePosition>& gatewayTiles, const BWAPI::TilePosition& openingTile, const std::vector<BWAPI::TilePosition>& protectedTiles)
-{
-    const BWAPI::UnitType forge = BWAPI::UnitTypes::Protoss_Forge;
-    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-    int bestScore = INT_MAX;
-
-    BWAPI::TilePosition anchor = pylonTile;
-    if (!anchor.isValid() && !gatewayTiles.empty())
-        anchor = gatewayTiles.front();
-    if (!anchor.isValid())
-        return best;
-
-    for (int r = 0; r <= 8; ++r)
-    {
-        for (int dx = -r; dx <= r; ++dx)
-        {
-            for (int dy = -r; dy <= r; ++dy)
-            {
-                if (r > 0 && std::abs(dx) != r && std::abs(dy) != r)
-                    continue;
-                BWAPI::TilePosition t(anchor.x + dx, anchor.y + dy);
-                if (!isTerrainBuildable(forge, t))
-                    continue;
-                if (overlapsExistingWallPiece(forge, t, pylonTile, std::vector<BWAPI::TilePosition>(), gatewayTiles))
-                    continue;
-                if (footprintOverlapsProtectedTiles(forge, t, protectedTiles))
-                    continue;
-                if (footprintMinDistanceToProtectedTiles(forge, t, protectedTiles) <= 1)
-                    continue;
-                if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
-                    continue;
-
-                int score = 0;
-                if (pylonTile.isValid())
-                    score += 120 * (std::abs(t.x - pylonTile.x) + std::abs(t.y - pylonTile.y));
-                if (!gatewayTiles.empty())
-                    score += 35 * footprintDistanceToTile(forge, t, gatewayTiles.front());
-                if (openingTile.isValid())
-                    score += 8 * footprintDistanceToTile(forge, t, openingTile);
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    best = t;
-                }
-            }
-        }
-        if (best.isValid())
-            break;
-    }
-
-    return best;
-}
-
-static BWAPI::TilePosition chooseCompactWallGatewayTile(const BWAPI::TilePosition& pylonTile, const std::vector<BWAPI::TilePosition>& forgeTiles, const BWAPI::TilePosition& existingGatewayAnchor, const BWAPI::TilePosition& openingTile, const std::vector<BWAPI::TilePosition>& protectedTiles)
-{
-    const BWAPI::UnitType gateway = BWAPI::UnitTypes::Protoss_Gateway;
-    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-    int bestScore = INT_MAX;
-
-    BWAPI::TilePosition anchor = pylonTile;
-    if (!anchor.isValid() && !forgeTiles.empty())
-        anchor = forgeTiles.front();
-    if (!anchor.isValid() && existingGatewayAnchor.isValid())
-        anchor = existingGatewayAnchor;
-    if (!anchor.isValid())
-        return best;
-
-    std::vector<BWAPI::TilePosition> noGateways;
-    for (int r = 0; r <= 10; ++r)
-    {
-        for (int dx = -r; dx <= r; ++dx)
-        {
-            for (int dy = -r; dy <= r; ++dy)
-            {
-                if (r > 0 && std::abs(dx) != r && std::abs(dy) != r)
-                    continue;
-                BWAPI::TilePosition t(anchor.x + dx, anchor.y + dy);
-                if (!isTerrainBuildable(gateway, t))
-                    continue;
-                if (overlapsExistingWallPiece(gateway, t, pylonTile, forgeTiles, noGateways))
-                    continue;
-                if (footprintOverlapsProtectedTiles(gateway, t, protectedTiles))
-                    continue;
-                if (footprintMinDistanceToProtectedTiles(gateway, t, protectedTiles) <= 1)
-                    continue;
-                if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
-                    continue;
-
-                int score = 0;
-                if (pylonTile.isValid())
-                    score += 150 * footprintDistanceToTile(gateway, t, pylonTile);
-                if (!forgeTiles.empty())
-                    score += 60 * footprintDistanceToTile(gateway, t, forgeTiles.front());
-                if (openingTile.isValid())
-                    score += 12 * footprintDistanceToTile(gateway, t, openingTile);
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    best = t;
-                }
-            }
-        }
-        if (best.isValid())
-            break;
-    }
-
-    return best;
-}
-
-static BWAPI::TilePosition chooseCompactWallCannonTile(const BWAPI::TilePosition& pylonTile, const std::vector<BWAPI::TilePosition>& forgeTiles, const std::vector<BWAPI::TilePosition>& gatewayTiles, const BWAPI::TilePosition& openingTile, const std::vector<BWAPI::TilePosition>& protectedTiles)
-{
-    const BWAPI::UnitType cannon = BWAPI::UnitTypes::Protoss_Photon_Cannon;
-    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-    int bestScore = INT_MAX;
-
-    BWAPI::TilePosition anchor = pylonTile;
-    if (!anchor.isValid() && !forgeTiles.empty())
-        anchor = forgeTiles.front();
-    if (!anchor.isValid() && !gatewayTiles.empty())
-        anchor = gatewayTiles.front();
-    if (!anchor.isValid())
-        return best;
-
-    for (int r = 0; r <= 8; ++r)
-    {
-        for (int dx = -r; dx <= r; ++dx)
-        {
-            for (int dy = -r; dy <= r; ++dy)
-            {
-                if (r > 0 && std::abs(dx) != r && std::abs(dy) != r)
-                    continue;
-                BWAPI::TilePosition t(anchor.x + dx, anchor.y + dy);
-                if (!isTerrainBuildable(cannon, t))
-                    continue;
-                if (overlapsExistingWallPiece(cannon, t, pylonTile, forgeTiles, gatewayTiles))
-                    continue;
-                if (footprintOverlapsProtectedTiles(cannon, t, protectedTiles))
-                    continue;
-                if (footprintOverlapsProtectedTiles(cannon, t, protectedTiles))
-                    continue;
-                if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
-                    continue;
-
-                int score = 0;
-                if (pylonTile.isValid())
-                    score += 100 * (std::abs(t.x - pylonTile.x) + std::abs(t.y - pylonTile.y));
-                if (!forgeTiles.empty())
-                    score += 60 * footprintDistanceToTile(cannon, t, forgeTiles.front());
-                if (!gatewayTiles.empty())
-                    score += 20 * footprintDistanceToTile(cannon, t, gatewayTiles.front());
-                if (openingTile.isValid())
-                    score += 5 * footprintDistanceToTile(cannon, t, openingTile);
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    best = t;
-                }
-            }
-        }
-        if (best.isValid())
-            break;
-    }
-    return best;
-}
-
-
-static std::vector<BWAPI::TilePosition> chooseCompactWallCannonArcTiles(int count, const BWAPI::TilePosition& pylonTile, const std::vector<BWAPI::TilePosition>& forgeTiles, const std::vector<BWAPI::TilePosition>& gatewayTiles, const BWAPI::TilePosition& openingTile, const std::vector<BWAPI::TilePosition>& protectedTiles)
-{
-    std::vector<BWAPI::TilePosition> result;
-    if (count <= 0)
-        return result;
-
-    const BWAPI::UnitType cannon = BWAPI::UnitTypes::Protoss_Photon_Cannon;
-    BWAPI::TilePosition anchor = !forgeTiles.empty() ? forgeTiles.front() : (pylonTile.isValid() ? pylonTile : (!gatewayTiles.empty() ? gatewayTiles.front() : BWAPI::TilePositions::Invalid));
-    if (!anchor.isValid())
-        return result;
-
-    int fx = 1, fy = 0;
-    if (openingTile.isValid())
-    {
-        fx = openingTile.x - anchor.x;
-        fy = openingTile.y - anchor.y;
-        if (fx == 0 && fy == 0)
-            fx = 1;
-    }
-
-    std::vector<std::pair<int, BWAPI::TilePosition>> scored;
-    for (int r = 0; r <= 8; ++r)
-    {
-        for (int dx = -r; dx <= r; ++dx)
-        {
-            for (int dy = -r; dy <= r; ++dy)
-            {
-                if (r > 0 && std::abs(dx) != r && std::abs(dy) != r)
-                    continue;
-                BWAPI::TilePosition t(anchor.x + dx, anchor.y + dy);
-                if (!isTerrainBuildable(cannon, t))
-                    continue;
-                if (overlapsExistingWallPiece(cannon, t, pylonTile, forgeTiles, gatewayTiles))
-                    continue;
-                if (!BWAPI::Broodwar->hasPath(BWEB::Map::getMainPosition(), BWAPI::Position(t) + BWAPI::Position(16, 16)))
-                    continue;
-
-                int score = 0;
-                if (pylonTile.isValid())
-                    score += 120 * footprintDistanceToTile(cannon, t, pylonTile);
-                if (!forgeTiles.empty())
-                    score += 80 * footprintDistanceToTile(cannon, t, forgeTiles.front());
-                if (!gatewayTiles.empty())
-                    score += 30 * footprintDistanceToTile(cannon, t, gatewayTiles.front());
-                if (openingTile.isValid())
-                    score += 15 * footprintDistanceToTile(cannon, t, openingTile);
-
-                const int vx = t.x - anchor.x;
-                const int vy = t.y - anchor.y;
-                const int dot = vx * fx + vy * fy;
-                score -= dot * 20; // prefer choke-facing side
-
-                scored.push_back({ score, t });
-            }
-        }
-    }
-
-    std::sort(scored.begin(), scored.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
-    for (const auto& entry : scored)
-    {
-        const auto& t = entry.second;
-        bool tooClose = false;
-        for (const auto& existing : result)
-        {
-            if (std::abs(existing.x - t.x) <= 1 && std::abs(existing.y - t.y) <= 1)
-            {
-                tooClose = true;
-                break;
-            }
-        }
-        if (tooClose)
-            continue;
-        result.push_back(t);
-        if ((int)result.size() >= count)
-            break;
-    }
-
-    return result;
-}
-
-
-
 BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 
@@ -582,9 +86,6 @@ void BuildManager::onStart()
 void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests) 
 {
     runBuildOrderOnFrame();
-
-    if (naturalWallPlanned && (!naturalWallPylonEnqueued || !naturalWallGatewaysEnqueued || !naturalWallCannonsEnqueued))
-        enqueueNaturalWallAtChoke();
 
     buildingPlacer.drawPoweredTiles();
 
@@ -1314,19 +815,9 @@ void BuildManager::resetNaturalWallPlan()
     naturalWallPlanned = false;
     naturalWallPylonEnqueued = false;
     naturalWallGatewaysEnqueued = false;
-    naturalWallCannonsEnqueued = false;
-    naturalWallStartLogged = false;
     naturalWallPylonTile = BWAPI::TilePositions::Invalid;
-    naturalWallPylonTiles.clear();
-    naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
-    naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
-    naturalWallForgeTiles.clear();
     naturalWallGatewayTiles.clear();
-    naturalWallCannonTiles.clear();
-    naturalWallPathTiles.clear();
-    naturalWallGapTiles.clear();
 }
-
 
 // Find a good pylon tile very near the natural choke for wall power.
 BWAPI::TilePosition BuildManager::findNaturalChokePylonTile() const
@@ -1336,7 +827,6 @@ BWAPI::TilePosition BuildManager::findNaturalChokePylonTile() const
 
     const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
     const BWAPI::TilePosition anchor(BWEB::Map::getClosestChokeTile(choke, mainPos));
-    const BWAPI::TilePosition centerTarget = naturalWallOpeningTile.isValid() ? naturalWallOpeningTile : anchor;
 
     const auto pylon = BWAPI::UnitTypes::Protoss_Pylon;
     const int w = pylon.tileWidth();
@@ -1349,37 +839,52 @@ BWAPI::TilePosition BuildManager::findNaturalChokePylonTile() const
             && (t.y + h) <= BWAPI::Broodwar->mapHeight();
     };
 
-    BWAPI::TilePosition best = BWAPI::TilePositions::Invalid;
-    int bestScore = INT_MAX;
+    // Prefer main-side area if possible
+    const BWEM::Area* mainArea = BWEB::Map::getMainArea();
 
-    for (int r = 0; r <= 12; r++) {
+    // Ring search around anchor
+    for (int r = 0; r <= 10; r++) {
         for (int dx = -r; dx <= r; dx++) {
             for (int dy = -r; dy <= r; dy++) {
                 if (std::abs(dx) != r && std::abs(dy) != r) continue;
-                BWAPI::TilePosition t = centerTarget + BWAPI::TilePosition(dx, dy);
+                BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
                 if (!inBounds(t)) continue;
-                if (!BWAPI::Broodwar->canBuildHere(t, pylon)) continue;
-                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None) continue;
 
-                const int gapDist = footprintDistanceToTile(pylon, t, centerTarget);
-                const int pathOverlap = footprintPathOverlapCount(pylon, t, naturalWallPathTiles);
-                int score = gapDist * 1000 + pathOverlap * 10;
-                if (gapDist > 1)
-                    score += 100000;
+                if (mainArea && BWEB::Map::mapBWEM.GetArea(t) != mainArea)
+                    continue;
 
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    best = t;
-                }
+                if (!BWAPI::Broodwar->canBuildHere(t, pylon))
+                    continue;
+
+                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None)
+                    continue;
+
+                return t;
             }
         }
     }
 
-    return best;
+    // Fallback: allow non-main area
+    for (int r = 0; r <= 10; r++) {
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dy = -r; dy <= r; dy++) {
+                if (std::abs(dx) != r && std::abs(dy) != r) continue;
+                BWAPI::TilePosition t = anchor + BWAPI::TilePosition(dx, dy);
+                if (!inBounds(t)) continue;
+
+                if (!BWAPI::Broodwar->canBuildHere(t, pylon))
+                    continue;
+
+                if (BWEB::Map::isUsed(t, w, h) != BWAPI::UnitTypes::None)
+                    continue;
+
+                return t;
+            }
+        }
+    }
+
+    return BWAPI::TilePositions::Invalid;
 }
-
-
 
 bool BuildManager::enqueueSupplyAtNaturalRamp()
 {
