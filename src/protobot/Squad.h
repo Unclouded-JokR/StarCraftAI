@@ -8,7 +8,7 @@
 
 //#define DEBUG_SQUAD
 //#define DEBUG_FLOCKING
-#define MAX_SQUAD_SIZE 6
+#define MAX_SQUAD_SIZE 12
 
 class SquadState;
 

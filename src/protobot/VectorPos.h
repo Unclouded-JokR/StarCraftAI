@@ -24,7 +24,7 @@ public:
 
 	VectorPos normalized() {
 		// Avoid division by 0
-		const double magnitude = this->getDistance(BWAPI::Position(0, 0));
+		const double magnitude = this->getLength();
 		if (magnitude < 1 && magnitude > 0) {
 			return VectorPos(this->x, this->y);
 		}

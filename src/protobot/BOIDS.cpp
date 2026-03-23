@@ -54,9 +54,11 @@ void BOIDS::squadFlock(Squad* squad) {
 			leaderRadiusMap[squad->leader] = outer_radius;
 		}
 
+		leaderVec += leaderVelocity;
+
 		// leaderVec stronger when farther from leader + includes velocity for grouping while moving
 		if (distUnitToLeader > outer_radius) {
-			leaderVec += (leaderVelocity * VELOCITY_DAMPENING) + (leaderPos - unitPos) * (1 / distUnitToLeader);
+			leaderVec += (leaderPos - unitPos) * (1 / distUnitToLeader);
 		}
 
 		// SEPARATION VECTOR
@@ -96,19 +98,32 @@ void BOIDS::squadFlock(Squad* squad) {
 				}
 
 				if (CombatManager::unitSquadMap[unit] == CombatManager::unitSquadMap[neighbor]) { // same squad
-					if (!inLeaderRadius(unitPos, leaderPos, leaderRadiusMap[squad->leader])
+					if (CombatManager::unitSquadMap[neighbor]->leader == neighbor 
+						|| !inLeaderRadius(neighborPos, leaderPos, leaderRadiusMap[squad->leader])){
+						separationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
+					}
+					else if (!inLeaderRadius(unitPos, leaderPos, leaderRadiusMap[squad->leader])
 						&& inLeaderRadius(neighborPos, leaderPos, leaderRadiusMap[squad->leader])) { // unit not in radius but neighbor is
 						separationVec += VectorPos(0, 0);
 					}
 					else {
-						separationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
+						if (unitVelocity.getLength() == 0) {
+							separationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
+							continue;
+						}
+
+						separationVec += getSeparationSteering(unitPos, neighborPos, unitVelocity);
 					}
 				}
-				else if (CombatManager::unitSquadMap[neighbor]->leader == neighbor) { // neighbor is a leader
+				else if (CombatManager::unitSquadMap[neighbor]->leader == neighbor) { // neighbor is a leader of different squad
 					leaderSeparationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
 				}
 				else {
-					separationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
+					if (unitVelocity.getLength() == 0) {
+						separationVec += (unitPos - neighborPos) * (1 / distToNeighbor);
+						continue;
+					}
+					separationVec += getSeparationSteering(unitPos, neighborPos, unitVelocity);
 				}
 			}
 		}
@@ -119,7 +134,7 @@ void BOIDS::squadFlock(Squad* squad) {
 		// TERRAIN VECTOR
 		const VectorPos finalTerrainVec = VectorPos(0, 0); //getTerrainVector(unit, squad->leader) * TERRAIN_STRENGTH;
 
-		// FINAL BOIDS VECTOR
+		// BOIDS VECTOR
 		VectorPos boidsVector = finalLeaderVec + finalSeparationVec + finalTerrainVec;
 
 		// If the adjustment is not significant enough, don't move the unit
@@ -129,7 +144,8 @@ void BOIDS::squadFlock(Squad* squad) {
 		}
 
 		// unit speed is pixels per frame so its scaled by frames skipped between boids calculations
-		const double distScale = sqrt(distUnitToLeader / outer_radius); // Closer to leader = less length
+		// At a minimum, scale by 50% of the distance. Too short was making units too slow.
+		const double distScale = max(sqrt(distUnitToLeader / outer_radius), 0.75);
 		boidsVector = boidsVector * distScale;
 
 		// Clamping
@@ -154,10 +170,10 @@ void BOIDS::squadFlock(Squad* squad) {
 		unit->move(finalTarget);
 
 #ifdef DEBUG_FLOCKING
-		cout << "Separation Vector : " << finalSeparationVec.getLength() << endl;
+		//cout << "Separation Vector : " << finalSeparationVec.getLength() << endl;
 		//cout << "Terrain Vector : " << finalTerrainVec << endl;
-		cout << "Leader Vector : " << finalLeaderVec.getLength() << endl;
-		cout << "Boids Vector : " << boidsVector.getLength() << endl;
+		//cout << "Leader Vector : " << finalLeaderVec.getLength() << endl;
+		//cout << "Boids Vector : " << boidsVector.getLength() << endl;
 		//cout << "Final Vector : " << finalTarget << endl;
 		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + separationVec * 10, BWAPI::Colors::Red);
 		//BWAPI::Broodwar->drawLineMap(unitPos, unitPos + cohesionVec * 10, BWAPI::Colors::Yellow);
@@ -171,6 +187,18 @@ void BOIDS::squadFlock(Squad* squad) {
 		//BWAPI::Broodwar->printf("FinalDirection magnitude: %f", unitPos.getDistance(finalDirection));
 #endif
 	}
+}
+
+VectorPos BOIDS::getSeparationSteering(VectorPos unitPos, VectorPos neighborPos, VectorPos unitVelocity) {
+	const VectorPos toNeighbor = (neighborPos - unitPos).normalized();
+	const VectorPos velocityDir = unitVelocity.normalized();
+
+	const double crossProduct = velocityDir.x * toNeighbor.y - velocityDir.y * toNeighbor.x;
+	// If crossProduct > 0, neighbor on left so need to go right
+	// vice versa.
+	VectorPos dir = crossProduct > 0 ? VectorPos(velocityDir.y, -velocityDir.x) : VectorPos(-velocityDir.y, velocityDir.x);
+
+	return dir;
 }
 
 VectorPos BOIDS::getTerrainVector(BWAPI::Unit unit, BWAPI::Unit leader) {
