@@ -413,7 +413,9 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
 	request.unit = building;
-	request.fromBuildOrder = false;
+	request.fromBuildOrder = fromBuildOrder;
+	request.useForcedTile = useForcedTile;
+	request.forcedTile = forcedtile;
 
 	switch (building)
 	{
@@ -448,22 +450,24 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	resourceRequests.push_back(request);
 }
 
-void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain)
+void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Unit;
 	request.unit = unit;
 	request.requestedBuilding = buildingToTrain;
+	request.fromBuildOrder = fromBuildOrder;
 
 	resourceRequests.push_back(request);
 }
 
-void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade)
+void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Upgrade;
 	request.upgrade = upgrade;
 	request.requestedBuilding = unit;
+	request.fromBuildOrder = fromBuildOrder;
 
 	resourceRequests.push_back(request);
 }

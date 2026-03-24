@@ -116,8 +116,8 @@ public:
 	//Resource Requests Methods
 	void removeApprovedRequests();
 	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool useForcedTile = false, BWAPI::TilePosition forcedtile = BWAPI::TilePositions::Invalid);
-	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain);
-	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade);
+	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
+	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
