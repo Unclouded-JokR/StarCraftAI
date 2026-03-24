@@ -77,6 +77,7 @@ public:
     std::vector<NexusEconomy> getNexusEconomies();
 
     void pumpUnit();
+    bool shouldPreventUnitTraining(int currentSupply) const;
 private:
     std::vector<BuildOrder> buildOrders;
     int activeBuildOrderIndex = -1;
@@ -102,5 +103,6 @@ private:
     bool isRestrictedTechBuilding(BWAPI::UnitType type) const;
     std::string buildOrderNameToString(int name) const;
     bool enqueueBuildOrderBuilding(BWAPI::UnitType type, int count);
+    bool enqueueBuildOrderUnit(BWAPI::UnitType type, int count);
 
 };

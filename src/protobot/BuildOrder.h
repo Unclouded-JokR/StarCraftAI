@@ -15,6 +15,7 @@ struct BuildTrigger
 enum class BuildStepType
 {
     Build,               // build a building (unit field)
+    Train,               // train a unit
     ScoutWorker,         // call commanderReference->getUnitToScout()
     SupplyRampNatural,   // place a pylon on/near natural ramp using findNaturalRampPlacement
     NaturalWall          // create a wall at natural choke using BWEB
@@ -34,6 +35,7 @@ struct BuildOrder
     int id = 0;
 
     BWAPI::Race vsRace = BWAPI::Races::Unknown;
+    int blockUnitTrainingUntilSupply = 0;
 
     std::vector<BuildOrderStep> steps;
 };

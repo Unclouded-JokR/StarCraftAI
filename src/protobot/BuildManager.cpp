@@ -833,6 +833,15 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
     }*/
 }
 
+bool BuildManager::shouldPreventUnitTraining(int currentSupply) const
+{
+    if (!isBuildOrderActive())
+        return false;
+
+    const BuildOrder& bo = buildOrders[activeBuildOrderIndex];
+    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply < bo.blockUnitTrainingUntilSupply;
+}
+
 void BuildManager::pumpUnit()
 {
     const FriendlyUnitCounter ProtoBot_Units = InformationManager::Instance().getFriendlyUnitCounter();
@@ -840,11 +849,13 @@ void BuildManager::pumpUnit()
     const FriendlyUpgradeCounter ProtoBot_Upgrades = InformationManager::Instance().getFriendlyUpgradeCounter();
     const int totalMinerals = BWAPI::Broodwar->self()->minerals();
     const int totalGas = BWAPI::Broodwar->self()->gas();
+    const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+    const bool preventCombatUnitTraining = shouldPreventUnitTraining(currentSupply);
 
     for (BWAPI::Unit unit : buildings)
     {
         const BWAPI::UnitType type = unit->getType();
-        if (type == BWAPI::UnitTypes::Protoss_Gateway && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()))
+        if (type == BWAPI::UnitTypes::Protoss_Gateway && !preventCombatUnitTraining && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()))
         {
             if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
             {
@@ -855,7 +866,7 @@ void BuildManager::pumpUnit()
                 commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
             }
         }
-        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
+        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !preventCombatUnitTraining && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
         {
             if (ProtoBot_Units.observer < 4)
             {
@@ -1250,6 +1261,35 @@ bool BuildManager::enqueueBuildOrderBuilding(BWAPI::UnitType type, int count)
     return true;
 }
 
+bool BuildManager::enqueueBuildOrderUnit(BWAPI::UnitType type, int count)
+{
+    if (!commanderReference)
+        return false;
+
+    const BWAPI::UnitType trainerType = type.whatBuilds().first;
+    if (trainerType == BWAPI::UnitTypes::None)
+        return false;
+
+    int requestsIssued = 0;
+    for (BWAPI::Unit building : buildings)
+    {
+        if (!building || building->getType() != trainerType)
+            continue;
+        if (!building->isCompleted() || !building->isPowered() || building->isTraining())
+            continue;
+        if (!building->canTrain(type) || commanderReference->alreadySentRequest(building->getID()))
+            continue;
+
+        commanderReference->requestUnit(type, building, true);
+        requestsIssued++;
+
+        if (requestsIssued >= count)
+            return true;
+    }
+
+    return false;
+}
+
 void BuildManager::runBuildOrderOnFrame()
 {
     if (!isBuildOrderActive())
@@ -1291,6 +1331,10 @@ switch (step.type)
 
     case BuildStepType::NaturalWall:
         issued = enqueueNaturalWallAtChoke();
+        break;
+
+    case BuildStepType::Train:
+        issued = enqueueBuildOrderUnit(step.unit, step.count);
         break;
 
     case BuildStepType::Build:
