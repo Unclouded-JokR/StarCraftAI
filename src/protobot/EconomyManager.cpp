@@ -143,7 +143,7 @@ void EconomyManager::assignUnit(BWAPI::Unit unit)
         if (alreadyExists == false)
         {
             NexusEconomy temp = NexusEconomy(unit, nexusEconomies.size() + 1, this);
-            temp.minerals = getMineralsAtBase(unit->getTilePosition());
+            getMineralsAtBase(unit->getTilePosition(), temp);
             nexusEconomies.push_back(temp);
             //std::cout << "nexus: " << temp.workers.size();
 
@@ -326,7 +326,7 @@ BWAPI::Unit EconomyManager::getUnitScout()
     }
 }
 
-BWAPI::Unitset EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation)
+void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusEconomy& newNexus)
 {
     const BWEM::Base* myBase = nullptr;
     bool found = false;
@@ -343,6 +343,8 @@ BWAPI::Unitset EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocati
     }
 
     BWAPI::Unitset mineralsToReturn;
+    BWAPI::Unitset geysersToReturn;
+
 
     if (myBase)
     {
@@ -350,10 +352,21 @@ BWAPI::Unitset EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocati
         {
              mineralsToReturn.insert(mineral->Unit());
         }
+        newNexus.minerals = mineralsToReturn;
+
+        if (myBase->Geysers().size() != 0)
+        {
+            for (const auto* geyser : myBase->Geysers())
+            {
+                newNexus.vespeneGyser = geyser->Unit();
+            }
+        }
+       
+
     }
 
     //std::cout << mineralsToReturn.size();
-    return mineralsToReturn;
+   // return mineralsToReturn;
 
 }
 
@@ -366,7 +379,7 @@ std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
 #pragma region Commander Requests
 void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
 {
-    commanderReference->requestUnitToTrain(worker, nexus);
+    commanderReference->requestUnit(worker, nexus);
 }
 
 bool EconomyManager::checkRequestAlreadySent(int unitID)

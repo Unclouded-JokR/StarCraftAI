@@ -25,7 +25,7 @@ public:
 	double intercept;
 	int spot_to_move;
 	int offset;
-	int moveTimer = 5;
+	//int moveTimer = 5;
 	int workerNums;
 	int attackingWorkers = 0;
 	bool needWorkers = true;
@@ -35,6 +35,7 @@ public:
 	BWAPI::Unitset minerals;
 	BWAPI::Unitset closestMinerals;
 	BWAPI::Unit vespeneGyser = nullptr; //Should maybe consider changing this to a unit set like minerals in case multiple gysers.
+	//BWAPI::Unitset vespeneGysers;
 	BWAPI::Unit assimilator = nullptr;
 	std::unordered_map<BWAPI::Unit, int> resourceWorkerCount;
 	std::unordered_map<BWAPI::Unit, BWAPI::Unit> assignedResource;
@@ -47,7 +48,8 @@ public:
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();
-	int addMissedResources();
+	void defendWorker();
+	void checkGasSteal();
 	void onFrame();
 	void printMineralWorkerCounts();
 	//void moveToMineral(BWAPI::Unit worker, BWAPI::Unit mineral);

@@ -28,6 +28,8 @@ public:
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
     static vector<Squad*> IdleSquads;
+    BWAPI::Position globalAttackPosition = BWAPI::Positions::Invalid;
+    bool attacking = false;
 
     void onStart();
     void onFrame();

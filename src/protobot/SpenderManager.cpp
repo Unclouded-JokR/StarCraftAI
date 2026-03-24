@@ -1,6 +1,6 @@
 #pragma once
 #include "SpenderManager.h"
-#include "BuildManager.h"
+#include "ProtoBotCommander.h"
 
 SpenderManager::SpenderManager()
 {
