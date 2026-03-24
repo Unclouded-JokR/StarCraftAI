@@ -2,25 +2,34 @@
 #include <BWAPI.h>
 #include "Squad.h"
 #include "A-StarPathfinding.h"
+#include "BOIDS.h"
 
-#define DEBUG_CM
+//#define DEBUG_CM
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 5
 using namespace std;
 
 class ProtoBotCommander;
 
+struct unitCMHash {
+    std::size_t operator()(const BWAPI::Unit& unit) const {
+        return std::hash<int>{}(unit->getID());
+    }
+};
+
 class CombatManager{
 public:
     ProtoBotCommander* commanderReference;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset allUnits;
-	static map<BWAPI::Unit, Squad*> unitSquadMap;
+	static unordered_map<BWAPI::Unit, Squad*, unitCMHash> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
     static vector<Squad*> IdleSquads;
+    BWAPI::Position globalAttackPosition = BWAPI::Positions::Invalid;
+    bool attacking = false;
 
     void onStart();
     void onFrame();

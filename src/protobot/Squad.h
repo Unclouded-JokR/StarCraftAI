@@ -19,11 +19,11 @@ public:
 	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
 
-	BWAPI::Position commandPos;
-	BWAPI::Position currentDefensivePosition;
-	BWAPI::Position currentReinforcePosition;
-	BWAPI::Position currentAttackPosition;
-	BWAPI::Position kitePos;
+	BWAPI::Position commandPos = BWAPI::Positions::Invalid;
+	BWAPI::Position currentDefensivePosition = BWAPI::Positions::Invalid;
+	BWAPI::Position currentReinforcePosition = BWAPI::Positions::Invalid;
+	BWAPI::Position currentAttackPosition = BWAPI::Positions::Invalid;
+	BWAPI::Position kitePos = BWAPI::Positions::Invalid;
 
 	Path currentPath = Path();
 	int currentPathIdx = 0;

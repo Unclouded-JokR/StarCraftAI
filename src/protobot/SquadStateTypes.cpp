@@ -15,12 +15,17 @@ void AttackingState::Enter(Squad* squad) {
 
 void AttackingState::Update(Squad* squad) {
 
-	if (squad->currentAttackPosition == squad->commandPos) {
+	if (squad->currentAttackPosition.isValid() && squad->currentAttackPosition == squad->commandPos) {
+		return;
+	}
+
+	if (!squad->commandPos.isValid()) {
 		return;
 	}
 
 	squad->currentAttackPosition = squad->commandPos;
-	for (BWAPI::Unit& squadMate : squad->units)
+
+	for (const auto& squadMate : squad->units)
 	{
 		squadMate->attack(squad->currentAttackPosition);
 	}
@@ -57,7 +62,7 @@ void DefendingState::Enter(Squad* squad) {
 }
 
 void DefendingState::Update(Squad* squad) {
-	
+	// TODO: Integrate logic to interchange between kiting and defending
 }
 
 void DefendingState::Exit(Squad* squad) {
@@ -120,6 +125,8 @@ void ReinforcingState::Update(Squad* squad) {
 			}
 		}
 	}
+
+	// TODO: Integrate logic to kite while reinforcing
 }
 
 void ReinforcingState::Exit(Squad* squad) {
