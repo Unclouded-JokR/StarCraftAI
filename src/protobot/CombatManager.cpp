@@ -1,6 +1,5 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
-#include "BOIDS.h"
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -13,8 +12,12 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
+	//for (const auto& squad : Squads) {
+	//	BOIDS::squadFlock(squad);
+	//}
+
 	for (const auto& squad : Squads) {
-		BOIDS::squadFlock(squad);
+		squad->onFrame();
 	}
 
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {

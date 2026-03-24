@@ -64,11 +64,11 @@ void ProtoBotCommander::onStart()
 	/*
 	* Protobot Modules
 	*/
-	//informationManager.onStart();
-	//strategyManager.onStart();
-	//economyManager.onStart();
-	//scoutingManager.onStart();
-	//buildManager.onStart();
+	informationManager.onStart();
+	strategyManager.onStart();
+	economyManager.onStart();
+	scoutingManager.onStart();
+	buildManager.onStart();
 
 	combatManager.onStart();
 
@@ -93,11 +93,11 @@ void ProtoBotCommander::onFrame()
 	*/
 
 	//timerManager.startTimer(TimerManager::Information);
-	//informationManager.onFrame();
+	informationManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Information);
 
 	//timerManager.startTimer(TimerManager::Strategy);
-	/*std::vector<Action> actions = strategyManager.onFrame();
+	std::vector<Action> actions = strategyManager.onFrame();
 
 	bool issuedScoutThisFrame = false;
 
@@ -131,21 +131,21 @@ void ProtoBotCommander::onFrame()
 			combatManager.reinforce(action.reinforcePosition);
 			break;
 		}
-	}*/
+	}
 	//timerManager.stopTimer(TimerManager::Strategy);
 
 	//timerManager.startTimer(TimerManager::Build);
-	//buildManager.onFrame();
+	buildManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Build);
 
 	//Leaving these in a specific order due to cases like building manager possibly needing units.
 	//timerManager.startTimer(TimerManager::Economy);
-	//economyManager.onFrame();
+	economyManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Economy);
 
 	//Uncomment this once onFrame does not steal a worker.
 	//timerManager.startTimer(TimerManager::Scouting);
-	//scoutingManager.onFrame();
+	scoutingManager.onFrame();
 	//timerManager.stopTimer(TimerManager::Scouting);
 
 	//timerManager.startTimer(TimerManager::Combat);

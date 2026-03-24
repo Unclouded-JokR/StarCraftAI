@@ -2,7 +2,7 @@
 #include <BWAPI.h>
 
 class VectorPos : public BWAPI::Point<double, 1> {
-public:
+public:	
 	VectorPos(int _x, int _y) {
 		this->x = _x;
 		this->y = _y;
@@ -23,17 +23,22 @@ public:
 	};
 
 	VectorPos normalized() {
-		// Avoid division by 0
-		const double magnitude = this->getLength();
-		if (magnitude < 1 && magnitude > 0) {
-			return VectorPos(this->x, this->y);
-		}
+		// Using squared distance to save performance instead of using sqrt
+		const double dist = this->getLength();
 
-		if (magnitude == 0) {
+		if (dist == 0) {
 			return VectorPos(0, 0);
 		}
 
-		return VectorPos(this->x, this->y) / magnitude;
+		return VectorPos(this->x, this->y) / dist;
+	}
+
+	double dot(VectorPos other) {
+		return this->x * other.x + this->y * other.y;
+	}
+
+	double getSqDistance() {
+		return pow(this->x, 2) + pow(this->y, 2);
 	}
 
 	VectorPos& operator=(const VectorPos& other) noexcept(true) {
