@@ -68,8 +68,9 @@ void BOIDS::squadFlock(Squad* squad) {
 			leaderRadiusMap[unit].first = squadSize;
 			leaderRadiusMap[unit].second = outer_radius;
 		}
-
+#ifdef DEBUG_FLOCKING
 		BWAPI::Broodwar->drawCircleMap(leaderPos, outer_radius, BWAPI::Colors::Yellow);
+#endif
 
 		leaderVec += leaderVelocity * clamp(distUnitToLeader / outer_radius, 0.0, 1.0);
 

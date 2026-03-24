@@ -4,7 +4,7 @@
 #include "A-StarPathfinding.h"
 #include "BOIDS.h"
 
-#define DEBUG_CM
+//#define DEBUG_CM
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 5
 using namespace std;
