@@ -3,6 +3,7 @@
 #include <variant>
 #include <vector>
 #include <bwem.h>
+#include <unordered_map>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
 
@@ -14,6 +15,14 @@
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
 #define NUM_SQUADS_TO_ATTACK 4
+
+
+#define MAX_EARLY_ZEALOTS 3
+#define MAX_WORKERS 75
+#define MAX_DARK_TEMPLARS 2
+#define MAX_OBSERVERS_FOR_SCOUTING 4
+#define FRAMES_FOR_NO_GAS_ZEALOT_PUMP 5000 //Incase new production has to limit # of requests, value should also be harder.
+
 
 //If we sit at same supply level for 4 minutes, all in with squads to end the game.
 #define FRAMES_UNTIL_SUPPLY_ALL_IN 5760
@@ -32,6 +41,8 @@
 
 class ProtoBotCommander;
 struct FriendlyBuildingCounter;
+struct FriendlyUnitCounter;
+struct FriendlyUpgradeCounter;
 struct ResourceRequest;
 
 enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
@@ -70,6 +81,38 @@ struct IncompleteBuildingCounter
 	int templarArchives = 0;
 };
 
+struct UnitProductionGameCounter {
+	int worker = 0;
+	int zealots = 0;
+	int dragoons = 0;
+	int dark_templars = 0;
+	int observers = 0;
+};
+
+//Need to check production of units to make sure we are not oversaturating farming.
+enum UnitProductionGoals {
+	SATURATE_WORKERS, //Max 75 workers.
+	EARLY_ZEALOTS, //3 Zealots early.
+	DARK_TEMPLAR_ATTEMPT, //2 Dark Templar's early if against Terran or Protoss.
+	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
+	INFINITE_DRAGOONS,
+
+	//Edge case productions
+	SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS, //Should not have to use this. Covering the case where assimilators arent being made.
+	INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS, //Constant production of observers per squad.
+	FLYING_UNIT_DETECHED_NEED_CANNONS //Build cannons at bases/spots where there are stations.
+};
+
+enum UpgradeProductionGoals {
+	RESEARCH_SINGULARITY_CHARGE, //Should have this every game.
+	RESEARCH_GROUND_WEAPONS,
+	RESEARCH_GROUND_ARMOR,
+	RESEARCH_PLASMA_SHIELDS,
+
+	//Edge case research
+	SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS //Same reasoning as Zealots. Should make them stronger if we dont have gas.
+};
+
 struct Action {
 	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
 	ActionType type = ACTION_NONE;
@@ -106,7 +149,6 @@ private:
 	int timer = 0;
 
 	IncompleteBuildingCounter incompleteBuildings;
-
 	SpenderManager spenderManager;
 
 	//If we have excess minerals something is most likely wrong.
@@ -116,6 +158,31 @@ private:
 
 	bool metProductionGoal(FriendlyBuildingCounter);
 	bool canAfford(BWAPI::UnitType, std::pair<int, int> resources);
+
+	//New stuff I am adding 
+	int activeMiners();
+	int activeDrillers();
+	void checkForOpponentRace();
+	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y);
+	void drawBuildingCount(FriendlyBuildingCounter, int x, int y);
+	void drawUnitCount(FriendlyUnitCounter, int x, int y);
+	void drawUpgradeCount(FriendlyUpgradeCounter, int x, int y);
+
+	//Need to delete refrence after game complete, should also do the same for incomplete building counter and request counter.
+	UnitProductionGameCounter unitProductionCounter;
+
+	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
+	BWAPI::Unitset resourceDepots; 
+	BWAPI::Unitset unitProduction; //Units that can create combat units
+	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
+	BWAPI::Unitset workers;
+
+	bool opponentRaceNotKnown = true;
+
+	const double workerIncomePerFrameMinerals = 0.044;
+	const double workerIncomePerFrameGas = 0.069;
+	double ourIncomePerFrameMinerals = 0.0;
+	double outIncomePerFrameGas = 0.0;
 
 public:
 	std::unordered_set<const BWEM::Area*> ProtoBot_Areas;
@@ -132,9 +199,11 @@ public:
 	std::vector<Action> onFrame(std::vector<ResourceRequest> &resourceRequests);
 	void onUnitDestroy(BWAPI::Unit); //for buildings and workers
 	void onUnitCreate(BWAPI::Unit);
-	void onUnitMorph(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
-	void onUnitShow(BWAPI::Unit);
+
+	//Should we pass requests as argument?
+	void updateProductionGoals();
+	void updateUpgradeGoals();
 
 	BWAPI::Unitset getProtoBotBuildings();
 	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);

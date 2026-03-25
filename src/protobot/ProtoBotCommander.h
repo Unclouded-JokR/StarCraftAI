@@ -55,6 +55,9 @@ struct ResourceRequest
 	BWAPI::Unit scoutToPlaceBuilding = nullptr; //Used if a scout requests a gas steal
 	bool isCheese = false;
 
+	//Minimum frame to start producing a building by
+	int frameToStartBuilding = INT_MAX;
+
 	//For now buildings will request to make units but we should remove this later
 	//The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
 	BWAPI::Unit requestedBuilding = nullptr;

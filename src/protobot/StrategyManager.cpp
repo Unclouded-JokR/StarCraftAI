@@ -29,6 +29,8 @@ void StrategyManager::onStart()
 
 	for (const BWEM::Area* neighbor : mainArea->AccessibleNeighbours())
 	{
+		if (neighbor == nullptr) continue;
+
 		ProtoBot_Areas.insert(neighbor);
 
 		for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
@@ -39,8 +41,12 @@ void StrategyManager::onStart()
 
 	for (const BWEM::Area* area : ProtoBot_Areas)
 	{
+		if (area == nullptr) continue;
+
 		for (const BWEM::ChokePoint* choke : area->ChokePoints())
 		{
+			if (choke == nullptr) continue;
+
 			const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
 			
 			//Ignore choke that is on ramp to prevent builders from being able to construct.
@@ -51,24 +57,26 @@ void StrategyManager::onStart()
 		}
 	}
 
-	//std::cout << "ProtoBot areas: " << ProtoBot_Areas.size() << "\n";
-
 	spenderManager.onStart();
-}
 
-bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
-{
-	return (!commanderReference->requestedBuilding(type)
-		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
-			|| commanderReference->checkUnitIsPlanned(type)));
+	//Check for opponent race and unit counts;
+	opponentRace = BWAPI::Broodwar->enemy()->getRace();
+	std::cout << "Unit Race is " << opponentRace << "\n";
+
+	if (opponentRace != BWAPI::Races::Unknown) opponentRaceNotKnown = false;
 }
 
 std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resourceRequests)
 {
+	if(opponentRaceNotKnown == true) checkForOpponentRace();
+
+	drawGameUnitProduction(unitProductionCounter, 0, 100);
+
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
 
 	std::vector<Action> actionsToReturn;
+
 
 	//Debug: Drawing choke points to get an idea on where the BWEM can have us position squads
 	/*for (const BWEM::ChokePoint* choke : ProtoBotArea_SquadPlacements)
@@ -88,6 +96,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	const int frame = BWAPI::Broodwar->getFrameCount();
 	const int seconds = frame / FRAMES_PER_SECOND;
 	const int minutes = seconds / 60;
+
+	//Estimate income
+	ourIncomePerFrameMinerals = workerIncomePerFrameMinerals * activeMiners();
+	outIncomePerFrameGas = workerIncomePerFrameGas * activeDrillers();
 
 	//Building logic
 	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
@@ -623,6 +635,425 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	return actionsToReturn;
 }
 
+void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
+{
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+	switch (unit->getType())
+	{
+	case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+		incompleteBuildings.arbiterTribunal--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Assimilator:
+		incompleteBuildings.assimilator--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+		incompleteBuildings.citadelOfAdun--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+		incompleteBuildings.cyberneticsCore--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+		incompleteBuildings.fleetBeacon--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Forge:
+		incompleteBuildings.forge--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Gateway:
+		incompleteBuildings.gateway--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Nexus:
+		incompleteBuildings.nexus--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Observatory:
+		incompleteBuildings.observatory--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Photon_Cannon:
+		incompleteBuildings.photonCannon--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Pylon:
+		incompleteBuildings.pylon--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+		incompleteBuildings.roboticsFacility--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+		incompleteBuildings.roboticsSupportBay--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Shield_Battery:
+		incompleteBuildings.shieldBattery--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Stargate:
+		incompleteBuildings.stargate--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Templar_Archives:
+		incompleteBuildings.templarArchives--;
+		break;
+	default:
+		break;
+	}
+
+	if (unit->getType().isResourceDepot())
+	{
+		std::unordered_set<const BWEM::Area*> areasToRemove;
+		std::unordered_set<const BWEM::Area*> areasStillOwned;
+
+		const BWAPI::Position ProtoBot_DestroyedBase = unit->getPosition();
+		const BWEM::Area* oldArea = theMap.GetNearestArea(BWAPI::TilePosition(ProtoBot_DestroyedBase));
+
+		//Find potential areas we need to remove
+		areasToRemove.insert(oldArea);
+		for (const BWEM::Area* neighbor : oldArea->AccessibleNeighbours())
+		{
+			areasToRemove.insert(neighbor);
+
+			for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
+			{
+				areasToRemove.insert(neighbors_neighbor);
+			}
+		}
+
+		//Get the areas we still own.
+		ProtoBot_Areas.erase(oldArea);
+		for (const BWEM::Area* area : ProtoBot_Areas)
+		{
+			areasStillOwned.insert(area);
+
+			for (const BWEM::Area* neighbor : area->AccessibleNeighbours())
+			{
+				areasStillOwned.insert(neighbor);
+
+				for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
+				{
+					areasStillOwned.insert(neighbors_neighbor);
+				}
+			}
+		}
+
+		//Do a remove elements that we still dont own and are in the areasToRemove set.
+		for (const BWEM::Area* area : areasToRemove)
+		{
+			if (areasStillOwned.find(area) == areasStillOwned.end()) ProtoBot_Areas.erase(area);
+		}
+
+		//Update choke points.
+		for (const BWEM::Area* area : ProtoBot_Areas)
+		{
+			for (const BWEM::ChokePoint* choke : area->ChokePoints())
+			{
+				const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
+
+				//Ignore choke that is on ramp to prevent builders from being able to construct.
+				if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
+
+				ProtoBotArea_SquadPlacements.insert(choke);
+			}
+		}
+
+		resourceDepots.erase(unit);
+	}
+
+	if (unit->getType().isWorker()) workers.erase(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility)
+	{
+		unitProduction.erase(unit);
+	}
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core)
+	{
+		upgradeProduction.erase(unit);
+	}
+}
+
+void StrategyManager::onUnitCreate(BWAPI::Unit unit)
+{
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+	switch (unit->getType())
+	{
+	case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+		incompleteBuildings.arbiterTribunal++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Assimilator:
+		incompleteBuildings.assimilator++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+		incompleteBuildings.citadelOfAdun++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+		incompleteBuildings.cyberneticsCore++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+		incompleteBuildings.fleetBeacon++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Forge:
+		incompleteBuildings.forge++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Gateway:
+		incompleteBuildings.gateway++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Nexus:
+		incompleteBuildings.nexus++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Observatory:
+		incompleteBuildings.observatory++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Photon_Cannon:
+		incompleteBuildings.photonCannon++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Pylon:
+		incompleteBuildings.pylon++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+		incompleteBuildings.roboticsFacility++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+		incompleteBuildings.roboticsSupportBay++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Shield_Battery:
+		incompleteBuildings.shieldBattery++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Stargate:
+		incompleteBuildings.stargate++;
+		break;
+	case BWAPI::UnitTypes::Protoss_Templar_Archives:
+		incompleteBuildings.templarArchives++;
+		break;
+	default:
+		break;
+	}
+
+	switch (unit->getType())
+	{
+		case BWAPI::UnitTypes::Protoss_Probe:
+			unitProductionCounter.worker++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Zealot:
+			unitProductionCounter.zealots++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dragoon:
+			unitProductionCounter.dragoons++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			unitProductionCounter.dark_templars++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observer:
+			unitProductionCounter.observers++;
+			break;
+		default:
+			break;
+	}
+
+	if (unit->getType().isResourceDepot())
+	{
+		//Add new area to areas we occupy.
+		const BWAPI::Position ProtoBot_Base = unit->getPosition();
+		const BWEM::Area* newArea = theMap.GetNearestArea(BWAPI::TilePosition(ProtoBot_Base));
+		ProtoBot_Areas.insert(newArea);
+
+		for (const BWEM::Area* neighbor : newArea->AccessibleNeighbours())
+		{
+			ProtoBot_Areas.insert(neighbor);
+
+			for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
+			{
+				ProtoBot_Areas.insert(neighbors_neighbor);
+			}
+		}
+
+		//Add new choke point locations (Temp solution for now).
+		for (const BWEM::Area* area : ProtoBot_Areas)
+		{
+			for (const BWEM::ChokePoint* choke : area->ChokePoints())
+			{
+				const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
+
+				//Ignore choke that is on ramp to prevent builders from being able to construct.
+				if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
+
+				ProtoBotArea_SquadPlacements.insert(choke);
+				PositionsFilled.insert({ choke, false });
+			}
+		}
+
+		resourceDepots.insert(unit);
+	}
+
+	if (unit->getType().isWorker()) workers.insert(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Gateway ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility)
+	{
+		unitProduction.insert(unit);
+	}
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core)
+	{
+		upgradeProduction.insert(unit);
+	}
+
+}
+
+void StrategyManager::onUnitComplete(BWAPI::Unit unit)
+{
+	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
+	switch (unit->getType())
+	{
+	case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+		incompleteBuildings.arbiterTribunal--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Assimilator:
+		incompleteBuildings.assimilator--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+		incompleteBuildings.citadelOfAdun--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+		incompleteBuildings.cyberneticsCore--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+		incompleteBuildings.fleetBeacon--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Forge:
+		incompleteBuildings.forge--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Gateway:
+		incompleteBuildings.gateway--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Nexus:
+		incompleteBuildings.nexus--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Observatory:
+		incompleteBuildings.observatory--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Photon_Cannon:
+		incompleteBuildings.photonCannon--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Pylon:
+		incompleteBuildings.pylon--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+		incompleteBuildings.roboticsFacility--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+		incompleteBuildings.roboticsSupportBay--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Shield_Battery:
+		incompleteBuildings.shieldBattery--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Stargate:
+		incompleteBuildings.stargate--;
+		break;
+	case BWAPI::UnitTypes::Protoss_Templar_Archives:
+		incompleteBuildings.templarArchives--;
+		break;
+	default:
+		break;
+	}
+}
+
+void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y)
+{
+	BWAPI::Broodwar->drawTextScreen(x, y, "Units Created Over Game");
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "Workers = %d", unitProduction.worker);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "Zealots = %d", unitProduction.zealots);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "Dragoons = %d", unitProduction.dragoons);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "Observers = %d", unitProduction.observers);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "Dark Templars = %d", unitProduction.dark_templars);
+}
+
+void StrategyManager::drawUnitCount(FriendlyUnitCounter ProtoBot_unitCount, int x, int y)
+{
+	BWAPI::Broodwar->drawTextScreen(x, y, "Unit Count");
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
+
+}
+
+void StrategyManager::drawBuildingCount(FriendlyBuildingCounter ProtoBot_buildingCount, int x, int y)
+{
+	BWAPI::Broodwar->drawTextScreen(x, y, "Building Count");
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
+}
+
+void StrategyManager::drawUpgradeCount(FriendlyUpgradeCounter ProtoBot_upgradeCount, int x, int y)
+{
+	BWAPI::Broodwar->drawTextScreen(x, y, "Upgrade Count");
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
+}
+
+
+void StrategyManager::checkForOpponentRace()
+{
+	for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
+		if (pair.first->getPlayer() == BWAPI::Broodwar->enemy() &&
+			pair.first->exists() &&
+			pair.first->isVisible() &&
+			pair.second.destroyed == false)
+		{
+			opponentRaceNotKnown = false;
+			opponentRace = pair.first->getType().getRace();
+			std::cout << "Opponent Race is " << opponentRace << "\n";
+		}
+	}
+}
+
+int StrategyManager::activeMiners()
+{
+	int activeMineralWorkerCount = 0;
+
+	for (const BWAPI::Unit worker : workers)
+	{
+		if (worker == nullptr || !worker->exists()) continue;
+
+		const BWAPI::Order order = worker->getOrder();
+
+		if (order == BWAPI::Orders::MoveToMinerals ||
+			order == BWAPI::Orders::WaitForMinerals ||
+			order == BWAPI::Orders::MiningMinerals ||
+			order == BWAPI::Orders::ReturnMinerals)
+		{
+			activeMineralWorkerCount++;
+		}
+	}
+
+	return activeMineralWorkerCount;
+}
+
+int StrategyManager::activeDrillers()
+{
+	int activeDrillerlWorkerCount = 0;
+
+	for (const BWAPI::Unit worker : workers)
+	{
+		if (worker == nullptr || !worker->exists()) continue;
+
+		const BWAPI::Order order = worker->getOrder();
+
+		if (order == BWAPI::Orders::MoveToGas ||
+			order == BWAPI::Orders::WaitForGas ||
+			order == BWAPI::Orders::HarvestGas ||
+			order == BWAPI::Orders::ReturnGas)
+		{
+			activeDrillerlWorkerCount++;
+		}
+	}
+
+	return activeDrillerlWorkerCount;
+}
+
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
+{
+	return (!commanderReference->requestedBuilding(type)
+		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
+			|| commanderReference->checkUnitIsPlanned(type)));
+}
+
 BWAPI::Unitset StrategyManager::getProtoBotBuildings()
 {
 	const BWAPI::Unitset ProtoBot_units = BWAPI::Broodwar->self()->getUnits();
@@ -717,274 +1148,4 @@ bool StrategyManager::checkTechTree(BWAPI::UnitType unit, FriendlyBuildingCounte
 
 
 	return hasRequiredTech;
-}
-
-void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
-{
-	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
-
-	switch (unit->getType())
-	{
-		case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
-			incompleteBuildings.arbiterTribunal--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Assimilator:
-			incompleteBuildings.assimilator--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-			incompleteBuildings.citadelOfAdun--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-			incompleteBuildings.cyberneticsCore--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
-			incompleteBuildings.fleetBeacon--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Forge:
-			incompleteBuildings.forge--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Gateway:
-			incompleteBuildings.gateway--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Nexus:
-			incompleteBuildings.nexus--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Observatory:
-			incompleteBuildings.observatory--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Photon_Cannon:
-			incompleteBuildings.photonCannon--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Pylon:
-			incompleteBuildings.pylon--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-			incompleteBuildings.roboticsFacility--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
-			incompleteBuildings.roboticsSupportBay--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Shield_Battery:
-			incompleteBuildings.shieldBattery--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Stargate:
-			incompleteBuildings.stargate--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Templar_Archives:
-			incompleteBuildings.templarArchives--;
-			break;
-		default:
-			break;
-	}
-
-	if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
-	{
-		std::unordered_set<const BWEM::Area*> areasToRemove;
-		std::unordered_set<const BWEM::Area*> areasStillOwned;
-
-		const BWAPI::Position ProtoBot_DestroyedBase = unit->getPosition();
-		const BWEM::Area* oldArea = theMap.GetNearestArea(BWAPI::TilePosition(ProtoBot_DestroyedBase));
-
-		//Find potential areas we need to remove
-		areasToRemove.insert(oldArea);
-		for (const BWEM::Area* neighbor : oldArea->AccessibleNeighbours())
-		{
-			areasToRemove.insert(neighbor);
-
-			for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
-			{
-				areasToRemove.insert(neighbors_neighbor);
-			}
-		}
-
-		//Get the areas we still own.
-		ProtoBot_Areas.erase(oldArea);
-		for (const BWEM::Area* area : ProtoBot_Areas)
-		{
-			areasStillOwned.insert(area);
-
-			for (const BWEM::Area* neighbor : area->AccessibleNeighbours())
-			{
-				areasStillOwned.insert(neighbor);
-
-				for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
-				{
-					areasStillOwned.insert(neighbors_neighbor);
-				}
-			}
-		}
-
-		//Do a remove elements that we still dont own and are in the areasToRemove set.
-		for (const BWEM::Area* area : areasToRemove)
-		{
-			if (areasStillOwned.find(area) == areasStillOwned.end()) ProtoBot_Areas.erase(area);
-		}
-
-		//Update choke points.
-		for (const BWEM::Area* area : ProtoBot_Areas)
-		{
-			for (const BWEM::ChokePoint* choke : area->ChokePoints())
-			{
-				const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
-
-				//Ignore choke that is on ramp to prevent builders from being able to construct.
-				if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
-
-				ProtoBotArea_SquadPlacements.insert(choke);
-			}
-		}
-
-	}
-}
-
-void StrategyManager::onUnitCreate(BWAPI::Unit unit)
-{
-	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
-
-	switch (unit->getType())
-	{
-		case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
-			incompleteBuildings.arbiterTribunal++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Assimilator:
-			incompleteBuildings.assimilator++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-			incompleteBuildings.citadelOfAdun++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-			incompleteBuildings.cyberneticsCore++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
-			incompleteBuildings.fleetBeacon++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Forge:
-			incompleteBuildings.forge++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Gateway:
-			incompleteBuildings.gateway++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Nexus:
-			incompleteBuildings.nexus++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Observatory:
-			incompleteBuildings.observatory++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Photon_Cannon:
-			incompleteBuildings.photonCannon++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Pylon:
-			incompleteBuildings.pylon++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-			incompleteBuildings.roboticsFacility++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
-			incompleteBuildings.roboticsSupportBay++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Shield_Battery:
-			incompleteBuildings.shieldBattery++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Stargate:
-			incompleteBuildings.stargate++;
-			break;
-		case BWAPI::UnitTypes::Protoss_Templar_Archives:
-			incompleteBuildings.templarArchives++;
-			break;
-		default:
-			break;
-	}
-
-	if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus)
-	{
-		//Add new area to areas we occupy.
-		const BWAPI::Position ProtoBot_Base = unit->getPosition();
-		const BWEM::Area* newArea = theMap.GetNearestArea(BWAPI::TilePosition(ProtoBot_Base));
-		ProtoBot_Areas.insert(newArea);
-
-		for (const BWEM::Area* neighbor : newArea->AccessibleNeighbours())
-		{
-			ProtoBot_Areas.insert(neighbor);
-
-			for (const BWEM::Area* neighbors_neighbor : neighbor->AccessibleNeighbours())
-			{
-				ProtoBot_Areas.insert(neighbors_neighbor);
-			}
-		}
-
-		//Add new choke point locations (Temp solution for now).
-		for (const BWEM::Area* area : ProtoBot_Areas)
-		{
-			for (const BWEM::ChokePoint* choke : area->ChokePoints())
-			{
-				const std::pair<const BWEM::Area*, const BWEM::Area*> areas = choke->GetAreas();
-
-				//Ignore choke that is on ramp to prevent builders from being able to construct.
-				if (areas.first == mainArea || areas.second == mainArea || choke->Blocked() || choke->BlockingNeutral()) continue;
-
-				ProtoBotArea_SquadPlacements.insert(choke);
-				PositionsFilled.insert({ choke, false });
-			}
-		}
-	}
-
-}
-
-void StrategyManager::onUnitComplete(BWAPI::Unit unit)
-{
-	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
-
-	switch (unit->getType())
-	{
-		case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
-			incompleteBuildings.arbiterTribunal--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Assimilator:
-			incompleteBuildings.assimilator--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-			incompleteBuildings.citadelOfAdun--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-			incompleteBuildings.cyberneticsCore--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
-			incompleteBuildings.fleetBeacon--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Forge:
-			incompleteBuildings.forge--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Gateway:
-			incompleteBuildings.gateway--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Nexus:
-			incompleteBuildings.nexus--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Observatory:
-			incompleteBuildings.observatory--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Photon_Cannon:
-			incompleteBuildings.photonCannon--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Pylon:
-			incompleteBuildings.pylon--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-			incompleteBuildings.roboticsFacility--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
-			incompleteBuildings.roboticsSupportBay--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Shield_Battery:
-			incompleteBuildings.shieldBattery--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Stargate:
-			incompleteBuildings.stargate--;
-			break;
-		case BWAPI::UnitTypes::Protoss_Templar_Archives:
-			incompleteBuildings.templarArchives--;
-			break;
-		default:
-			break;
-	}
 }

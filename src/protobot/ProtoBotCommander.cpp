@@ -483,8 +483,17 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 void ProtoBotCommander::drawDebugInformation()
 {
 	// Display the game frame rate as text in the upper left area of the screen
-	BWAPI::Broodwar->drawTextScreen(0, 20, "FPS: %d", BWAPI::Broodwar->getFPS());
-	BWAPI::Broodwar->drawTextScreen(0, 30, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
+	BWAPI::Broodwar->drawTextScreen(0, 10, "FPS: %d", BWAPI::Broodwar->getFPS());
+	BWAPI::Broodwar->drawTextScreen(0, 20, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
+	BWAPI::Broodwar->drawTextScreen(0, 0, "Frame: %d", BWAPI::Broodwar->getFrameCount());
+
+	BWAPI::Broodwar->drawTextScreen(0, 40, "Resource Information");
+	BWAPI::Broodwar->drawTextScreen(0, 41, "_________________________");
+	BWAPI::Broodwar->drawTextScreen(0, 50, "Total Minerals Gathered: %d", BWAPI::Broodwar->self()->gatheredMinerals());
+	BWAPI::Broodwar->drawTextScreen(0, 60, "Total Gas Gathered : %d", BWAPI::Broodwar->self()->gatheredGas());
+
+	BWAPI::Broodwar->drawTextScreen(0, 75, "Total Minerals Spent: %d", BWAPI::Broodwar->self()->spentMinerals());
+	BWAPI::Broodwar->drawTextScreen(0, 85, "Total Gas Spent : %d", BWAPI::Broodwar->self()->spentGas());
 
 	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
 	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
