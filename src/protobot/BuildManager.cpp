@@ -592,6 +592,8 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
     const auto* naturalChoke = BWEB::Map::getNaturalChoke();
     if (naturalChoke)
     {
+
+
         if (naturalWallOpeningTile.isValid())
         {
             BWAPI::Broodwar->drawBoxMap(BWAPI::Position(naturalWallOpeningTile), BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(32, 32), BWAPI::Colors::Orange, false);
@@ -609,6 +611,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
             const BWAPI::Position br = tl + BWAPI::Position(32, 32);
             BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Yellow, false);
         }
+
         BWEB::Walls::draw();
         for (const auto& pylonTile : naturalWallPylonTiles)
         {
