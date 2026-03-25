@@ -87,6 +87,7 @@ private:
     bool buildOrderActive = false;
 
     BWAPI::TilePosition naturalRampPlacementTile = BWAPI::TilePositions::Invalid;
+    const BWEM::ChokePoint* naturalChoke = nullptr;
 
     // Natural wall planning cache
     bool naturalWallPlanned = false;

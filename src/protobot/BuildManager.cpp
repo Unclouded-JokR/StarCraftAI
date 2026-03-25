@@ -571,6 +571,7 @@ void BuildManager::onStart()
     buildOrderCompleted = false;
 
     resetNaturalWallPlan();
+    naturalChoke = BWEB::Map::getNaturalChoke();
 
     buildingPlacer.onStart();
     builders.clear();
@@ -588,11 +589,12 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
         enqueueNaturalWallAtChoke();
 
     buildingPlacer.drawPoweredTiles();
-
-    const auto* naturalChoke = BWEB::Map::getNaturalChoke();
+    
+    // Debug drawing for natural wall setup
+	/*  
+    const auto* naturalChoke = this->naturalChoke;
     if (naturalChoke)
     {
-
 
         if (naturalWallOpeningTile.isValid())
         {
@@ -646,6 +648,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
             BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall gateway");
         }
     }
+    */
 
     //Have to have loop that can check if a building can create a unit and is powered.
     //Might also need to have some data that shows what each building is doing but might be too complictaed for this approach.
@@ -1417,7 +1420,7 @@ BWAPI::TilePosition BuildManager::resolveSpecialBuildTile(const ResourceRequest&
 
 BWAPI::TilePosition BuildManager::findNaturalRampPlacement(BWAPI::UnitType type) const
 {
-    const auto* choke = BWEB::Map::getNaturalChoke();
+    const auto* choke = naturalChoke;
     if (!choke)
         return BWAPI::TilePositions::Invalid;
 
@@ -1495,7 +1498,7 @@ void BuildManager::resetNaturalWallPlan()
 // Find a good pylon tile very near the natural choke for wall power.
 BWAPI::TilePosition BuildManager::findNaturalChokePylonTile() const
 {
-    const auto* choke = BWEB::Map::getNaturalChoke();
+    const auto* choke = naturalChoke;
     if (!choke) return BWAPI::TilePositions::Invalid;
 
     const BWAPI::Position mainPos = BWEB::Map::getMainPosition();
@@ -1573,7 +1576,7 @@ bool BuildManager::enqueueNaturalWallAtChoke()
     if (BWAPI::Broodwar->self()->getRace() != BWAPI::Races::Protoss)
         return false;
 
-    const auto* choke = BWEB::Map::getNaturalChoke();
+    const auto* choke = naturalChoke;
     const auto* area = BWEB::Map::getNaturalArea();
     if (!choke || !area)
         return false;
