@@ -1,17 +1,6 @@
 #include "ProtoBotCommander.h"
 #include "ScoutPolicy.h"
 
-int Overall_Wins = 0;
-int Overall_Loses = 0;
-
-int versusProtoss_Wins = 0;
-int versusProtoss_Loses = 0;
-int versusZerg_Wins = 0;
-int versusZerg_Loses = 0;
-int versusTerran_Wins = 0;
-int versusTerran_Loses = 0;
-
-
 ProtoBotCommander::ProtoBotCommander() : buildManager(this), strategyManager(this), economyManager(this), scoutingManager(this), combatManager(this)
 {
 	// Initialize singleton InformationManager with this commander reference
@@ -164,31 +153,6 @@ void ProtoBotCommander::onFrame()
 
 void ProtoBotCommander::onEnd(bool isWinner)
 {
-	//std::cout << "We " << (isWinner ? "won!" : "lost!") << "\n";
-	//(isWinner ? Overall_Wins++ : Overall_Loses++);
-
-	/*
-	switch(BWAPI::Broodwar->enemy()->getRace())
-	{
-		case BWAPI::Races::Protoss: (isWinner ? versusProtoss_Wins++ : versusProtoss_Loses++); break;
-		case BWAPI::Races::Zerg: (isWinner ? versusZerg_Wins++ : versusZerg_Loses++); break;
-		case BWAPI::Races::Terran:(isWinner ? versusTerran_Wins++ : versusTerran_Loses++); break;
-	}
-	*/
-	//const float totalGames = float(Overall_Wins + Overall_Loses);
-
-	//std::cout << "Win Percentage: " << float(Overall_Wins) / totalGames << "\n";
-	//std::cout << "Wins: " << Overall_Wins << "\n";
-	//std::cout << "Loses: " << Overall_Loses << "\n";
-
-	/*std::cout << "Versus Protoss Wins: " << versusProtoss_Wins << "\n";
-	std::cout << "Versus Protoss Loses: " << versusProtoss_Loses << "\n";
-	std::cout << "Versus Zerg Wins: " << versusZerg_Wins << "\n";
-	std::cout << "Versus Zeg Loses: " << versusZerg_Loses << "\n";
-	std::cout << "Versus Terran Wins: " << versusTerran_Wins << "\n";
-	std::cout << "Versus Terran Loses: " << versusTerran_Loses << "\n";*/
-
-
 	// Important: Clear all caches BWEB pointers upon game end, otherwise invalid = crash
 	BWEB::Map::onEnd();
 }
