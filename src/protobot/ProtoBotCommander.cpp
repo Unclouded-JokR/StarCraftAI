@@ -374,12 +374,14 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
-void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool useForcedTile, BWAPI::TilePosition forcedtile)
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
 	request.unit = building;
 	request.fromBuildOrder = fromBuildOrder;
+	request.isWall = isWall;
+	request.isRampPlacement = isRampPlacement;
 
 	switch (building)
 	{

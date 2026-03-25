@@ -65,8 +65,8 @@ struct ResourceRequest
 
 	// Build order / placement helpers
 	bool fromBuildOrder = false;
-	BWAPI::TilePosition forcedTile = BWAPI::TilePositions::Invalid;
-	bool useForcedTile = false;
+	bool isWall = false;
+	bool isRampPlacement = false;
 };
 
 struct ProtoBotRequestCounter {
@@ -115,7 +115,7 @@ public:
 
 	//Resource Requests Methods
 	void removeApprovedRequests();
-	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool useForcedTile = false, BWAPI::TilePosition forcedtile = BWAPI::TilePositions::Invalid);
+	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false);
 	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
 	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);

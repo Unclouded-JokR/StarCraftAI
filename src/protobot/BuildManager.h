@@ -64,6 +64,8 @@ public:
 
     // Placement helpers
     BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
+    BWAPI::TilePosition resolveSpecialBuildTile(const ResourceRequest& request) const;
+    bool isTileCommittedToBuild(BWAPI::UnitType type, const BWAPI::TilePosition& tile) const;
     bool enqueueSupplyAtNaturalRamp();
     bool enqueueNaturalWallAtChoke();
     bool requestNaturalWallBuild(bool resetPlan = false);
@@ -83,6 +85,8 @@ private:
     int activeBuildOrderIndex = -1;
     size_t activeBuildOrderStep = 0;
     bool buildOrderActive = false;
+
+    BWAPI::TilePosition naturalRampPlacementTile = BWAPI::TilePositions::Invalid;
 
     // Natural wall planning cache
     bool naturalWallPlanned = false;

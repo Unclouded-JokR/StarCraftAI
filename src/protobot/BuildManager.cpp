@@ -679,49 +679,30 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
                 }
                 else
-                {  
-                    //  for natural walling, bypass PlacementInfo and use forcedTile calculation to build.
-
+                {
                     BWAPI::Position placementPos = BWAPI::Positions::Invalid;
+                    BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
                     PlacementInfo placementInfo;
+                    bool usingChosenSpecialTile = false;
 
-                    if (request.useForcedTile)
+                    if (request.isWall || request.isRampPlacement)
                     {
-                        const BWAPI::TilePosition tileToPlace = request.forcedTile;
-
-                        // If forced tile is out of bounds, drop it
-                        if (!tileToPlace.isValid()
-                            || tileToPlace.x < 0 || tileToPlace.y < 0
-                            || (tileToPlace.x + request.unit.tileWidth()) > BWAPI::Broodwar->mapWidth()
-                            || (tileToPlace.y + request.unit.tileHeight()) > BWAPI::Broodwar->mapHeight())
-                        {
-                            request.useForcedTile = false;
-                            request.forcedTile = BWAPI::TilePositions::Invalid;
+                        tileToPlace = resolveSpecialBuildTile(request);
+                        if (!tileToPlace.isValid())
                             continue;
-                        }
 
-                        // If terrain itself isn't buildable, drop forced tile
-                        if (!isTerrainBuildable(request.unit, tileToPlace))
-                        {
-                            request.useForcedTile = false;
-                            request.forcedTile = BWAPI::TilePositions::Invalid;
-                            continue;
-                        }
-
-                        // ...or if missing pylon, wait.
                         if (!BWAPI::Broodwar->canBuildHere(tileToPlace, request.unit))
                         {
                             const bool needsPower = (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && request.unit.requiresPsi());
                             if (needsPower && !BWAPI::Broodwar->hasPower(tileToPlace, request.unit))
-                            {
                                 continue;
-                            }
 
                             // Otherwise it may be blocked by a moving unit, retry later
                             continue;
                         }
 
                         placementPos = BWAPI::Position(tileToPlace);
+                        usingChosenSpecialTile = true;
                     }
                     else
                     {
@@ -761,6 +742,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                         }
 
                         placementPos = placementInfo.position;
+                        tileToPlace = placementInfo.topLeft;
                     }
 
                     const BWAPI::Unit workerAvalible = getUnitToBuild(placementPos);
@@ -790,7 +772,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
 
-                    BWEB::Map::addUsed(placementInfo.topLeft, request.unit);
+                    BWEB::Map::addUsed(usingChosenSpecialTile ? tileToPlace : placementInfo.topLeft, request.unit);
                 }
                 break;
             }
@@ -1351,7 +1333,87 @@ if (issued)
 
 }
 
+
 // BWEB placement helpers
+
+bool BuildManager::isTileCommittedToBuild(BWAPI::UnitType type, const BWAPI::TilePosition& tile) const
+{
+    if (!tile.isValid())
+        return true;
+
+    for (const auto& builder : builders)
+    {
+        if (builder.buildingToConstruct == type && BWAPI::TilePosition(builder.requestedPositionToBuild) == tile)
+            return true;
+    }
+
+    for (BWAPI::Unit unit : BWAPI::Broodwar->self()->getUnits())
+    {
+        if (!unit || unit->getType() != type)
+            continue;
+        if (unit->getTilePosition() == tile)
+            return true;
+    }
+
+    return false;
+}
+
+BWAPI::TilePosition BuildManager::resolveSpecialBuildTile(const ResourceRequest& request) const
+{
+    auto checksTile = [&](const BWAPI::TilePosition& tile)
+    {
+        if (!tile.isValid())
+            return false;
+        if (!isTerrainBuildable(request.unit, tile))
+            return false;
+        if (isTileCommittedToBuild(request.unit, tile))
+            return false;
+        return true;
+    };
+
+    if (request.isRampPlacement)
+    {
+        if (checksTile(naturalRampPlacementTile))
+            return naturalRampPlacementTile;
+
+        const BWAPI::TilePosition tile = findNaturalRampPlacement(request.unit);
+        return checksTile(tile) ? tile : BWAPI::TilePositions::Invalid;
+    }
+
+    if (request.isWall)
+    {
+        const std::vector<BWAPI::TilePosition>* candidates = nullptr;
+
+        switch (request.unit)
+        {
+        case BWAPI::UnitTypes::Protoss_Pylon:
+            candidates = &naturalWallPylonTiles;
+            break;
+        case BWAPI::UnitTypes::Protoss_Forge:
+            candidates = &naturalWallForgeTiles;
+            break;
+        case BWAPI::UnitTypes::Protoss_Gateway:
+            candidates = &naturalWallGatewayTiles;
+            break;
+        case BWAPI::UnitTypes::Protoss_Photon_Cannon:
+            candidates = &naturalWallCannonTiles;
+            break;
+        default:
+            break;
+        }
+
+        if (!candidates)
+            return BWAPI::TilePositions::Invalid;
+
+        for (const auto& tile : *candidates)
+        {
+            if (checksTile(tile))
+                return tile;
+        }
+    }
+
+    return BWAPI::TilePositions::Invalid;
+}
 
 BWAPI::TilePosition BuildManager::findNaturalRampPlacement(BWAPI::UnitType type) const
 {
@@ -1492,8 +1554,9 @@ bool BuildManager::enqueueSupplyAtNaturalRamp()
     if (!isValidBuildTile(type, t))
         return false;
 
+    naturalRampPlacementTile = t;
     BWEB::Map::addReserve(t, type.tileWidth(), type.tileHeight());
-    commanderReference->requestBuilding(type, true, true, t);
+    commanderReference->requestBuilding(type, true, false, true);
     return true;
 }
 
@@ -1664,7 +1727,7 @@ bool BuildManager::enqueueNaturalWallAtChoke()
             if (!isValidBuildTile(BWAPI::UnitTypes::Protoss_Pylon, pylonTile))
                 continue;
 
-            commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Pylon, true, true, pylonTile);
+            commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Pylon, true, true, false);
             BWEB::Map::addReserve(pylonTile, BWAPI::UnitTypes::Protoss_Pylon.tileWidth(), BWAPI::UnitTypes::Protoss_Pylon.tileHeight());
             enqueuedAny = true;
         }
@@ -1731,7 +1794,7 @@ bool BuildManager::enqueueNaturalWallAtChoke()
             if (!isTerrainBuildable(ut, t))
                 return;
 
-            commanderReference->requestBuilding(ut, true, true, t);
+            commanderReference->requestBuilding(ut, true, true, false);
             BWEB::Map::addReserve(t, ut.tileWidth(), ut.tileHeight());
             enqueuedAny = true;
         };
@@ -1809,7 +1872,7 @@ bool BuildManager::enqueueNaturalWallAtChoke()
             if (!BWAPI::Broodwar->hasPower(t, cannon))
                 continue;
 
-            commanderReference->requestBuilding(cannon, true, true, t);
+            commanderReference->requestBuilding(cannon, true, true, false);
             BWEB::Map::addReserve(t, cannon.tileWidth(), cannon.tileHeight());
             enqueuedAny = true;
         }
