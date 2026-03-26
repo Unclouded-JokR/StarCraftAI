@@ -70,7 +70,6 @@ void ProtoBotCommander::onStart()
 
 void ProtoBotCommander::onFrame()
 {
-
 	// Draw unit health bars, which brood war unfortunately does not do
 	Tools::DrawUnitHealthBars();
 

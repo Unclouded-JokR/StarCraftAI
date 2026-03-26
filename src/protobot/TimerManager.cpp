@@ -29,9 +29,9 @@ void TimerManager::displayTimers(int x, int y)
     for (size_t i(0); i < moduleTimers.size(); ++i)
     {
         const double elapsed = moduleTimers[i].getElapsedTimeInMilliSec();
-        if (elapsed > 85)
+        if (elapsed > MAX_TIME_BEFORE_FLAG)
         {
-            BWAPI::Broodwar->printf("Timer Debug: %s %lf", timerNames[i].c_str(), elapsed);
+            BWAPI::Broodwar->printf("Timer Debug (frame %d): %s %lf", BWAPI::Broodwar->getFrameCount(), timerNames[i].c_str(), elapsed);
         }
 
         int width = (int)((elapsed == 0) ? 0 : (moduleBarWidth * (elapsed / total)));

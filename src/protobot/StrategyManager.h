@@ -174,6 +174,8 @@ private:
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
 	BWAPI::Unitset workers;
 
+	std::unordered_set<UnitProductionGoals> activeGoals;
+
 	bool opponentRaceNotKnown = true;
 
 	const double workerIncomePerFrameMinerals = 0.044;
@@ -198,9 +200,20 @@ public:
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
 
-	//Should we pass requests as argument?
-	void updateProductionGoals();
+	//Have these update active goals.
+	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
+
+	//Should we pass requests as argument?
+	//Make these pass back stuff we should produce
+	//Same with buildings and such
+	//Make a function that will then process all the requests and filter them out somehow and deny some.
+	// These should be unit sets should be a struct that organizes the unit requests to make addressing what we need to do easier.
+	
+	//BWAPI::Unitset plannedUnitProduction();
+	//BWAPI::UpgradeTypes plannedUpgradeProduction();
+	//BWAPI::Unitset plannedBuildingProduction();
+
 
 	BWAPI::Unitset getProtoBotBuildings();
 	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);

@@ -980,7 +980,20 @@ void StrategyManager::checkForOpponentRace()
 		{
 			opponentRaceNotKnown = false;
 			opponentRace = pair.first->getType().getRace();
-			std::cout << "Opponent Race is " << opponentRace << "\n";
+			std::cout << "Enemy building found, Opponent Race is " << opponentRace << "\n";
+		}
+	}
+
+	if (opponentRaceNotKnown == false) return;
+
+	for (const auto& enemyUnit : InformationManager::Instance().getKnownEnemies()) {
+		if (enemyUnit->getPlayer() == BWAPI::Broodwar->enemy() &&
+			enemyUnit->exists() &&
+			enemyUnit->isVisible())
+		{
+			opponentRaceNotKnown = false;
+			opponentRace = enemyUnit->getType().getRace();
+			std::cout << "Enemy combat unit found, Opponent Race is " << opponentRace << "\n";
 		}
 	}
 }
