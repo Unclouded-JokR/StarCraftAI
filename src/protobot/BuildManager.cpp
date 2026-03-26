@@ -670,6 +670,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 {
                     request.requestedBuilding->train(request.unit);
                     request.state = ResourceRequest::State::Accepted_Completed;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
                 }
 
                 break;
@@ -774,6 +775,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
 
                     BWEB::Map::addUsed(usingChosenSpecialTile ? tileToPlace : placementInfo.topLeft, request.unit);
                 }
@@ -788,6 +790,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
                 }
                 break;
             }
@@ -800,6 +803,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
                 }
                 break;
             }

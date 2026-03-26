@@ -65,6 +65,7 @@ struct ResourceRequest
 
 	//New stuff for Debuging
 	int frameRequestCreated = -1;
+	int frameRequestApproved = -1;
 	int frameRequestServiced = -1;
 
 	//Use this to try requests again and see if we need to kill it.
@@ -150,6 +151,7 @@ public:
 	void checkBuildingAlreadyHasPlan(BWAPI::Unit); //Might not need this if we already have the minerals to spend for units.
 	void updateRequestCounter(BWAPI::UnitType unit);
 	void drawResourceRequestQueue(int x, int y, bool background = true);
+	void drawResouceRequestCount(int x, int y, bool background = true);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
 	bool requestedBuilding(BWAPI::UnitType building);

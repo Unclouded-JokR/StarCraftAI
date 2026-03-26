@@ -149,9 +149,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::Combat);
 
 	timerManager.stopTimer(TimerManager::All);
-
-	//[TODO]
-	//Should add a service accpeted requests here to not have it in the Build Manager
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -411,8 +408,16 @@ void ProtoBotCommander::removeApprovedRequests()
 			}
 
 
-			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") Serviced : Completed Frame = " << BWAPI::Broodwar->getFrameCount()
-				<< " : Requested to Start By Frame = " << it->frameToStartBuilding << " : Actual Frame Started = " << it->frameRequestServiced << "\n";
+			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") " 
+				<< "\nFrame Request Created = " << it->frameRequestCreated
+				<< "\nFrame Request Approved = " << it->frameRequestApproved
+				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
+				<< "\nFrame Request Removed = " 
+				<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = " 
+				<< (it->frameRequestApproved - it->frameRequestCreated)
+				<< "\n";
+
+			//Add time between frames and other stuff.
 
 			it = resourceRequests.erase(it);
 		}
@@ -429,6 +434,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.type = ResourceRequest::Type::Building;
 	request.unit = building;
 	request.fromBuildOrder = fromBuildOrder;
+	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.isWall = isWall;
 	request.isRampPlacement = isRampPlacement;
 
@@ -470,6 +476,7 @@ void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingTo
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Unit;
 	request.unit = unit;
+	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.requestedBuilding = buildingToTrain;
 	request.fromBuildOrder = fromBuildOrder;
 
@@ -480,6 +487,7 @@ void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgr
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Upgrade;
+	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.upgrade = upgrade;
 	request.requestedBuilding = unit;
 	request.fromBuildOrder = fromBuildOrder;
@@ -531,24 +539,24 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 
 void ProtoBotCommander::drawResourceRequestQueue(int x, int y, bool background)
 {
-	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 360, y + 135, BWAPI::Colors::Black, true);
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 360, y + 140, BWAPI::Colors::Black, true);
 	BWAPI::Broodwar->drawTextScreen(x + 5, y - 3, "%cResource Request Queue", BWAPI::Text::White);
-	BWAPI::Broodwar->drawTextScreen(x + 5, y + -2, "%c___________________________________________________________", BWAPI::Text::White);
-	BWAPI::Broodwar->drawTextScreen(x + 5, y + 10, "%c Position |     Type     | Cost (Minerals) | Cost (Gas) | Frame_Start  ", BWAPI::Text::White);
-	BWAPI::Broodwar->drawTextScreen(x + 5, y + 14, "%c___________________________________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + -2, "%c___________________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + 10, "%c %2s | %-10s | %4s | %4s | %14s", BWAPI::Text::White, "#", "Type", "Min", "Gas", "Frame Approved");
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + 14, "%c___________________________________________", BWAPI::Text::White);
 
-	const int min_y = y + 20;
-	for (size_t iter = 1; iter < 11; iter++)
+	const int min_y = y + 15;
+	for (size_t iter = 0; iter < 10; iter++)
 	{
-		/*if (iter < resourceRequests.size())
+		if (iter < resourceRequests.size())
 		{
-			const ResourceRequest request = resourceRequests.at(iter - 1);
+			const ResourceRequest request = resourceRequests.at(iter);
 
 			const ResourceRequest::Type request_type = request.type;
 			int mineralCost = -1;
 			int gasCost = -1;
 			std::string type_string;
-			std::string frame_string = (request.frameToStartBuilding == -1 ? "N\\A" : std::to_string(request.frameToStartBuilding));
+			std::string frame_string = (request.frameRequestApproved == -1 ? "N\\A" : std::to_string(request.frameRequestApproved));
 
 			switch (request_type)
 			{
@@ -573,21 +581,13 @@ void ProtoBotCommander::drawResourceRequestQueue(int x, int y, bool background)
 					gasCost = request.tech.gasPrice();
 					break;
 			}
-
-			BWAPI::Broodwar->drawTextScreen(x, min_y + (iter * 10), "%c%d.) %10s|%5d|%5d|%8s", BWAPI::Text::White, type_string, mineralCost, gasCost, frame_string);
+			BWAPI::Broodwar->drawTextScreen(x, min_y + ((iter + 1) * 10), "%c %2d   %-10s   %4d   %4d   %6s", BWAPI::Text::White, iter + 1, type_string.c_str(), mineralCost, gasCost, frame_string.c_str());
 		}
 		else
 		{
-			
-		}*/
-
-		BWAPI::Broodwar->drawTextScreen(x, min_y + (iter * 10), "%c   %02d   | %10s | %5d | %5d | %8s ", BWAPI::Text::White, iter, "None", 0, 0, "N\\A");
+			BWAPI::Broodwar->drawTextScreen(x, min_y + ((iter + 1) * 10), "%c %2d   %-10s   %4d   %4d   %6s", BWAPI::Text::White, iter + 1, "None", 0, 0, "N\\A");
+		}
 	}
-
-	/*if (resourceRequests.size() >= MAX_QUEUE_ITEMS_TO_DRAW)
-	{
-
-	}*/
 }
 
 //Only counts when completed
@@ -666,7 +666,7 @@ void ProtoBotCommander::drawDebugInformation()
 	//drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
 	//drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 30);
 	//timerManager.displayTimers(490, 225);
-	drawResourceRequestQueue(1, 30);
+	drawResourceRequestQueue(1, 25);
 }
 #pragma endregion
 
