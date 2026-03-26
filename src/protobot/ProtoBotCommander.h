@@ -96,6 +96,7 @@ public:
 	StrategyManager strategyManager;
 	ProtoBotRequestCounter requestCounter;
 
+	bool drawUnitDebug = true;
 	std::vector<ResourceRequest> resourceRequests;
 
 	ProtoBotCommander();

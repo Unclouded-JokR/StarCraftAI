@@ -206,6 +206,16 @@ void ProtoBotCommander::onSendText(std::string text)
 	{
 		m_mapTools.toggleDraw();
 	}
+	
+	if (text == "/unitdebug_on")
+	{
+		drawUnitDebug = true;
+	}
+	
+	if (text == "/unitdebug_off")
+	{
+		drawUnitDebug = false;
+	}
 
 	combatManager.handleTextCommand(text);
 }
@@ -544,6 +554,8 @@ void ProtoBotCommander::drawDebugInformation()
 {
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
+
+	if (!drawUnitDebug) return;
 
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
