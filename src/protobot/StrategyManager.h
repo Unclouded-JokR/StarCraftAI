@@ -163,7 +163,7 @@ private:
 	int activeMiners();
 	int activeDrillers();
 	void checkForOpponentRace();
-	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y);
+	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 
 	//Need to delete refrence after game complete, should also do the same for incomplete building counter and request counter.
 	UnitProductionGameCounter unitProductionCounter;

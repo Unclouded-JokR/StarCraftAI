@@ -70,7 +70,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	//drawGameUnitProduction(unitProductionCounter, 0, 100);
+	drawGameUnitProduction(unitProductionCounter, 5, 165);
 
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
@@ -957,15 +957,17 @@ void StrategyManager::onUnitComplete(BWAPI::Unit unit)
 	}
 }
 
-void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y)
+void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background)
 {
-	BWAPI::Broodwar->drawTextScreen(x, y, "Total Combat Units Created (Game)");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-	BWAPI::Broodwar->drawTextScreen(x, y + 10, "Workers = %d", unitProduction.worker);
-	BWAPI::Broodwar->drawTextScreen(x, y + 20, "Zealots = %d", unitProduction.zealots);
-	BWAPI::Broodwar->drawTextScreen(x, y + 30, "Dragoons = %d", unitProduction.dragoons);
-	BWAPI::Broodwar->drawTextScreen(x, y + 40, "Observers = %d", unitProduction.observers);
-	BWAPI::Broodwar->drawTextScreen(x, y + 50, "Dark Templars = %d", unitProduction.dark_templars);
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 200, y + 65, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cTotal Combat Units Created (Game)", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cWorkers = %d", BWAPI::Text::White, unitProduction.worker);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cZealots = %d", BWAPI::Text::White, unitProduction.zealots);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cDragoons = %d", BWAPI::Text::White, unitProduction.dragoons);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cObservers = %d", BWAPI::Text::White, unitProduction.observers);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cDark Templars = %d", BWAPI::Text::White, unitProduction.dark_templars);
 }
 
 void StrategyManager::checkForOpponentRace()
