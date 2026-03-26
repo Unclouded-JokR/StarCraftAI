@@ -168,7 +168,6 @@ private:
 	//Need to delete refrence after game complete, should also do the same for incomplete building counter and request counter.
 	UnitProductionGameCounter unitProductionCounter;
 
-	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
 	BWAPI::Unitset resourceDepots; 
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
@@ -200,6 +199,10 @@ public:
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
 
+
+	//New stuff I am adding
+	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
+	
 	//Have these update active goals.
 	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
@@ -215,6 +218,7 @@ public:
 	//BWAPI::Unitset plannedBuildingProduction();
 
 
+	//Not you
 	BWAPI::Unitset getProtoBotBuildings();
 	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();

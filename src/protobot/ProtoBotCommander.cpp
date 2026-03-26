@@ -78,6 +78,8 @@ void ProtoBotCommander::onFrame()
 
 	//BWEB::Walls::draw();
 
+	removeApprovedRequests();
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -87,8 +89,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::MapTools);
 	m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
-
-	removeApprovedRequests();
 
 	/*
 	* Protobot Modules
@@ -149,6 +149,9 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::Combat);
 
 	timerManager.stopTimer(TimerManager::All);
+
+	//[TODO]
+	//Should add a service accpeted requests here to not have it in the Build Manager
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -372,8 +375,44 @@ void ProtoBotCommander::removeApprovedRequests()
 	{
 		if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
 		{
-			//if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
-			//if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+			const ResourceRequest::Type request_type = it->type;
+			int mineralCost = -1;
+			int gasCost = -1;
+			std::string bwapiType_string;
+			std::string type_string;
+			std::string frame_string = (it->frameToStartBuilding == -1 ? "N\\A" : std::to_string(it->frameToStartBuilding));
+
+			switch (request_type)
+			{
+			case ResourceRequest::Unit:
+				type_string = "Unit";
+				mineralCost = it->unit.mineralPrice();
+				gasCost = it->unit.gasPrice();
+				bwapiType_string = it->unit.toString();
+				break;
+			case ResourceRequest::Building:
+				type_string = "Building";
+				mineralCost = it->unit.mineralPrice();
+				gasCost = it->unit.gasPrice();
+				bwapiType_string = it->unit.toString();
+				break;
+			case ResourceRequest::Upgrade:
+				type_string = "Upgrade";
+				mineralCost = it->upgrade.mineralPrice();
+				gasCost = it->upgrade.gasPrice();
+				bwapiType_string = it->upgrade.toString();
+				break;
+			case ResourceRequest::Tech:
+				type_string = "Tech";
+				mineralCost = it->tech.mineralPrice();
+				gasCost = it->tech.gasPrice();
+				bwapiType_string = it->tech.toString();
+				break;
+			}
+
+
+			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") Serviced : Completed Frame = " << BWAPI::Broodwar->getFrameCount()
+				<< " : Requested to Start By Frame = " << it->frameToStartBuilding << " : Actual Frame Started = " << it->frameRequestServiced << "\n";
 
 			it = resourceRequests.erase(it);
 		}
@@ -490,6 +529,67 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 	return false;
 }
 
+void ProtoBotCommander::drawResourceRequestQueue(int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 360, y + 135, BWAPI::Colors::Black, true);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y - 3, "%cResource Request Queue", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + -2, "%c___________________________________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + 10, "%c Position |     Type     | Cost (Minerals) | Cost (Gas) | Frame_Start  ", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + 14, "%c___________________________________________________________", BWAPI::Text::White);
+
+	const int min_y = y + 20;
+	for (size_t iter = 1; iter < 11; iter++)
+	{
+		/*if (iter < resourceRequests.size())
+		{
+			const ResourceRequest request = resourceRequests.at(iter - 1);
+
+			const ResourceRequest::Type request_type = request.type;
+			int mineralCost = -1;
+			int gasCost = -1;
+			std::string type_string;
+			std::string frame_string = (request.frameToStartBuilding == -1 ? "N\\A" : std::to_string(request.frameToStartBuilding));
+
+			switch (request_type)
+			{
+				case ResourceRequest::Unit:
+					type_string = "Unit";
+					mineralCost = request.unit.mineralPrice();
+					gasCost = request.unit.gasPrice();
+					break;
+				case ResourceRequest::Building:
+					type_string = "Building";
+					mineralCost = request.unit.mineralPrice();
+					gasCost = request.unit.gasPrice();
+					break;
+				case ResourceRequest::Upgrade:
+					type_string = "Upgrade";
+					mineralCost = request.upgrade.mineralPrice();
+					gasCost = request.upgrade.gasPrice();
+					break;
+				case ResourceRequest::Tech:
+					type_string = "Tech";
+					mineralCost = request.tech.mineralPrice();
+					gasCost = request.tech.gasPrice();
+					break;
+			}
+
+			BWAPI::Broodwar->drawTextScreen(x, min_y + (iter * 10), "%c%d.) %10s|%5d|%5d|%8s", BWAPI::Text::White, type_string, mineralCost, gasCost, frame_string);
+		}
+		else
+		{
+			
+		}*/
+
+		BWAPI::Broodwar->drawTextScreen(x, min_y + (iter * 10), "%c   %02d   | %10s | %5d | %5d | %8s ", BWAPI::Text::White, iter, "None", 0, 0, "N\\A");
+	}
+
+	/*if (resourceRequests.size() >= MAX_QUEUE_ITEMS_TO_DRAW)
+	{
+
+	}*/
+}
+
 //Only counts when completed
 void ProtoBotCommander::drawUnitCount(FriendlyUnitCounter ProtoBot_unitCount, int x, int y, bool background)
 {
@@ -559,13 +659,14 @@ void ProtoBotCommander::drawDebugInformation()
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
 	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
-	BWAPI::Broodwar->drawTextScreen(200, 5, "%cAverage FPS: %f", BWAPI::Text::White, BWAPI::Broodwar->getAverageFPS());
+	BWAPI::Broodwar->drawTextScreen(170, 5, "%cOpponent Race: %s", BWAPI::Text::White, strategyManager.opponentRace.c_str());
 
-	drawBwapiResourceInfo(5, 102);
-	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
-	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
-	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 30);
-	timerManager.displayTimers(490, 225);
+	//drawBwapiResourceInfo(5, 102);
+	//drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
+	//drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
+	//drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 30);
+	//timerManager.displayTimers(490, 225);
+	drawResourceRequestQueue(1, 30);
 }
 #pragma endregion
 
