@@ -96,7 +96,9 @@ public:
 	StrategyManager strategyManager;
 	ProtoBotRequestCounter requestCounter;
 
+	//Need to have some sort of debug class that can control what we are seeing on our screen for showing information.
 	bool drawUnitDebug = true;
+
 	std::vector<ResourceRequest> resourceRequests;
 
 	ProtoBotCommander();
