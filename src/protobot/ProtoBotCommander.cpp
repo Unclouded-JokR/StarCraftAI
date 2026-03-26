@@ -70,6 +70,15 @@ void ProtoBotCommander::onStart()
 
 void ProtoBotCommander::onFrame()
 {
+
+	// Draw unit health bars, which brood war unfortunately does not do
+	Tools::DrawUnitHealthBars();
+
+	// Draw some relevent information to the screen to help us debug the bot
+	drawDebugInformation();
+
+	//BWEB::Walls::draw();
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -141,14 +150,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::Combat);
 
 	timerManager.stopTimer(TimerManager::All);
-
-	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
-
-	// Draw some relevent information to the screen to help us debug the bot
-	drawDebugInformation();
-
-	//BWEB::Walls::draw();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
