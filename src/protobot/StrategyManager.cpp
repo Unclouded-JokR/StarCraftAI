@@ -70,7 +70,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	drawGameUnitProduction(unitProductionCounter, 0, 100);
+	//drawGameUnitProduction(unitProductionCounter, 0, 100);
 
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
@@ -959,7 +959,7 @@ void StrategyManager::onUnitComplete(BWAPI::Unit unit)
 
 void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y)
 {
-	BWAPI::Broodwar->drawTextScreen(x, y, "Units Created Over Game");
+	BWAPI::Broodwar->drawTextScreen(x, y, "Total Combat Units Created (Game)");
 	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
 	BWAPI::Broodwar->drawTextScreen(x, y + 10, "Workers = %d", unitProduction.worker);
 	BWAPI::Broodwar->drawTextScreen(x, y + 20, "Zealots = %d", unitProduction.zealots);
@@ -967,26 +967,6 @@ void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProd
 	BWAPI::Broodwar->drawTextScreen(x, y + 40, "Observers = %d", unitProduction.observers);
 	BWAPI::Broodwar->drawTextScreen(x, y + 50, "Dark Templars = %d", unitProduction.dark_templars);
 }
-
-void StrategyManager::drawUnitCount(FriendlyUnitCounter ProtoBot_unitCount, int x, int y)
-{
-	BWAPI::Broodwar->drawTextScreen(x, y, "Unit Count");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-
-}
-
-void StrategyManager::drawBuildingCount(FriendlyBuildingCounter ProtoBot_buildingCount, int x, int y)
-{
-	BWAPI::Broodwar->drawTextScreen(x, y, "Building Count");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-}
-
-void StrategyManager::drawUpgradeCount(FriendlyUpgradeCounter ProtoBot_upgradeCount, int x, int y)
-{
-	BWAPI::Broodwar->drawTextScreen(x, y, "Upgrade Count");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-}
-
 
 void StrategyManager::checkForOpponentRace()
 {

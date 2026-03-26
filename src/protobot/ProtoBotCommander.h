@@ -114,7 +114,13 @@ public:
 	void onUnitShow(BWAPI::Unit unit);
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
+
+	//Debug Statements
 	void drawDebugInformation();
+	void drawBuildingCount(FriendlyBuildingCounter, int x, int y, bool background = true);
+	void drawUnitCount(FriendlyUnitCounter, int x, int y, bool background = true);
+	void drawUpgradeCount(FriendlyUpgradeCounter, int x, int y, bool background = true);
+	void drawBwapiResourceInfo(int x, int y, bool background = true);
 
 	//Resource Requests Methods
 	void removeApprovedRequests();

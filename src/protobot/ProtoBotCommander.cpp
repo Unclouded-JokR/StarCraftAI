@@ -480,27 +480,79 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 	return false;
 }
 
+//Only counts when completed
+void ProtoBotCommander::drawUnitCount(FriendlyUnitCounter ProtoBot_unitCount, int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 150, y + 65, BWAPI::Colors::Black, true);
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cCurrent Unit Count", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cWorkers = %d", BWAPI::Text::White, ProtoBot_unitCount.probe);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cZealots = %d", BWAPI::Text::White, ProtoBot_unitCount.zealot);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cDragoons = %d", BWAPI::Text::White, ProtoBot_unitCount.dragoon);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cObservers = %d", BWAPI::Text::White, ProtoBot_unitCount.observer);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cDark Templars = %d", BWAPI::Text::White, ProtoBot_unitCount.darkTemplar);
+
+}
+
+//Only counts when completed
+void ProtoBotCommander::drawBuildingCount(FriendlyBuildingCounter ProtoBot_buildingCount, int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 150, y + 115, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cCurrent Building Count", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cPylon = %d", BWAPI::Text::White, ProtoBot_buildingCount.pylon);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cNexus = %d", BWAPI::Text::White, ProtoBot_buildingCount.nexus);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cGateway = %d", BWAPI::Text::White, ProtoBot_buildingCount.gateway);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cForge = %d", BWAPI::Text::White, ProtoBot_buildingCount.forge);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cCybernetics Core = %d", BWAPI::Text::White, ProtoBot_buildingCount.cyberneticsCore);
+	BWAPI::Broodwar->drawTextScreen(x, y + 60, "%cPhoton Can. = %d", BWAPI::Text::White, ProtoBot_buildingCount.photonCannon);
+	BWAPI::Broodwar->drawTextScreen(x, y + 70, "%cRobotics Facil. = %d", BWAPI::Text::White, ProtoBot_buildingCount.roboticsFacility);
+	BWAPI::Broodwar->drawTextScreen(x, y + 80, "%cCitadel of Adun = %d", BWAPI::Text::White, ProtoBot_buildingCount.citadelOfAdun);
+	BWAPI::Broodwar->drawTextScreen(x, y + 90, "%cObservatory = %d", BWAPI::Text::White, ProtoBot_buildingCount.observatory);
+	BWAPI::Broodwar->drawTextScreen(x, y + 100, "%cTemplar Arch. = %d", BWAPI::Text::White, ProtoBot_buildingCount.templarArchives);
+}
+
+//Only counts when completed
+void ProtoBotCommander::drawUpgradeCount(FriendlyUpgradeCounter ProtoBot_upgradeCount, int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 150, y + 65, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cCurrent Upgrade Count", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cDragoon Range = %s", BWAPI::Text::White, (ProtoBot_upgradeCount.singularityCharge ? "true" : "false"));
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cGround Weapons = %d", BWAPI::Text::White, ProtoBot_upgradeCount.groundWeapons);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cGround Armor = %d", BWAPI::Text::White, ProtoBot_upgradeCount.groundArmor);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cPlasma Shields = %d", BWAPI::Text::White, ProtoBot_upgradeCount.plasmaShields);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cLeg Enhance. = %d", BWAPI::Text::White, ProtoBot_upgradeCount.legEnhancements);
+}
+
+void ProtoBotCommander::drawBwapiResourceInfo(int x, int y, bool background)
+{
+	if(background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 200, y + 55, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cBWAPI Resource Information", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cTotal Minerals Gathered: %d", BWAPI::Text::White, BWAPI::Broodwar->self()->gatheredMinerals());
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cTotal Gas Gathered : %d", BWAPI::Text::White, BWAPI::Broodwar->self()->gatheredGas());
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cTotal Minerals Spent: %d", BWAPI::Text::White, BWAPI::Broodwar->self()->spentMinerals());
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cTotal Gas Spent : %d", BWAPI::Text::White, BWAPI::Broodwar->self()->spentGas());
+}
+
 void ProtoBotCommander::drawDebugInformation()
 {
-	// Display the game frame rate as text in the upper left area of the screen
-	BWAPI::Broodwar->drawTextScreen(0, 10, "FPS: %d", BWAPI::Broodwar->getFPS());
-	BWAPI::Broodwar->drawTextScreen(0, 20, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
-	BWAPI::Broodwar->drawTextScreen(0, 0, "Frame: %d", BWAPI::Broodwar->getFrameCount());
-
-	BWAPI::Broodwar->drawTextScreen(0, 40, "Resource Information");
-	BWAPI::Broodwar->drawTextScreen(0, 41, "_________________________");
-	BWAPI::Broodwar->drawTextScreen(0, 50, "Total Minerals Gathered: %d", BWAPI::Broodwar->self()->gatheredMinerals());
-	BWAPI::Broodwar->drawTextScreen(0, 60, "Total Gas Gathered : %d", BWAPI::Broodwar->self()->gatheredGas());
-
-	BWAPI::Broodwar->drawTextScreen(0, 75, "Total Minerals Spent: %d", BWAPI::Broodwar->self()->spentMinerals());
-	BWAPI::Broodwar->drawTextScreen(0, 85, "Total Gas Spent : %d", BWAPI::Broodwar->self()->spentGas());
-
-	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
-	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
-
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 
+	// Display the game frame rate as text in the upper left area of the screen
+	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
+	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
+	BWAPI::Broodwar->drawTextScreen(200, 5, "%cAverage FPS: %f", BWAPI::Text::White, BWAPI::Broodwar->getAverageFPS());
+
+	drawBwapiResourceInfo(5, 102);
+	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
+	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
+	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 30);
 	timerManager.displayTimers(490, 225);
 }
 #pragma endregion
