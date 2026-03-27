@@ -78,8 +78,7 @@ public:
 	int Powered_MediumPlacements = 0;
 	int Used_LargeBuildingPlacements;
 	int Used_MediumBuildingPlacements;
-	BWAPI::TilePosition enemyLoc = BWAPI::TilePosition(999, 999);
-	BWAPI::Position enemyLocTest = BWAPI::Position(999, 999);
+	BWAPI::Position enemyLoc = BWAPI::Position(32, 32);
 	BuildManager* buildReference;
 
 	BuildingPlacer(BuildManager* buildReference);

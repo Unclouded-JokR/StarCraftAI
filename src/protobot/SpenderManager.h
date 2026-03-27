@@ -6,6 +6,8 @@
 
 struct ResourceRequest;
 
+//Need a counter here
+
 class SpenderManager
 {
 public:

@@ -54,8 +54,9 @@ bool BuildingPlacer::checkPower(BWAPI::TilePosition location, BWAPI::UnitType bu
 BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
 {
     //Power up blocks that are not power reserve blocks.
-    int distanceToPowerBlock = INT_MAX;
+    double distanceToPowerBlock = INT_MAX;
     BWAPI::TilePosition powerTilePosition = BWAPI::TilePositions::Invalid;
+    double finalDistance;
 
     for (BWEB::Block block : ProtoBot_Blocks)
     {
@@ -69,13 +70,24 @@ BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
                 if (BWEB::Map::isUsed(powerPlacements) != BWAPI::UnitTypes::None) continue;
 
                 int distance = 0;
+                int distanceToEnemy3 = 0;
                 theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(powerPlacements), &distance);
+                theMap.GetPath(enemyLoc, BWAPI::Position(block.getTilePosition()), &distanceToEnemy3);
 
                 if (distance == -1) continue;
 
-                if (distance < distanceToPowerBlock)
+                if (distanceToEnemy3 != 0 && enemyLoc != BWAPI::Position(32, 32))
                 {
-                    distanceToPowerBlock = distance;
+                    finalDistance = static_cast<double>(distance) / distanceToEnemy3;
+                }
+                else
+                {
+                    finalDistance = static_cast<double>(distance);
+                }
+
+                if (finalDistance < distanceToPowerBlock)
+                {
+                    distanceToPowerBlock = finalDistance;
                     powerTilePosition = powerPlacements;
                 }
             }
@@ -87,10 +99,11 @@ BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
 
 BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
 {
-    int distanceToPowerBlock = INT_MAX;
+    double distanceToPowerBlock = INT_MAX;
     BWAPI::TilePosition supplyReservePosition = BWAPI::TilePositions::Invalid;
 
     std::vector<BWEB::Block> blocksToCheck;
+    double finalDistance;
 
     blocksToCheck = ProtoBot_Blocks;
     if (nexusCount >= 3)
@@ -109,13 +122,25 @@ BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
         if (data.Blocksize == BlockData::SUPPLY && BWEB::Map::isUsed(block.getTilePosition()) == BWAPI::UnitTypes::None)
         {
             int distance = 0;
+            int distanceToEnemy2 = 0;
             theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(block.getTilePosition()), &distance);
+            theMap.GetPath(enemyLoc, BWAPI::Position(block.getTilePosition()), &distanceToEnemy2);
+
 
             if (distance == -1) continue;
 
-            if (distance < distanceToPowerBlock)
+            if (distanceToEnemy2 != 0 && enemyLoc != BWAPI::Position(32, 32))
             {
-                distanceToPowerBlock = distance;
+                finalDistance = static_cast<double>(distance) / distanceToEnemy2;
+            }
+            else
+            {
+                finalDistance = static_cast<double>(distance);
+            }
+
+            if (finalDistance < distanceToPowerBlock)
+            {
+                distanceToPowerBlock = finalDistance;
                 supplyReservePosition = block.getTilePosition();
             }
         }
@@ -133,8 +158,6 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
     double finalDistance;
     BWAPI::TilePosition closestDistance = BWAPI::TilePositions::Invalid;
     const BWAPI::UnitType type = BWAPI::UnitTypes::Protoss_Nexus;
-    BWAPI::Position enemies(enemyLoc);
-    //std::cout << "new expansion at: " << enemyLoc.x << enemyLoc.y << "\n";
 
     //This does not cover the case of a building being place on a tile but it should be good enough for now.
     for (const BWEM::Area& area : theMap.Areas())
@@ -146,14 +169,13 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
             int distanceToNewBase = 0;
             int distanceToEnemy = 0;
             const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
-            const BWEM::CPPath pathToEnemy = theMap.GetPath(enemies, BWAPI::Position(base.Location()), &distanceToEnemy);
+            const BWEM::CPPath pathToEnemy = theMap.GetPath(enemyLoc, BWAPI::Position(base.Location()), &distanceToEnemy);
 
             if (distanceToNewBase == -1) continue;
 
-            if (distanceToEnemy && distanceToEnemy != 0)
+            if (distanceToEnemy != 0 && enemyLoc != BWAPI::Position(32, 32))
             {
                 finalDistance = static_cast<double>(distanceToNewBase) / distanceToEnemy;
-
             }
             else
             {
@@ -301,10 +323,9 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 {
     PlacementInfo information;
 
-    if (!enemyLoc || enemyLoc == BWAPI::TilePosition(999, 999))
+    if (!enemyLoc || enemyLoc == BWAPI::Position(32, 32))
     {
-        enemyLoc = buildReference->commanderReference->enemy().main.value_or(BWAPI::TilePosition(999, 999));
-        std::cout << "new enemy loc at: " << enemyLoc.x << enemyLoc.y << "\n";
+        enemyLoc = BWAPI::Position(buildReference->commanderReference->enemy().main.value_or(BWAPI::TilePosition(1, 1)));
     }
 
     switch(type)

@@ -670,6 +670,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 {
                     request.requestedBuilding->train(request.unit);
                     request.state = ResourceRequest::State::Accepted_Completed;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
                 }
 
                 break;
@@ -709,13 +710,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     }
                     else
                     {
-                        /*f(!buildingPlacer.enemyLoc || buildingPlacer.enemyLoc == BWAPI::TilePosition(999, 999))
-                        {
-                            buildingPlacer.enemyLoc = commanderReference->enemy().main.value_or(BWAPI::TilePosition(999, 999));
-                            std::cout << "new enemy loc at: " << buildingPlacer.enemyLoc.x << buildingPlacer.enemyLoc.y << "\n";
-                        }*/
                         placementInfo = buildingPlacer.getPositionToBuild(request.unit);
-                        
 
                         if (placementInfo.position == BWAPI::Positions::Invalid)
                         {
@@ -780,6 +775,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
 
                     BWEB::Map::addUsed(usingChosenSpecialTile ? tileToPlace : placementInfo.topLeft, request.unit);
                 }
@@ -794,6 +790,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
                 }
                 break;
             }
@@ -806,6 +803,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 {
                     request.requestedBuilding->upgrade(request.upgrade);
                     request.state = ResourceRequest::State::Accepted_Completed;
+                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
                 }
                 break;
             }

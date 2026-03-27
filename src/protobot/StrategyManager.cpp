@@ -70,7 +70,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	drawGameUnitProduction(unitProductionCounter, 5, 165);
+	drawGameUnitProduction(unitProductionCounter, 5, 238);
 
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
@@ -980,7 +980,8 @@ void StrategyManager::checkForOpponentRace()
 		{
 			opponentRaceNotKnown = false;
 			opponentRace = pair.first->getType().getRace();
-			std::cout << "Enemy building found, Opponent Race is " << opponentRace << "\n";
+			//std::cout << "Enemy building found, Opponent Race is " << opponentRace << "\n";
+			break;
 		}
 	}
 
@@ -993,7 +994,7 @@ void StrategyManager::checkForOpponentRace()
 		{
 			opponentRaceNotKnown = false;
 			opponentRace = enemyUnit->getType().getRace();
-			std::cout << "Enemy combat unit found, Opponent Race is " << opponentRace << "\n";
+			//std::cout << "Enemy combat unit found, Opponent Race is " << opponentRace << "\n";
 		}
 	}
 }
@@ -1040,6 +1041,40 @@ int StrategyManager::activeDrillers()
 	}
 
 	return activeDrillerlWorkerCount;
+}
+
+void StrategyManager::updateUnitProductionGoals()
+{
+	//Notes:
+	//Need a way to check tech tree to make sure we can build
+
+	//Probes
+	//Need to get units in queue plus units created.
+
+	//Zealots
+	//Get Units in queue plus units crated over game
+
+	//Dragoons
+	if (opponentRace == BWAPI::Races::Terran || opponentRace == BWAPI::Races::Protoss)
+	{
+
+	}
+
+	//Minimum Observer Production
+
+
+	//Constant Observer Production
+	InformationManager::Instance().enemyHasCloakTech();
+
+	//Dark Templars
+
+	//Photon Cannons (Yes I know they are not combat units but we will leave this here for now)
+	InformationManager::Instance().enemyHasAirTech();
+}
+
+void StrategyManager::updateUpgradeGoals()
+{
+
 }
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
