@@ -407,6 +407,7 @@ void ProtoBotCommander::removeApprovedRequests()
 				break;
 			}
 
+			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
 			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") " 
 				<< "\nFrame Request Created = " << it->frameRequestCreated
@@ -415,7 +416,7 @@ void ProtoBotCommander::removeApprovedRequests()
 				<< "\nFrame Request Removed = " 
 				<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = " 
 				<< (it->frameRequestApproved - it->frameRequestCreated)
-				<< "\n";
+				<< " (" << seconds << " seconds)" << "\n";
 
 			//Add time between frames and other stuff.
 
@@ -539,7 +540,7 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 
 void ProtoBotCommander::drawResourceRequestQueue(int x, int y, bool background)
 {
-	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 360, y + 140, BWAPI::Colors::Black, true);
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 270, y + 130, BWAPI::Colors::Black, true);
 	BWAPI::Broodwar->drawTextScreen(x + 5, y - 3, "%cResource Request Queue", BWAPI::Text::White);
 	BWAPI::Broodwar->drawTextScreen(x + 5, y + -2, "%c___________________________________________", BWAPI::Text::White);
 	BWAPI::Broodwar->drawTextScreen(x + 5, y + 10, "%c %2s | %-10s | %4s | %4s | %14s", BWAPI::Text::White, "#", "Type", "Min", "Gas", "Frame Approved");
@@ -661,11 +662,11 @@ void ProtoBotCommander::drawDebugInformation()
 	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(170, 5, "%cOpponent Race: %s", BWAPI::Text::White, strategyManager.opponentRace.c_str());
 
-	//drawBwapiResourceInfo(5, 102);
-	//drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
-	//drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
-	//drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 30);
-	//timerManager.displayTimers(490, 225);
+	drawBwapiResourceInfo(5, 102);
+	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
+	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
+	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);
+	timerManager.displayTimers(490, 225);
 	drawResourceRequestQueue(1, 25);
 }
 #pragma endregion

@@ -70,7 +70,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	//drawGameUnitProduction(unitProductionCounter, 5, 165);
+	drawGameUnitProduction(unitProductionCounter, 5, 238);
 
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
