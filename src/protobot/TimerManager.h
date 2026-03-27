@@ -3,6 +3,8 @@
 #include <BWAPI.h>
 #include <vector> 
 
+#define MAX_TIME_BEFORE_FLAG 85
+
 class TimerManager
 {
 	std::vector<Timer> moduleTimers;

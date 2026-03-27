@@ -70,7 +70,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	drawGameUnitProduction(unitProductionCounter, 0, 100);
+	drawGameUnitProduction(unitProductionCounter, 5, 238);
 
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
@@ -957,36 +957,18 @@ void StrategyManager::onUnitComplete(BWAPI::Unit unit)
 	}
 }
 
-void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y)
+void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background)
 {
-	BWAPI::Broodwar->drawTextScreen(x, y, "Units Created Over Game");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-	BWAPI::Broodwar->drawTextScreen(x, y + 10, "Workers = %d", unitProduction.worker);
-	BWAPI::Broodwar->drawTextScreen(x, y + 20, "Zealots = %d", unitProduction.zealots);
-	BWAPI::Broodwar->drawTextScreen(x, y + 30, "Dragoons = %d", unitProduction.dragoons);
-	BWAPI::Broodwar->drawTextScreen(x, y + 40, "Observers = %d", unitProduction.observers);
-	BWAPI::Broodwar->drawTextScreen(x, y + 50, "Dark Templars = %d", unitProduction.dark_templars);
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 200, y + 65, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cTotal Combat Units Created (Game)", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cWorkers = %d", BWAPI::Text::White, unitProduction.worker);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cZealots = %d", BWAPI::Text::White, unitProduction.zealots);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cDragoons = %d", BWAPI::Text::White, unitProduction.dragoons);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cObservers = %d", BWAPI::Text::White, unitProduction.observers);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cDark Templars = %d", BWAPI::Text::White, unitProduction.dark_templars);
 }
-
-void StrategyManager::drawUnitCount(FriendlyUnitCounter ProtoBot_unitCount, int x, int y)
-{
-	BWAPI::Broodwar->drawTextScreen(x, y, "Unit Count");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-
-}
-
-void StrategyManager::drawBuildingCount(FriendlyBuildingCounter ProtoBot_buildingCount, int x, int y)
-{
-	BWAPI::Broodwar->drawTextScreen(x, y, "Building Count");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-}
-
-void StrategyManager::drawUpgradeCount(FriendlyUpgradeCounter ProtoBot_upgradeCount, int x, int y)
-{
-	BWAPI::Broodwar->drawTextScreen(x, y, "Upgrade Count");
-	BWAPI::Broodwar->drawTextScreen(x, y + 1, "_________________________");
-}
-
 
 void StrategyManager::checkForOpponentRace()
 {
@@ -998,7 +980,21 @@ void StrategyManager::checkForOpponentRace()
 		{
 			opponentRaceNotKnown = false;
 			opponentRace = pair.first->getType().getRace();
-			std::cout << "Opponent Race is " << opponentRace << "\n";
+			//std::cout << "Enemy building found, Opponent Race is " << opponentRace << "\n";
+			break;
+		}
+	}
+
+	if (opponentRaceNotKnown == false) return;
+
+	for (const auto& enemyUnit : InformationManager::Instance().getKnownEnemies()) {
+		if (enemyUnit->getPlayer() == BWAPI::Broodwar->enemy() &&
+			enemyUnit->exists() &&
+			enemyUnit->isVisible())
+		{
+			opponentRaceNotKnown = false;
+			opponentRace = enemyUnit->getType().getRace();
+			//std::cout << "Enemy combat unit found, Opponent Race is " << opponentRace << "\n";
 		}
 	}
 }
@@ -1045,6 +1041,40 @@ int StrategyManager::activeDrillers()
 	}
 
 	return activeDrillerlWorkerCount;
+}
+
+void StrategyManager::updateUnitProductionGoals()
+{
+	//Notes:
+	//Need a way to check tech tree to make sure we can build
+
+	//Probes
+	//Need to get units in queue plus units created.
+
+	//Zealots
+	//Get Units in queue plus units crated over game
+
+	//Dragoons
+	if (opponentRace == BWAPI::Races::Terran || opponentRace == BWAPI::Races::Protoss)
+	{
+
+	}
+
+	//Minimum Observer Production
+
+
+	//Constant Observer Production
+	InformationManager::Instance().enemyHasCloakTech();
+
+	//Dark Templars
+
+	//Photon Cannons (Yes I know they are not combat units but we will leave this here for now)
+	InformationManager::Instance().enemyHasAirTech();
+}
+
+void StrategyManager::updateUpgradeGoals()
+{
+
 }
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)

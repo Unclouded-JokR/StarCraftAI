@@ -70,6 +70,16 @@ void ProtoBotCommander::onStart()
 
 void ProtoBotCommander::onFrame()
 {
+	// Draw unit health bars, which brood war unfortunately does not do
+	Tools::DrawUnitHealthBars();
+
+	// Draw some relevent information to the screen to help us debug the bot
+	drawDebugInformation();
+
+	//BWEB::Walls::draw();
+
+	removeApprovedRequests();
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -79,8 +89,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::MapTools);
 	m_mapTools.onFrame();
 	timerManager.stopTimer(TimerManager::MapTools);
-
-	removeApprovedRequests();
 
 	/*
 	* Protobot Modules
@@ -141,14 +149,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.stopTimer(TimerManager::Combat);
 
 	timerManager.stopTimer(TimerManager::All);
-
-	// Draw unit health bars, which brood war unfortunately does not do
-	Tools::DrawUnitHealthBars();
-
-	// Draw some relevent information to the screen to help us debug the bot
-	drawDebugInformation();
-
-	//BWEB::Walls::draw();
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
@@ -204,6 +204,16 @@ void ProtoBotCommander::onSendText(std::string text)
 	if (text == "/map")
 	{
 		m_mapTools.toggleDraw();
+	}
+	
+	if (text == "/unitdebug_on")
+	{
+		drawUnitDebug = true;
+	}
+	
+	if (text == "/unitdebug_off")
+	{
+		drawUnitDebug = false;
 	}
 
 	combatManager.handleTextCommand(text);
@@ -368,8 +378,53 @@ void ProtoBotCommander::removeApprovedRequests()
 	{
 		if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
 		{
-			//if (it->state == ResourceRequest::State::Accepted_Completed) std::cout << "Completed Request\n";
-			//if (it->attempts == MAX_ATTEMPTS) std::cout << "Killing request to build " << it->unit << "\n";
+			const ResourceRequest::Type request_type = it->type;
+			int mineralCost = -1;
+			int gasCost = -1;
+			std::string bwapiType_string;
+			std::string type_string;
+			std::string frame_string = (it->frameToStartBuilding == -1 ? "N\\A" : std::to_string(it->frameToStartBuilding));
+
+			switch (request_type)
+			{
+			case ResourceRequest::Unit:
+				type_string = "Unit";
+				mineralCost = it->unit.mineralPrice();
+				gasCost = it->unit.gasPrice();
+				bwapiType_string = it->unit.toString();
+				break;
+			case ResourceRequest::Building:
+				type_string = "Building";
+				mineralCost = it->unit.mineralPrice();
+				gasCost = it->unit.gasPrice();
+				bwapiType_string = it->unit.toString();
+				break;
+			case ResourceRequest::Upgrade:
+				type_string = "Upgrade";
+				mineralCost = it->upgrade.mineralPrice();
+				gasCost = it->upgrade.gasPrice();
+				bwapiType_string = it->upgrade.toString();
+				break;
+			case ResourceRequest::Tech:
+				type_string = "Tech";
+				mineralCost = it->tech.mineralPrice();
+				gasCost = it->tech.gasPrice();
+				bwapiType_string = it->tech.toString();
+				break;
+			}
+
+			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
+
+			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") " 
+				<< "\nFrame Request Created = " << it->frameRequestCreated
+				<< "\nFrame Request Approved = " << it->frameRequestApproved
+				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
+				<< "\nFrame Request Removed = " 
+				<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = " 
+				<< (it->frameRequestApproved - it->frameRequestCreated)
+				<< " (" << seconds << " seconds)" << "\n";
+
+			//Add time between frames and other stuff.
 
 			it = resourceRequests.erase(it);
 		}
@@ -386,6 +441,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.type = ResourceRequest::Type::Building;
 	request.unit = building;
 	request.fromBuildOrder = fromBuildOrder;
+	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.isWall = isWall;
 	request.isRampPlacement = isRampPlacement;
 
@@ -427,6 +483,7 @@ void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingTo
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Unit;
 	request.unit = unit;
+	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.requestedBuilding = buildingToTrain;
 	request.fromBuildOrder = fromBuildOrder;
 
@@ -437,6 +494,7 @@ void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgr
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Upgrade;
+	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.upgrade = upgrade;
 	request.requestedBuilding = unit;
 	request.fromBuildOrder = fromBuildOrder;
@@ -486,28 +544,136 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
 	return false;
 }
 
+void ProtoBotCommander::drawResourceRequestQueue(int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 270, y + 130, BWAPI::Colors::Black, true);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y - 3, "%cResource Request Queue", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + -2, "%c___________________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + 10, "%c %2s | %-10s | %4s | %4s | %14s", BWAPI::Text::White, "#", "Type", "Min", "Gas", "Frame Approved");
+	BWAPI::Broodwar->drawTextScreen(x + 5, y + 14, "%c___________________________________________", BWAPI::Text::White);
+
+	const int min_y = y + 15;
+	for (size_t iter = 0; iter < 10; iter++)
+	{
+		if (iter < resourceRequests.size())
+		{
+			const ResourceRequest request = resourceRequests.at(iter);
+
+			const ResourceRequest::Type request_type = request.type;
+			int mineralCost = -1;
+			int gasCost = -1;
+			std::string type_string;
+			std::string frame_string = (request.frameRequestApproved == -1 ? "N\\A" : std::to_string(request.frameRequestApproved));
+
+			switch (request_type)
+			{
+				case ResourceRequest::Unit:
+					type_string = "Unit";
+					mineralCost = request.unit.mineralPrice();
+					gasCost = request.unit.gasPrice();
+					break;
+				case ResourceRequest::Building:
+					type_string = "Building";
+					mineralCost = request.unit.mineralPrice();
+					gasCost = request.unit.gasPrice();
+					break;
+				case ResourceRequest::Upgrade:
+					type_string = "Upgrade";
+					mineralCost = request.upgrade.mineralPrice();
+					gasCost = request.upgrade.gasPrice();
+					break;
+				case ResourceRequest::Tech:
+					type_string = "Tech";
+					mineralCost = request.tech.mineralPrice();
+					gasCost = request.tech.gasPrice();
+					break;
+			}
+			BWAPI::Broodwar->drawTextScreen(x, min_y + ((iter + 1) * 10), "%c %2d   %-10s   %4d   %4d   %6s", BWAPI::Text::White, iter + 1, type_string.c_str(), mineralCost, gasCost, frame_string.c_str());
+		}
+		else
+		{
+			BWAPI::Broodwar->drawTextScreen(x, min_y + ((iter + 1) * 10), "%c %2d   %-10s   %4d   %4d   %6s", BWAPI::Text::White, iter + 1, "None", 0, 0, "N\\A");
+		}
+	}
+}
+
+//Only counts when completed
+void ProtoBotCommander::drawUnitCount(FriendlyUnitCounter ProtoBot_unitCount, int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 150, y + 65, BWAPI::Colors::Black, true);
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cCurrent Unit Count", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cWorkers = %d", BWAPI::Text::White, ProtoBot_unitCount.probe);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cZealots = %d", BWAPI::Text::White, ProtoBot_unitCount.zealot);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cDragoons = %d", BWAPI::Text::White, ProtoBot_unitCount.dragoon);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cObservers = %d", BWAPI::Text::White, ProtoBot_unitCount.observer);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cDark Templars = %d", BWAPI::Text::White, ProtoBot_unitCount.darkTemplar);
+
+}
+
+//Only counts when completed
+void ProtoBotCommander::drawBuildingCount(FriendlyBuildingCounter ProtoBot_buildingCount, int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 150, y + 115, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cCurrent Building Count", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cPylon = %d", BWAPI::Text::White, ProtoBot_buildingCount.pylon);
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cNexus = %d", BWAPI::Text::White, ProtoBot_buildingCount.nexus);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cGateway = %d", BWAPI::Text::White, ProtoBot_buildingCount.gateway);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cForge = %d", BWAPI::Text::White, ProtoBot_buildingCount.forge);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cCybernetics Core = %d", BWAPI::Text::White, ProtoBot_buildingCount.cyberneticsCore);
+	BWAPI::Broodwar->drawTextScreen(x, y + 60, "%cPhoton Can. = %d", BWAPI::Text::White, ProtoBot_buildingCount.photonCannon);
+	BWAPI::Broodwar->drawTextScreen(x, y + 70, "%cRobotics Facil. = %d", BWAPI::Text::White, ProtoBot_buildingCount.roboticsFacility);
+	BWAPI::Broodwar->drawTextScreen(x, y + 80, "%cCitadel of Adun = %d", BWAPI::Text::White, ProtoBot_buildingCount.citadelOfAdun);
+	BWAPI::Broodwar->drawTextScreen(x, y + 90, "%cObservatory = %d", BWAPI::Text::White, ProtoBot_buildingCount.observatory);
+	BWAPI::Broodwar->drawTextScreen(x, y + 100, "%cTemplar Arch. = %d", BWAPI::Text::White, ProtoBot_buildingCount.templarArchives);
+}
+
+//Only counts when completed
+void ProtoBotCommander::drawUpgradeCount(FriendlyUpgradeCounter ProtoBot_upgradeCount, int x, int y, bool background)
+{
+	if (background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 150, y + 65, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cCurrent Upgrade Count", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cDragoon Range = %s", BWAPI::Text::White, (ProtoBot_upgradeCount.singularityCharge ? "true" : "false"));
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cGround Weapons = %d", BWAPI::Text::White, ProtoBot_upgradeCount.groundWeapons);
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cGround Armor = %d", BWAPI::Text::White, ProtoBot_upgradeCount.groundArmor);
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cPlasma Shields = %d", BWAPI::Text::White, ProtoBot_upgradeCount.plasmaShields);
+	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cLeg Enhance. = %d", BWAPI::Text::White, ProtoBot_upgradeCount.legEnhancements);
+}
+
+void ProtoBotCommander::drawBwapiResourceInfo(int x, int y, bool background)
+{
+	if(background) BWAPI::Broodwar->drawBoxScreen(x - 5, y - 5, x + 200, y + 55, BWAPI::Colors::Black, true);
+
+	BWAPI::Broodwar->drawTextScreen(x, y, "%cBWAPI Resource Information", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 1, "%c________________________________", BWAPI::Text::White);
+	BWAPI::Broodwar->drawTextScreen(x, y + 10, "%cTotal Minerals Gathered: %d", BWAPI::Text::White, BWAPI::Broodwar->self()->gatheredMinerals());
+	BWAPI::Broodwar->drawTextScreen(x, y + 20, "%cTotal Gas Gathered : %d", BWAPI::Text::White, BWAPI::Broodwar->self()->gatheredGas());
+	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cTotal Minerals Spent: %d", BWAPI::Text::White, BWAPI::Broodwar->self()->spentMinerals());
+	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cTotal Gas Spent : %d", BWAPI::Text::White, BWAPI::Broodwar->self()->spentGas());
+}
+
 void ProtoBotCommander::drawDebugInformation()
 {
-	// Display the game frame rate as text in the upper left area of the screen
-	BWAPI::Broodwar->drawTextScreen(0, 10, "FPS: %d", BWAPI::Broodwar->getFPS());
-	BWAPI::Broodwar->drawTextScreen(0, 20, "Average FPS: %f", BWAPI::Broodwar->getAverageFPS());
-	BWAPI::Broodwar->drawTextScreen(0, 0, "Frame: %d", BWAPI::Broodwar->getFrameCount());
-
-	BWAPI::Broodwar->drawTextScreen(0, 40, "Resource Information");
-	BWAPI::Broodwar->drawTextScreen(0, 41, "_________________________");
-	BWAPI::Broodwar->drawTextScreen(0, 50, "Total Minerals Gathered: %d", BWAPI::Broodwar->self()->gatheredMinerals());
-	BWAPI::Broodwar->drawTextScreen(0, 60, "Total Gas Gathered : %d", BWAPI::Broodwar->self()->gatheredGas());
-
-	BWAPI::Broodwar->drawTextScreen(0, 75, "Total Minerals Spent: %d", BWAPI::Broodwar->self()->spentMinerals());
-	BWAPI::Broodwar->drawTextScreen(0, 85, "Total Gas Spent : %d", BWAPI::Broodwar->self()->spentGas());
-
-	/*BWAPI::Broodwar->drawTextScreen(0, 40, "Elapsed Time (Real time): %02d:", BWAPI::Broodwar->elapsedTime() / 60);
-	BWAPI::Broodwar->drawTextScreen(142, 40, "%02d", BWAPI::Broodwar->elapsedTime() % 60);*/
-
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 
+	if (!drawUnitDebug) return;
+
+	// Display the game frame rate as text in the upper left area of the screen
+	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
+	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
+	BWAPI::Broodwar->drawTextScreen(170, 5, "%cOpponent Race: %s", BWAPI::Text::White, strategyManager.opponentRace.c_str());
+
+	drawBwapiResourceInfo(5, 102);
+	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
+	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
+	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);
 	timerManager.displayTimers(490, 225);
+	drawResourceRequestQueue(1, 25);
 }
 #pragma endregion
 
@@ -663,7 +829,7 @@ void ProtoBotCommander::onEnemyMainFound(const BWAPI::TilePosition& tp) {
 	enemy_.main = tp;
 	enemy_.frameLastUpdateMain = BWAPI::Broodwar->getFrameCount();
 	//BWAPI::Broodwar->printf("[Commander] Enemy main set to (%d,%d)", tp.x, tp.y);
-
+	
 	// StrategyManager.onEnemyMain(tp);
 }
 

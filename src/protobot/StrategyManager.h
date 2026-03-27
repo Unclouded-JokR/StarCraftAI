@@ -163,19 +163,17 @@ private:
 	int activeMiners();
 	int activeDrillers();
 	void checkForOpponentRace();
-	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y);
-	void drawBuildingCount(FriendlyBuildingCounter, int x, int y);
-	void drawUnitCount(FriendlyUnitCounter, int x, int y);
-	void drawUpgradeCount(FriendlyUpgradeCounter, int x, int y);
+	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 
 	//Need to delete refrence after game complete, should also do the same for incomplete building counter and request counter.
 	UnitProductionGameCounter unitProductionCounter;
 
-	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
 	BWAPI::Unitset resourceDepots; 
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
 	BWAPI::Unitset workers;
+
+	std::unordered_set<UnitProductionGoals> activeGoals;
 
 	bool opponentRaceNotKnown = true;
 
@@ -201,10 +199,26 @@ public:
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
 
-	//Should we pass requests as argument?
-	void updateProductionGoals();
+
+	//New stuff I am adding
+	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
+	
+	//Have these update active goals.
+	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
 
+	//Should we pass requests as argument?
+	//Make these pass back stuff we should produce
+	//Same with buildings and such
+	//Make a function that will then process all the requests and filter them out somehow and deny some.
+	// These should be unit sets should be a struct that organizes the unit requests to make addressing what we need to do easier.
+	
+	//BWAPI::Unitset plannedUnitProduction();
+	//BWAPI::UpgradeTypes plannedUpgradeProduction();
+	//BWAPI::Unitset plannedBuildingProduction();
+
+
+	//Not you
 	BWAPI::Unitset getProtoBotBuildings();
 	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();

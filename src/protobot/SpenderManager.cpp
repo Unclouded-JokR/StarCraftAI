@@ -223,6 +223,7 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
             if (canAffordRequest)
             {
                 request.state = ResourceRequest::State::Approved_InProgress;
+                request.frameRequestApproved = BWAPI::Broodwar->getFrameCount();
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
             }
@@ -256,6 +257,7 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
         if (canAffordRequest)
         {
             request.state = ResourceRequest::State::Approved_InProgress;
+            request.frameRequestApproved = BWAPI::Broodwar->getFrameCount();
             currentMineralCount -= mineralPrice;
             currentGasCount -= gasPrice;
         }

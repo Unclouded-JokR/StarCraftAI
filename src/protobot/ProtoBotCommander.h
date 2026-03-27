@@ -16,6 +16,7 @@
 #include "BWEM/src/bwem.h"
 
 #define FRAMES_PER_SECOND 24
+#define MAX_QUEUE_ITEMS_TO_DRAW 10
 
 using namespace BWEM;
 
@@ -56,11 +57,16 @@ struct ResourceRequest
 	bool isCheese = false;
 
 	//Minimum frame to start producing a building by
-	int frameToStartBuilding = INT_MAX;
+	int frameToStartBuilding = -1;
 
 	//For now buildings will request to make units but we should remove this later
 	//The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
 	BWAPI::Unit requestedBuilding = nullptr;
+
+	//New stuff for Debuging
+	int frameRequestCreated = -1;
+	int frameRequestApproved = -1;
+	int frameRequestServiced = -1;
 
 	//Use this to try requests again and see if we need to kill it.
 	int framesSinceLastCheck = 0;
@@ -73,6 +79,14 @@ struct ResourceRequest
 };
 
 struct ProtoBotRequestCounter {
+	//Combat units
+	int worker_requests = 0;
+	int zealots_requests = 0;
+	int dragoons_requests = 0;
+	int observers_requests = 0;
+	int dark_templars_requests = 0;
+
+	//Buildings
 	int gateway_requests = 0;
 	int nexus_requests = 0;
 	int forge_requests = 0;
@@ -81,6 +95,9 @@ struct ProtoBotRequestCounter {
 	int observatory_requests = 0;
 	int citadel_requests = 0;
 	int templarArchives_requests = 0;
+	int photon_cannon_requests = 0;
+
+	//Upgrades
 };
 
 class ProtoBotCommander
@@ -95,6 +112,9 @@ public:
 	CombatManager combatManager;
 	StrategyManager strategyManager;
 	ProtoBotRequestCounter requestCounter;
+
+	//Need to have some sort of debug class that can control what we are seeing on our screen for showing information.
+	bool drawUnitDebug = true;
 
 	std::vector<ResourceRequest> resourceRequests;
 
@@ -114,7 +134,13 @@ public:
 	void onUnitShow(BWAPI::Unit unit);
 	void onUnitHide(BWAPI::Unit unit);
 	void onUnitRenegade(BWAPI::Unit unit);
+
+	//Debug Statements
 	void drawDebugInformation();
+	void drawBuildingCount(FriendlyBuildingCounter, int x, int y, bool background = true);
+	void drawUnitCount(FriendlyUnitCounter, int x, int y, bool background = true);
+	void drawUpgradeCount(FriendlyUpgradeCounter, int x, int y, bool background = true);
+	void drawBwapiResourceInfo(int x, int y, bool background = true);
 
 	//Resource Requests Methods
 	void removeApprovedRequests();
@@ -122,6 +148,10 @@ public:
 	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
 	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
+	void checkBuildingAlreadyHasPlan(BWAPI::Unit); //Might not need this if we already have the minerals to spend for units.
+	void updateRequestCounter(BWAPI::UnitType unit);
+	void drawResourceRequestQueue(int x, int y, bool background = true);
+	void drawResouceRequestCount(int x, int y, bool background = true);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
 	bool requestedBuilding(BWAPI::UnitType building);
