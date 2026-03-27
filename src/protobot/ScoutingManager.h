@@ -14,18 +14,21 @@ class ProtoBotCommander;
 class ScoutingProbe;
 class ScoutingZealot;
 class ScoutingObserver;
+class DarkTemplar;
 
 // include concrete behaviors
 #include "ScoutingProbe.h"
 #include "ScoutingZealot.h"
 // #include "ScoutingDragoon.h"
 #include "ScoutingObserver.h"
+#include "DarkTemplar.h"
 
 using BehaviorVariant = std::variant<
     std::monostate,
     ScoutingProbe,
     ScoutingZealot,
-    ScoutingObserver
+    ScoutingObserver,
+    DarkTemplar
     /*Once added ->,
     ScoutingDragoon,
     */
@@ -60,12 +63,23 @@ public:
 
     bool canAcceptWorkerScout() const { return !combatScoutingStarted_ && !workerScout_; }
 
-    bool canAcceptCombatScout(BWAPI::UnitType t) const 
+    bool canAcceptCombatScout(BWAPI::UnitType t) const
     {
         if (t == BWAPI::UnitTypes::Protoss_Zealot)
+        {
             return int(combatZealots_.size()) < maxZealotScouts_;
+        }
+
         if (t == BWAPI::UnitTypes::Protoss_Dragoon)
+        {
             return int(combatDragoons_.size()) < maxDragoonScouts_;
+        }
+
+        if (t == BWAPI::UnitTypes::Protoss_Dark_Templar)
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -80,6 +94,7 @@ public:
 
 private:
     ProtoBotCommander* commanderRef = nullptr;
+
 
     std::unordered_map<int, BehaviorVariant> behaviors_;
 
@@ -105,6 +120,7 @@ private:
 
     std::vector<BWAPI::Unit> combatZealots_;
     std::vector<BWAPI::Unit> combatDragoons_;
+    
 
     // assigned observer units + slot ownership (slot 0..3)
     std::vector<BWAPI::Unit> observerScouts_;
@@ -114,6 +130,7 @@ private:
     int  reserveObserverSlot(int unitId);   // returns slot [0..3] or -1
     void releaseObserverSlot(int unitId);
 
+    std::vector<BWAPI::Unit> darkTemplarScouts_;
 
 
 };

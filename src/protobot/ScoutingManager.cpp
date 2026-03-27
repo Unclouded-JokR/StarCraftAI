@@ -2,7 +2,7 @@
 #include "ProtoBotCommander.h"
 
 ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
-    : commanderRef(commander) 
+    : commanderRef(commander)
 {
 }
 
@@ -55,6 +55,7 @@ static void visit_onUnitDestroy(BehaviorVariant& sb, BWAPI::Unit u)
         using T = std::decay_t<decltype(b)>;
         if constexpr (!std::is_same_v<T, std::monostate>) b.onUnitDestroy(u);
         }, sb);
+
 }
 
 void ScoutingManager::onFrame() 
@@ -96,7 +97,10 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
     else
     {
         // zealot or dragoon
-        if (!canAcceptCombatScout(unit->getType())) return;
+        if (!canAcceptCombatScout(unit->getType()))
+        {
+            return;
+        }
     }
     // build a behavior instance for THIS unit and store by id
     BehaviorVariant sb = constructBehaviorFor(unit);
@@ -167,6 +171,14 @@ bool ScoutingManager::hasScout() const
     }
 
     for (auto u : observerScouts_)
+    {
+        if (u && u->exists())
+        {
+            return true;
+        }
+    }
+
+    for (auto u : darkTemplarScouts_)
     {
         if (u && u->exists())
         {
@@ -252,6 +264,7 @@ void ScoutingManager::onUnitDestroy(BWAPI::Unit unit)
     releaseObserverSlot(id);
     observerScouts_.erase(std::remove(observerScouts_.begin(), observerScouts_.end(), unit),
         observerScouts_.end());
+
 }
 
 int ScoutingManager::reserveObserverSlot(int unitId) 
@@ -297,6 +310,18 @@ BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
         if (enemyMainCache_) o.setEnemyMain(*enemyMainCache_);
         //BWAPI::Broodwar->printf("[SM] behavior = Observer for id=%d", unit->getID());
         return o;
+    }
+
+    if (t == BWAPI::UnitTypes::Protoss_Dark_Templar)
+    {
+        DarkTemplar dt(commanderRef, this);
+
+        if (enemyMainCache_)
+        {
+            dt.setEnemyMain(*enemyMainCache_);
+        }
+
+        return dt;
     }
 
     // fallback
@@ -347,6 +372,14 @@ void ScoutingManager::markScout(BWAPI::Unit u)
         }
         return;
     }
+    if (t == BWAPI::UnitTypes::Protoss_Dark_Templar)
+    {
+        if (std::find(darkTemplarScouts_.begin(), darkTemplarScouts_.end(), u) == darkTemplarScouts_.end())
+        {
+            darkTemplarScouts_.push_back(u);
+        }
+        return;
+    }
 }
 
 void ScoutingManager::unmarkScout(BWAPI::Unit u)
@@ -370,21 +403,31 @@ void ScoutingManager::unmarkScout(BWAPI::Unit u)
         return;
     }
 
+    if (u->getType() == BWAPI::UnitTypes::Protoss_Dark_Templar)
+    {
+        darkTemplarScouts_.erase(std::remove(darkTemplarScouts_.begin(), darkTemplarScouts_.end(), u),
+            darkTemplarScouts_.end());
+        return;
+    }
+
     combatZealots_.erase(std::remove(combatZealots_.begin(), combatZealots_.end(), u),
         combatZealots_.end());
     combatDragoons_.erase(std::remove(combatDragoons_.begin(), combatDragoons_.end(), u),
         combatDragoons_.end());
     observerScouts_.erase(std::remove(observerScouts_.begin(), observerScouts_.end(), u), 
         observerScouts_.end());
+    darkTemplarScouts_.erase(std::remove(darkTemplarScouts_.begin(), darkTemplarScouts_.end(), u),
+        darkTemplarScouts_.end());
 }
 
 bool ScoutingManager::isScout(BWAPI::Unit u) const 
 {
-    if (!u) return false;
-    if (workerScout_ == u) return true;
-    if (std::find(combatZealots_.begin(), combatZealots_.end(), u) != combatZealots_.end()) return true;
-    if (std::find(combatDragoons_.begin(), combatDragoons_.end(), u) != combatDragoons_.end()) return true;
-    if (std::find(observerScouts_.begin(), observerScouts_.end(), u) != observerScouts_.end()) return true;
+    if (!u)                                                                                                 return false;
+    if (workerScout_ == u)                                                                                  return true;
+    if (std::find(combatZealots_.begin(), combatZealots_.end(), u) != combatZealots_.end())                 return true;
+    if (std::find(combatDragoons_.begin(), combatDragoons_.end(), u) != combatDragoons_.end())              return true;
+    if (std::find(observerScouts_.begin(), observerScouts_.end(), u) != observerScouts_.end())              return true;
+    if (std::find(darkTemplarScouts_.begin(), darkTemplarScouts_.end(), u) != darkTemplarScouts_.end())     return true;
     return false;
 }
 

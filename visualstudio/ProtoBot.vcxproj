@@ -32,6 +32,7 @@
     <ClInclude Include="..\src\protobot\BWEB\Source\Station.h" />
     <ClInclude Include="..\src\protobot\BWEB\Source\Wall.h" />
     <ClInclude Include="..\src\protobot\CombatManager.h" />
+    <ClInclude Include="..\src\protobot\DarkTemplar.h" />
     <ClInclude Include="..\src\protobot\EconomyManager.h" />
     <ClInclude Include="..\src\protobot\InfluenceMap.h" />
     <ClInclude Include="..\src\protobot\InformationManager.h" />
@@ -88,6 +89,7 @@
     <ClCompile Include="..\src\protobot\BWEB\Source\Station.cpp" />
     <ClCompile Include="..\src\protobot\BWEB\Source\Wall.cpp" />
     <ClCompile Include="..\src\protobot\CombatManager.cpp" />
+    <ClCompile Include="..\src\protobot\DarkTemplar.cpp" />
     <ClCompile Include="..\src\protobot\EconomyManager.cpp" />
     <ClCompile Include="..\src\protobot\InfluenceMap.cpp" />
     <ClCompile Include="..\src\protobot\InformationManager.cpp" />

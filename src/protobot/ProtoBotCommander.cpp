@@ -337,6 +337,12 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
+	if (unit_type == BWAPI::UnitTypes::Protoss_Dark_Templar)
+	{
+		scoutingManager.assignScout(unit);
+		return;
+	}
+
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }
