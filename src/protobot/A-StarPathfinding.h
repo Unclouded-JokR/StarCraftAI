@@ -3,6 +3,7 @@
 #include "Timer.h"
 #include "BWEM/src/bwem.h"
 #include "BWEB/Source/BWEB.h"
+#include "Hashes.h"
 
 //#define DEBUG_PATH
 //#define DEBUG_PRECACHE
@@ -56,28 +57,6 @@ struct Node {
 	}
 	bool operator ==(const Node& rhs) const {
 		return tile == rhs.tile;
-	}
-};
-
-// Hash for storing BWAPI::TilePositions in an unordered_set 
-struct TilePositionHash {
-	std::size_t operator()(const BWAPI::TilePosition& tile) const {
-		return std::hash<int>()(0.5 * (tile.x + tile.y) * (tile.x + tile.y + 1) + tile.y);
-	}
-};
-
-// Hash for storing AreaId pairs as keys in an unordered_map
-// Using a regular std::map for now due to a linker errors thats happening with the unordered_map
-struct AreaIdPairHash {
-	std::size_t operator()(const std::pair<BWEM::Area::id, BWEM::Area::id>& v) const {
-		return std::hash<int>{}(v.first) ^ std::hash<int>{}(v.second);
-	}
-};
-
-// Hash used for storing AreaId, Area pairs
-struct AreaIdHash {
-	std::size_t operator()(const BWEM::Area::id v) const {
-		return std::hash<int>{}(v);
 	}
 };
 

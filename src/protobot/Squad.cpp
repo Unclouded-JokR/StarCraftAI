@@ -55,7 +55,6 @@ void Squad::removeUnit(BWAPI::Unit unit){
 
 	if (unit == leader) {
 		BOIDS::leaderRadiusMap.erase(unit);
-
 		const BWAPI::Position leaderPos = unit->getPosition();
 		std::erase_if(units, [unit](const BWAPI::Unit& _unit) {
 			return unit->getID() == _unit->getID();
