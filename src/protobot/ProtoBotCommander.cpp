@@ -721,7 +721,7 @@ void ProtoBotCommander::onEnemyMainFound(const BWAPI::TilePosition& tp) {
 	enemy_.main = tp;
 	enemy_.frameLastUpdateMain = BWAPI::Broodwar->getFrameCount();
 	//BWAPI::Broodwar->printf("[Commander] Enemy main set to (%d,%d)", tp.x, tp.y);
-
+	
 	// StrategyManager.onEnemyMain(tp);
 }
 

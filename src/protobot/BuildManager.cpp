@@ -540,7 +540,7 @@ static std::vector<BWAPI::TilePosition> chooseCompactWallCannonArcTiles(int coun
 
 
 
-BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
+BuildManager::BuildManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference), buildingPlacer(this)
 {
 
 }
@@ -709,7 +709,13 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     }
                     else
                     {
+                        /*f(!buildingPlacer.enemyLoc || buildingPlacer.enemyLoc == BWAPI::TilePosition(999, 999))
+                        {
+                            buildingPlacer.enemyLoc = commanderReference->enemy().main.value_or(BWAPI::TilePosition(999, 999));
+                            std::cout << "new enemy loc at: " << buildingPlacer.enemyLoc.x << buildingPlacer.enemyLoc.y << "\n";
+                        }*/
                         placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                        
 
                         if (placementInfo.position == BWAPI::Positions::Invalid)
                         {

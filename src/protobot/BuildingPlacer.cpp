@@ -1,7 +1,8 @@
 #include "BuildingPlacer.h"
 #include "ProtoBotCommander.h"
+#include "BuildManager.h"
 
-BuildingPlacer::BuildingPlacer()
+BuildingPlacer::BuildingPlacer(BuildManager* buildReference) : buildReference(buildReference)
 {
 
 }
@@ -128,9 +129,12 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
     const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
     const BWEM::Area* mainArea = theMap.GetArea(ProtoBot_MainBase);
 
-    int distance = INT_MAX;
+    double distance = INT_MAX;
+    double finalDistance;
     BWAPI::TilePosition closestDistance = BWAPI::TilePositions::Invalid;
     const BWAPI::UnitType type = BWAPI::UnitTypes::Protoss_Nexus;
+    BWAPI::Position enemies(enemyLoc);
+    //std::cout << "new expansion at: " << enemyLoc.x << enemyLoc.y << "\n";
 
     //This does not cover the case of a building being place on a tile but it should be good enough for now.
     for (const BWEM::Area& area : theMap.Areas())
@@ -140,13 +144,25 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
             if (base.Location() == BWAPI::Broodwar->self()->getStartLocation() || alreadyUsingTiles(base.Location(), type.tileWidth(), type.tileHeight())) continue;
 
             int distanceToNewBase = 0;
+            int distanceToEnemy = 0;
             const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
+            const BWEM::CPPath pathToEnemy = theMap.GetPath(enemies, BWAPI::Position(base.Location()), &distanceToEnemy);
 
             if (distanceToNewBase == -1) continue;
 
-            if (distanceToNewBase < distance)
+            if (distanceToEnemy && distanceToEnemy != 0)
             {
-                distance = distanceToNewBase;
+                finalDistance = static_cast<double>(distanceToNewBase) / distanceToEnemy;
+
+            }
+            else
+            {
+                finalDistance = static_cast<double>(distanceToNewBase);
+            }
+
+            if (finalDistance < distance)
+            {
+                distance = finalDistance;
                 closestDistance = base.Location();
             }
         }
@@ -284,6 +300,12 @@ void BuildingPlacer::drawPoweredTiles()
 PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 {
     PlacementInfo information;
+
+    if (!enemyLoc || enemyLoc == BWAPI::TilePosition(999, 999))
+    {
+        enemyLoc = buildReference->commanderReference->enemy().main.value_or(BWAPI::TilePosition(999, 999));
+        std::cout << "new enemy loc at: " << enemyLoc.x << enemyLoc.y << "\n";
+    }
 
     switch(type)
     {
