@@ -39,7 +39,7 @@ void BOIDS::squadFlock(Squad* squad) {
 		}
 	}
 
-	for (const auto& unit : squad->units) {
+	for (const auto& unit : squad->info.units) {
 		if (!unit->exists()) {
 			continue;
 		}
@@ -80,7 +80,7 @@ void BOIDS::squadFlock(Squad* squad) {
 		double outer_radius;
 
 		// Update leader radii map if needed
-		const int squadSize = CombatManager::unitSquadMap[unit]->units.size();
+		const int squadSize = CombatManager::unitSquadMap[unit]->info.units.size();
 
 		// Only calculate outer_radius if squad size has changed since the unit's previous calculation
 		// Saves performance since sqrt is expensive
@@ -88,7 +88,7 @@ void BOIDS::squadFlock(Squad* squad) {
 			outer_radius = leaderRadiusMap[squad->leader].second;
 		}
 		else {
-			outer_radius = max(spacing * 1.5, spacing + sqrt(squad->units.size()) * spacing);
+			outer_radius = max(spacing * 1.5, spacing + sqrt(squad->info.units.size()) * spacing);
 			leaderRadiusMap[unit].first = squadSize;
 			leaderRadiusMap[unit].second = outer_radius;
 		}

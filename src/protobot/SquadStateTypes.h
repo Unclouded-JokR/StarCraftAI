@@ -45,7 +45,21 @@ public:
 private:
 	ReinforcingState() {};
 	ReinforcingState(const ReinforcingState&);
-	ReinforcingState& operator=(const AttackingState&) {};
+	ReinforcingState& operator=(const ReinforcingState&) {};
+};
+
+// ReinforcingState occurs when the squad leaves its assigned defensive position (i.e. chokepoint) to help a squad that is being attacked
+class KitingState : public SquadState {
+public:
+	void Enter(Squad* squad);
+	void Update(Squad* squad);
+	void Exit(Squad* squad);
+	std::string getName();
+	static SquadState& getInstance();
+private:
+	KitingState() {};
+	KitingState(const KitingState&);
+	KitingState& operator=(const KitingState&) {};
 };
 
 // IdleState occurs when a squad has not been told to do anything (i.e. new squad created without instructions)

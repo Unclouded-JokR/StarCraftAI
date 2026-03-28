@@ -12,23 +12,38 @@
 
 class SquadState;
 
-class Squad {
+class SquadInfo {
 public:
 	int squadId;
 	BWAPI::Color squadColor;
-	BWAPI::Unit leader;
 	std::vector<BWAPI::Unit> units;
+	BWAPI::Position commandPos;
+	BWAPI::Position currentDefensivePosition;
+	BWAPI::Position currentReinforcePosition;
+	BWAPI::Position currentAttackPosition;
+	BWAPI::Position kitePos;
+	Path currentPath;
+	int currentPathIdx;
+	SquadState* currentState;
 
-	BWAPI::Position commandPos = BWAPI::Positions::Invalid;
-	BWAPI::Position currentDefensivePosition = BWAPI::Positions::Invalid;
-	BWAPI::Position currentReinforcePosition = BWAPI::Positions::Invalid;
-	BWAPI::Position currentAttackPosition = BWAPI::Positions::Invalid;
-	BWAPI::Position kitePos = BWAPI::Positions::Invalid;
+	SquadInfo() {
+		squadId = 0;
+		BWAPI::Position commandPos = BWAPI::Positions::Invalid;
+		BWAPI::Position currentDefensivePosition = BWAPI::Positions::Invalid;
+		BWAPI::Position currentReinforcePosition = BWAPI::Positions::Invalid;
+		BWAPI::Position currentAttackPosition = BWAPI::Positions::Invalid;
+		BWAPI::Position kitePos = BWAPI::Positions::Invalid;
 
-	Path currentPath = Path();
-	int currentPathIdx = 0;
+		Path currentPath = Path();
+		int currentPathIdx = 0;
+		SquadState* currentState = nullptr;
+	}
+};
 
-	SquadState* currentState = nullptr;
+class Squad {
+public:
+	BWAPI::Unit leader;
+	SquadInfo info;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor);
 
@@ -39,7 +54,7 @@ public:
 	void drawDebugInfo();
 
 	bool operator==(const Squad& other) noexcept(true) {
-		return this->squadId == other.squadId;
+		return this->info.squadId == other.info.squadId;
 	}
 	bool operator!=(const Squad& other) noexcept(true) {
 		return !(*this == other);
@@ -50,4 +65,9 @@ private:
 	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
 	void attackUnit(BWAPI::Unit unit, BWAPI::Unit target);
 	void kitingAttack(BWAPI::Unit unit, BWAPI::Unit target);
+};
+
+class SharedSquad {
+	vector<Squad*> Squads;
+	map<Squad*, SquadInfo> savedSquadInfoMap;
 };

@@ -12,13 +12,13 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
-	for (const auto& squad : Squads) {
-		BOIDS::squadFlock(squad);
-	}
-
 	/*for (const auto& squad : Squads) {
-		squad->onFrame();
+		BOIDS::squadFlock(squad);
 	}*/
+
+	for (const auto& squad : Squads) {
+		squad->onFrame();
+	}
 
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
 		AStar::fillAreaPathCache();
@@ -48,7 +48,7 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 		unitSquadMap.erase(unit);
 		allUnits.erase(unit);
 
-		if (squad->units.empty()) {
+		if (squad->info.units.empty()) {
 			removeSquad(squad);
 		}
 
@@ -61,7 +61,7 @@ void CombatManager::attack(BWAPI::Position position) {
 	globalAttackPosition = position;
 	
 	for (const auto& squad : Squads) {
-		squad->commandPos = position;
+		squad->info.commandPos = position;
 		squad->setState(AttackingState::getInstance());
 	}
 }
@@ -69,7 +69,7 @@ void CombatManager::attack(BWAPI::Position position) {
 void CombatManager::defend(BWAPI::Position position) {
 	attacking = false;
 	for (auto& squad : IdleSquads) {
-		squad->currentDefensivePosition = position;
+		squad->info.currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
 	}
 }
@@ -77,17 +77,17 @@ void CombatManager::defend(BWAPI::Position position) {
 void CombatManager::reinforce(BWAPI::Position position) {
 	attacking = false;
 	for (auto& squad : DefendingSquads) {
-		if (squad->currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
+		if (squad->info.currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
 			continue;
 		}
 		else {
-			squad->commandPos = position;
+			squad->info.commandPos = position;
 			squad->setState(ReinforcingState::getInstance());
 		}
 	}
 
 	for (auto& squad : ReinforcingSquads) {
-		squad->commandPos = position;
+		squad->info.commandPos = position;
 	}
 }
 
@@ -105,11 +105,11 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 	Squad* newSquad = new Squad(leaderUnit, id, randomColor);
 	Squads.push_back(newSquad);
 
-	newSquad->currentState = &IdleState::getInstance();
+	newSquad->info.currentState = &IdleState::getInstance();
 	newSquad->setState(IdleState::getInstance());
 
 	if (attacking) {
-		newSquad->commandPos = globalAttackPosition;
+		newSquad->info.commandPos = globalAttackPosition;
 		newSquad->setState(AttackingState::getInstance());
 	}
 
@@ -129,7 +129,7 @@ void CombatManager::removeSquad(Squad* squad) {
 
 	// Handling filled chokepoint locations in strategy manager
 	for (const auto& cp : commanderReference->strategyManager.ProtoBotArea_SquadPlacements) {
-		if (cp != nullptr && squad->currentDefensivePosition == BWAPI::Position(cp->Center())) {
+		if (cp != nullptr && squad->info.currentDefensivePosition == BWAPI::Position(cp->Center())) {
 			commanderReference->strategyManager.PositionsFilled[cp] = false;
 
 #ifdef DEBUG_CM
@@ -160,7 +160,7 @@ bool CombatManager::assignUnit(BWAPI::Unit unit)
 
 	// Assigning to an existing squad if available
 	for (auto& squad : Squads) {
-		if (squad->units.size() < MAX_SQUAD_SIZE) {
+		if (squad->info.units.size() < MAX_SQUAD_SIZE) {
 			squad->addUnit(unit);
 			allUnits.insert(unit);
 			unitSquadMap[unit] = squad;
@@ -208,7 +208,7 @@ BWAPI::Unit CombatManager::getAvailableUnit() {
 
 BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> filter) {
 	for (auto& squad : Squads) {
-		for (auto it = squad->units.begin(); it != squad->units.end(); ++it) {
+		for (auto it = squad->info.units.begin(); it != squad->info.units.end(); ++it) {
 			BWAPI::Unit unit = *it;
 			if (!unit || !unit->exists()) continue;
 			if (commanderReference->scoutingManager.isScout(unit)) continue;
@@ -293,8 +293,8 @@ void CombatManager::handleTextCommand(std::string text) {
 #endif
 		}
 
-		vector<BWAPI::Position> positions = squad->currentPath.positions;
-		const int dist = squad->currentPath.distance;
+		vector<BWAPI::Position> positions = squad->info.currentPath.positions;
+		const int dist = squad->info.currentPath.distance;
 		if (positions.size() > 1) {
 			BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size() - 1).x, positions.at(positions.size() - 1).y, dist);
 		}
@@ -318,13 +318,13 @@ bool CombatManager::detachUnit(BWAPI::Unit unit) {
 
 	squad->removeUnit(unit);
 
-	if (squad->units.empty()) {
+	if (squad->info.units.empty()) {
 		removeSquad(squad);
 	}
 	else {
 		// Optional: ensure leader is valid after removal
 		if (!squad->leader || !squad->leader->exists()) {
-			squad->leader = squad->units.front();
+			squad->leader = squad->info.units.front();
 		}
 	}
 
