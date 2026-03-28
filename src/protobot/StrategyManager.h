@@ -124,8 +124,8 @@ struct UnitProductionGameCounter {
 enum UnitProductionGoals {
 	SATURATE_WORKERS, //Max 75 workers.
 	EARLY_ZEALOTS, //3 Zealots early.
-	INFINITE_DRAGOONS,
 	DARK_TEMPLAR_ATTEMPT, //2 Dark Templar's early if against Terran or Protoss.
+	INFINITE_DRAGOONS,
 	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
 
 	//Edge case productions

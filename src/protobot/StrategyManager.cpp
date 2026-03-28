@@ -1214,14 +1214,18 @@ void StrategyManager::updateUnitProductionGoals()
 void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceRequests)
 {
 	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
-	for (UnitProductionGoals productionGoal : unitProductionGoals)
+	//Prevents construction of units outside Build Order.
+	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
+	const std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+	for (const UnitProductionGoals productionGoal : unitProductionGoals)
 	{
 		switch (productionGoal)
 		{
 			case SATURATE_WORKERS:
-				std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-
+		
 				for (NexusEconomy nexusEconomy : nexusEconomies)
 				{
 					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
@@ -1231,10 +1235,76 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);
-						std::cout << "Training Worker for Nexus: " << nexusEconomy.workers.size() << " < " << nexusEconomy.maximumWorkers << "\n";
+						//std::cout << "Training Worker for Nexus: " << nexusEconomy.workers.size() << " < " << nexusEconomy.maximumWorkers << "\n";
 					}
 				}
+				break;
 
+			case EARLY_ZEALOTS:
+				if (trainingBlock) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					//unitProductionCounter.zealots
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.zealots_requests + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, building);
+					}
+				}
+				break;
+			case DARK_TEMPLAR_ATTEMPT:
+				/*if (trainingBlock) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.dark_templars_requests + unitProductionCounter.dark_templars + 1) <= MAX_EARLY_ZEALOTS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dark_Templar, building);
+					}
+				}*/
+				break;
+			case INFINITE_DRAGOONS:
+				if (trainingBlock) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted())
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, building);
+					}
+				}
+				break;
+			case OBSERVER_SCOUTS:
+				if (trainingBlock) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Observatory) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.observatory_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, building);
+					}
+				}
+				break;
+			default:
 				break;
 		}
 	}
