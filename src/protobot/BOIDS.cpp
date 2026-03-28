@@ -21,8 +21,22 @@ void BOIDS::squadFlock(Squad* squad) {
 	// Spatial Paritioning optimization
 	unordered_map<SeparationCell, vector<BWAPI::Unit>, SeparationCellHash> unitGrid;
 	for (auto& unit : BWAPI::Broodwar->self()->getUnits()) {
-		const SeparationCell cell = unitToCell(unit->getPosition());
-		unitGrid[cell].push_back(unit);
+		SeparationCell cell;
+		if (unit->getType().isBuilding()) {
+			const int tileWidth = unit->getType().tileWidth();
+			const int tileHeight = unit->getType().tileHeight();
+
+			for (int x = -(tileWidth / 2); x < tileWidth / 2; x++) {
+				for (int y = -(tileHeight / 2); y < tileHeight / 2; y++) {
+					cell = unitToCell(unit->getPosition() + BWAPI::Position(x * 32, y * 32));
+					unitGrid[cell].push_back(unit);
+				}
+			}
+		}
+		else {
+			cell = unitToCell(unit->getPosition());
+			unitGrid[cell].push_back(unit);
+		}
 	}
 
 	for (const auto& unit : squad->units) {
@@ -93,9 +107,11 @@ void BOIDS::squadFlock(Squad* squad) {
 		VectorPos separationVec = VectorPos(0, 0);
 		VectorPos leaderSeparationVec = VectorPos(0, 0);
 
+		SeparationCell thisCell = unitToCell(unit->getPosition());
+		auto& squadMap = CombatManager::unitSquadMap;
 		for (int dx = -1; dx <= 1; dx++) {
 			for (int dy = -1; dy <= 1; dy++) {
-				for (const auto& neighbor : unitGrid[unitToCell(unit->getPosition()) + SeparationCell(dx, dy)]) {
+				for (const auto& neighbor : unitGrid[thisCell + SeparationCell(dx, dy)]) {
 					// If neighbor is the current unit, dont process
 					if (neighbor == unit) {
 						continue;
@@ -103,60 +119,67 @@ void BOIDS::squadFlock(Squad* squad) {
 
 					const VectorPos neighborPos = VectorPos(neighbor->getPosition().x, neighbor->getPosition().y);
 
-					// Don't apply separation to self if neighbor is a unit settling into their leader's radius
-					// If neighbor is a leader, apply separation to self 
-					if (CombatManager::unitSquadMap.find(neighbor) != CombatManager::unitSquadMap.end()) { // neighbor has a squad
-						const BWAPI::Unit neighborLeader = CombatManager::unitSquadMap[neighbor]->leader;
-						const VectorPos neighborLeaderPos = VectorPos(neighborLeader->getPosition());
-						double distToNeighbor;
+					Squad* unitSquad = squadMap[unit];
+					Squad* neighborSquad;
+					BWAPI::Unit neighborLeader;
+					VectorPos neighborLeaderPos;
+					if (squadMap.find(neighbor) == squadMap.end()) {
+						neighborSquad = nullptr;
+						neighborLeader = nullptr;
+						neighborLeaderPos = VectorPos();
+					}
+					else {
+						neighborSquad = squadMap[neighbor];
+						neighborLeader = neighborSquad->leader;
+						neighborLeaderPos = VectorPos(neighborLeader->getPosition());
+					}
 
-						// unitDistanceCache keeps distances between units for this frame.
-						// If neighbor has not seen another unit yet or if the neighbor has not seen this unit, then this unit should store the distance first
-						// Otherwise the neighbor has seen this unit before and has tracked the distance already so use that distance.
-						if (unitDistanceCache.find(neighbor) != unitDistanceCache.end()) {
-							if (unitDistanceCache[neighbor].find(unit) != unitDistanceCache[neighbor].end()) {
-								distToNeighbor = unitDistanceCache[neighbor][unit];
-							}
-							else {
-								distToNeighbor = unitPos.getDistance(neighborPos);
-								unitDistanceCache[unit][neighbor] = distToNeighbor;
-							}
+					// unitDistanceCache keeps distances between units for this frame.
+					// If neighbor has not seen another unit yet or if the neighbor has not seen this unit, then this unit should store the distance first
+					// Otherwise the neighbor has seen this unit before and has tracked the distance already so use that distance.
+					double distToNeighbor;
+					if (unitDistanceCache.find(neighbor) != unitDistanceCache.end()) {
+						if (unitDistanceCache[neighbor].find(unit) != unitDistanceCache[neighbor].end()) {
+							distToNeighbor = unitDistanceCache[neighbor][unit];
 						}
 						else {
 							distToNeighbor = unitPos.getDistance(neighborPos);
-							unitDistanceCache[unit][neighbor] = distToNeighbor;
 						}
+					}
+					else {
+						distToNeighbor = unitPos.getDistance(neighborPos);
+						unitDistanceCache[unit][neighbor] = distToNeighbor;
+					}
 
-						const bool sameSquad = CombatManager::unitSquadMap[unit] == CombatManager::unitSquadMap[neighbor];
-						const bool isNeighborLeader = CombatManager::unitSquadMap[neighbor]->leader == neighbor;
-						const bool neighborInLeaderRadius = inLeaderRadius(neighborPos, leaderPos, outer_radius);
-						const bool unitInLeaderRadius = inLeaderRadius(unitPos, leaderPos, outer_radius);
+					const bool isSameSquad = unitSquad && neighborSquad && unitSquad == neighborSquad;
+					const bool isNeighborLeader = neighborLeader && neighborLeader == neighbor;
+					const bool neighborInLeaderRadius = neighborLeaderPos != VectorPos() && inLeaderRadius(neighborPos, neighborLeaderPos, outer_radius);
+					const bool unitInLeaderRadius = inLeaderRadius(unitPos, leaderPos, outer_radius);
 
-						if (sameSquad) { // same squad
-							if (isNeighborLeader) {
-								leaderSeparationVec += (unitPos - neighborPos);
-							}
-							else if (!unitInLeaderRadius && neighborInLeaderRadius) { // unit not in radius but neighbor is
-								separationVec += VectorPos(0, 0);
-							}
-							else if (isZeroUnitVelocity) {
-								separationVec += (unitPos - neighborPos);
-								continue;
-							}
-							else {
-								separationVec += getSeparationSteering(unitPos, neighborPos, unitVelocity);
-							}
-						}
-						else if (isNeighborLeader) { // neighbor is a leader of different squad
+					if (isSameSquad) { // same squad
+						if (isNeighborLeader) {
 							leaderSeparationVec += (unitPos - neighborPos);
 						}
+						else if (!unitInLeaderRadius && neighborInLeaderRadius) { // unit not in radius but neighbor is
+							separationVec += VectorPos(0, 0);
+						}
+						else if (isZeroUnitVelocity) {
+							separationVec += (unitPos - neighborPos);
+							continue;
+						}
 						else {
-							if (isZeroUnitVelocity) {
-								separationVec += (unitPos - neighborPos);
-								continue;
-							}
 							separationVec += getSeparationSteering(unitPos, neighborPos, unitVelocity);
 						}
+					}
+					else if (isNeighborLeader) { // neighbor is a leader of different squad
+						leaderSeparationVec += (unitPos - neighborPos);
+					}
+					else {
+						if (isZeroUnitVelocity) {
+							separationVec += (unitPos - neighborPos);
+							continue;
+						}
+						separationVec += getSeparationSteering(unitPos, neighborPos, unitVelocity);
 					}
 				}
 			}
@@ -177,22 +200,13 @@ void BOIDS::squadFlock(Squad* squad) {
 		else {
 			terrainVec = getTerrainSteering(unit, unitPos, leaderPos, unitVelocity);
 			terrainSqDistance = terrainVec.getSqDistance();
-			if (terrainSqDistance) {
+			if (terrainSqDistance > 0) {
 				terrainDirMap[unit] = terrainVec;
 				terrainFrameMap[unit] = TERRAIN_AVOIDANCE_FRAMES;
 			}
 		}
 
 		// BOIDS VECTOR
-		// Before applying leader vector, check if leaderVector is pulling us into the wall
-		// If so, lower strength of finalLeaderVec
-		if (terrainSqDistance > 0) {
-			VectorPos terrainNorm = terrainVec.normalized();
-
-			if (finalLeaderVec.dot(terrainNorm) < 0) {
-				finalLeaderVec *= 0.4;
-			}
-		}
 
 		VectorPos boidsVector = finalLeaderVec + finalSeparationVec;
 
@@ -341,7 +355,7 @@ SeparationCell BOIDS::unitToCell(BWAPI::Position pos) {
 }
 
 bool BOIDS::inLeaderRadius(VectorPos unitPos, VectorPos leaderPos, double leaderRadius) {
-	if (unitPos.getDistance(leaderPos) <= leaderRadius) {
+	if (unitPos.getApproxDistance(leaderPos) <= leaderRadius) {
 		return true;
 	}
 	else {
