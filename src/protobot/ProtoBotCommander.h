@@ -98,6 +98,11 @@ struct ProtoBotRequestCounter {
 	int photon_cannon_requests = 0;
 
 	//Upgrades
+	bool singularity_requests = false;
+	int groundWeapons_requests = 0;
+	int groundArmor_requests = 0;
+	int plasmaShields_requests = 0;
+	int legEnhancements_requests = 0;
 };
 
 class ProtoBotCommander

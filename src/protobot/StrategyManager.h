@@ -4,13 +4,14 @@
 #include <vector>
 #include <bwem.h>
 #include <unordered_map>
+#include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
 
 #define FRAMES_PER_SECOND 24
-#define SUPPLY_THRESHOLD_EARLYGAME 3
-#define SUPPLY_THRESHOLD_MIDGAME 5
-#define SUPPLY_THRESHOLD_LATEGAME 8
+#define SUPPLY_THRESHOLD_EARLYGAME 4
+#define SUPPLY_THRESHOLD_MIDGAME 6
+#define SUPPLY_THRESHOLD_LATEGAME 9
 #define MIDGAME_TIME 5
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
@@ -50,7 +51,7 @@ enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
 enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
 
 //Different from the information managers friendly unit counter since this include "Created" units as well.
-struct ProtoBotUnitCount
+struct ProtoBotProductionCount
 {
 	//Units
 	int created_workers = 0;
@@ -72,6 +73,11 @@ struct ProtoBotUnitCount
 	int created_pylons = 0;
 
 	//Upgrades
+	bool singularity_requests = false;
+	int groundWeapons_requests = 0;
+	int groundArmor_requests = 0;
+	int plasmaShields_requests = 0;
+	int legEnhancements_requests = 0;
 };
 
 struct ProductionGoals
@@ -138,6 +144,10 @@ enum UpgradeProductionGoals {
 	SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS //Same reasoning as Zealots. Should make them stronger if we dont have gas.
 };
 
+struct PotentionalConstruct {
+
+};
+
 struct Action {
 	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
 	ActionType type = ACTION_NONE;
@@ -191,14 +201,15 @@ private:
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 
 	UnitProductionGameCounter unitProductionCounter;
-	ProtoBotUnitCount ProtoBot_createdUnitCount;
+	ProtoBotProductionCount ProtoBot_createdUnitCount;
 
 	BWAPI::Unitset resourceDepots; 
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
 	BWAPI::Unitset workers;
 
-	std::unordered_set<UnitProductionGoals> activeGoals;
+	std::set<UnitProductionGoals> unitProductionGoals;
+	std::set<UpgradeProductionGoals> upgradeProductionGoals;
 
 	bool opponentRaceNotKnown = true;
 

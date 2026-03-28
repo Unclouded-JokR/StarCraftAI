@@ -1097,22 +1097,22 @@ void StrategyManager::updateUnitProductionGoals()
 	//Probes
 	if (request_count.worker_requests + unitProductionCounter.worker < MAX_WORKERS)
 	{
-		activeGoals.insert(SATURATE_WORKERS);
+		unitProductionGoals.insert(SATURATE_WORKERS);
 	}
 	else
 	{
-		activeGoals.erase(SATURATE_WORKERS);
+		unitProductionGoals.erase(SATURATE_WORKERS);
 	}
 
 	//Zealots 
 	//Always have 3 zealots at the beggining of the game unless the build order we have focuses dragoons then dont attempt to create any zealots.
 	if ((request_count.zealots_requests + unitProductionCounter.zealots < MAX_EARLY_ZEALOTS && request_count.dragoons_requests + unitProductionCounter.dragoons < 1))
 	{
-		activeGoals.insert(EARLY_ZEALOTS);
+		unitProductionGoals.insert(EARLY_ZEALOTS);
 	}
 	else
 	{
-		activeGoals.erase(EARLY_ZEALOTS);
+		unitProductionGoals.erase(EARLY_ZEALOTS);
 	}
 
 	//Dragoons
@@ -1120,17 +1120,17 @@ void StrategyManager::updateUnitProductionGoals()
 	//Will be added once we have made + planned 3 zealots or have atleast made 1 dragoon during build order.
 	if ((request_count.zealots_requests + unitProductionCounter.zealots > MAX_EARLY_ZEALOTS || request_count.dragoons_requests + unitProductionCounter.dragoons >= 1))
 	{
-		activeGoals.insert(INFINITE_DRAGOONS);
+		unitProductionGoals.insert(INFINITE_DRAGOONS);
 	}
 
 	//Minimum Observer Production
 	if (request_count.observers_requests + unitProductionCounter.observers < MAX_OBSERVERS_FOR_SCOUTING)
 	{
-		activeGoals.insert(OBSERVER_SCOUTS);
+		unitProductionGoals.insert(OBSERVER_SCOUTS);
 	}
 	else
 	{
-		activeGoals.erase(OBSERVER_SCOUTS);
+		unitProductionGoals.erase(OBSERVER_SCOUTS);
 	}
 
 	//Constant Observer Production
@@ -1151,21 +1151,24 @@ void StrategyManager::updateUnitProductionGoals()
 	{
 		if (request_count.dark_templars_requests + unitProductionCounter.dark_templars < MAX_DARK_TEMPLARS)
 		{
-			activeGoals.insert(DARK_TEMPLAR_ATTEMPT);
+			unitProductionGoals.insert(DARK_TEMPLAR_ATTEMPT);
 		}
 		else
 		{
-			activeGoals.erase(DARK_TEMPLAR_ATTEMPT);
+			unitProductionGoals.erase(DARK_TEMPLAR_ATTEMPT);
 		}
 	}
 
 	//Photon Cannons (Yes I know they are not combat units but we will leave this here for now)
 	//InformationManager::Instance().enemyHasAirTech();
 
-	BWAPI::Broodwar->drawTextScreen(5, 30, "Production Goals");
+	//[TODO]
+	//Still need to add infinite zealot logic but do that later.
+
+	BWAPI::Broodwar->drawTextScreen(5, 30, "Production Goals:");
 	int index = 0;
 
-	for (UnitProductionGoals goal : activeGoals)
+	for (UnitProductionGoals goal : unitProductionGoals)
 	{
 		std::string temp;
 
