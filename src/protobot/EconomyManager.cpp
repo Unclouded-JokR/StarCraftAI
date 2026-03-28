@@ -330,6 +330,7 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
 {
     const BWEM::Base* myBase = nullptr;
     bool found = false;
+
     for (const Area& area : theMap.Areas())
     {
         for (const BWEM::Base& base : area.Bases()) {
@@ -358,16 +359,17 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
         {
             for (const auto* geyser : myBase->Geysers())
             {
+                if (geyser == nullptr) continue;
+
                 newNexus.vespeneGyser = geyser->Unit();
             }
         }
-       
-
     }
 
-    //std::cout << mineralsToReturn.size();
-   // return mineralsToReturn;
+    newNexus.optimalWorkerAmount = newNexus.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
+    newNexus.maximumWorkers = newNexus.optimalWorkerAmount + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 
+   //std::cout << mineralsToReturn.size() << "\n";
 }
 
 std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
@@ -377,11 +379,6 @@ std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
 #pragma endregion
 
 #pragma region Commander Requests
-void EconomyManager::needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus)
-{
-    commanderReference->requestUnit(worker, nexus);
-}
-
 bool EconomyManager::checkRequestAlreadySent(int unitID)
 {
     return commanderReference->alreadySentRequest(unitID);

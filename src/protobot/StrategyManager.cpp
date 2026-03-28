@@ -81,6 +81,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 	updateUnitProductionGoals();
 
+	planUnitProduction(resourceRequests);
+
 	std::vector<Action> actionsToReturn;
 
 
@@ -1095,7 +1097,7 @@ void StrategyManager::updateUnitProductionGoals()
 	std::vector<Squad *> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
 	//Probes
-	if (request_count.worker_requests + unitProductionCounter.worker < MAX_WORKERS)
+	if (request_count.worker_requests + ProtoBot_createdUnitCount.created_workers < MAX_WORKERS)
 	{
 		unitProductionGoals.insert(SATURATE_WORKERS);
 	}
@@ -1207,6 +1209,35 @@ void StrategyManager::updateUnitProductionGoals()
 		index++;
 	}
 
+}
+
+void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceRequests)
+{
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+
+	for (UnitProductionGoals productionGoal : unitProductionGoals)
+	{
+		switch (productionGoal)
+		{
+			case SATURATE_WORKERS:
+				std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+				for (NexusEconomy nexusEconomy : nexusEconomies)
+				{
+					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
+						!nexusEconomy.nexus->isTraining() &&
+						nexusEconomy.nexus->isCompleted() &&
+						nexusEconomy.workers.size() < nexusEconomy.maximumWorkers && 
+						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);
+						std::cout << "Training Worker for Nexus: " << nexusEconomy.workers.size() << " < " << nexusEconomy.maximumWorkers << "\n";
+					}
+				}
+
+				break;
+		}
+	}
 }
 
 void StrategyManager::updateUpgradeGoals()

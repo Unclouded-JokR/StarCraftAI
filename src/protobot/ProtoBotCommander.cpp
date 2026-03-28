@@ -98,6 +98,10 @@ void ProtoBotCommander::onFrame()
     InformationManager::Instance().onFrame();
 	timerManager.stopTimer(TimerManager::Information);
 
+	timerManager.startTimer(TimerManager::Economy);
+	economyManager.onFrame();
+	timerManager.stopTimer(TimerManager::Economy);
+
 	timerManager.startTimer(TimerManager::Strategy);
 	std::vector<Action> actions = strategyManager.onFrame(resourceRequests);
 
@@ -133,11 +137,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame(resourceRequests);
 	timerManager.stopTimer(TimerManager::Build);
-
-	//Leaving these in a specific order due to cases like building manager possibly needing units.
-	timerManager.startTimer(TimerManager::Economy);
-	economyManager.onFrame();
-	timerManager.stopTimer(TimerManager::Economy);
 
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
