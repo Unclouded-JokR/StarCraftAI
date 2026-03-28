@@ -661,14 +661,16 @@ void ProtoBotCommander::drawDebugInformation()
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 
-	if (!drawUnitDebug) return;
-
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
 	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(170, 5, "%cOpponent Race: %s", BWAPI::Text::White, strategyManager.opponentRace.c_str());
 
-	drawBwapiResourceInfo(5, 102);
+	if (!drawUnitDebug) return;
+
+	//Need to find a place to put this on the screen, might need to have a /command to get the stuff I need.
+	//drawBwapiResourceInfo(5, 102);
+
 	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
 	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
 	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);

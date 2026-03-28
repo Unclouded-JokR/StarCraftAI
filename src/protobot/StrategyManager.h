@@ -49,6 +49,31 @@ enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
 enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
 enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
 
+//Different from the information managers friendly unit counter since this include "Created" units as well.
+struct ProtoBotUnitCount
+{
+	//Units
+	int created_workers = 0;
+	int created_zealots = 0;
+	int created_dragoons = 0;
+	int created_dark_templars = 0;
+	int created_observers = 0;
+
+	//Buildings
+	int created_nexus = 0;
+	int created_gateway = 0;
+	int created_forge = 0;
+	int created_cybernetics = 0;
+	int created_roboticsFacility = 0;
+	int created_observatory = 0;
+	int created_citadel = 0;
+	int created_templarArchives = 0;
+	int created_photonCannons = 0;
+	int created_pylons = 0;
+
+	//Upgrades
+};
+
 struct ProductionGoals
 {
 	int nexusCount = 0;
@@ -165,8 +190,8 @@ private:
 	void checkForOpponentRace();
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 
-	//Need to delete refrence after game complete, should also do the same for incomplete building counter and request counter.
 	UnitProductionGameCounter unitProductionCounter;
+	ProtoBotUnitCount ProtoBot_createdUnitCount;
 
 	BWAPI::Unitset resourceDepots; 
 	BWAPI::Unitset unitProduction; //Units that can create combat units

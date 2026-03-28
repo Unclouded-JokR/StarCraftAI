@@ -29,7 +29,7 @@ void TimerManager::displayTimers(int x, int y)
     for (size_t i(0); i < moduleTimers.size(); ++i)
     {
         const double elapsed = moduleTimers[i].getElapsedTimeInMilliSec();
-        if (elapsed > MAX_TIME_BEFORE_FLAG)
+        if (elapsed > 85)
         {
             BWAPI::Broodwar->printf("Timer Debug (frame %d): %s %lf", BWAPI::Broodwar->getFrameCount(), timerNames[i].c_str(), elapsed);
         }
