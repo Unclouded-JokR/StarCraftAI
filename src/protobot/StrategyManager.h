@@ -22,6 +22,12 @@
 #define MAX_WORKERS 75
 #define MAX_DARK_TEMPLARS 2
 #define MAX_OBSERVERS_FOR_SCOUTING 4
+#define MAX_SINGULARITY_UPGRADES 1
+#define MAX_GROUND_ARMOR_UPGRADES 3
+#define MAX_GROUND_WEAPONS_UPGRADES 3
+#define MAX_PLASMA_SHIELD_UPGRADES 3 
+#define MAX_LEG_ENHANCEMENTS_UPGRADES 1
+
 #define FRAMES_FOR_NO_GAS_ZEALOT_PUMP 5000 //Incase new production has to limit # of requests, value should also be harder.
 
 
@@ -213,7 +219,7 @@ private:
 	void checkForOpponentRace();
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 	bool haveRequiredTech(BWAPI::UnitType);
-	void getUpgradesBeingCreated();
+	void updateUpgradesBeingCreated();
 
 	UnitProductionGameCounter unitProductionCounter;
 	ProtoBotProductionCount ProtoBot_createdUnitCount;
@@ -222,6 +228,11 @@ private:
 	BWAPI::Unitset resourceDepots;
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
+
+	BWAPI::Unitset cybernetics;
+	BWAPI::Unitset forges;
+	BWAPI::Unitset citadels;
+
 	BWAPI::Unitset workers;
 
 	std::set<UnitProductionGoals> unitProductionGoals;
@@ -251,7 +262,6 @@ public:
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
 
-
 	//New stuff I am adding
 	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
 
@@ -270,7 +280,7 @@ public:
 	//BWAPI::Unitset plannedBuildingProduction();
 
 	void planUnitProduction(std::vector<ResourceRequest>& resourceRequests);
-
+	void planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests);
 
 	//Not you
 	BWAPI::Unitset getProtoBotBuildings();

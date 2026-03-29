@@ -80,8 +80,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	spenderManager.OnFrame(resourceRequests);
 
 	updateUnitProductionGoals();
+	updateUpgradeGoals();
 
 	planUnitProduction(resourceRequests);
+	planUpgradeProduction(resourceRequests);
 
 	std::vector<Action> actionsToReturn;
 
@@ -803,6 +805,12 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 	{
 		upgradeProduction.erase(unit);
 	}
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge) forges.erase(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core) cybernetics.erase(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun) citadels.erase(unit);
 }
 
 void StrategyManager::onUnitCreate(BWAPI::Unit unit)
@@ -943,6 +951,11 @@ void StrategyManager::onUnitCreate(BWAPI::Unit unit)
 		upgradeProduction.insert(unit);
 	}
 
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge) forges.insert(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core) cybernetics.insert(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun) citadels.insert(unit);
 }
 
 void StrategyManager::onUnitComplete(BWAPI::Unit unit)
@@ -1318,6 +1331,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 
 void StrategyManager::updateUpgradesBeingCreated()
 {
+	//Reset values.
 	upgradesInProduction.singularity_charge = 0;
 	upgradesInProduction.ground_weapons = 0;
 	upgradesInProduction.ground_armor = 0;
@@ -1351,7 +1365,83 @@ void StrategyManager::updateUpgradesBeingCreated()
 
 void StrategyManager::updateUpgradeGoals()
 {
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
+	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
 
+	updateUpgradesBeingCreated();
+
+	if (request_count.singularity_requests + upgradesInProduction.singularity_charge + completedUpgradesCount.singularityCharge < MAX_SINGULARITY_UPGRADES)
+	{
+		upgradeProductionGoals.insert(RESEARCH_SINGULARITY_CHARGE);
+	}
+	else
+	{
+		upgradeProductionGoals.erase(RESEARCH_SINGULARITY_CHARGE);
+	}
+
+	int x = 250;
+	int y = 250;
+	BWAPI::Broodwar->drawTextScreen(x, y, "Upgarde Production Goals:");
+	int index = 0;
+	for (UpgradeProductionGoals goal : upgradeProductionGoals)
+	{
+		std::string temp;
+
+		switch (goal)
+		{
+			case RESEARCH_SINGULARITY_CHARGE:
+				temp = "RESEARCH_SINGULARITY_CHARGE";
+				break;
+			case RESEARCH_GROUND_WEAPONS:
+				temp = "RESEARCH_GROUND_WEAPONS";
+				break;
+			case RESEARCH_GROUND_ARMOR:
+				temp = "RESEARCH_GROUND_ARMOR";
+				break;
+			case RESEARCH_PLASMA_SHIELDS:
+				temp = "RESEARCH_PLASMA_SHIELDS";
+				break;
+			case SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS:
+				temp = "SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS";
+				break;
+			default:
+				temp = "UNKNOWN_GOAL";
+				break;
+		}
+
+		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
+		index++;
+	}
+}
+
+void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests)
+{
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
+	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
+
+	for (const UpgradeProductionGoals productionGoal : upgradeProductionGoals)
+	{
+		switch (productionGoal)
+		{
+			case RESEARCH_SINGULARITY_CHARGE:
+				for (const BWAPI::Unit unit : cybernetics)
+				{
+					if (commanderReference->alreadySentRequest(unit->getID()) == false &&
+						!unit->isTraining() &&
+						unit->isCompleted() && 
+						completedUnitsCount.dragoon >= 1 &&
+						(request_count.singularity_requests + upgradesInProduction.singularity_charge + completedUpgradesCount.singularityCharge + 1) == MAX_SINGULARITY_UPGRADES)
+					{
+						commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
+					}
+				}
+				break;
+		}
+	}
 }
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
