@@ -64,6 +64,11 @@ void ProtoBotCommander::onStart()
 
 	resourceRequests.clear();
 
+	std::cout << "Required Units for Templar\n";
+	for (auto tech : BWAPI::UnitTypes::Protoss_Dark_Templar.requiredUnits())
+	{
+		std::cout << tech.first << " : " << tech.second << "\n";
+	}
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
@@ -97,6 +102,10 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Information);
     InformationManager::Instance().onFrame();
 	timerManager.stopTimer(TimerManager::Information);
+
+	timerManager.startTimer(TimerManager::Economy);
+	economyManager.onFrame();
+	timerManager.stopTimer(TimerManager::Economy);
 
 	timerManager.startTimer(TimerManager::Strategy);
 	std::vector<Action> actions = strategyManager.onFrame(resourceRequests);
@@ -133,11 +142,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame(resourceRequests);
 	timerManager.stopTimer(TimerManager::Build);
-
-	//Leaving these in a specific order due to cases like building manager possibly needing units.
-	timerManager.startTimer(TimerManager::Economy);
-	economyManager.onFrame();
-	timerManager.stopTimer(TimerManager::Economy);
 
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
@@ -415,7 +419,7 @@ void ProtoBotCommander::removeApprovedRequests()
 
 			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
-			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") " 
+			std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
 				<< "\nFrame Request Created = " << it->frameRequestCreated
 				<< "\nFrame Request Approved = " << it->frameRequestApproved
 				<< "\nFrame Request Serviced = " << it->frameRequestServiced 

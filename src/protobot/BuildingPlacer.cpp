@@ -326,7 +326,6 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
     if (!enemyLoc || enemyLoc == BWAPI::Position(32, 32))
     {
         enemyLoc = BWAPI::Position(buildReference->commanderReference->enemy().main.value_or(BWAPI::TilePosition(1, 1)));
-        std::cout << "new enemy loc\n";
     }
 
     switch(type)

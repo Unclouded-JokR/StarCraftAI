@@ -825,7 +825,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
         builder.onFrame();
     }
 
-    pumpUnit();
+    //pumpUnit();
 
     //Debug
     //Will most likely need to add a building data class to make this easier to be able to keep track of buildings and what units they are creating.
@@ -841,7 +841,7 @@ bool BuildManager::shouldPreventUnitTraining(int currentSupply) const
         return false;
 
     const BuildOrder& bo = buildOrders[activeBuildOrderIndex];
-    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply < bo.blockUnitTrainingUntilSupply;
+    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply <= bo.blockUnitTrainingUntilSupply;
 }
 
 void BuildManager::pumpUnit()
@@ -857,25 +857,8 @@ void BuildManager::pumpUnit()
     for (BWAPI::Unit unit : buildings)
     {
         const BWAPI::UnitType type = unit->getType();
-        if (type == BWAPI::UnitTypes::Protoss_Gateway && !preventCombatUnitTraining && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()))
-        {
-            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
-            {
-                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
-            }
-            else
-            {
-                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
-            }
-        }
-        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !preventCombatUnitTraining && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
-        {
-            if (ProtoBot_Units.observer < 4)
-            {
-                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
+      
+        if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
         {
             if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !commanderReference->upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
             {

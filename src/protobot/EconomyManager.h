@@ -30,7 +30,6 @@ public:
 	BWAPI::Unit getAvalibleWorker(BWAPI::Position buildLocation);
 	BWAPI::Unit getUnitScout();
 	void getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusEconomy& nexusEconomy);
-	void needWorkerUnit(BWAPI::UnitType worker, BWAPI::Unit nexus);
 	int newMinerals;
 	int totalWorkers = 0;
 

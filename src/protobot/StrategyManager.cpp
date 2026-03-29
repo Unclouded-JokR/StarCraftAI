@@ -81,6 +81,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 	updateUnitProductionGoals();
 
+	planUnitProduction(resourceRequests);
+
 	std::vector<Action> actionsToReturn;
 
 
@@ -301,7 +303,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Gateway
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Gateway, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Gateway) &&
 					ProtoBot_buildings.gateway + incompleteBuildings.gateway + requests.gateway_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible) &&
 					ProtoBot_buildings.nexus >= ProtoBot_ProductionGoals.at(ProductionGoal_index).nexusCount)
@@ -313,7 +315,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Forge
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Forge) &&
 					ProtoBot_buildings.forge + incompleteBuildings.forge + requests.forge_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Forge, resourcesAvalible) &&
 					ProtoBot_buildings.gateway >= ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount)
@@ -325,7 +327,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Cybernetics
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Cybernetics_Core) &&
 					ProtoBot_buildings.cyberneticsCore + incompleteBuildings.cyberneticsCore + requests.cybernetics_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Cybernetics_Core, resourcesAvalible) &&
 					ProtoBot_buildings.forge >= ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount)
@@ -337,7 +339,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Robotics
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Robotics_Facility) &&
 					ProtoBot_buildings.roboticsFacility + incompleteBuildings.roboticsFacility + requests.robotics_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Robotics_Facility, resourcesAvalible) &&
 					ProtoBot_buildings.cyberneticsCore >= ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount)
@@ -349,7 +351,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Observatory
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Observatory) &&
 					ProtoBot_buildings.observatory + incompleteBuildings.observatory + requests.observatory_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Observatory, resourcesAvalible) &&
 					ProtoBot_buildings.roboticsFacility >= ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount)
@@ -361,7 +363,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Citadel
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) &&
 					ProtoBot_buildings.citadelOfAdun + incompleteBuildings.citadelOfAdun + requests.citadel_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, resourcesAvalible) &&
 					ProtoBot_buildings.observatory >= ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount)
@@ -373,7 +375,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Templar Archives
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Templar_Archives) &&
 					ProtoBot_buildings.templarArchives + incompleteBuildings.templarArchives + requests.templarArchives_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).templarArchivesCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Templar_Archives, resourcesAvalible) &&
 					ProtoBot_buildings.citadelOfAdun >= ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount)
@@ -446,7 +448,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Forge) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
 			{
 				//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 
@@ -454,7 +456,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//Only need 1 cybernetics core
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
 			{
 				//std::cout << "build action: requesting to warp forge\n";
 
@@ -462,7 +464,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//Should only build 1 robotics facility
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Robotics_Facility) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 			{
 				//std::cout << "build action: requesting to warp robotics facility\n";
 
@@ -470,7 +472,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//Only 1 observatory
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Observatory) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
 			{
 				//std::cout << "Build Action: requesting to warp observatory\n";
 
@@ -479,14 +481,14 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 			//2/3 Forge upgrade units
 
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 			{
 				//std::cout << "build action: requesting to warp citadel of adun\n";
 
 				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Citadel_of_Adun);
 			}
 
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Templar_Archives) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
 			{
 				//std::cout << "build action: requesting to warp templar archives\n";
 
@@ -1095,7 +1097,7 @@ void StrategyManager::updateUnitProductionGoals()
 	std::vector<Squad *> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
 	//Probes
-	if (request_count.worker_requests + unitProductionCounter.worker < MAX_WORKERS)
+	if (request_count.worker_requests + ProtoBot_createdUnitCount.created_workers < MAX_WORKERS)
 	{
 		unitProductionGoals.insert(SATURATE_WORKERS);
 	}
@@ -1164,8 +1166,9 @@ void StrategyManager::updateUnitProductionGoals()
 
 	//[TODO]
 	//Still need to add infinite zealot logic but do that later.
-
-	BWAPI::Broodwar->drawTextScreen(5, 30, "Production Goals:");
+	int x = 250;
+	int y = 300;
+	BWAPI::Broodwar->drawTextScreen(x, y, "Production Goals:");
 	int index = 0;
 
 	for (UnitProductionGoals goal : unitProductionGoals)
@@ -1203,10 +1206,112 @@ void StrategyManager::updateUnitProductionGoals()
 				break;
 		}
 
-		BWAPI::Broodwar->drawTextScreen(5, 30 + ((index + 1) * 10), "%s", temp.c_str());
+		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
 		index++;
 	}
 
+}
+
+void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceRequests)
+{
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+	//Prevents construction of units outside Build Order.
+	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
+	const std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+	//Add tech tree into production.
+
+	for (const UnitProductionGoals productionGoal : unitProductionGoals)
+	{
+		switch (productionGoal)
+		{
+			case SATURATE_WORKERS:
+		
+				for (NexusEconomy nexusEconomy : nexusEconomies)
+				{
+					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
+						!nexusEconomy.nexus->isTraining() &&
+						nexusEconomy.nexus->isCompleted() &&
+						nexusEconomy.workers.size() < nexusEconomy.maximumWorkers && 
+						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);
+					}
+				}
+				break;
+
+			case EARLY_ZEALOTS:
+
+				if (trainingBlock) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					//unitProductionCounter.zealots
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.zealots_requests + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, building);
+					}
+				}
+				break;
+
+			case DARK_TEMPLAR_ATTEMPT:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dark_Templar) == false) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.dark_templars_requests + unitProductionCounter.dark_templars + 1) <= MAX_EARLY_ZEALOTS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dark_Templar, building);
+					}
+				}
+				break;
+			case INFINITE_DRAGOONS:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dragoon) == false) break;
+
+				for (const BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted())
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, building);
+					}
+				}
+				break;
+			case OBSERVER_SCOUTS:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false) break;
+
+				for (const BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Observatory) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.observatory_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, building);
+					}
+				}
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 void StrategyManager::updateUpgradeGoals()
@@ -1269,50 +1374,54 @@ bool StrategyManager::shouldGasSteal()
 	return true;
 }
 
-bool StrategyManager::checkTechTree(BWAPI::UnitType unit, FriendlyBuildingCounter ProtoBot_Buildings)
+bool StrategyManager::haveRequiredTech(BWAPI::UnitType unit)
 {
+	const FriendlyBuildingCounter ProtoBot_Buildings = InformationManager::Instance().getFriendlyBuildingCounter();
 	const std::map<BWAPI::UnitType, int> requiredBuildings = unit.requiredUnits();
-	bool hasRequiredTech = true;
 
-	for (auto requiredBuilding : requiredBuildings)
+	bool haveRequiredTech = true;
+
+	for (const std::pair<const BWAPI::UnitType, int> requiredBuilding : requiredBuildings)
 	{
 		switch (requiredBuilding.first)
 		{
-			case BWAPI::UnitTypes::Protoss_Nexus:
-				if (ProtoBot_Buildings.nexus < requiredBuilding.second) hasRequiredTech = false;
-				break;
-
 			case BWAPI::UnitTypes::Protoss_Gateway:
-				if (ProtoBot_Buildings.gateway < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.gateway < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Forge:
-				if (ProtoBot_Buildings.forge < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.forge < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-				if (ProtoBot_Buildings.cyberneticsCore < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.cyberneticsCore < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-				if (ProtoBot_Buildings.roboticsFacility < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.roboticsFacility < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-				if (ProtoBot_Buildings.citadelOfAdun < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.citadelOfAdun < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Templar_Archives:
-				if (ProtoBot_Buildings.templarArchives < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.templarArchives < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Stargate:
-				if (ProtoBot_Buildings.stargate < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.stargate < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
+			case BWAPI::UnitTypes::Protoss_Observatory:
+				if (ProtoBot_Buildings.observatory < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+				if (ProtoBot_Buildings.roboticsSupportBay < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+				if (ProtoBot_Buildings.fleetBeacon < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+				if (ProtoBot_Buildings.arbiterTribunal < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			default:
+				break;
 		}
 	}
 
-
-	return hasRequiredTech;
+	return haveRequiredTech;
 }

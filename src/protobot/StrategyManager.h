@@ -125,8 +125,8 @@ enum UnitProductionGoals {
 	SATURATE_WORKERS, //Max 75 workers.
 	EARLY_ZEALOTS, //3 Zealots early.
 	DARK_TEMPLAR_ATTEMPT, //2 Dark Templar's early if against Terran or Protoss.
-	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
 	INFINITE_DRAGOONS,
+	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
 
 	//Edge case productions
 	SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS, //Should not have to use this. Covering the case where assimilators arent being made.
@@ -145,11 +145,15 @@ enum UpgradeProductionGoals {
 };
 
 struct PotentionalConstruct {
+	BWAPI::Unit buildingToTrain;
 
+	BWAPI::Unit unitToCreate;
+	BWAPI::UpgradeType upgradeToCreate = BWAPI::UpgradeTypes::Unknown;
+	BWAPI::Unit buildingToCreate;
 };
 
 struct Action {
-	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
+	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE };
 	ActionType type = ACTION_NONE;
 
 	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
@@ -178,7 +182,7 @@ class StrategyManager
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };
-	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate};
+	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate };
 	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;
 	int timer = 0;
@@ -199,11 +203,12 @@ private:
 	int activeDrillers();
 	void checkForOpponentRace();
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
+	bool haveRequiredTech(BWAPI::UnitType);
 
 	UnitProductionGameCounter unitProductionCounter;
 	ProtoBotProductionCount ProtoBot_createdUnitCount;
 
-	BWAPI::Unitset resourceDepots; 
+	BWAPI::Unitset resourceDepots;
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
 	BWAPI::Unitset workers;
@@ -230,7 +235,7 @@ public:
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 
 	void onStart();
-	std::vector<Action> onFrame(std::vector<ResourceRequest> &resourceRequests);
+	std::vector<Action> onFrame(std::vector<ResourceRequest>& resourceRequests);
 	void onUnitDestroy(BWAPI::Unit); //for buildings and workers
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
@@ -238,7 +243,7 @@ public:
 
 	//New stuff I am adding
 	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
-	
+
 	//Have these update active goals.
 	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
@@ -248,15 +253,16 @@ public:
 	//Same with buildings and such
 	//Make a function that will then process all the requests and filter them out somehow and deny some.
 	// These should be unit sets should be a struct that organizes the unit requests to make addressing what we need to do easier.
-	
+
 	//BWAPI::Unitset plannedUnitProduction();
 	//BWAPI::UpgradeTypes plannedUpgradeProduction();
 	//BWAPI::Unitset plannedBuildingProduction();
 
+	void planUnitProduction(std::vector<ResourceRequest>& resourceRequests);
+
 
 	//Not you
 	BWAPI::Unitset getProtoBotBuildings();
-	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();
 	bool checkAlreadyRequested(BWAPI::UnitType type);
 };
