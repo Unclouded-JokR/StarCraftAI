@@ -217,9 +217,13 @@ private:
 	int activeMiners();
 	int activeDrillers();
 	void checkForOpponentRace();
-	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 	bool haveRequiredTech(BWAPI::UnitType);
 	void updateUpgradesBeingCreated();
+
+	//Debug methods
+	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
+	void drawUnitProductionGoals();
+	void drawUpgradeProductionGoals();
 
 	UnitProductionGameCounter unitProductionCounter;
 	ProtoBotProductionCount ProtoBot_createdUnitCount;

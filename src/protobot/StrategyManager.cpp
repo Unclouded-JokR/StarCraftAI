@@ -74,8 +74,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	drawGameUnitProduction(unitProductionCounter, 5, 238);
-
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
 
@@ -84,6 +82,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 	planUnitProduction(resourceRequests);
 	planUpgradeProduction(resourceRequests);
+
+	drawGameUnitProduction(unitProductionCounter, 5, 238);
+	drawUnitProductionGoals();
+	drawUpgradeProductionGoals();
 
 	std::vector<Action> actionsToReturn;
 
@@ -1030,6 +1032,90 @@ void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProd
 	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cDark Templars = %d", BWAPI::Text::White, unitProduction.dark_templars);
 }
 
+void StrategyManager::drawUpgradeProductionGoals()
+{
+	int x = 250;
+	int y = 250;
+	BWAPI::Broodwar->drawTextScreen(x, y, "Upgarde Production Goals:");
+	int index = 0;
+	for (const UpgradeProductionGoals goal : upgradeProductionGoals)
+	{
+		std::string temp;
+
+		switch (goal)
+		{
+			case RESEARCH_SINGULARITY_CHARGE:
+				temp = "RESEARCH_SINGULARITY_CHARGE";
+				break;
+			case RESEARCH_GROUND_WEAPONS:
+				temp = "RESEARCH_GROUND_WEAPONS";
+				break;
+			case RESEARCH_GROUND_ARMOR:
+				temp = "RESEARCH_GROUND_ARMOR";
+				break;
+			case RESEARCH_PLASMA_SHIELDS:
+				temp = "RESEARCH_PLASMA_SHIELDS";
+				break;
+			case SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS:
+				temp = "SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS";
+				break;
+			default:
+				temp = "UNKNOWN_GOAL";
+				break;
+		}
+
+		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
+		index++;
+	}
+}
+
+void StrategyManager::drawUnitProductionGoals()
+{
+	int x = 250;
+	int y = 300;
+	BWAPI::Broodwar->drawTextScreen(x, y, "Production Goals:");
+	int index = 0;
+
+	for (const UnitProductionGoals goal : unitProductionGoals)
+	{
+		std::string temp;
+
+		switch (goal)
+		{
+			case SATURATE_WORKERS:
+				temp = "SATURATE_WORKERS";
+				break;
+			case EARLY_ZEALOTS:
+				temp = "EARLY_ZEALOTS";
+				break;
+			case DARK_TEMPLAR_ATTEMPT:
+				temp = "DARK_TEMPLAR_ATTEMPT";
+				break;
+			case OBSERVER_SCOUTS:
+				temp = "OBSERVER_SCOUTS";
+				break;
+			case INFINITE_DRAGOONS:
+				temp = "INFINITE_DRAGOONS";
+				break;
+			case SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS:
+				temp = "SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS";
+				break;
+			case INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS:
+				temp = "INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS";
+				break;
+			case FLYING_UNIT_DETECHED_NEED_CANNONS:
+				temp = "FLYING_UNIT_DETECHED_NEED_CANNONS";
+				break;
+			default:
+				temp = "UNKNOWN_GOAL";
+				break;
+		}
+
+		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
+		index++;
+	}
+}
+
 void StrategyManager::checkForOpponentRace()
 {
 	for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
@@ -1153,6 +1239,12 @@ void StrategyManager::updateUnitProductionGoals()
 	//Constant Observer Production
 	/*if (InformationManager::Instance().enemyHasCloakTech())
 	{
+		int numObservers = (request_count.observers_requests + unitProductionCounter.observers) - MAX_OBSERVERS_FOR_SCOUTING
+
+		//Check to make sure negative unit count doesnt happen from scouting observers.
+		//Can probably work with matthew to make sure we can check what squads have a observer.
+		numObersvers = (numObservers < 0 ? 0 : numObservers)
+
 		if ((request_count.observers_requests + unitProductionCounter.observers) - MAX_OBSERVERS_FOR_SCOUTING < ProtoBot_Squads.size())
 		{
 			activeGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
@@ -1178,53 +1270,6 @@ void StrategyManager::updateUnitProductionGoals()
 
 	//Photon Cannons (Yes I know they are not combat units but we will leave this here for now)
 	//InformationManager::Instance().enemyHasAirTech();
-
-	//[TODO]
-	//Still need to add infinite zealot logic but do that later.
-	int x = 250;
-	int y = 300;
-	BWAPI::Broodwar->drawTextScreen(x, y, "Production Goals:");
-	int index = 0;
-
-	for (UnitProductionGoals goal : unitProductionGoals)
-	{
-		std::string temp;
-
-		switch (goal)
-		{
-			case SATURATE_WORKERS:
-				temp = "SATURATE_WORKERS";
-				break;
-			case EARLY_ZEALOTS:
-				temp = "EARLY_ZEALOTS";
-				break;
-			case DARK_TEMPLAR_ATTEMPT:
-				temp = "DARK_TEMPLAR_ATTEMPT";
-				break;
-			case OBSERVER_SCOUTS:
-				temp = "OBSERVER_SCOUTS";
-				break;
-			case INFINITE_DRAGOONS:
-				temp = "INFINITE_DRAGOONS";
-				break;
-			case SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS:
-				temp = "SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS";
-				break;
-			case INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS:
-				temp = "INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS";
-				break;
-			case FLYING_UNIT_DETECHED_NEED_CANNONS:
-				temp = "FLYING_UNIT_DETECHED_NEED_CANNONS";
-				break;
-			default:
-				temp = "UNKNOWN_GOAL";
-				break;
-		}
-
-		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
-		index++;
-	}
-
 }
 
 void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceRequests)
@@ -1379,40 +1424,6 @@ void StrategyManager::updateUpgradeGoals()
 	else
 	{
 		upgradeProductionGoals.erase(RESEARCH_SINGULARITY_CHARGE);
-	}
-
-	int x = 250;
-	int y = 250;
-	BWAPI::Broodwar->drawTextScreen(x, y, "Upgarde Production Goals:");
-	int index = 0;
-	for (UpgradeProductionGoals goal : upgradeProductionGoals)
-	{
-		std::string temp;
-
-		switch (goal)
-		{
-			case RESEARCH_SINGULARITY_CHARGE:
-				temp = "RESEARCH_SINGULARITY_CHARGE";
-				break;
-			case RESEARCH_GROUND_WEAPONS:
-				temp = "RESEARCH_GROUND_WEAPONS";
-				break;
-			case RESEARCH_GROUND_ARMOR:
-				temp = "RESEARCH_GROUND_ARMOR";
-				break;
-			case RESEARCH_PLASMA_SHIELDS:
-				temp = "RESEARCH_PLASMA_SHIELDS";
-				break;
-			case SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS:
-				temp = "SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS";
-				break;
-			default:
-				temp = "UNKNOWN_GOAL";
-				break;
-		}
-
-		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
-		index++;
 	}
 }
 
