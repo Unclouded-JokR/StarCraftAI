@@ -203,6 +203,7 @@ private:
 	int activeDrillers();
 	void checkForOpponentRace();
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
+	bool haveRequiredTech(BWAPI::UnitType);
 
 	UnitProductionGameCounter unitProductionCounter;
 	ProtoBotProductionCount ProtoBot_createdUnitCount;
@@ -262,7 +263,6 @@ public:
 
 	//Not you
 	BWAPI::Unitset getProtoBotBuildings();
-	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();
 	bool checkAlreadyRequested(BWAPI::UnitType type);
 };

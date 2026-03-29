@@ -831,7 +831,7 @@ bool BuildManager::shouldPreventUnitTraining(int currentSupply) const
         return false;
 
     const BuildOrder& bo = buildOrders[activeBuildOrderIndex];
-    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply < bo.blockUnitTrainingUntilSupply;
+    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply <= bo.blockUnitTrainingUntilSupply;
 }
 
 void BuildManager::pumpUnit()

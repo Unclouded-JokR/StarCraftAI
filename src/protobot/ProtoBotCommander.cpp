@@ -64,6 +64,11 @@ void ProtoBotCommander::onStart()
 
 	resourceRequests.clear();
 
+	std::cout << "Required Units for Templar\n";
+	for (auto tech : BWAPI::UnitTypes::Protoss_Dark_Templar.requiredUnits())
+	{
+		std::cout << tech.first << " : " << tech.second << "\n";
+	}
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
@@ -414,7 +419,7 @@ void ProtoBotCommander::removeApprovedRequests()
 
 			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
-			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") " 
+			std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
 				<< "\nFrame Request Created = " << it->frameRequestCreated
 				<< "\nFrame Request Approved = " << it->frameRequestApproved
 				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
