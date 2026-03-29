@@ -80,6 +80,15 @@ struct ProtoBotProductionCount
 	int legEnhancements_requests = 0;
 };
 
+struct UpgradesInProduction
+{
+	int singularity_charge = 0;
+	int ground_weapons = 0;
+	int ground_armor = 0;
+	int plasma_shields = 0;
+	int leg_enhancements = 0;
+};
+
 struct ProductionGoals
 {
 	int nexusCount = 0;
@@ -204,9 +213,11 @@ private:
 	void checkForOpponentRace();
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 	bool haveRequiredTech(BWAPI::UnitType);
+	void getUpgradesBeingCreated();
 
 	UnitProductionGameCounter unitProductionCounter;
 	ProtoBotProductionCount ProtoBot_createdUnitCount;
+	UpgradesInProduction upgradesInProduction;
 
 	BWAPI::Unitset resourceDepots;
 	BWAPI::Unitset unitProduction; //Units that can create combat units

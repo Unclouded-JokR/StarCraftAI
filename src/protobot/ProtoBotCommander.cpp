@@ -287,6 +287,26 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 			if (requestCounter.templarArchives_requests > 0)
 				--requestCounter.templarArchives_requests;
 			break;
+		case BWAPI::UnitTypes::Protoss_Probe:
+			if(requestCounter.worker_requests > 0)
+				--requestCounter.worker_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Zealot:
+			if (requestCounter.zealots_requests > 0)
+				--requestCounter.zealots_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dragoon:
+			if (requestCounter.dragoons_requests > 0)
+				--requestCounter.dragoons_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observer:
+			if (requestCounter.observatory_requests > 0)
+				--requestCounter.observers_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			if (requestCounter.dark_templars_requests > 0)
+				--requestCounter.dark_templars_requests;
+			break;
 		default:
 			break;
 		}
@@ -408,6 +428,31 @@ void ProtoBotCommander::removeApprovedRequests()
 				mineralCost = it->upgrade.mineralPrice();
 				gasCost = it->upgrade.gasPrice();
 				bwapiType_string = it->upgrade.toString();
+
+				switch (it->upgrade)
+				{
+					case BWAPI::UpgradeTypes::Singularity_Charge:
+						if (requestCounter.singularity_requests > 0)
+							--requestCounter.singularity_requests;
+						break;
+					case BWAPI::UpgradeTypes::Protoss_Ground_Weapons:
+						if (requestCounter.groundWeapons_requests > 0)
+							--requestCounter.groundWeapons_requests;
+						break;
+					case BWAPI::UpgradeTypes::Protoss_Ground_Armor:
+						if (requestCounter.groundArmor_requests > 0)
+							--requestCounter.groundArmor_requests;
+						break;
+					case BWAPI::UpgradeTypes::Protoss_Plasma_Shields:
+						if (requestCounter.plasmaShields_requests > 0)
+							--requestCounter.plasmaShields_requests;
+						break;
+					case BWAPI::UpgradeTypes::Leg_Enhancements:
+						if (requestCounter.legEnhancements_requests > 0)
+							--requestCounter.legEnhancements_requests;
+						break;
+				}
+
 				break;
 			case ResourceRequest::Tech:
 				type_string = "Tech";
@@ -491,6 +536,25 @@ void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingTo
 	request.requestedBuilding = buildingToTrain;
 	request.fromBuildOrder = fromBuildOrder;
 
+	switch (unit)
+	{
+		case BWAPI::UnitTypes::Protoss_Probe:
+			requestCounter.worker_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Zealot:
+			requestCounter.zealots_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dragoon:
+			requestCounter.dragoons_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observer:
+			requestCounter.observers_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			requestCounter.dark_templars_requests++;
+			break;
+	}	
+
 	resourceRequests.push_back(request);
 }
 
@@ -502,6 +566,25 @@ void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgr
 	request.upgrade = upgrade;
 	request.requestedBuilding = unit;
 	request.fromBuildOrder = fromBuildOrder;
+
+	switch (request.upgrade)
+	{
+		case BWAPI::UpgradeTypes::Singularity_Charge:
+				requestCounter.singularity_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Protoss_Ground_Weapons:
+				requestCounter.groundWeapons_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Protoss_Ground_Armor:
+				requestCounter.groundArmor_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Protoss_Plasma_Shields:
+				requestCounter.plasmaShields_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Leg_Enhancements:
+				requestCounter.legEnhancements_requests++;
+			break;
+	}
 
 	resourceRequests.push_back(request);
 }

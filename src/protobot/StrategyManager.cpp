@@ -798,7 +798,8 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 	}
 
 	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge ||
-		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core)
+		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun)
 	{
 		upgradeProduction.erase(unit);
 	}
@@ -936,7 +937,8 @@ void StrategyManager::onUnitCreate(BWAPI::Unit unit)
 	}
 
 	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge ||
-		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core)
+		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun)
 	{
 		upgradeProduction.insert(unit);
 	}
@@ -1309,6 +1311,39 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 				}
 				break;
 			default:
+				break;
+		}
+	}
+}
+
+void StrategyManager::updateUpgradesBeingCreated()
+{
+	upgradesInProduction.singularity_charge = 0;
+	upgradesInProduction.ground_weapons = 0;
+	upgradesInProduction.ground_armor = 0;
+	upgradesInProduction.plasma_shields = 0;
+	upgradesInProduction.leg_enhancements = 0;
+
+	for (BWAPI::Unit upgrade_building : upgradeProduction)
+	{
+		if (!upgrade_building->isUpgrading()) continue;
+
+		switch (upgrade_building->getUpgrade())
+		{
+			case BWAPI::UpgradeTypes::Singularity_Charge:
+				upgradesInProduction.singularity_charge++;
+				break;
+			case BWAPI::UpgradeTypes::Protoss_Ground_Weapons:
+				upgradesInProduction.ground_weapons++;
+				break;
+			case BWAPI::UpgradeTypes::Protoss_Ground_Armor:
+				upgradesInProduction.ground_armor++;
+				break;
+			case BWAPI::UpgradeTypes::Protoss_Plasma_Shields:
+				upgradesInProduction.plasma_shields++;
+				break;
+			case BWAPI::UpgradeTypes::Leg_Enhancements:
+				upgradesInProduction.leg_enhancements++;
 				break;
 		}
 	}
