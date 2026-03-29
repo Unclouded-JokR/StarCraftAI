@@ -1,6 +1,7 @@
 #include "SquadStateTypes.h"
 
 // Initializing extern variables from "CombatManager.h"
+vector<SharedSquad*> CombatManager::SharedSquads;
 vector<Squad*> CombatManager::AttackingSquads;
 vector<Squad*> CombatManager::DefendingSquads;
 vector<Squad*> CombatManager::ReinforcingSquads;
@@ -71,7 +72,7 @@ void DefendingState::Exit(Squad* squad) {
 #ifdef DEBUG_STATES
 	cout << "(" << squad->info.squadId << ")" << "Exited DEFENDING state" << endl;
 #endif
-}
+};
 
 // TODO: Singleton pattern for getInstance
 SquadState& DefendingState::getInstance()
@@ -94,6 +95,16 @@ void ReinforcingState::Update(Squad* squad) {
 		&& squad->info.currentDefensivePosition.getApproxDistance(squad->info.commandPos) > MAX_REINFORCE_DIST) {
 		squad->setState(DefendingState::getInstance());
 		return;
+	}
+
+	// If near a a shared squad, join them in combat
+	const BWAPI::Position leaderPos = squad->leader->getPosition();
+	for (auto& sharedSquad : CombatManager::SharedSquads) {
+		if (leaderPos.getApproxDistance(sharedSquad->getPosition()) < COMBINE_DISTANCE) {
+			sharedSquad->Squads.push_back(squad);
+			sharedSquad->savedSquadInfoMap[squad] = squad->info; // Save current info for when squads will split
+			squad->setState(NullState::getInstance());
+		}
 	}
 
 	// If no enemies are left but still in range, return to defending state
@@ -144,30 +155,6 @@ SquadState& ReinforcingState::getInstance()
 	return singleton;
 }
 
-void KitingState::Enter(Squad* squad) {
-	CombatManager::DefendingSquads.push_back(squad);
-
-#ifdef DEBUG_STATES
-	cout << "(" << squad->info.squadId << ")" << "Entered KITING state" << endl;
-#endif
-}
-
-void KitingState::Update(Squad* squad) {
-
-}
-
-void KitingState::Exit(Squad* squad) {
-#ifdef DEBUG_STATES
-	cout << "(" << squad->info.squadId << ")" << "Exited Kiting state" << endl;
-#endif
-}
-
-SquadState& KitingState::getInstance()
-{
-	static KitingState singleton;
-	return singleton;
-}
-
 void IdleState::Enter(Squad* squad) {
 	CombatManager::IdleSquads.push_back(squad);
 
@@ -191,5 +178,24 @@ void IdleState::Exit(Squad* squad) {
 SquadState& IdleState::getInstance()
 {
 	static IdleState singleton;
+	return singleton;
+}
+
+void NullState::Enter(Squad* squad) {
+#ifdef DEBUG_STATES
+	cout << "(" << squad->info.squadId << ")" << "Entered NULL state" << endl;
+#endif
+}
+void NullState::Update(Squad* squad) {
+}
+void NullState::Exit(Squad* squad) {
+#ifdef DEBUG_STATES
+	cout << "(" << squad->info.squadId << ")" << "Exited NULL state" << endl;
+#endif
+}
+
+SquadState& NullState::getInstance()
+{
+	static NullState singleton;
 	return singleton;
 }

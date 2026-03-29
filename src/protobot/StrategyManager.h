@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
+#include "Squad.h"
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 3
@@ -120,6 +121,7 @@ struct Action {
 	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
 	BWAPI::Position defendPosition = BWAPI::Positions::Invalid;
 	BWAPI::Position reinforcePosition = BWAPI::Positions::Invalid;
+	Squad* initialSquad = nullptr; // Used for reinforcement to decide what squad is put into a kiting state first before combining future squads
 };
 
 //Making gateway amount lower than I would like since the BWEB doesnt make a full 16 blocks for gateways sometimes.

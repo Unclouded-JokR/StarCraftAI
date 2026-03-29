@@ -124,7 +124,7 @@ void ProtoBotCommander::onFrame()
 			combatManager.defend(action.defendPosition);
 			break;
 		case Action::ACTION_REINFORCE:
-			combatManager.reinforce(action.reinforcePosition);
+			combatManager.reinforce(action.reinforcePosition, action.initialSquad);
 			break;
 		}
 	}

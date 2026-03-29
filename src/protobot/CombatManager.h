@@ -4,12 +4,13 @@
 #include "A-StarPathfinding.h"
 #include "BOIDS.h"
 
-//#define DEBUG_CM
+#define DEBUG_CM
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 5
 using namespace std;
 
 class ProtoBotCommander;
+class SharedSquad;
 
 struct unitCMHash {
     std::size_t operator()(const BWAPI::Unit& unit) const {
@@ -24,6 +25,7 @@ public:
     BWAPI::Unitset allUnits;
 	static unordered_map<BWAPI::Unit, Squad*, unitCMHash> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
+    static vector<SharedSquad*> SharedSquads;
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
@@ -36,8 +38,7 @@ public:
     void onUnitDestroy(BWAPI::Unit unit);
     void attack(BWAPI::Position position);
     void defend(BWAPI::Position position);
-    void reinforce(BWAPI::Position position);
-    bool reinforceOutOfRange(Squad* squad, BWAPI::Position reinforcePos);
+    void reinforce(BWAPI::Position position, Squad* initialSquad);
     Squad* addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(Squad* squad);
     bool assignUnit(BWAPI::Unit unit);

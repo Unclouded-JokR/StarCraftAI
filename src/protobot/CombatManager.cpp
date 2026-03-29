@@ -12,16 +12,48 @@ void CombatManager::onStart(){
 
 void CombatManager::onFrame() {
 
+	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
+		AStar::fillAreaPathCache();
+	}
+
 	/*for (const auto& squad : Squads) {
 		BOIDS::squadFlock(squad);
 	}*/
 
 	for (const auto& squad : Squads) {
 		squad->onFrame();
+
+#ifdef DEBUG_CM
+		squad->drawDebugInfo();
+
+		int leftMost = 0;
+		int topMost = 0;
+		int rightMost = 0;
+		int bottomMost = 0;
+
+		// Boundary box of the squad
+		for (const auto& unit : squad->info.units) {
+			int dist = unit->getPosition().getApproxDistance(squad->leader->getPosition());
+			if (dist < 500) {
+				int x = unit->getPosition().x - squad->leader->getPosition().x;
+				int y = unit->getPosition().y - squad->leader->getPosition().y;
+
+				if (x < leftMost) { leftMost = x; }
+				if (x > rightMost) { rightMost = x; }
+				if (y < topMost) { topMost = y; }
+				if (y > bottomMost) { bottomMost = y; }
+			}
+		}
+
+		// Drawing squad boundary box (color based on squad state)
+		BWAPI::Position topLeft = squad->leader->getPosition() + BWAPI::Position(leftMost, topMost);
+		BWAPI::Position bottomRight = squad->leader->getPosition() + BWAPI::Position(rightMost, bottomMost);
+		BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, Squad::stateColorMap[squad->info.currentState]);
+#endif 
 	}
 
-	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
-		AStar::fillAreaPathCache();
+	for (const auto& sharedSquad : SharedSquads) {
+		sharedSquad->onFrame();
 	}
 
 
@@ -34,10 +66,6 @@ void CombatManager::onFrame() {
 			prevPos = pos;
 		}
 	}
-#endif
-
-#ifdef DEBUG_CM
-	drawDebugInfo();
 #endif
 }
 
@@ -74,15 +102,21 @@ void CombatManager::defend(BWAPI::Position position) {
 	}
 }
 
-void CombatManager::reinforce(BWAPI::Position position) {
+void CombatManager::reinforce(BWAPI::Position position, Squad* initialSquad) {
 	attacking = false;
-	for (auto& squad : DefendingSquads) {
+	for (const auto& squad : DefendingSquads) {
 		if (squad->info.currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
 			continue;
 		}
 		else {
 			squad->info.commandPos = position;
-			squad->setState(ReinforcingState::getInstance());
+			// Set initial squad to kiting state if it's not already kiting
+			if (initialSquad != nullptr && squad == initialSquad) {
+				SharedSquads.push_back(new SharedSquad(squad));
+			}
+			else {
+				squad->setState(ReinforcingState::getInstance());
+			}
 		}
 	}
 
@@ -105,7 +139,6 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 	Squad* newSquad = new Squad(leaderUnit, id, randomColor);
 	Squads.push_back(newSquad);
 
-	newSquad->info.currentState = &IdleState::getInstance();
 	newSquad->setState(IdleState::getInstance());
 
 	if (attacking) {
@@ -138,8 +171,18 @@ void CombatManager::removeSquad(Squad* squad) {
 		}
 	}
 
+	for (auto& sharedSquad : SharedSquads) {
+		sharedSquad->Squads.erase(remove(sharedSquad->Squads.begin(), sharedSquad->Squads.end(), squad), sharedSquad->Squads.end());
+		sharedSquad->savedSquadInfoMap.erase(squad);
+	
+		if (sharedSquad->Squads.empty()) {
+			delete sharedSquad;
+			sharedSquad = nullptr;
+		}
+	}
+
 #ifdef DEBUG_CM
-	BWAPI::Broodwar->printf("Removed Squad %d", squad->squadId);
+	BWAPI::Broodwar->printf("Removed Squad %d", squad->info.squadId);
 #endif
 
 	delete squad;
@@ -188,18 +231,6 @@ bool CombatManager::isAssigned(BWAPI::Unit unit) {
 	else {
 		return false;
 	}
-}
-
-void CombatManager::drawDebugInfo() {
-	for (auto& squad : Squads) {
-		squad->drawDebugInfo();
-	}
-
-	//for (auto& tile : closedTiles) {
-	//	map_tool = MapTools();
-	//	map_tool.drawTile(tile.first.x, tile.first.y, BWAPI::Colors::Red);
-	//	BWAPI::Broodwar->drawTextMap(BWAPI::Position(tile.first) + BWAPI::Position(0, 16), "%.2f", tile.second);
-	//}
 }
 
 BWAPI::Unit CombatManager::getAvailableUnit() {

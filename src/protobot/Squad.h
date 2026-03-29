@@ -8,7 +8,8 @@
 
 //#define DEBUG_SQUAD
 //#define DEBUG_FLOCKING
-#define MAX_SQUAD_SIZE 12
+#define DISPLAY_STATES
+#define MAX_SQUAD_SIZE 4
 
 class SquadState;
 
@@ -24,7 +25,7 @@ public:
 	BWAPI::Position kitePos;
 	Path currentPath;
 	int currentPathIdx;
-	SquadState* currentState;
+	SquadState* currentState = nullptr;
 
 	SquadInfo() {
 		squadId = 0;
@@ -44,6 +45,7 @@ class Squad {
 public:
 	BWAPI::Unit leader;
 	SquadInfo info;
+	static map<SquadState*, BWAPI::Color> stateColorMap;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor);
 
@@ -62,12 +64,26 @@ public:
 
 private:
 	void pathHandler();
-	void kitingMove(BWAPI::Unit unit, BWAPI::Position position);
-	void attackUnit(BWAPI::Unit unit, BWAPI::Unit target);
-	void kitingAttack(BWAPI::Unit unit, BWAPI::Unit target);
 };
 
-class SharedSquad {
+class SharedSquad{
+public:
 	vector<Squad*> Squads;
 	map<Squad*, SquadInfo> savedSquadInfoMap;
+
+	SharedSquad() {
+		this->Squads = vector<Squad*>();
+		this->savedSquadInfoMap = map<Squad*, SquadInfo>();
+	}
+
+	SharedSquad(Squad* initialSquad) {
+		this->Squads.push_back(initialSquad);
+		this->savedSquadInfoMap[initialSquad] = initialSquad->info;
+	}
+
+	void onFrame();
+	BWAPI::Position getPosition();
+private:
+	void kitingMelee(BWAPI::Unit);
+	void kitingRanged(BWAPI::Unit);
 };
