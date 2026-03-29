@@ -1,9 +1,7 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\src",
-    "\\src\\protobot"
+    ""
   ],
-  "SelectedNode": "\\src\\protobot\\BuildManager.cpp",
+  "SelectedNode": "\\ProtoBot.sln",
   "PreviewInSolutionExplorer": false
 }

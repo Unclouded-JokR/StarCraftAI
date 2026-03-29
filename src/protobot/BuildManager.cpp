@@ -684,37 +684,42 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 }
                 else
                 {
-                    BWAPI::Position placementPos = BWAPI::Positions::Invalid;
-                    BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
-                    PlacementInfo placementInfo;
+                    //BWAPI::Position placementPos = BWAPI::Positions::Invalid;
+                    //BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
+                    //PlacementInfo placementInfo;
                     bool usingChosenSpecialTile = false;
 
                     if (request.isWall || request.isRampPlacement)
                     {
-                        tileToPlace = resolveSpecialBuildTile(request);
-                        if (!tileToPlace.isValid())
+                        request.tileToPlace = resolveSpecialBuildTile(request);
+                        if (!request.tileToPlace.isValid())
                             continue;
 
-                        if (!BWAPI::Broodwar->canBuildHere(tileToPlace, request.unit))
+                        if (!BWAPI::Broodwar->canBuildHere(request.tileToPlace, request.unit))
                         {
                             const bool needsPower = (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && request.unit.requiresPsi());
-                            if (needsPower && !BWAPI::Broodwar->hasPower(tileToPlace, request.unit))
+                            if (needsPower && !BWAPI::Broodwar->hasPower(request.tileToPlace, request.unit))
                                 continue;
 
                             // Otherwise it may be blocked by a moving unit, retry later
                             continue;
                         }
 
-                        placementPos = BWAPI::Position(tileToPlace);
+                        request.placementPos = BWAPI::Position(request.tileToPlace);
                         usingChosenSpecialTile = true;
                     }
                     else
                     {
-                        placementInfo = buildingPlacer.getPositionToBuild(request.unit);
-
-                        if (placementInfo.position == BWAPI::Positions::Invalid)
+                        if (request.gotPositionToBuild == false)
                         {
-                            const PlacementInfo::PlacementFlag flag_info = placementInfo.flag;
+                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                        }
+                        //placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+
+
+                        if (request.placementInfo.position == BWAPI::Positions::Invalid && request.gotPositionToBuild == false)
+                        {
+                            const PlacementInfo::PlacementFlag flag_info = request.placementInfo.flag;
 
                             switch (flag_info)
                             {
@@ -745,39 +750,44 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                             continue;
                         }
 
-                        placementPos = placementInfo.position;
-                        tileToPlace = placementInfo.topLeft;
+
+                        request.placementPos = request.placementInfo.position;
+                        request.tileToPlace = request.placementInfo.topLeft;
                     }
 
-                    const BWAPI::Unit workerAvalible = getUnitToBuild(placementPos);
+                    const BWAPI::Unit workerAvalible = getUnitToBuild(request.placementPos);
 
-                    if (workerAvalible == nullptr) continue;
+                    if (workerAvalible == nullptr)
+                    {
+                        request.gotPositionToBuild = true;
+                        continue;
+                    }
 
 
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
                         //std::cout << "Trying to build Nexus\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
                     }
                     else if(request.unit.isRefinery())
                     {
                         //std::cout << "Trying to build assimlator\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos, true);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos, true);
                     }
                     else
                     {                                                                                                                           
                         //std::cout << "Trying to build regular building\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
                     }
 
-                    Builder temp = Builder(workerAvalible, request.unit, placementPos, pathToLocation);
+                    Builder temp = Builder(workerAvalible, request.unit, request.placementPos, pathToLocation);
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
                     request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
 
-                    BWEB::Map::addUsed(usingChosenSpecialTile ? tileToPlace : placementInfo.topLeft, request.unit);
+                    BWEB::Map::addUsed(usingChosenSpecialTile ? request.tileToPlace : request.placementInfo.topLeft, request.unit);
                 }
                 break;
             }

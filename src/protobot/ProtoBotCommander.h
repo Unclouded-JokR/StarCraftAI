@@ -76,6 +76,10 @@ struct ResourceRequest
 	bool fromBuildOrder = false;
 	bool isWall = false;
 	bool isRampPlacement = false;
+	bool gotPositionToBuild = false;
+	BWAPI::Position placementPos = BWAPI::Positions::Invalid;
+	BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
+	PlacementInfo placementInfo;
 };
 
 struct ProtoBotRequestCounter {
