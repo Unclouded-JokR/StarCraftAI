@@ -849,14 +849,7 @@ void BuildManager::pumpUnit()
     {
         const BWAPI::UnitType type = unit->getType();
       
-        if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
-        {
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !commanderReference->upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
-            {
-                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
+        if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
         {
             if (ProtoBot_Buildings.gateway < 8 || ProtoBot_Buildings.templarArchives < 1) continue;
 
@@ -884,37 +877,6 @@ void BuildManager::pumpUnit()
             {
                 commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
             }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
-        {
-            /*if (unit->canUpgrade(BWAPI::TechTypes::Psionic_Storm))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
-                continue;
-            }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
-                continue;
-            }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
-                continue;
-            }*/
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Observatory)
-        {
-            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
-            }
-            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
-            }*/
         }
     }
 }

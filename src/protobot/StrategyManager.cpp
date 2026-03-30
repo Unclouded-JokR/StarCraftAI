@@ -1417,6 +1417,7 @@ void StrategyManager::updateUpgradeGoals()
 
 	updateUpgradesBeingCreated();
 
+	//Singularity Charge
 	if (request_count.singularity_requests + upgradesInProduction.singularity_charge + completedUpgradesCount.singularityCharge < MAX_SINGULARITY_UPGRADES)
 	{
 		upgradeProductionGoals.insert(RESEARCH_SINGULARITY_CHARGE);
@@ -1425,6 +1426,18 @@ void StrategyManager::updateUpgradeGoals()
 	{
 		upgradeProductionGoals.erase(RESEARCH_SINGULARITY_CHARGE);
 	}
+
+	//Ground Armor
+
+
+	//Ground Weapons
+
+
+	//Plasma Shields
+
+
+	//Leg Enhancements
+
 }
 
 void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests)
