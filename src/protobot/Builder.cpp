@@ -21,7 +21,7 @@ Builder::~Builder()
 
 void Builder::onFrame()
 {
-	if(referencePath.positions.empty() == false)
+	if(referencePath.positions.empty() == false && debug)
 		AStar::drawPath(referencePath);
 
 	if (referencePath.positions.empty())

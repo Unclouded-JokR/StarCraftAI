@@ -118,7 +118,10 @@ void InformationManager::onFrame()
 	}
 
 	updateEnemyBuildingCounter();
-	isEnemyEarlyPush();
+	if (isEnemyEarlyPush())
+	{
+		cout << "Enemy is playing aggro!" << endl;
+	}
 
 	//TestDrawBaseOwnership();
 	if (BWAPI::Broodwar->getFrameCount() % 120 == 0)
@@ -128,6 +131,7 @@ void InformationManager::onFrame()
 		//printFriendlyResearch();
 		//printFriendlyUpgrades();
 		//TestPrintBaseOwnership();
+		//printKnownEnemyBuildings();
 		//printEnemyBuildingCounter();
 		//printEnemyResearch();
 		//printEnemyUpgrades();
@@ -1586,11 +1590,15 @@ bool InformationManager::isEnemyEarlyPush() const
 		BWAPI::UnitType t = info.type;
 		if (!t.isValid()) continue;
 
-		if (t == BWAPI::UnitTypes::Terran_Barracks || t == BWAPI::UnitTypes::Terran_Factory || t == BWAPI::UnitTypes::Terran_Starport
+		if (t == BWAPI::UnitTypes::Terran_Barracks || t == BWAPI::UnitTypes::Terran_Factory || t == BWAPI::UnitTypes::Terran_Starport || t == BWAPI::UnitTypes::Terran_Supply_Depot
 			|| t == BWAPI::UnitTypes::Protoss_Gateway || t == BWAPI::UnitTypes::Protoss_Stargate || t == BWAPI::UnitTypes::Protoss_Robotics_Facility
 			|| t == BWAPI::UnitTypes::Zerg_Hatchery || t == BWAPI::UnitTypes::Zerg_Lair || t == BWAPI::UnitTypes::Zerg_Hive)
 		{
 			++enemyProdBuildings;
+		}
+		if (t == BWAPI::UnitTypes::Zerg_Spawning_Pool)
+		{
+			enemyProdBuildings += 2;
 		}
 	}
 

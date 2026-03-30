@@ -56,11 +56,12 @@ void NexusEconomy::defendWorker()
 	for (const BWAPI::Unit unit : resourcesInRectangle)
 	{
 
-		if (unit->isAttacking() && unit->getPlayer() != BWAPI::Broodwar->self()) {
+		if (unit->isAttacking() && unit->getPlayer() != BWAPI::Broodwar->self() ) {
 			for (auto u : workers)
 			{
-				if (u->getType().isWorker() && attackingWorkers < 8) {
+				if (u->getType().isWorker() && attackingWorkers < 8 && assignedResource[u]) {
 					u->attack(unit);
+					workerOrder[u] = 7;
 					attackingWorkers += 1;
 				}
 			}
@@ -147,10 +148,16 @@ void NexusEconomy::onFrame()
 		//if (worker->isIdle()) workerOrder[worker] = 0;
 		//BWAPI::Broodwar->drawTextMap(worker->getPosition(), std::to_string(worker->getID()).c_str());
 
-		if (worker->isUnderAttack() && !worker->isAttacking())
+		if (workerOrder[worker] == 7 && BWAPI::Broodwar->getFrameCount() % 150 == 0)
 		{
-			defendWorker();
+			if (worker->getPosition().getApproxDistance(nexus->getPosition()) > 300)
+			{
+				worker->gather(assignedResource[worker]);
+				workerOrder[worker] = 1;
+			}
 		}
+	
+
 
 		if (minerals.size() == 0) break;
 
@@ -162,7 +169,10 @@ void NexusEconomy::onFrame()
 			continue;
 		}
 
-
+		if (worker->isUnderAttack() && !worker->isAttacking())
+		{
+			defendWorker();
+		}
 
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
 		if (!worker->isCarryingMinerals())
@@ -213,10 +223,7 @@ void NexusEconomy::onFrame()
 
 
 
-		if (worker->isCarryingMinerals() && worker->isIdle())
-		{
-			//worker->stop(); // breaks BW mining AI
-		}
+
 		if (worker->isCarryingMinerals() && worker->isIdle())
 		{
 			//BWAPI::Unit assignedMineral = assignedResource[worker];
@@ -224,21 +231,11 @@ void NexusEconomy::onFrame()
 			//resourceWorkerCount[assignedMineral] -= 1;
 			worker->move(nexus->getPosition());
 			worker->rightClick(nexus);
+			workerOrder[worker] = 1;
 		}
 
 
-	}
 
-
-
-
-	//Train unit if we are not at optimal worker count
-	//Need to remove this but need to change flow of functions to strategy for first deliverable.
-	if (!nexus->isTraining()
-		&& workers.size() < ((OPTIMAL_WORKERS_PER_MINERAL * minerals.size()) + (vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0))
-		&& !economyReference->checkRequestAlreadySent(nexus->getID()) && needWorkers)
-	{
-		economyReference->needWorkerUnit(BWAPI::UnitTypes::Protoss_Probe, nexus);
 	}
 
 	/*
@@ -246,15 +243,6 @@ void NexusEconomy::onFrame()
 	{
 		moveTimer = 0;
 	}*/
-
-
-	//if (BWAPI::Broodwar->getFrameCount() % 500 == 0)
-	//{
-	//	std::cout << BWAPI::Broodwar->getFrameCount() << " test: " << BWAPI::Broodwar->self()->gatheredMinerals() << "\n";
-	//}
-	
-	
-
 }
 
 void NexusEconomy::printMineralWorkerCounts()
@@ -763,7 +751,7 @@ BWAPI::Unit NexusEconomy::getWorkerToBuild(BWAPI::Position locationToBuild)
 		int distance = 0;
 		theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(locationToBuild), &distance);
 
-		if (unit->isCarryingMinerals() && distance < minDistance)
+		if (distance < minDistance)
 		{
 			minDistance = distance;
 			unitToReturn = unit;

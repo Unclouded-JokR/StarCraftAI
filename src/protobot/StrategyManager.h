@@ -4,14 +4,15 @@
 #include <vector>
 #include <bwem.h>
 #include <unordered_map>
+#include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
 #include "Squad.h"
 
 #define FRAMES_PER_SECOND 24
-#define SUPPLY_THRESHOLD_EARLYGAME 3
-#define SUPPLY_THRESHOLD_MIDGAME 5
-#define SUPPLY_THRESHOLD_LATEGAME 8
+#define SUPPLY_THRESHOLD_EARLYGAME 4
+#define SUPPLY_THRESHOLD_MIDGAME 6
+#define SUPPLY_THRESHOLD_LATEGAME 9
 #define MIDGAME_TIME 5
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
@@ -22,6 +23,12 @@
 #define MAX_WORKERS 75
 #define MAX_DARK_TEMPLARS 2
 #define MAX_OBSERVERS_FOR_SCOUTING 4
+#define MAX_SINGULARITY_UPGRADES 1
+#define MAX_GROUND_ARMOR_UPGRADES 3
+#define MAX_GROUND_WEAPONS_UPGRADES 3
+#define MAX_PLASMA_SHIELD_UPGRADES 3 
+#define MAX_LEG_ENHANCEMENTS_UPGRADES 1
+
 #define FRAMES_FOR_NO_GAS_ZEALOT_PUMP 5000 //Incase new production has to limit # of requests, value should also be harder.
 
 
@@ -49,6 +56,45 @@ struct ResourceRequest;
 enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
 enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
 enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
+
+//Different from the information managers friendly unit counter since this include "Created" units as well.
+struct ProtoBotProductionCount
+{
+	//Units
+	int created_workers = 0;
+	int created_zealots = 0;
+	int created_dragoons = 0;
+	int created_dark_templars = 0;
+	int created_observers = 0;
+
+	//Buildings
+	int created_nexus = 0;
+	int created_gateway = 0;
+	int created_forge = 0;
+	int created_cybernetics = 0;
+	int created_roboticsFacility = 0;
+	int created_observatory = 0;
+	int created_citadel = 0;
+	int created_templarArchives = 0;
+	int created_photonCannons = 0;
+	int created_pylons = 0;
+
+	//Upgrades
+	bool singularity_requests = false;
+	int groundWeapons_requests = 0;
+	int groundArmor_requests = 0;
+	int plasmaShields_requests = 0;
+	int legEnhancements_requests = 0;
+};
+
+struct UpgradesInProduction
+{
+	int singularity_charge = 0;
+	int ground_weapons = 0;
+	int ground_armor = 0;
+	int plasma_shields = 0;
+	int leg_enhancements = 0;
+};
 
 struct ProductionGoals
 {
@@ -95,13 +141,13 @@ enum UnitProductionGoals {
 	SATURATE_WORKERS, //Max 75 workers.
 	EARLY_ZEALOTS, //3 Zealots early.
 	DARK_TEMPLAR_ATTEMPT, //2 Dark Templar's early if against Terran or Protoss.
-	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
 	INFINITE_DRAGOONS,
+	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
 
 	//Edge case productions
 	SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS, //Should not have to use this. Covering the case where assimilators arent being made.
 	INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS, //Constant production of observers per squad.
-	FLYING_UNIT_DETECHED_NEED_CANNONS //Build cannons at bases/spots where there are stations.
+	FLYING_UNIT_DETECTED_NEED_CANNONS //Build cannons at bases/spots where there are stations.
 };
 
 enum UpgradeProductionGoals {
@@ -114,8 +160,16 @@ enum UpgradeProductionGoals {
 	SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS //Same reasoning as Zealots. Should make them stronger if we dont have gas.
 };
 
+struct PotentionalConstruct {
+	BWAPI::Unit buildingToTrain;
+
+	BWAPI::Unit unitToCreate;
+	BWAPI::UpgradeType upgradeToCreate = BWAPI::UpgradeTypes::Unknown;
+	BWAPI::Unit buildingToCreate;
+};
+
 struct Action {
-	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE};
+	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE };
 	ActionType type = ACTION_NONE;
 
 	BWAPI::Position attackPosition = BWAPI::Positions::Invalid;
@@ -145,7 +199,7 @@ class StrategyManager
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };
-	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate};
+	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate };
 	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;
 	int timer = 0;
@@ -165,17 +219,30 @@ private:
 	int activeMiners();
 	int activeDrillers();
 	void checkForOpponentRace();
+	bool haveRequiredTech(BWAPI::UnitType);
+	void updateUpgradesBeingCreated();
+
+	//Debug methods
 	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
+	void drawUnitProductionGoals();
+	void drawUpgradeProductionGoals();
 
-	//Need to delete refrence after game complete, should also do the same for incomplete building counter and request counter.
 	UnitProductionGameCounter unitProductionCounter;
+	ProtoBotProductionCount ProtoBot_createdUnitCount;
+	UpgradesInProduction upgradesInProduction;
 
-	BWAPI::Unitset resourceDepots; 
+	BWAPI::Unitset resourceDepots;
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
+
+	BWAPI::Unitset cybernetics;
+	BWAPI::Unitset forges;
+	BWAPI::Unitset citadels;
+
 	BWAPI::Unitset workers;
 
-	std::unordered_set<UnitProductionGoals> activeGoals;
+	std::set<UnitProductionGoals> unitProductionGoals;
+	std::set<UpgradeProductionGoals> upgradeProductionGoals;
 
 	bool opponentRaceNotKnown = true;
 
@@ -196,15 +263,14 @@ public:
 	StrategyManager(ProtoBotCommander* commanderToAsk);
 
 	void onStart();
-	std::vector<Action> onFrame(std::vector<ResourceRequest> &resourceRequests);
+	std::vector<Action> onFrame(std::vector<ResourceRequest>& resourceRequests);
 	void onUnitDestroy(BWAPI::Unit); //for buildings and workers
 	void onUnitCreate(BWAPI::Unit);
 	void onUnitComplete(BWAPI::Unit);
 
-
 	//New stuff I am adding
 	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
-	
+
 	//Have these update active goals.
 	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
@@ -214,15 +280,16 @@ public:
 	//Same with buildings and such
 	//Make a function that will then process all the requests and filter them out somehow and deny some.
 	// These should be unit sets should be a struct that organizes the unit requests to make addressing what we need to do easier.
-	
+
 	//BWAPI::Unitset plannedUnitProduction();
 	//BWAPI::UpgradeTypes plannedUpgradeProduction();
 	//BWAPI::Unitset plannedBuildingProduction();
 
+	void planUnitProduction(std::vector<ResourceRequest>& resourceRequests);
+	void planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests);
 
 	//Not you
 	BWAPI::Unitset getProtoBotBuildings();
-	bool checkTechTree(BWAPI::UnitType, FriendlyBuildingCounter);
 	bool shouldGasSteal();
 	bool checkAlreadyRequested(BWAPI::UnitType type);
 };

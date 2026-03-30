@@ -59,6 +59,10 @@ void StrategyManager::onStart()
 
 	spenderManager.onStart();
 
+	//Set active goals
+	//activeGoals.insert(SATURATE_WORKERS);
+	//activeGoals.insert(EARLY_ZEALOTS);
+
 	//Check for opponent race and unit counts;
 	opponentRace = BWAPI::Broodwar->enemy()->getRace();
 	std::cout << "Unit Race is " << opponentRace << "\n";
@@ -70,10 +74,18 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 {
 	if(opponentRaceNotKnown == true) checkForOpponentRace();
 
-	drawGameUnitProduction(unitProductionCounter, 5, 238);
-
 	//Might need to move this.
 	spenderManager.OnFrame(resourceRequests);
+
+	updateUnitProductionGoals();
+	updateUpgradeGoals();
+
+	planUnitProduction(resourceRequests);
+	planUpgradeProduction(resourceRequests);
+
+	drawGameUnitProduction(unitProductionCounter, 5, 238);
+	drawUnitProductionGoals();
+	drawUpgradeProductionGoals();
 
 	std::vector<Action> actionsToReturn;
 
@@ -295,7 +307,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Gateway
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Gateway, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Gateway) &&
 					ProtoBot_buildings.gateway + incompleteBuildings.gateway + requests.gateway_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible) &&
 					ProtoBot_buildings.nexus >= ProtoBot_ProductionGoals.at(ProductionGoal_index).nexusCount)
@@ -307,7 +319,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Forge
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Forge) &&
 					ProtoBot_buildings.forge + incompleteBuildings.forge + requests.forge_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Forge, resourcesAvalible) &&
 					ProtoBot_buildings.gateway >= ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount)
@@ -319,7 +331,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Cybernetics
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Cybernetics_Core) &&
 					ProtoBot_buildings.cyberneticsCore + incompleteBuildings.cyberneticsCore + requests.cybernetics_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Cybernetics_Core, resourcesAvalible) &&
 					ProtoBot_buildings.forge >= ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount)
@@ -331,7 +343,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Robotics
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Robotics_Facility) &&
 					ProtoBot_buildings.roboticsFacility + incompleteBuildings.roboticsFacility + requests.robotics_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Robotics_Facility, resourcesAvalible) &&
 					ProtoBot_buildings.cyberneticsCore >= ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount)
@@ -343,7 +355,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Observatory
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Observatory) &&
 					ProtoBot_buildings.observatory + incompleteBuildings.observatory + requests.observatory_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Observatory, resourcesAvalible) &&
 					ProtoBot_buildings.roboticsFacility >= ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount)
@@ -355,7 +367,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Citadel
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) &&
 					ProtoBot_buildings.citadelOfAdun + incompleteBuildings.citadelOfAdun + requests.citadel_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, resourcesAvalible) &&
 					ProtoBot_buildings.observatory >= ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount)
@@ -367,7 +379,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				}
 
 				//Templar Archives
-				if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) &&
+				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Templar_Archives) &&
 					ProtoBot_buildings.templarArchives + incompleteBuildings.templarArchives + requests.templarArchives_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).templarArchivesCount &&
 					canAfford(BWAPI::UnitTypes::Protoss_Templar_Archives, resourcesAvalible) &&
 					ProtoBot_buildings.citadelOfAdun >= ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount)
@@ -440,7 +452,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Forge, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Forge) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
 			{
 				//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
 
@@ -448,7 +460,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//Only need 1 cybernetics core
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Cybernetics_Core, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
 			{
 				//std::cout << "build action: requesting to warp forge\n";
 
@@ -456,7 +468,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//Should only build 1 robotics facility
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Robotics_Facility, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Robotics_Facility) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 			{
 				//std::cout << "build action: requesting to warp robotics facility\n";
 
@@ -464,7 +476,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			}
 
 			//Only 1 observatory
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Observatory, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Observatory) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
 			{
 				//std::cout << "Build Action: requesting to warp observatory\n";
 
@@ -473,14 +485,14 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 			//2/3 Forge upgrade units
 
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
 			{
 				//std::cout << "build action: requesting to warp citadel of adun\n";
 
 				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Citadel_of_Adun);
 			}
 
-			if (checkTechTree(BWAPI::UnitTypes::Protoss_Templar_Archives, ProtoBot_buildings) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
+			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Templar_Archives) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
 			{
 				//std::cout << "build action: requesting to warp templar archives\n";
 
@@ -649,58 +661,86 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 {
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
+	std::cout << unit->getType() << " was destroyed and was " << (unit->isCompleted() ? "completed\n" : "not completed\n");
+
+	//Update Units counts
 	switch (unit->getType())
 	{
-	case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
-		incompleteBuildings.arbiterTribunal--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Assimilator:
-		incompleteBuildings.assimilator--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-		incompleteBuildings.citadelOfAdun--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-		incompleteBuildings.cyberneticsCore--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
-		incompleteBuildings.fleetBeacon--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Forge:
-		incompleteBuildings.forge--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Gateway:
-		incompleteBuildings.gateway--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Nexus:
-		incompleteBuildings.nexus--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Observatory:
-		incompleteBuildings.observatory--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Photon_Cannon:
-		incompleteBuildings.photonCannon--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Pylon:
-		incompleteBuildings.pylon--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-		incompleteBuildings.roboticsFacility--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
-		incompleteBuildings.roboticsSupportBay--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Shield_Battery:
-		incompleteBuildings.shieldBattery--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Stargate:
-		incompleteBuildings.stargate--;
-		break;
-	case BWAPI::UnitTypes::Protoss_Templar_Archives:
-		incompleteBuildings.templarArchives--;
-		break;
-	default:
-		break;
+		case BWAPI::UnitTypes::Protoss_Probe:
+			ProtoBot_createdUnitCount.created_workers--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Zealot:
+			ProtoBot_createdUnitCount.created_zealots--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dragoon:
+			ProtoBot_createdUnitCount.created_dragoons--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			ProtoBot_createdUnitCount.created_dark_templars--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observer:
+			ProtoBot_createdUnitCount.created_observers--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+			incompleteBuildings.arbiterTribunal--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Assimilator:
+			incompleteBuildings.assimilator--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+			incompleteBuildings.citadelOfAdun--;
+			ProtoBot_createdUnitCount.created_citadel--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+			incompleteBuildings.cyberneticsCore--;
+			ProtoBot_createdUnitCount.created_cybernetics--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+			incompleteBuildings.fleetBeacon--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Forge:
+			incompleteBuildings.forge--;
+			ProtoBot_createdUnitCount.created_forge--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Gateway:
+			incompleteBuildings.gateway--;
+			ProtoBot_createdUnitCount.created_gateway--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Nexus:
+			incompleteBuildings.nexus--;
+			ProtoBot_createdUnitCount.created_nexus--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observatory:
+			incompleteBuildings.observatory--;
+			ProtoBot_createdUnitCount.created_observatory--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Photon_Cannon:
+			incompleteBuildings.photonCannon--;
+			ProtoBot_createdUnitCount.created_photonCannons--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Pylon:
+			incompleteBuildings.pylon--;
+			ProtoBot_createdUnitCount.created_pylons--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+			incompleteBuildings.roboticsFacility--;
+			ProtoBot_createdUnitCount.created_roboticsFacility--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+			incompleteBuildings.roboticsSupportBay--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Shield_Battery:
+			incompleteBuildings.shieldBattery--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Stargate:
+			incompleteBuildings.stargate--;
+			break;
+		case BWAPI::UnitTypes::Protoss_Templar_Archives:
+			incompleteBuildings.templarArchives--;
+			ProtoBot_createdUnitCount.created_templarArchives--;
+			break;
+		default:
+			break;
 	}
 
 	if (unit->getType().isResourceDepot())
@@ -772,10 +812,17 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 	}
 
 	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge ||
-		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core)
+		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun)
 	{
 		upgradeProduction.erase(unit);
 	}
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge) forges.erase(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core) cybernetics.erase(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun) citadels.erase(unit);
 }
 
 void StrategyManager::onUnitCreate(BWAPI::Unit unit)
@@ -784,74 +831,83 @@ void StrategyManager::onUnitCreate(BWAPI::Unit unit)
 
 	switch (unit->getType())
 	{
-	case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
-		incompleteBuildings.arbiterTribunal++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Assimilator:
-		incompleteBuildings.assimilator++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-		incompleteBuildings.citadelOfAdun++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-		incompleteBuildings.cyberneticsCore++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
-		incompleteBuildings.fleetBeacon++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Forge:
-		incompleteBuildings.forge++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Gateway:
-		incompleteBuildings.gateway++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Nexus:
-		incompleteBuildings.nexus++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Observatory:
-		incompleteBuildings.observatory++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Photon_Cannon:
-		incompleteBuildings.photonCannon++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Pylon:
-		incompleteBuildings.pylon++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-		incompleteBuildings.roboticsFacility++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
-		incompleteBuildings.roboticsSupportBay++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Shield_Battery:
-		incompleteBuildings.shieldBattery++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Stargate:
-		incompleteBuildings.stargate++;
-		break;
-	case BWAPI::UnitTypes::Protoss_Templar_Archives:
-		incompleteBuildings.templarArchives++;
-		break;
-	default:
-		break;
-	}
-
-	switch (unit->getType())
-	{
 		case BWAPI::UnitTypes::Protoss_Probe:
+			ProtoBot_createdUnitCount.created_workers++;
 			unitProductionCounter.worker++;
 			break;
 		case BWAPI::UnitTypes::Protoss_Zealot:
+			ProtoBot_createdUnitCount.created_zealots++;
 			unitProductionCounter.zealots++;
 			break;
 		case BWAPI::UnitTypes::Protoss_Dragoon:
+			ProtoBot_createdUnitCount.created_dragoons++;
 			unitProductionCounter.dragoons++;
 			break;
 		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			ProtoBot_createdUnitCount.created_dark_templars++;
 			unitProductionCounter.dark_templars++;
 			break;
 		case BWAPI::UnitTypes::Protoss_Observer:
+			ProtoBot_createdUnitCount.created_observers++;
 			unitProductionCounter.observers++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+			incompleteBuildings.arbiterTribunal++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Assimilator:
+			incompleteBuildings.assimilator++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
+			incompleteBuildings.citadelOfAdun++;
+			ProtoBot_createdUnitCount.created_citadel++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
+			incompleteBuildings.cyberneticsCore++;
+			ProtoBot_createdUnitCount.created_cybernetics++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+			incompleteBuildings.fleetBeacon++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Forge:
+			incompleteBuildings.forge++;
+			ProtoBot_createdUnitCount.created_forge++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Gateway:
+			incompleteBuildings.gateway++;
+			ProtoBot_createdUnitCount.created_gateway++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Nexus:
+			incompleteBuildings.nexus++;
+			ProtoBot_createdUnitCount.created_nexus++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observatory:
+			incompleteBuildings.observatory++;
+			ProtoBot_createdUnitCount.created_observatory++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Photon_Cannon:
+			incompleteBuildings.photonCannon++;
+			ProtoBot_createdUnitCount.created_photonCannons++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Pylon:
+			incompleteBuildings.pylon++;
+			ProtoBot_createdUnitCount.created_pylons++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Facility:
+			incompleteBuildings.roboticsFacility++;
+			ProtoBot_createdUnitCount.created_roboticsFacility++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+			incompleteBuildings.roboticsSupportBay++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Shield_Battery:
+			incompleteBuildings.shieldBattery++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Stargate:
+			incompleteBuildings.stargate++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Templar_Archives:
+			incompleteBuildings.templarArchives++;
+			ProtoBot_createdUnitCount.created_templarArchives++;
 			break;
 		default:
 			break;
@@ -901,11 +957,17 @@ void StrategyManager::onUnitCreate(BWAPI::Unit unit)
 	}
 
 	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge ||
-		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core)
+		unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core ||
+		unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun)
 	{
 		upgradeProduction.insert(unit);
 	}
 
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Forge) forges.insert(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Cybernetics_Core) cybernetics.insert(unit);
+
+	if (unit->getType() == BWAPI::UnitTypes::Protoss_Citadel_of_Adun) citadels.insert(unit);
 }
 
 void StrategyManager::onUnitComplete(BWAPI::Unit unit)
@@ -978,6 +1040,90 @@ void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProd
 	BWAPI::Broodwar->drawTextScreen(x, y + 30, "%cDragoons = %d", BWAPI::Text::White, unitProduction.dragoons);
 	BWAPI::Broodwar->drawTextScreen(x, y + 40, "%cObservers = %d", BWAPI::Text::White, unitProduction.observers);
 	BWAPI::Broodwar->drawTextScreen(x, y + 50, "%cDark Templars = %d", BWAPI::Text::White, unitProduction.dark_templars);
+}
+
+void StrategyManager::drawUpgradeProductionGoals()
+{
+	int x = 250;
+	int y = 250;
+	BWAPI::Broodwar->drawTextScreen(x, y, "Upgarde Production Goals:");
+	int index = 0;
+	for (const UpgradeProductionGoals goal : upgradeProductionGoals)
+	{
+		std::string temp;
+
+		switch (goal)
+		{
+			case RESEARCH_SINGULARITY_CHARGE:
+				temp = "RESEARCH_SINGULARITY_CHARGE";
+				break;
+			case RESEARCH_GROUND_WEAPONS:
+				temp = "RESEARCH_GROUND_WEAPONS";
+				break;
+			case RESEARCH_GROUND_ARMOR:
+				temp = "RESEARCH_GROUND_ARMOR";
+				break;
+			case RESEARCH_PLASMA_SHIELDS:
+				temp = "RESEARCH_PLASMA_SHIELDS";
+				break;
+			case SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS:
+				temp = "SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS";
+				break;
+			default:
+				temp = "UNKNOWN_GOAL";
+				break;
+		}
+
+		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
+		index++;
+	}
+}
+
+void StrategyManager::drawUnitProductionGoals()
+{
+	int x = 250;
+	int y = 300;
+	BWAPI::Broodwar->drawTextScreen(x, y, "Production Goals:");
+	int index = 0;
+
+	for (const UnitProductionGoals goal : unitProductionGoals)
+	{
+		std::string temp;
+
+		switch (goal)
+		{
+			case SATURATE_WORKERS:
+				temp = "SATURATE_WORKERS";
+				break;
+			case EARLY_ZEALOTS:
+				temp = "EARLY_ZEALOTS";
+				break;
+			case DARK_TEMPLAR_ATTEMPT:
+				temp = "DARK_TEMPLAR_ATTEMPT";
+				break;
+			case OBSERVER_SCOUTS:
+				temp = "OBSERVER_SCOUTS";
+				break;
+			case INFINITE_DRAGOONS:
+				temp = "INFINITE_DRAGOONS";
+				break;
+			case SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS:
+				temp = "SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS";
+				break;
+			case INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS:
+				temp = "INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS";
+				break;
+			case FLYING_UNIT_DETECTED_NEED_CANNONS:
+				temp = "FLYING_UNIT_DETECHED_NEED_CANNONS";
+				break;
+			default:
+				temp = "UNKNOWN_GOAL";
+				break;
+		}
+
+		BWAPI::Broodwar->drawTextScreen(x, y + ((index + 1) * 10), "%s", temp.c_str());
+		index++;
+	}
 }
 
 void StrategyManager::checkForOpponentRace()
@@ -1057,34 +1203,279 @@ void StrategyManager::updateUnitProductionGoals()
 {
 	//Notes:
 	//Need a way to check tech tree to make sure we can build
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
+	std::vector<Squad *> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
 	//Probes
-	//Need to get units in queue plus units created.
+	if (request_count.worker_requests + ProtoBot_createdUnitCount.created_workers < MAX_WORKERS)
+	{
+		unitProductionGoals.insert(SATURATE_WORKERS);
+	}
+	else
+	{
+		unitProductionGoals.erase(SATURATE_WORKERS);
+	}
 
-	//Zealots
-	//Get Units in queue plus units crated over game
+	//Zealots 
+	//Always have 3 zealots at the beggining of the game unless the build order we have focuses dragoons then dont attempt to create any zealots.
+	if ((request_count.zealots_requests + unitProductionCounter.zealots < MAX_EARLY_ZEALOTS && request_count.dragoons_requests + unitProductionCounter.dragoons < 1))
+	{
+		unitProductionGoals.insert(EARLY_ZEALOTS);
+	}
+	else
+	{
+		unitProductionGoals.erase(EARLY_ZEALOTS);
+	}
 
 	//Dragoons
-	if (opponentRace == BWAPI::Races::Terran || opponentRace == BWAPI::Races::Protoss)
+	//Once this is inserted it will not be removed unless something bad happens.
+	//Will be added once we have made + planned 3 zealots or have atleast made 1 dragoon during build order.
+	if ((request_count.zealots_requests + unitProductionCounter.zealots > MAX_EARLY_ZEALOTS || request_count.dragoons_requests + unitProductionCounter.dragoons >= 1))
 	{
-
+		unitProductionGoals.insert(INFINITE_DRAGOONS);
 	}
 
 	//Minimum Observer Production
-
+	if (request_count.observers_requests + unitProductionCounter.observers < MAX_OBSERVERS_FOR_SCOUTING)
+	{
+		unitProductionGoals.insert(OBSERVER_SCOUTS);
+	}
+	else
+	{
+		unitProductionGoals.erase(OBSERVER_SCOUTS);
+	}
 
 	//Constant Observer Production
-	InformationManager::Instance().enemyHasCloakTech();
+	/*if (InformationManager::Instance().enemyHasCloakTech())
+	{
+		int numObservers = (request_count.observers_requests + unitProductionCounter.observers) - MAX_OBSERVERS_FOR_SCOUTING
+
+		//Check to make sure negative unit count doesnt happen from scouting observers.
+		//Can probably work with matthew to make sure we can check what squads have a observer.
+		numObersvers = (numObservers < 0 ? 0 : numObservers)
+
+		if ((request_count.observers_requests + unitProductionCounter.observers) - MAX_OBSERVERS_FOR_SCOUTING < ProtoBot_Squads.size())
+		{
+			activeGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
+		}
+		else
+		{
+			activeGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
+		}
+	}*/
 
 	//Dark Templars
+	if (opponentRace == BWAPI::Races::Terran || opponentRace == BWAPI::Races::Protoss)
+	{
+		if (request_count.dark_templars_requests + unitProductionCounter.dark_templars < MAX_DARK_TEMPLARS)
+		{
+			unitProductionGoals.insert(DARK_TEMPLAR_ATTEMPT);
+		}
+		else
+		{
+			unitProductionGoals.erase(DARK_TEMPLAR_ATTEMPT);
+		}
+	}
 
 	//Photon Cannons (Yes I know they are not combat units but we will leave this here for now)
-	InformationManager::Instance().enemyHasAirTech();
+	//InformationManager::Instance().enemyHasAirTech();
+}
+
+void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceRequests)
+{
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
+
+	//Prevents construction of units outside Build Order.
+	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
+	const std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+	//Add tech tree into production.
+
+	for (const UnitProductionGoals productionGoal : unitProductionGoals)
+	{
+		switch (productionGoal)
+		{
+			case SATURATE_WORKERS:
+		
+				for (NexusEconomy nexusEconomy : nexusEconomies)
+				{
+					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
+						!nexusEconomy.nexus->isTraining() &&
+						nexusEconomy.nexus->isCompleted() &&
+						nexusEconomy.workers.size() < nexusEconomy.maximumWorkers && 
+						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);
+					}
+				}
+				break;
+
+			case EARLY_ZEALOTS:
+
+				if (trainingBlock) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					//unitProductionCounter.zealots
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.zealots_requests + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, building);
+					}
+				}
+				break;
+
+			case DARK_TEMPLAR_ATTEMPT:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dark_Templar) == false) break;
+
+				for (BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.dark_templars_requests + unitProductionCounter.dark_templars + 1) <= MAX_EARLY_ZEALOTS)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dark_Templar, building);
+					}
+				}
+				break;
+			case INFINITE_DRAGOONS:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dragoon) == false) break;
+
+				for (const BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted())
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, building);
+					}
+				}
+				break;
+			case OBSERVER_SCOUTS:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false) break;
+
+				for (const BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Observatory) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.observatory_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, building);
+					}
+				}
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+void StrategyManager::updateUpgradesBeingCreated()
+{
+	//Reset values.
+	upgradesInProduction.singularity_charge = 0;
+	upgradesInProduction.ground_weapons = 0;
+	upgradesInProduction.ground_armor = 0;
+	upgradesInProduction.plasma_shields = 0;
+	upgradesInProduction.leg_enhancements = 0;
+
+	for (BWAPI::Unit upgrade_building : upgradeProduction)
+	{
+		if (!upgrade_building->isUpgrading()) continue;
+
+		switch (upgrade_building->getUpgrade())
+		{
+			case BWAPI::UpgradeTypes::Singularity_Charge:
+				upgradesInProduction.singularity_charge++;
+				break;
+			case BWAPI::UpgradeTypes::Protoss_Ground_Weapons:
+				upgradesInProduction.ground_weapons++;
+				break;
+			case BWAPI::UpgradeTypes::Protoss_Ground_Armor:
+				upgradesInProduction.ground_armor++;
+				break;
+			case BWAPI::UpgradeTypes::Protoss_Plasma_Shields:
+				upgradesInProduction.plasma_shields++;
+				break;
+			case BWAPI::UpgradeTypes::Leg_Enhancements:
+				upgradesInProduction.leg_enhancements++;
+				break;
+		}
+	}
 }
 
 void StrategyManager::updateUpgradeGoals()
 {
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
+	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
 
+	updateUpgradesBeingCreated();
+
+	//Singularity Charge
+	if (request_count.singularity_requests + upgradesInProduction.singularity_charge + completedUpgradesCount.singularityCharge < MAX_SINGULARITY_UPGRADES)
+	{
+		upgradeProductionGoals.insert(RESEARCH_SINGULARITY_CHARGE);
+	}
+	else
+	{
+		upgradeProductionGoals.erase(RESEARCH_SINGULARITY_CHARGE);
+	}
+
+	//Ground Armor
+
+
+	//Ground Weapons
+
+
+	//Plasma Shields
+
+
+	//Leg Enhancements
+
+}
+
+void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests)
+{
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
+	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
+	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
+
+	for (const UpgradeProductionGoals productionGoal : upgradeProductionGoals)
+	{
+		switch (productionGoal)
+		{
+			case RESEARCH_SINGULARITY_CHARGE:
+				for (const BWAPI::Unit unit : cybernetics)
+				{
+					if (commanderReference->alreadySentRequest(unit->getID()) == false &&
+						!unit->isTraining() &&
+						unit->isCompleted() && 
+						completedUnitsCount.dragoon >= 1 &&
+						(request_count.singularity_requests + upgradesInProduction.singularity_charge + completedUpgradesCount.singularityCharge + 1) == MAX_SINGULARITY_UPGRADES)
+					{
+						commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
+					}
+				}
+				break;
+		}
+	}
 }
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
@@ -1142,50 +1533,54 @@ bool StrategyManager::shouldGasSteal()
 	return true;
 }
 
-bool StrategyManager::checkTechTree(BWAPI::UnitType unit, FriendlyBuildingCounter ProtoBot_Buildings)
+bool StrategyManager::haveRequiredTech(BWAPI::UnitType unit)
 {
+	const FriendlyBuildingCounter ProtoBot_Buildings = InformationManager::Instance().getFriendlyBuildingCounter();
 	const std::map<BWAPI::UnitType, int> requiredBuildings = unit.requiredUnits();
-	bool hasRequiredTech = true;
 
-	for (auto requiredBuilding : requiredBuildings)
+	bool haveRequiredTech = true;
+
+	for (const std::pair<const BWAPI::UnitType, int> requiredBuilding : requiredBuildings)
 	{
 		switch (requiredBuilding.first)
 		{
-			case BWAPI::UnitTypes::Protoss_Nexus:
-				if (ProtoBot_Buildings.nexus < requiredBuilding.second) hasRequiredTech = false;
-				break;
-
 			case BWAPI::UnitTypes::Protoss_Gateway:
-				if (ProtoBot_Buildings.gateway < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.gateway < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Forge:
-				if (ProtoBot_Buildings.forge < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.forge < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Cybernetics_Core:
-				if (ProtoBot_Buildings.cyberneticsCore < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.cyberneticsCore < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Robotics_Facility:
-				if (ProtoBot_Buildings.roboticsFacility < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.roboticsFacility < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
-				if (ProtoBot_Buildings.citadelOfAdun < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.citadelOfAdun < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Templar_Archives:
-				if (ProtoBot_Buildings.templarArchives < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.templarArchives < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
 			case BWAPI::UnitTypes::Protoss_Stargate:
-				if (ProtoBot_Buildings.stargate < requiredBuilding.second) hasRequiredTech = false;
+				if (ProtoBot_Buildings.stargate < requiredBuilding.second) haveRequiredTech = false;
 				break;
-
+			case BWAPI::UnitTypes::Protoss_Observatory:
+				if (ProtoBot_Buildings.observatory < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			case BWAPI::UnitTypes::Protoss_Robotics_Support_Bay:
+				if (ProtoBot_Buildings.roboticsSupportBay < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			case BWAPI::UnitTypes::Protoss_Fleet_Beacon:
+				if (ProtoBot_Buildings.fleetBeacon < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			case BWAPI::UnitTypes::Protoss_Arbiter_Tribunal:
+				if (ProtoBot_Buildings.arbiterTribunal < requiredBuilding.second) haveRequiredTech = false;
+				break;
+			default:
+				break;
 		}
 	}
 
-
-	return hasRequiredTech;
+	return haveRequiredTech;
 }

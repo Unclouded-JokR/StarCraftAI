@@ -76,6 +76,10 @@ struct ResourceRequest
 	bool fromBuildOrder = false;
 	bool isWall = false;
 	bool isRampPlacement = false;
+	bool gotPositionToBuild = false;
+	BWAPI::Position placementPos = BWAPI::Positions::Invalid;
+	BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
+	PlacementInfo placementInfo;
 };
 
 struct ProtoBotRequestCounter {
@@ -98,6 +102,11 @@ struct ProtoBotRequestCounter {
 	int photon_cannon_requests = 0;
 
 	//Upgrades
+	int singularity_requests = 0;
+	int groundWeapons_requests = 0;
+	int groundArmor_requests = 0;
+	int plasmaShields_requests = 0;
+	int legEnhancements_requests = 0;
 };
 
 class ProtoBotCommander
@@ -114,7 +123,7 @@ public:
 	ProtoBotRequestCounter requestCounter;
 
 	//Need to have some sort of debug class that can control what we are seeing on our screen for showing information.
-	bool drawUnitDebug = true;
+	bool drawUnitDebug = false;
 
 	std::vector<ResourceRequest> resourceRequests;
 

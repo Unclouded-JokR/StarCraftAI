@@ -684,37 +684,42 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 }
                 else
                 {
-                    BWAPI::Position placementPos = BWAPI::Positions::Invalid;
-                    BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
-                    PlacementInfo placementInfo;
+                    //BWAPI::Position placementPos = BWAPI::Positions::Invalid;
+                    //BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
+                    //PlacementInfo placementInfo;
                     bool usingChosenSpecialTile = false;
 
                     if (request.isWall || request.isRampPlacement)
                     {
-                        tileToPlace = resolveSpecialBuildTile(request);
-                        if (!tileToPlace.isValid())
+                        request.tileToPlace = resolveSpecialBuildTile(request);
+                        if (!request.tileToPlace.isValid())
                             continue;
 
-                        if (!BWAPI::Broodwar->canBuildHere(tileToPlace, request.unit))
+                        if (!BWAPI::Broodwar->canBuildHere(request.tileToPlace, request.unit))
                         {
                             const bool needsPower = (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && request.unit.requiresPsi());
-                            if (needsPower && !BWAPI::Broodwar->hasPower(tileToPlace, request.unit))
+                            if (needsPower && !BWAPI::Broodwar->hasPower(request.tileToPlace, request.unit))
                                 continue;
 
                             // Otherwise it may be blocked by a moving unit, retry later
                             continue;
                         }
 
-                        placementPos = BWAPI::Position(tileToPlace);
+                        request.placementPos = BWAPI::Position(request.tileToPlace);
                         usingChosenSpecialTile = true;
                     }
                     else
                     {
-                        placementInfo = buildingPlacer.getPositionToBuild(request.unit);
-
-                        if (placementInfo.position == BWAPI::Positions::Invalid)
+                        if (request.gotPositionToBuild == false)
                         {
-                            const PlacementInfo::PlacementFlag flag_info = placementInfo.flag;
+                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                        }
+                        //placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+
+
+                        if (request.placementInfo.position == BWAPI::Positions::Invalid && request.gotPositionToBuild == false)
+                        {
+                            const PlacementInfo::PlacementFlag flag_info = request.placementInfo.flag;
 
                             switch (flag_info)
                             {
@@ -745,39 +750,44 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                             continue;
                         }
 
-                        placementPos = placementInfo.position;
-                        tileToPlace = placementInfo.topLeft;
+
+                        request.placementPos = request.placementInfo.position;
+                        request.tileToPlace = request.placementInfo.topLeft;
                     }
 
-                    const BWAPI::Unit workerAvalible = getUnitToBuild(placementPos);
+                    const BWAPI::Unit workerAvalible = getUnitToBuild(request.placementPos);
 
-                    if (workerAvalible == nullptr) continue;
+                    if (workerAvalible == nullptr)
+                    {
+                        request.gotPositionToBuild = true;
+                        continue;
+                    }
 
 
                     Path pathToLocation;
                     if (request.unit.isResourceDepot())
                     {
                         //std::cout << "Trying to build Nexus\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
                     }
                     else if(request.unit.isRefinery())
                     {
                         //std::cout << "Trying to build assimlator\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos, true);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos, true);
                     }
                     else
                     {                                                                                                                           
                         //std::cout << "Trying to build regular building\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), placementPos);
+                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
                     }
 
-                    Builder temp = Builder(workerAvalible, request.unit, placementPos, pathToLocation);
+                    Builder temp = Builder(workerAvalible, request.unit, request.placementPos, pathToLocation);
                     builders.push_back(temp);
 
                     request.state = ResourceRequest::State::Approved_BeingBuilt;
                     request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
 
-                    BWEB::Map::addUsed(usingChosenSpecialTile ? tileToPlace : placementInfo.topLeft, request.unit);
+                    BWEB::Map::addUsed(usingChosenSpecialTile ? request.tileToPlace : request.placementInfo.topLeft, request.unit);
                 }
                 break;
             }
@@ -814,15 +824,6 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
     {
         builder.onFrame();
     }
-
-    pumpUnit();
-
-    //Debug
-    //Will most likely need to add a building data class to make this easier to be able to keep track of buildings and what units they are creating.
-    /*for (BWAPI::Unit building : buildings)
-    {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }*/
 }
 
 bool BuildManager::shouldPreventUnitTraining(int currentSupply) const
@@ -831,7 +832,7 @@ bool BuildManager::shouldPreventUnitTraining(int currentSupply) const
         return false;
 
     const BuildOrder& bo = buildOrders[activeBuildOrderIndex];
-    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply < bo.blockUnitTrainingUntilSupply;
+    return bo.blockUnitTrainingUntilSupply > 0 && currentSupply <= bo.blockUnitTrainingUntilSupply;
 }
 
 void BuildManager::pumpUnit()
@@ -847,32 +848,8 @@ void BuildManager::pumpUnit()
     for (BWAPI::Unit unit : buildings)
     {
         const BWAPI::UnitType type = unit->getType();
-        if (type == BWAPI::UnitTypes::Protoss_Gateway && !preventCombatUnitTraining && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()))
-        {
-            if (ProtoBot_Buildings.cyberneticsCore >= 1 && ProtoBot_Units.zealot >= 7)
-            {
-                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, unit);
-            }
-            else
-            {
-                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Zealot, unit);
-            }
-        }
-        else if (unit->getType() == BWAPI::UnitTypes::Protoss_Robotics_Facility && !preventCombatUnitTraining && !unit->isTraining() && !commanderReference->alreadySentRequest(unit->getID()) && unit->canTrain(BWAPI::UnitTypes::Protoss_Observer))
-        {
-            if (ProtoBot_Units.observer < 4)
-            {
-                commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, unit);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Cybernetics_Core && !unit->isUpgrading())
-        {
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Singularity_Charge) && !commanderReference->upgradeAlreadyRequested(unit) && ProtoBot_Units.dragoon >= 1)
-            {
-                commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
-            }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
+      
+        if (type == BWAPI::UnitTypes::Protoss_Citadel_of_Adun && !unit->isUpgrading())
         {
             if (ProtoBot_Buildings.gateway < 8 || ProtoBot_Buildings.templarArchives < 1) continue;
 
@@ -900,37 +877,6 @@ void BuildManager::pumpUnit()
             {
                 commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
             }
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Templar_Archives && !unit->isUpgrading())
-        {
-            /*if (unit->canUpgrade(BWAPI::TechTypes::Psionic_Storm))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Armor);
-                continue;
-            }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Ground_Weapons))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
-                continue;
-            }
-
-            if (unit->canUpgrade(BWAPI::UpgradeTypes::Protoss_Plasma_Shields))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Protoss_Plasma_Shields);
-                continue;
-            }*/
-        }
-        else if (type == BWAPI::UnitTypes::Protoss_Observatory)
-        {
-            /*if (unit->canUpgrade(BWAPI::UpgradeTypes::Sensor_Array) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Sensor_Array);
-            }
-            else if (unit->canUpgrade(BWAPI::UpgradeTypes::Gravitic_Boosters) && !upgradeAlreadyRequested(unit))
-            {
-                buildUpgadeType(unit, BWAPI::UpgradeTypes::Gravitic_Boosters);
-            }*/
         }
     }
 }

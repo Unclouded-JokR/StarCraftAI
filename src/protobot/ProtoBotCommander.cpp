@@ -64,6 +64,11 @@ void ProtoBotCommander::onStart()
 
 	resourceRequests.clear();
 
+	std::cout << "Required Units for Templar\n";
+	for (auto tech : BWAPI::UnitTypes::Protoss_Dark_Templar.requiredUnits())
+	{
+		std::cout << tech.first << " : " << tech.second << "\n";
+	}
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
@@ -97,6 +102,10 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Information);
     InformationManager::Instance().onFrame();
 	timerManager.stopTimer(TimerManager::Information);
+
+	timerManager.startTimer(TimerManager::Economy);
+	economyManager.onFrame();
+	timerManager.stopTimer(TimerManager::Economy);
 
 	timerManager.startTimer(TimerManager::Strategy);
 	std::vector<Action> actions = strategyManager.onFrame(resourceRequests);
@@ -133,11 +142,6 @@ void ProtoBotCommander::onFrame()
 	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame(resourceRequests);
 	timerManager.stopTimer(TimerManager::Build);
-
-	//Leaving these in a specific order due to cases like building manager possibly needing units.
-	timerManager.startTimer(TimerManager::Economy);
-	economyManager.onFrame();
-	timerManager.stopTimer(TimerManager::Economy);
 
 	//Uncomment this once onFrame does not steal a worker.
 	timerManager.startTimer(TimerManager::Scouting);
@@ -283,6 +287,26 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 			if (requestCounter.templarArchives_requests > 0)
 				--requestCounter.templarArchives_requests;
 			break;
+		case BWAPI::UnitTypes::Protoss_Probe:
+			if(requestCounter.worker_requests > 0)
+				--requestCounter.worker_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Zealot:
+			if (requestCounter.zealots_requests > 0)
+				--requestCounter.zealots_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dragoon:
+			if (requestCounter.dragoons_requests > 0)
+				--requestCounter.dragoons_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observer:
+			if (requestCounter.observatory_requests > 0)
+				--requestCounter.observers_requests;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			if (requestCounter.dark_templars_requests > 0)
+				--requestCounter.dark_templars_requests;
+			break;
 		default:
 			break;
 		}
@@ -347,6 +371,12 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
+	if (unit_type == BWAPI::UnitTypes::Protoss_Dark_Templar)
+	{
+		scoutingManager.assignScout(unit);
+		return;
+	}
+
 	//Gone through all cases assume it is a combat unit 
 	combatManager.assignUnit(unit);
 }
@@ -398,6 +428,31 @@ void ProtoBotCommander::removeApprovedRequests()
 				mineralCost = it->upgrade.mineralPrice();
 				gasCost = it->upgrade.gasPrice();
 				bwapiType_string = it->upgrade.toString();
+
+				switch (it->upgrade)
+				{
+					case BWAPI::UpgradeTypes::Singularity_Charge:
+						if (requestCounter.singularity_requests > 0)
+							--requestCounter.singularity_requests;
+						break;
+					case BWAPI::UpgradeTypes::Protoss_Ground_Weapons:
+						if (requestCounter.groundWeapons_requests > 0)
+							--requestCounter.groundWeapons_requests;
+						break;
+					case BWAPI::UpgradeTypes::Protoss_Ground_Armor:
+						if (requestCounter.groundArmor_requests > 0)
+							--requestCounter.groundArmor_requests;
+						break;
+					case BWAPI::UpgradeTypes::Protoss_Plasma_Shields:
+						if (requestCounter.plasmaShields_requests > 0)
+							--requestCounter.plasmaShields_requests;
+						break;
+					case BWAPI::UpgradeTypes::Leg_Enhancements:
+						if (requestCounter.legEnhancements_requests > 0)
+							--requestCounter.legEnhancements_requests;
+						break;
+				}
+
 				break;
 			case ResourceRequest::Tech:
 				type_string = "Tech";
@@ -409,7 +464,7 @@ void ProtoBotCommander::removeApprovedRequests()
 
 			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
-			std::cout << "Reuqest for " << type_string << " (" << bwapiType_string << ") " 
+			std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
 				<< "\nFrame Request Created = " << it->frameRequestCreated
 				<< "\nFrame Request Approved = " << it->frameRequestApproved
 				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
@@ -481,6 +536,25 @@ void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingTo
 	request.requestedBuilding = buildingToTrain;
 	request.fromBuildOrder = fromBuildOrder;
 
+	switch (unit)
+	{
+		case BWAPI::UnitTypes::Protoss_Probe:
+			requestCounter.worker_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Zealot:
+			requestCounter.zealots_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dragoon:
+			requestCounter.dragoons_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Observer:
+			requestCounter.observers_requests++;
+			break;
+		case BWAPI::UnitTypes::Protoss_Dark_Templar:
+			requestCounter.dark_templars_requests++;
+			break;
+	}	
+
 	resourceRequests.push_back(request);
 }
 
@@ -492,6 +566,25 @@ void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgr
 	request.upgrade = upgrade;
 	request.requestedBuilding = unit;
 	request.fromBuildOrder = fromBuildOrder;
+
+	switch (request.upgrade)
+	{
+		case BWAPI::UpgradeTypes::Singularity_Charge:
+				requestCounter.singularity_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Protoss_Ground_Weapons:
+				requestCounter.groundWeapons_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Protoss_Ground_Armor:
+				requestCounter.groundArmor_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Protoss_Plasma_Shields:
+				requestCounter.plasmaShields_requests++;
+			break;
+		case BWAPI::UpgradeTypes::Leg_Enhancements:
+				requestCounter.legEnhancements_requests++;
+			break;
+	}
 
 	resourceRequests.push_back(request);
 }
@@ -655,14 +748,16 @@ void ProtoBotCommander::drawDebugInformation()
 	Tools::DrawUnitCommands();
 	Tools::DrawUnitBoundingBoxes();
 
-	if (!drawUnitDebug) return;
-
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
 	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(170, 5, "%cOpponent Race: %s", BWAPI::Text::White, strategyManager.opponentRace.c_str());
 
-	drawBwapiResourceInfo(5, 102);
+	if (!drawUnitDebug) return;
+
+	//Need to find a place to put this on the screen, might need to have a /command to get the stuff I need.
+	//drawBwapiResourceInfo(5, 102);
+
 	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
 	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
 	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);
