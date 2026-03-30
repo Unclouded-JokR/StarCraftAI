@@ -146,7 +146,7 @@ enum UnitProductionGoals {
 	//Edge case productions
 	SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS, //Should not have to use this. Covering the case where assimilators arent being made.
 	INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS, //Constant production of observers per squad.
-	FLYING_UNIT_DETECHED_NEED_CANNONS //Build cannons at bases/spots where there are stations.
+	FLYING_UNIT_DETECTED_NEED_CANNONS //Build cannons at bases/spots where there are stations.
 };
 
 enum UpgradeProductionGoals {
