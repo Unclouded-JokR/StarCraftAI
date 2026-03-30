@@ -120,7 +120,7 @@ void InformationManager::onFrame()
 	updateEnemyBuildingCounter();
 	if (isEnemyEarlyPush())
 	{
-		cout << "Enemy is playing aggro!" << endl;
+		//cout << "Enemy is playing aggro!" << endl;
 	}
 
 	//TestDrawBaseOwnership();
