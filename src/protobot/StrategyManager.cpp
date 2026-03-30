@@ -599,19 +599,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 		{
 			if (unitToAttack->exists() || unitToAttack != nullptr) {
 				int closestDist = 0;
-				Squad* closestSquad;
-				for (const auto& squad : Protobot_Squads) {
-					int dist = squad->leader->getPosition().getApproxDistance(unitToAttack->getPosition());
-					if (dist < closestDist) {
-						closestDist = dist;
-						closestSquad = squad;
-					}
-				}
 
 				Action attack;
 				attack.type = Action::ACTION_REINFORCE;
 				attack.reinforcePosition = unitToAttack->getPosition();
-				attack.initialSquad = closestSquad;
 				actionsToReturn.push_back(attack);
 			}
 		}

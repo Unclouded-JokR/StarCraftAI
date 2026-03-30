@@ -1,8 +1,16 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
 
+map<SquadState*, BWAPI::Color> CombatManager::stateColorMap = {
+		{&AttackingState::getInstance(), BWAPI::Colors::Red},
+		{&DefendingState::getInstance(), BWAPI::Colors::Green},
+		{&ReinforcingState::getInstance(), BWAPI::Colors::Yellow},
+		{&IdleState::getInstance(), BWAPI::Colors::White}
+};
+
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
+	
 }
 
 void CombatManager::onStart(){
@@ -24,8 +32,6 @@ void CombatManager::onFrame() {
 		squad->onFrame();
 
 #ifdef DEBUG_CM
-		squad->drawDebugInfo();
-
 		int leftMost = 0;
 		int topMost = 0;
 		int rightMost = 0;
@@ -46,16 +52,11 @@ void CombatManager::onFrame() {
 		}
 
 		// Drawing squad boundary box (color based on squad state)
-		BWAPI::Position topLeft = squad->leader->getPosition() + BWAPI::Position(leftMost, topMost);
-		BWAPI::Position bottomRight = squad->leader->getPosition() + BWAPI::Position(rightMost, bottomMost);
-		BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, Squad::stateColorMap[squad->info.currentState]);
+		const BWAPI::Position topLeft = squad->leader->getPosition() + BWAPI::Position(leftMost, topMost);
+		const BWAPI::Position bottomRight = squad->leader->getPosition() + BWAPI::Position(rightMost, bottomMost);
+		BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, stateColorMap[squad->info.currentState]);
 #endif 
 	}
-
-	for (const auto& sharedSquad : SharedSquads) {
-		sharedSquad->onFrame();
-	}
-
 
 #ifdef DRAW_PRECACHE //In A-StarPathfinding.h
 	MapTools map_tool = MapTools();
@@ -102,7 +103,7 @@ void CombatManager::defend(BWAPI::Position position) {
 	}
 }
 
-void CombatManager::reinforce(BWAPI::Position position, Squad* initialSquad) {
+void CombatManager::reinforce(BWAPI::Position position) {
 	attacking = false;
 	for (const auto& squad : DefendingSquads) {
 		if (squad->info.currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
@@ -110,13 +111,7 @@ void CombatManager::reinforce(BWAPI::Position position, Squad* initialSquad) {
 		}
 		else {
 			squad->info.commandPos = position;
-			// Set initial squad to kiting state if it's not already kiting
-			if (initialSquad != nullptr && squad == initialSquad) {
-				SharedSquads.push_back(new SharedSquad(squad));
-			}
-			else {
-				squad->setState(ReinforcingState::getInstance());
-			}
+			squad->setState(ReinforcingState::getInstance());
 		}
 	}
 
@@ -168,16 +163,6 @@ void CombatManager::removeSquad(Squad* squad) {
 #ifdef DEBUG_CM
 			cout << "Removed squad from chokepoint position: " << BWAPI::Position(cp->Center()).x << "," << BWAPI::Position(cp->Center()).y << endl;
 #endif
-		}
-	}
-
-	for (auto& sharedSquad : SharedSquads) {
-		sharedSquad->Squads.erase(remove(sharedSquad->Squads.begin(), sharedSquad->Squads.end(), squad), sharedSquad->Squads.end());
-		sharedSquad->savedSquadInfoMap.erase(squad);
-	
-		if (sharedSquad->Squads.empty()) {
-			delete sharedSquad;
-			sharedSquad = nullptr;
 		}
 	}
 

@@ -1,7 +1,6 @@
 #include "SquadStateTypes.h"
 
 // Initializing extern variables from "CombatManager.h"
-vector<SharedSquad*> CombatManager::SharedSquads;
 vector<Squad*> CombatManager::AttackingSquads;
 vector<Squad*> CombatManager::DefendingSquads;
 vector<Squad*> CombatManager::ReinforcingSquads;
@@ -26,9 +25,14 @@ void AttackingState::Update(Squad* squad) {
 
 	squad->info.currentAttackPosition = squad->info.commandPos;
 
-	for (const auto& squadMate : squad->info.units)
+	for (BWAPI::Unit& unit : squad->info.units)
 	{
-		squadMate->attack(squad->info.currentAttackPosition);
+		if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
+			KitingBehaviors::kitingMelee(unit, squad->info.currentAttackPosition);
+		}
+		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
+			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition);
+		}
 	}
 }
 
@@ -63,7 +67,7 @@ void DefendingState::Enter(Squad* squad) {
 }
 
 void DefendingState::Update(Squad* squad) {
-	// TODO: Integrate logic to interchange between kiting and defending
+	// State for keeping squads at chokepoint. Doesn't do anything per frame.
 }
 
 void DefendingState::Exit(Squad* squad) {
@@ -99,13 +103,6 @@ void ReinforcingState::Update(Squad* squad) {
 
 	// If near a a shared squad, join them in combat
 	const BWAPI::Position leaderPos = squad->leader->getPosition();
-	for (auto& sharedSquad : CombatManager::SharedSquads) {
-		if (leaderPos.getApproxDistance(sharedSquad->getPosition()) < COMBINE_DISTANCE) {
-			sharedSquad->Squads.push_back(squad);
-			sharedSquad->savedSquadInfoMap[squad] = squad->info; // Save current info for when squads will split
-			squad->setState(NullState::getInstance());
-		}
-	}
 
 	// If no enemies are left but still in range, return to defending state
 	int searchRadius = 100;
@@ -119,21 +116,20 @@ void ReinforcingState::Update(Squad* squad) {
 		squad->setState(DefendingState::getInstance());
 		return;
 	}
-
-	if (squad->info.currentReinforcePosition == BWAPI::Positions::Invalid) {
-		squad->info.currentReinforcePosition = squad->info.commandPos;
-		for (BWAPI::Unit& squadMate : squad->info.units)
-		{
-			squadMate->attack(squad->info.currentReinforcePosition);
+	
+	if (squad->info.currentReinforcePosition != squad->info.commandPos) {
+		if (squad->info.currentReinforcePosition.getApproxDistance(squad->info.commandPos) > 50) {
+			squad->info.currentReinforcePosition = squad->info.commandPos;
 		}
 	}
-	else if (squad->info.currentReinforcePosition != squad->info.commandPos) {
-		if (squad->info.currentReinforcePosition.getApproxDistance(squad->info.commandPos) > 100) {
-			squad->info.currentReinforcePosition = squad->info.commandPos;
-			for (BWAPI::Unit& squadMate : squad->info.units)
-			{
-				squadMate->attack(squad->info.currentReinforcePosition);
-			}
+
+	for (BWAPI::Unit& unit : squad->info.units)
+	{
+		if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
+			KitingBehaviors::kitingMelee(unit, squad->info.currentReinforcePosition);
+		}
+		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
+			KitingBehaviors::kitingRanged(unit, squad->info.currentReinforcePosition);
 		}
 	}
 
@@ -153,6 +149,63 @@ SquadState& ReinforcingState::getInstance()
 {
 	static ReinforcingState singleton;
 	return singleton;
+}
+
+// Despite the name, this method is not about attack-moving
+// Acts as the move command when attacking/kiting
+void KitingBehaviors::kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos) {
+	if (!unit) {
+		return;
+	}
+
+	if (BWAPI::Broodwar->getFrameCount() % KITING_FRAME_DELAY != 0) {
+		return;
+	}
+
+	// If unit already had a command assigned to it this frame, ignore
+	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount() || unit->isAttackFrame()) {
+		return;
+	}
+
+	if (unit->getGroundWeaponCooldown() == 0) {
+		unit->attack(targetPos);
+	}
+	else {
+		unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+	}
+}
+
+void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos) {
+	// If unit or target is invalid, return
+	if (!unit) {
+		return;
+	}
+
+	if (BWAPI::Broodwar->getFrameCount() % KITING_FRAME_DELAY != 0) {
+		return;
+	}
+
+	// If unit already had a command assigned to it this frame, ignore
+	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount() || unit->isAttackFrame()) {
+		return;
+	}
+
+	// If unit is already attacking, ignore
+	if (unit->isStartingAttack() || unit->isAttackFrame()) {
+		return;
+	}
+
+	if (unit->getGroundWeaponCooldown() == 0) {
+		unit->attack(targetPos);
+	}
+	else {
+		if (unit->isUnderAttack() || !BWAPI::Broodwar->getUnitsInRadius(unit->getPosition(), unit->getType().groundWeapon().maxRange(), BWAPI::Filter::IsEnemy).empty()) {
+			unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		}
+		else{
+			unit->holdPosition();
+		}
+	}
 }
 
 void IdleState::Enter(Squad* squad) {
@@ -178,24 +231,5 @@ void IdleState::Exit(Squad* squad) {
 SquadState& IdleState::getInstance()
 {
 	static IdleState singleton;
-	return singleton;
-}
-
-void NullState::Enter(Squad* squad) {
-#ifdef DEBUG_STATES
-	cout << "(" << squad->info.squadId << ")" << "Entered NULL state" << endl;
-#endif
-}
-void NullState::Update(Squad* squad) {
-}
-void NullState::Exit(Squad* squad) {
-#ifdef DEBUG_STATES
-	cout << "(" << squad->info.squadId << ")" << "Exited NULL state" << endl;
-#endif
-}
-
-SquadState& NullState::getInstance()
-{
-	static NullState singleton;
 	return singleton;
 }

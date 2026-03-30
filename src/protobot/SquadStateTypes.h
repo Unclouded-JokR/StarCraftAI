@@ -2,10 +2,13 @@
 #include "SquadState.h"
 #include "Squad.h"
 #include "CombatManager.h"
+#include "VectorPos.h"
 
 #define DEBUG_STATES
 #define MAX_REINFORCE_DIST 1500
-#define COMBINE_DISTANCE 200
+#define KITING_FRAME_DELAY 15
+
+using namespace std;
 
 // AttackingState occurs when the squad is specifically told to attack a location (i.e. base, building, unit, etc.)
 class AttackingState : public SquadState {
@@ -59,16 +62,8 @@ private:
 	IdleState& operator=(const IdleState&) {};
 };
 
-// NullState occurs when a squad joins another squad in combat into a SharedSquad. 
-// During this, the FSM should not trigger since SharedSquads have their own, separate behavior
-class NullState : public SquadState {
+class KitingBehaviors {
 public:
-	void Enter(Squad* squad);
-	void Update(Squad* squad);
-	void Exit(Squad* squad);
-	static SquadState& getInstance();
-private:
-	NullState() {};
-	NullState(const NullState&);
-	NullState& operator=(const NullState&) {};
+	static void kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos);
+	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos);
 };

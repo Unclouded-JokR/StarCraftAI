@@ -21,11 +21,11 @@ struct unitCMHash {
 class CombatManager{
 public:
     ProtoBotCommander* commanderReference;
+    static map<SquadState*, BWAPI::Color> stateColorMap;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset allUnits;
 	static unordered_map<BWAPI::Unit, Squad*, unitCMHash> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
-    static vector<SharedSquad*> SharedSquads;
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
@@ -38,7 +38,7 @@ public:
     void onUnitDestroy(BWAPI::Unit unit);
     void attack(BWAPI::Position position);
     void defend(BWAPI::Position position);
-    void reinforce(BWAPI::Position position, Squad* initialSquad);
+    void reinforce(BWAPI::Position position);
     Squad* addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(Squad* squad);
     bool assignUnit(BWAPI::Unit unit);

@@ -9,7 +9,7 @@
 //#define DEBUG_SQUAD
 //#define DEBUG_FLOCKING
 #define DISPLAY_STATES
-#define MAX_SQUAD_SIZE 4
+#define MAX_SQUAD_SIZE 12
 
 class SquadState;
 
@@ -45,7 +45,6 @@ class Squad {
 public:
 	BWAPI::Unit leader;
 	SquadInfo info;
-	static map<SquadState*, BWAPI::Color> stateColorMap;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor);
 
@@ -64,26 +63,4 @@ public:
 
 private:
 	void pathHandler();
-};
-
-class SharedSquad{
-public:
-	vector<Squad*> Squads;
-	map<Squad*, SquadInfo> savedSquadInfoMap;
-
-	SharedSquad() {
-		this->Squads = vector<Squad*>();
-		this->savedSquadInfoMap = map<Squad*, SquadInfo>();
-	}
-
-	SharedSquad(Squad* initialSquad) {
-		this->Squads.push_back(initialSquad);
-		this->savedSquadInfoMap[initialSquad] = initialSquad->info;
-	}
-
-	void onFrame();
-	BWAPI::Position getPosition();
-private:
-	void kitingMelee(BWAPI::Unit);
-	void kitingRanged(BWAPI::Unit);
 };

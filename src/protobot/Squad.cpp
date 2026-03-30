@@ -1,14 +1,6 @@
 #include "Squad.h"
 #include "BOIDS.h"
 
-map<SquadState*, BWAPI::Color> Squad::stateColorMap = {
-	{&AttackingState::getInstance(), BWAPI::Colors::Red},
-	{&DefendingState::getInstance(), BWAPI::Colors::Green},
-	{&ReinforcingState::getInstance(), BWAPI::Colors::Yellow},
-	{&IdleState::getInstance(), BWAPI::Colors::Grey},
-	{&NullState::getInstance(), BWAPI::Colors::White}
-};
-
 Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor)
 {
 	this->leader = leader;
@@ -119,63 +111,6 @@ void Squad::addUnit(BWAPI::Unit unit) {
 #endif
 }
 
-void SharedSquad::onFrame() {
-	for (const auto& squad : Squads) {
-		for (const auto& unit : squad->info.units) {
-			if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
-				kitingMelee(unit);
-			}
-			else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
-				kitingRanged(unit);
-			}
-		}
-	}
-}
-
-// Despite the name, this method is not about attack-moving
-// Acts as the move command when attacking/kiting
-void SharedSquad::kitingMelee(BWAPI::Unit unit) {
-	if (!unit) {
-		return;
-	}
-
-	// If unit already had a command assigned to it this frame, ignore
-	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount() || unit->isAttackFrame()) {
-		return;
-	}
-
-	if (unit->getGroundWeaponCooldown() == 0) {
-		unit->attack(BWAPI::Broodwar->getClosestUnit(unit->getPosition(), BWAPI::Filter::IsEnemy, 100));
-	}
-	else {
-		unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
-	}
-}
-
-void SharedSquad::kitingRanged(BWAPI::Unit unit) {
-	// If unit or target is invalid, return
-	if (!unit) {
-		return;
-	}
-
-	// If unit already had a command assigned to it this frame, ignore
-	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount() || unit->isAttackFrame()) {
-		return;
-	}
-
-	// If unit is already attacking, ignore
-	if (unit->isStartingAttack() || unit->isAttackFrame()) {
-		return;
-	}
-
-	if (unit->getGroundWeaponCooldown() == 0) {
-		unit->holdPosition();
-	}
-	else {
-		unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
-	}
-}
-
 void Squad::drawDebugInfo() {
 	for (auto& unit : info.units) {
 		if (!unit || !unit->exists()) {
@@ -215,14 +150,4 @@ void Squad::drawDebugInfo() {
 		const BWAPI::Position textPos(unit->getPosition().x - 20, unit->getPosition().y + 20);
 		BWAPI::Broodwar->drawTextMap(textPos, "%d", info.squadId);
 	}
-}
-
-BWAPI::Position SharedSquad::getPosition() {
-	BWAPI::Position totalPos;
-
-	for (const auto& squad : Squads) {
-		totalPos += squad->leader->getPosition();
-	}
-
-	return totalPos / Squads.size();
 }
