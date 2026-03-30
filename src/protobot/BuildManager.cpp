@@ -824,15 +824,6 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
     {
         builder.onFrame();
     }
-
-    //pumpUnit();
-
-    //Debug
-    //Will most likely need to add a building data class to make this easier to be able to keep track of buildings and what units they are creating.
-    /*for (BWAPI::Unit building : buildings)
-    {
-        BWAPI::Broodwar->drawTextMap(building->getPosition(), std::to_string(building->getID()).c_str());
-    }*/
 }
 
 bool BuildManager::shouldPreventUnitTraining(int currentSupply) const
