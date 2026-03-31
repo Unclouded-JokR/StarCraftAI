@@ -196,7 +196,6 @@ class StrategyManager
 {
 public:
 	bool isAttackPhase = false;
-	bool isBaseBeingAttacked = false;
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };

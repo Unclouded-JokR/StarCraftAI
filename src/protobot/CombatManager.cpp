@@ -91,10 +91,6 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
-	// If base under attack, stay defending/reinforcing
-	if (commanderReference->strategyManager.isBaseBeingAttacked) {
-		return;
-	}
 	globalAttackPosition = position;
 	
 	for (const auto& squad : Squads) {

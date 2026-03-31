@@ -520,30 +520,37 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 #pragma region EnemyCheck
 	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
-
 	BWAPI::Unit unitToAttack = nullptr;
-
+	BWAPI::Unit closestUnit = nullptr;
+	bool enemyNearFriendlyArea = false;
+	int closest = INT_MAX;
 	for (const BWAPI::Unit unit : unitsOnVisison)
 	{
 		if (!unit->exists() || unit == nullptr) {
 			continue;
 		}
 
-		if (unit->getType().isBuilding()) continue;
+		if (unit->isCloaked()) { 
+			continue; 
+		}
 
-		unitToAttack = unit;
-		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
+		const int dist = unit->getPosition().getApproxDistance(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		if (dist < closest) {
+			closest = dist;
+			closestUnit = unit;
+		}
+	}
 
-		bool found = false;
+	if (closestUnit != nullptr) {
+		unitToAttack = closestUnit;
+		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unitToAttack->getTilePosition());
 		for (const BWEM::Area* area : ProtoBot_Areas)
 		{
 			if (enemyAreaLocation == area) {
-				found = true;
+				enemyNearFriendlyArea = true;
 				break;
 			}
 		}
-
-		isBaseBeingAttacked = (found) ? true : false;
 	}
 #pragma endregion
 
@@ -553,28 +560,32 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if (!isBaseBeingAttacked && (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY)))
+	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (numberFullSquads >= NUM_SQUADS_TO_ATTACK && Protobot_Squads.size() > floor(NUM_SQUADS_TO_ATTACK / 2))
+		int numUnits = commanderReference->combatManager.allUnits.size();
+		int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
+		if (numUnits >= targetCount && numUnits > floor(targetCount / 3))
 		{
 			isAttackPhase = true;
-
 			BWAPI::Position attackPos = BWAPI::Positions::Invalid;
+			if (unitToAttack != nullptr && unitToAttack->exists()) {
+				attackPos = unitToAttack->getPosition();
+			}
+			else {
+				// Prioritize attacking known enemy buildings
+				for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
+					if (pair.second.destroyed) {
+						continue;
+					}
 
-			// Prioritize attacking known enemy buildings
-
-			for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
-				if (pair.second.destroyed) {
-					continue;
-				}
-
-				if (!pair.first->isVisible()) {
-					attackPos = pair.second.lastKnownPosition;
-					break;
-				}
-				else if (pair.first->exists()) {
-					attackPos = pair.first->getPosition();
-					break;
+					if (!pair.first->isVisible()) {
+						attackPos = pair.second.lastKnownPosition;
+						break;
+					}
+					else if (pair.first->exists()) {
+						attackPos = pair.first->getPosition();
+						break;
+					}
 				}
 			}
 
@@ -600,8 +611,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 #pragma endregion
 
 #pragma region Defend
-	if (isBaseBeingAttacked) {
-		if (unitToAttack != nullptr && unitToAttack->exists()) {
+	if (!isAttackPhase) {
+		if (unitToAttack != nullptr && unitToAttack->exists() && enemyNearFriendlyArea) {
 			int closestDist = 0;
 
 			Action attack;
@@ -609,9 +620,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			attack.reinforcePosition = unitToAttack->getPosition();
 			actionsToReturn.push_back(attack);
 		}
-	}
-	else {
-		if (Protobot_IdleSquads.size() != 0 && !isAttackPhase)
+
+		if (Protobot_IdleSquads.size() != 0)
 		{
 			int distanceToClosestChoke = INT_MAX;
 			BWAPI::WalkPosition areaToDefend = BWAPI::WalkPositions::Invalid;
