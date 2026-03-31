@@ -1,7 +1,6 @@
 #include "BOIDS.h"
 
 // Static variables
-unordered_map<BWAPI::Unit, Squad*, unitCMHash> CombatManager::unitSquadMap;
 unordered_map<BWAPI::Unit, pair<int, int>, unitHash> BOIDS::leaderRadiusMap;
 unordered_map<BWAPI::Unit, unordered_map<BWAPI::Unit, double, unitHash>, unitHash> BOIDS::unitDistanceCache;
 unordered_map<BWAPI::Unit, VectorPos, unitHash> BOIDS::previousBOIDSMap;;

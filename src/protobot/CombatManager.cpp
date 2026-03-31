@@ -1,12 +1,18 @@
 #include "CombatManager.h"
 #include "ProtoBotCommander.h"
 
+// Initializing static variables
 map<SquadState*, BWAPI::Color> CombatManager::stateColorMap = {
-		{&AttackingState::getInstance(), BWAPI::Colors::Red},
+		{&AttackingState::getInstance(), BWAPI::Colors::Cyan},
 		{&DefendingState::getInstance(), BWAPI::Colors::Green},
 		{&ReinforcingState::getInstance(), BWAPI::Colors::Yellow},
 		{&IdleState::getInstance(), BWAPI::Colors::White}
 };
+unordered_map<BWAPI::Unit, Squad*, unitCMHash> CombatManager::unitSquadMap;
+vector<Squad*> CombatManager::AttackingSquads;
+vector<Squad*> CombatManager::DefendingSquads;
+vector<Squad*> CombatManager::ReinforcingSquads;
+vector<Squad*> CombatManager::IdleSquads;
 
 CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
@@ -19,7 +25,6 @@ void CombatManager::onStart(){
 }
 
 void CombatManager::onFrame() {
-
 	if ((BWAPI::Broodwar->getFrameCount() % FRAMES_BETWEEN_CACHING) == 0) {
 		AStar::fillAreaPathCache();
 	}
@@ -86,7 +91,10 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 }
 
 void CombatManager::attack(BWAPI::Position position) {
-	attacking = true;
+	// If base under attack, stay defending/reinforcing
+	if (StrategyManager::isBaseBeingAttacked) {
+		return;
+	}
 	globalAttackPosition = position;
 	
 	for (const auto& squad : Squads) {
@@ -96,7 +104,6 @@ void CombatManager::attack(BWAPI::Position position) {
 }
 
 void CombatManager::defend(BWAPI::Position position) {
-	attacking = false;
 	for (auto& squad : IdleSquads) {
 		squad->info.currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
@@ -104,7 +111,6 @@ void CombatManager::defend(BWAPI::Position position) {
 }
 
 void CombatManager::reinforce(BWAPI::Position position) {
-	attacking = false;
 	for (const auto& squad : DefendingSquads) {
 		if (squad->info.currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
 			continue;
@@ -136,7 +142,7 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 
 	newSquad->setState(IdleState::getInstance());
 
-	if (attacking) {
+	if (StrategyManager::isAttackPhase) {
 		newSquad->info.commandPos = globalAttackPosition;
 		newSquad->setState(AttackingState::getInstance());
 	}
@@ -241,10 +247,6 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 }
 
 void CombatManager::handleTextCommand(std::string text) {
-	if (text == "/attackPosition") {
-		cout << "Attacking: " << globalAttackPosition << endl;
-	}
-
 	//PRESET POSITIONS FOR USE IN CUSTOM MAPS
 	BWAPI::Position leftPos = BWAPI::Position(0, 0);
 	BWAPI::Position rightPos = BWAPI::Position(0, 0);

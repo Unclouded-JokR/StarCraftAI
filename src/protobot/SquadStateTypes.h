@@ -3,12 +3,19 @@
 #include "Squad.h"
 #include "CombatManager.h"
 #include "VectorPos.h"
+#include "StrategyManager.h"
+#include "InformationManager.h"
+#include <bwem.h>
 
 #define DEBUG_STATES
 #define MAX_REINFORCE_DIST 1500
 #define KITING_FRAME_DELAY 15
 
 using namespace std;
+
+namespace {
+	auto& bwemMap = BWEM::Map::Instance();
+}
 
 // AttackingState occurs when the squad is specifically told to attack a location (i.e. base, building, unit, etc.)
 class AttackingState : public SquadState {
@@ -65,5 +72,5 @@ private:
 class KitingBehaviors {
 public:
 	static void kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos);
-	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos);
+	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, BWAPI::Position closestCPPos = BWAPI::Positions::Invalid);
 };

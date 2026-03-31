@@ -1,11 +1,5 @@
 #include "SquadStateTypes.h"
 
-// Initializing extern variables from "CombatManager.h"
-vector<Squad*> CombatManager::AttackingSquads;
-vector<Squad*> CombatManager::DefendingSquads;
-vector<Squad*> CombatManager::ReinforcingSquads;
-vector<Squad*> CombatManager::IdleSquads;
-
 void AttackingState::Enter(Squad* squad) {
 	CombatManager::AttackingSquads.push_back(squad);
 #ifdef DEBUG_STATES
@@ -15,15 +9,32 @@ void AttackingState::Enter(Squad* squad) {
 
 void AttackingState::Update(Squad* squad) {
 
-	if (squad->info.currentAttackPosition.isValid() && squad->info.currentAttackPosition == squad->info.commandPos) {
-		return;
-	}
-
 	if (!squad->info.commandPos.isValid()) {
 		return;
 	}
 
-	squad->info.currentAttackPosition = squad->info.commandPos;
+	if (squad->info.currentAttackPosition != squad->info.commandPos) {
+		squad->info.currentAttackPosition = squad->info.commandPos;
+	}
+
+	if (BWAPI::Broodwar->getFrameCount() % KITING_FRAME_DELAY != 0) {
+		return;
+	}
+
+	// Find closest chokepoint for use in ranged kiting
+	BWAPI::Position closestCPPos = BWAPI::Positions::Invalid;
+	int closestDist = 0;
+	const BWAPI::Position leaderPos = squad->leader->getPosition();
+	for (const BWEM::Area& area : bwemMap.Areas()) {
+		for (const BWEM::ChokePoint* cp : area.ChokePoints()) {
+			const BWAPI::Position cpCenter = BWAPI::Position(cp->Center());
+			const int dist = cpCenter.getApproxDistance(leaderPos);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestCPPos = cpCenter;
+			}
+		}
+	}
 
 	for (BWAPI::Unit& unit : squad->info.units)
 	{
@@ -31,7 +42,7 @@ void AttackingState::Update(Squad* squad) {
 			KitingBehaviors::kitingMelee(unit, squad->info.currentAttackPosition);
 		}
 		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
-			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition);
+			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition, closestCPPos);
 		}
 	}
 }
@@ -175,7 +186,7 @@ void KitingBehaviors::kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos) {
 	}
 }
 
-void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos) {
+void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, BWAPI::Position closestCPPos) {
 	// If unit or target is invalid, return
 	if (!unit) {
 		return;
@@ -199,10 +210,24 @@ void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos) 
 		unit->attack(targetPos);
 	}
 	else {
-		if (unit->isUnderAttack() || !BWAPI::Broodwar->getUnitsInRadius(unit->getPosition(), unit->getType().groundWeapon().maxRange(), BWAPI::Filter::IsEnemy).empty()) {
+		// Special case for attack phase
+		// If unit near chokepoint, move towards current target between attacks
+		// Removes chokepoint clumping during attack phase
+		if (StrategyManager::isAttackPhase && closestCPPos.isValid()) {
+			BWAPI::Broodwar->drawCircleMap(closestCPPos, unit->getType().groundWeapon().maxRange(), BWAPI::Colors::Yellow);
+			if (closestCPPos.getApproxDistance(unit->getPosition()) < unit->getType().groundWeapon().maxRange()) {
+				if (unit->isAttacking()) {
+					unit->move(unit->getTargetPosition());
+				}
+				else {
+					unit->attack(targetPos);
+				}
+			}
+		}
+		else if (unit->isUnderAttack() || !BWAPI::Broodwar->getUnitsInRadius(unit->getPosition(), unit->getType().groundWeapon().maxRange(), BWAPI::Filter::IsEnemy).empty()){
 			unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
 		}
-		else{
+		else {
 			unit->holdPosition();
 		}
 	}

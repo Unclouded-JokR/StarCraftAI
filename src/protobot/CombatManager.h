@@ -3,10 +3,11 @@
 #include "Squad.h"
 #include "A-StarPathfinding.h"
 #include "BOIDS.h"
+#include "StrategyManager.h"
 
 #define DEBUG_CM
 //#define ASTAR_COMMANDING
-#define FRAMES_BETWEEN_CACHING 5
+#define FRAMES_BETWEEN_CACHING 11
 using namespace std;
 
 class ProtoBotCommander;
@@ -21,17 +22,16 @@ struct unitCMHash {
 class CombatManager{
 public:
     ProtoBotCommander* commanderReference;
-    static map<SquadState*, BWAPI::Color> stateColorMap;
     CombatManager(ProtoBotCommander* commanderReference);
     BWAPI::Unitset allUnits;
-	static unordered_map<BWAPI::Unit, Squad*, unitCMHash> unitSquadMap;
     vector<Squad*> Squads = vector<Squad*>();
+    BWAPI::Position globalAttackPosition = BWAPI::Positions::Invalid;
+	static unordered_map<BWAPI::Unit, Squad*, unitCMHash> unitSquadMap;
+    static map<SquadState*, BWAPI::Color> stateColorMap;
     static vector<Squad*> AttackingSquads;
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
     static vector<Squad*> IdleSquads;
-    BWAPI::Position globalAttackPosition = BWAPI::Positions::Invalid;
-    bool attacking = false;
 
     void onStart();
     void onFrame();
