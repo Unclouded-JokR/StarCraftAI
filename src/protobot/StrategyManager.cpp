@@ -3,10 +3,6 @@
 #include "Squad.h"
 #include <BWAPI.h>
 
-// Static variable initialization
-bool StrategyManager::isAttackPhase = false;
-bool StrategyManager::isBaseBeingAttacked = false;
-
 StrategyManager::StrategyManager(ProtoBotCommander* commanderReference) : commanderReference(commanderReference)
 {
 	
@@ -543,12 +539,11 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 		{
 			if (enemyAreaLocation == area) {
 				found = true;
-				isBaseBeingAttacked = true;
 				break;
 			}
 		}
 
-		if (!found) { isBaseBeingAttacked = false; }
+		isBaseBeingAttacked = (found) ? true : false;
 	}
 #pragma endregion
 
@@ -558,7 +553,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if (!isBaseBeingAttacked && (supplyUsed >= 50 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY)))
+	if (!isBaseBeingAttacked && (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY)))
 	{
 		if (numberFullSquads >= NUM_SQUADS_TO_ATTACK && Protobot_Squads.size() > floor(NUM_SQUADS_TO_ATTACK / 2))
 		{

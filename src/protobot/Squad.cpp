@@ -48,10 +48,7 @@ void Squad::removeUnit(BWAPI::Unit unit){
 
 	if (unit == leader) {
 		BOIDS::leaderRadiusMap.erase(unit);
-		const BWAPI::Position leaderPos = unit->getPosition();
-		std::erase_if(info.units, [unit](const BWAPI::Unit& _unit) {
-			return unit->getID() == _unit->getID();
-			});
+		info.units.erase(std::remove(info.units.begin(), info.units.end(), unit), info.units.end());
 
 		if (info.units.empty()){
 			return;
@@ -60,6 +57,7 @@ void Squad::removeUnit(BWAPI::Unit unit){
 		// Closest unit to the leader is assigned as the new leader
 		double closest = std::numeric_limits<double>::infinity();
 		BWAPI::Unit closestUnit = nullptr;
+		const BWAPI::Position leaderPos = unit->getPosition();
 		for (BWAPI::Unit _unit : info.units) {
 			if (!_unit || !_unit->exists()) {
 				continue;

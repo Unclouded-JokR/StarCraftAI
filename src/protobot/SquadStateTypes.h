@@ -4,12 +4,11 @@
 #include "CombatManager.h"
 #include "VectorPos.h"
 #include "StrategyManager.h"
-#include "InformationManager.h"
 #include <bwem.h>
 
 #define DEBUG_STATES
 #define MAX_REINFORCE_DIST 1500
-#define KITING_FRAME_DELAY 15
+#define KITING_FRAME_DELAY 8
 
 using namespace std;
 
@@ -72,5 +71,5 @@ private:
 class KitingBehaviors {
 public:
 	static void kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos);
-	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, BWAPI::Position closestCPPos = BWAPI::Positions::Invalid);
+	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos);
 };

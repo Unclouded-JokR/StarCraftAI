@@ -5,7 +5,7 @@
 #include "BOIDS.h"
 #include "StrategyManager.h"
 
-#define DEBUG_CM
+//#define DEBUG_CM
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 11
 using namespace std;

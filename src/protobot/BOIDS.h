@@ -7,7 +7,7 @@
 
 // DEBUG
 //#define DEBUG_MAGNITUDES
-#define DEBUG_DRAW
+//#define DEBUG_DRAW
 
 // Algorithm calibration
 #define BOIDS_RANGE 300.0

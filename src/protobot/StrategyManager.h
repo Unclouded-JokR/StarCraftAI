@@ -7,7 +7,6 @@
 #include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
-#include "Squad.h"
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 4
@@ -16,7 +15,7 @@
 #define MIDGAME_TIME 5
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
-#define NUM_SQUADS_TO_ATTACK 1
+#define NUM_SQUADS_TO_ATTACK 4
 
 
 #define MAX_EARLY_ZEALOTS 3
@@ -196,8 +195,8 @@ const ProductionGoals productionGoalLate =
 class StrategyManager
 {
 public:
-	static bool isAttackPhase;
-	static bool isBaseBeingAttacked;
+	bool isAttackPhase = false;
+	bool isBaseBeingAttacked = false;
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };

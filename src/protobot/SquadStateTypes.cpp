@@ -21,28 +21,13 @@ void AttackingState::Update(Squad* squad) {
 		return;
 	}
 
-	// Find closest chokepoint for use in ranged kiting
-	BWAPI::Position closestCPPos = BWAPI::Positions::Invalid;
-	int closestDist = 0;
-	const BWAPI::Position leaderPos = squad->leader->getPosition();
-	for (const BWEM::Area& area : bwemMap.Areas()) {
-		for (const BWEM::ChokePoint* cp : area.ChokePoints()) {
-			const BWAPI::Position cpCenter = BWAPI::Position(cp->Center());
-			const int dist = cpCenter.getApproxDistance(leaderPos);
-			if (dist < closestDist) {
-				closestDist = dist;
-				closestCPPos = cpCenter;
-			}
-		}
-	}
-
 	for (BWAPI::Unit& unit : squad->info.units)
 	{
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
 			KitingBehaviors::kitingMelee(unit, squad->info.currentAttackPosition);
 		}
 		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
-			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition, closestCPPos);
+			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition);
 		}
 	}
 }
@@ -112,26 +97,21 @@ void ReinforcingState::Update(Squad* squad) {
 		return;
 	}
 
-	// If near a a shared squad, join them in combat
-	const BWAPI::Position leaderPos = squad->leader->getPosition();
+	if (squad->info.currentReinforcePosition != squad->info.commandPos) {
+		squad->info.currentReinforcePosition = squad->info.commandPos;
+	}
 
 	// If no enemies are left but still in range, return to defending state
 	int searchRadius = 100;
-	BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsInRadius(squad->info.commandPos, searchRadius, BWAPI::Filter::IsEnemy);
+	BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsInRadius(squad->info.currentReinforcePosition, searchRadius, BWAPI::Filter::IsEnemy);
 
 #ifdef DEBUG_STATES
-	BWAPI::Broodwar->drawCircleMap(squad->info.commandPos, searchRadius, BWAPI::Colors::Yellow);
+	BWAPI::Broodwar->drawCircleMap(squad->info.currentReinforcePosition, searchRadius, BWAPI::Colors::Yellow);
 #endif
 
 	if (enemies.empty()) {
 		squad->setState(DefendingState::getInstance());
 		return;
-	}
-	
-	if (squad->info.currentReinforcePosition != squad->info.commandPos) {
-		if (squad->info.currentReinforcePosition.getApproxDistance(squad->info.commandPos) > 50) {
-			squad->info.currentReinforcePosition = squad->info.commandPos;
-		}
 	}
 
 	for (BWAPI::Unit& unit : squad->info.units)
@@ -174,30 +154,7 @@ void KitingBehaviors::kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos) {
 	}
 
 	// If unit already had a command assigned to it this frame, ignore
-	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount() || unit->isAttackFrame()) {
-		return;
-	}
-
-	if (unit->getGroundWeaponCooldown() == 0) {
-		unit->attack(targetPos);
-	}
-	else {
-		unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
-	}
-}
-
-void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, BWAPI::Position closestCPPos) {
-	// If unit or target is invalid, return
-	if (!unit) {
-		return;
-	}
-
-	if (BWAPI::Broodwar->getFrameCount() % KITING_FRAME_DELAY != 0) {
-		return;
-	}
-
-	// If unit already had a command assigned to it this frame, ignore
-	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount() || unit->isAttackFrame()) {
+	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount()) {
 		return;
 	}
 
@@ -210,25 +167,41 @@ void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, 
 		unit->attack(targetPos);
 	}
 	else {
-		// Special case for attack phase
-		// If unit near chokepoint, move towards current target between attacks
-		// Removes chokepoint clumping during attack phase
-		if (StrategyManager::isAttackPhase && closestCPPos.isValid()) {
-			BWAPI::Broodwar->drawCircleMap(closestCPPos, unit->getType().groundWeapon().maxRange(), BWAPI::Colors::Yellow);
-			if (closestCPPos.getApproxDistance(unit->getPosition()) < unit->getType().groundWeapon().maxRange()) {
-				if (unit->isAttacking()) {
-					unit->move(unit->getTargetPosition());
-				}
-				else {
-					unit->attack(targetPos);
-				}
-			}
-		}
-		else if (unit->isUnderAttack() || !BWAPI::Broodwar->getUnitsInRadius(unit->getPosition(), unit->getType().groundWeapon().maxRange(), BWAPI::Filter::IsEnemy).empty()){
-			unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+	}
+}
+
+void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos) {
+	// If unit or target is invalid, return
+	if (!unit) {
+		return;
+	}
+
+	if (BWAPI::Broodwar->getFrameCount() % KITING_FRAME_DELAY != 0) {
+		return;
+	}
+
+	// If unit already had a command assigned to it this frame, ignore
+	if (unit->getLastCommandFrame() >= BWAPI::Broodwar->getFrameCount()) {
+		return;
+	}
+
+	// If unit is already attacking, ignore
+	if (unit->isStartingAttack() || unit->isAttackFrame()) {
+		return;
+	}
+
+	if (unit->getGroundWeaponCooldown() == 0) {
+		unit->attack(targetPos);
+	}
+	else {
+		// Only kite forward if not under attack and attacking a building
+		// Otherwise, kite away
+		if (unit->isAttacking() && unit->getOrderTarget()->isVisible() && unit->getOrderTarget()->getType().isBuilding()) {
+			unit->move(unit->getOrderTargetPosition());
 		}
 		else {
-			unit->holdPosition();
+			unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
 		}
 	}
 }
