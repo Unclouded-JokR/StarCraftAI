@@ -1302,7 +1302,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 		{
 			case SATURATE_WORKERS:
 		
-				for (NexusEconomy nexusEconomy : nexusEconomies)
+				for (const NexusEconomy nexusEconomy : nexusEconomies)
 				{
 					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 						!nexusEconomy.nexus->isTraining() &&
@@ -1319,7 +1319,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 
 				if (trainingBlock) break;
 
-				for (BWAPI::Unit building : unitProduction)
+				for (const BWAPI::Unit building : unitProduction)
 				{
 					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
 
@@ -1337,7 +1337,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 			case DARK_TEMPLAR_ATTEMPT:
 				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dark_Templar) == false) break;
 
-				for (BWAPI::Unit building : unitProduction)
+				for (const BWAPI::Unit building : unitProduction)
 				{
 					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
 
@@ -1350,6 +1350,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 					}
 				}
 				break;
+
 			case INFINITE_DRAGOONS:
 				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dragoon) == false) break;
 

@@ -140,8 +140,8 @@ enum UnitProductionGoals {
 	SATURATE_WORKERS, //Max 75 workers.
 	EARLY_ZEALOTS, //3 Zealots early.
 	DARK_TEMPLAR_ATTEMPT, //2 Dark Templar's early if against Terran or Protoss.
-	INFINITE_DRAGOONS,
 	OBSERVER_SCOUTS, //4 Observers max if we dont need detectors.
+	INFINITE_DRAGOONS,
 
 	//Edge case productions
 	SOMETHING_WENT_WRONG_GO_INFINITE_ZEALOTS, //Should not have to use this. Covering the case where assimilators arent being made.
