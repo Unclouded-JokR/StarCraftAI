@@ -28,6 +28,7 @@ private:
         Idle,
         WaitEnemyMain,
         MoveToEnemyMain,
+        ApproachNatural,
         AttackEnemyMain,
         Done
     };
@@ -47,11 +48,14 @@ private:
     static constexpr int kMoveCooldownFrames = 8;
     static constexpr int kAttackRangePx = 20 * 32;
     static constexpr int kArriveDistPx = 160;
-
+    static constexpr int kMainPriorityRadiusPx = 14 * 32;
 
     void issueMove(BWAPI::Unit unit, const BWAPI::Position& p, bool force = false);
     BWAPI::Unit pickTargetFor(BWAPI::Unit dt) const;
     BWAPI::Unit getLockedTarget() const;
+    BWAPI::Position getNaturalApproachPosition() const;
+    BWAPI::Unit findApproachTarget(BWAPI::Unit dt) const;
+
     static bool isDetectorBuildingType(BWAPI::UnitType type);
     static bool isDetectorBuilding(BWAPI::Unit unit);
     static bool isWorker(BWAPI::Unit unit);

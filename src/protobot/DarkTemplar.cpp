@@ -104,14 +104,116 @@ void DarkTemplar::onFrame()
 
         case State::MoveToEnemyMain:
         {
-            if (dt->getDistance(enemyMainPos) > kArriveDistPx)
+            if (enemyMainPos.isValid() && dt->getDistance(enemyMainPos) <= kMainPriorityRadiusPx)
             {
-                issueMove(dt, enemyMainPos);
+                lockedTargetId = -1;
+                state = State::AttackEnemyMain;
+                break;
+            }
+
+            if (manager)
+            {
+                auto nat = manager->getEnemyNatural();
+                if (nat.has_value())
+                {
+                    state = State::ApproachNatural;
+                    break;
+                }
+            }
+
+            BWAPI::Unit target = getLockedTarget();
+
+            if (!target || !target->exists())
+            {
+                target = findApproachTarget(dt);
+
+                if (target && target->exists())
+                {
+                    lockedTargetId = target->getID();
+                }
+                else
+                {
+                    lockedTargetId = -1;
+                }
+            }
+
+            if (target && target->exists())
+            {
+                if (dt->getOrderTarget() != target)
+                {
+                    dt->attack(target);
+                }
+            }
+            else if (dt->getDistance(enemyMainPos) > kArriveDistPx)
+            {
+                if (dt->getLastCommandFrame() < BWAPI::Broodwar->getFrameCount() - kMoveCooldownFrames)
+                {
+                    dt->attack(enemyMainPos);
+                }
             }
             else
             {
-                state = State::AttackEnemyMain;
+                state = State::ApproachNatural;
             }
+
+            break;
+        }
+
+        case State::ApproachNatural:
+        {
+            BWAPI::Position approachPos = getNaturalApproachPosition();
+
+            if (!approachPos.isValid())
+            {
+                if (enemyMainPos.isValid())
+                {
+                    approachPos = enemyMainPos;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            const int dist = dt->getDistance(approachPos);
+
+            const int mainPriorityRadius = 10 * 32;
+
+            if (enemyMainPos.isValid() && dt->getDistance(enemyMainPos) <= mainPriorityRadius)
+            {
+                lockedTargetId = -1;
+                state = State::AttackEnemyMain;
+                break;
+            }
+
+            BWAPI::Unit target = getLockedTarget();
+
+            if (!target || !target->exists())
+            {
+                target = findApproachTarget(dt);
+
+                if (target && target->exists())
+                {
+                    lockedTargetId = target->getID();
+                }
+                else
+                {
+                    lockedTargetId = -1;
+                }
+            }
+
+            if (target && target->exists())
+            {
+                if (dt->getOrderTarget() != target)
+                {
+                    dt->attack(target);
+                }
+            }
+            else if (dt->getLastCommandFrame() < BWAPI::Broodwar->getFrameCount() - kMoveCooldownFrames)
+            {
+                dt->attack(approachPos);
+            }
+
             break;
         }
 
@@ -119,7 +221,7 @@ void DarkTemplar::onFrame()
         {
             BWAPI::Unit target = getLockedTarget();
 
-            if (!target || !target->exists() || dt->getDistance(target) > kAttackRangePx)
+            if (!target || !target->exists())
             {
                 target = pickTargetFor(dt);
 
@@ -197,6 +299,65 @@ BWAPI::Unit DarkTemplar::getLockedTarget() const
     }
 
     return nullptr;
+}
+
+BWAPI::Position DarkTemplar::getNaturalApproachPosition() const
+{
+    if (manager)
+    {
+        auto nat = manager->getEnemyNatural();
+        if (nat.has_value())
+        {
+            return BWAPI::Position(nat.value());
+        }
+    }
+
+    if (enemyMainPos.isValid())
+    {
+        return enemyMainPos;
+    }
+
+    return BWAPI::Positions::Invalid;
+}
+
+BWAPI::Unit DarkTemplar::findApproachTarget(BWAPI::Unit dt) const
+{
+    if (!dt || !dt->exists())
+    {
+        return nullptr;
+    }
+
+    BWAPI::Unit best = nullptr;
+    int bestDist = INT_MAX;
+
+    for (BWAPI::Unit enemy : BWAPI::Broodwar->enemy()->getUnits())
+    {
+        if (!enemy || !enemy->exists())
+        {
+            continue;
+        }
+
+        if (!enemy->isVisible())
+        {
+            continue;
+        }
+
+        const int d = dt->getDistance(enemy);
+
+        // only grab things reasonably close during the walk-in
+        if (d > 8 * 32)
+        {
+            continue;
+        }
+
+        if (d < bestDist)
+        {
+            bestDist = d;
+            best = enemy;
+        }
+    }
+
+    return best;
 }
 
 bool DarkTemplar::isDetectorBuildingType(BWAPI::UnitType type)
