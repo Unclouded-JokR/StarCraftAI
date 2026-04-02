@@ -1505,7 +1505,12 @@ void ScoutingZealot::drawDebug() const
     }
 
     BWAPI::Broodwar->drawCircleMap(p, 20, BWAPI::Colors::Green, false);
-    BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 46, "\x07Zealot Scout");
+
+    const char* label = zealot->getType() == BWAPI::UnitTypes::Protoss_Dragoon
+        ? "Dragoon Scout"
+        : "Zealot Scout";
+
+    BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 46, "\x07%s", label);
     BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 34, "\x11State: %s", stateName);
 
     if (isProxyPatroller)
@@ -1526,7 +1531,7 @@ void ScoutingZealot::drawDebug() const
     if (enemyNaturalPos.isValid())
     {
         BWAPI::Broodwar->drawCircleMap(enemyNaturalPos, 18, BWAPI::Colors::Cyan, false);
-        BWAPI::Broodwar->drawTextMap(enemyNaturalPos.x + 8, enemyNaturalPos.y - 8, "\x0fEnemy Natural");
+        BWAPI::Broodwar->drawTextMap(enemyNaturalPos.x + 8, enemyNaturalPos.y - 8, "\x0f" "Enemy Natural");
     }
 
     if (state == State::MoveToNatural || state == State::HoldEdge || state == State::Reposition)
