@@ -1467,3 +1467,134 @@ bool ScoutingZealot::isGoodKiteTarget(BWAPI::Unit u, int radiusPx) const
 
     return zealot->getDistance(u) <= radiusPx;
 }
+
+void ScoutingZealot::drawDebug() const
+{
+    if (!zealot || !zealot->exists())
+    {
+        return;
+    }
+
+    BWAPI::Position p = zealot->getPosition();
+
+    const char* stateName = "Unknown";
+
+    switch (state)
+    {
+    case State::Idle:
+        stateName = "Idle";
+        break;
+    case State::WaitEnemyMain:
+        stateName = "WaitEnemyMain";
+        break;
+    case State::ProxyPatrol:
+        stateName = "ProxyPatrol";
+        break;
+    case State::MoveToNatural:
+        stateName = "MoveToNatural";
+        break;
+    case State::HoldEdge:
+        stateName = "HoldEdge";
+        break;
+    case State::Reposition:
+        stateName = "Reposition";
+        break;
+    case State::Done:
+        stateName = "Done";
+        break;
+    }
+
+    BWAPI::Broodwar->drawCircleMap(p, 20, BWAPI::Colors::Green, false);
+    BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 46, "\x07Zealot Scout");
+    BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 34, "\x11State: %s", stateName);
+
+    if (isProxyPatroller)
+    {
+        BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 22, "\x10Role: Proxy Patrol");
+    }
+    else
+    {
+        BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 22, "\x10Role: Natural Edge");
+    }
+
+    if (enemyMainPos.isValid())
+    {
+        BWAPI::Broodwar->drawCircleMap(enemyMainPos, 20, BWAPI::Colors::Red, false);
+        BWAPI::Broodwar->drawTextMap(enemyMainPos.x + 8, enemyMainPos.y - 8, "\x08Enemy Main");
+    }
+
+    if (enemyNaturalPos.isValid())
+    {
+        BWAPI::Broodwar->drawCircleMap(enemyNaturalPos, 18, BWAPI::Colors::Cyan, false);
+        BWAPI::Broodwar->drawTextMap(enemyNaturalPos.x + 8, enemyNaturalPos.y - 8, "\x0fEnemy Natural");
+    }
+
+    if (state == State::MoveToNatural || state == State::HoldEdge || state == State::Reposition)
+    {
+        BWAPI::Position perch = cachedPerch.isValid() ? cachedPerch : enemyNaturalPos;
+
+        if (perch.isValid())
+        {
+            BWAPI::Broodwar->drawLineMap(p, perch, BWAPI::Colors::Green);
+            BWAPI::Broodwar->drawCircleMap(perch, 10, BWAPI::Colors::Green, false);
+            BWAPI::Broodwar->drawTextMap(perch.x + 6, perch.y - 6, "\x07Perch");
+        }
+    }
+
+    if (state == State::ProxyPatrol)
+    {
+        for (int i = 0; i < (int)proxyPoints.size(); ++i)
+        {
+            BWAPI::Color c = (i == proxyNextIdx - 1) ? BWAPI::Colors::Orange : BWAPI::Colors::Yellow;
+
+            BWAPI::Broodwar->drawCircleMap(proxyPoints[i], 7, c, false);
+            BWAPI::Broodwar->drawTextMap(proxyPoints[i].x + 5, proxyPoints[i].y - 5, "#%d", i);
+
+            if (i + 1 < (int)proxyPoints.size())
+            {
+                BWAPI::Broodwar->drawLineMap(proxyPoints[i], proxyPoints[i + 1], BWAPI::Colors::Orange);
+            }
+        }
+
+        if (proxyCurTarget.isValid())
+        {
+            BWAPI::Broodwar->drawLineMap(p, proxyCurTarget, BWAPI::Colors::Orange);
+            BWAPI::Broodwar->drawCircleMap(proxyCurTarget, 10, BWAPI::Colors::Orange, false);
+            BWAPI::Broodwar->drawTextMap(proxyCurTarget.x + 6, proxyCurTarget.y - 6, "\x10Proxy Target");
+        }
+    }
+
+    BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);
+    if (threat && threat->exists())
+    {
+        BWAPI::Broodwar->drawLineMap(p, threat->getPosition(), BWAPI::Colors::Red);
+        BWAPI::Broodwar->drawCircleMap(threat->getPosition(), 12, BWAPI::Colors::Red, false);
+        BWAPI::Broodwar->drawTextMap(
+            threat->getPosition().x + 6,
+            threat->getPosition().y - 6,
+            "\x08Threat"
+        );
+    }
+
+    if (lastAttackTarget && lastAttackTarget->exists())
+    {
+        BWAPI::Broodwar->drawLineMap(p, lastAttackTarget->getPosition(), BWAPI::Colors::Purple);
+        BWAPI::Broodwar->drawCircleMap(lastAttackTarget->getPosition(), 10, BWAPI::Colors::Purple, false);
+        BWAPI::Broodwar->drawTextMap(
+            p.x - 40,
+            p.y - 10,
+            "\x05Attack: %s",
+            lastAttackTarget->getType().getName().c_str()
+        );
+    }
+
+    if (cachedPerch.isValid())
+    {
+        BWAPI::Broodwar->drawCircleMap(cachedPerch, 8, BWAPI::Colors::Blue, false);
+    }
+
+    if (lastIssuedGoal.isValid())
+    {
+        BWAPI::Broodwar->drawLineMap(p, lastIssuedGoal, BWAPI::Colors::White);
+    }
+}

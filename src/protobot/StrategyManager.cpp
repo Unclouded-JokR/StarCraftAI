@@ -83,9 +83,9 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	planUnitProduction(resourceRequests);
 	planUpgradeProduction(resourceRequests);
 
-	drawGameUnitProduction(unitProductionCounter, 5, 238);
-	drawUnitProductionGoals();
-	drawUpgradeProductionGoals();
+	//drawGameUnitProduction(unitProductionCounter, 5, 238);
+	//drawUnitProductionGoals();
+	//drawUpgradeProductionGoals();
 
 	std::vector<Action> actionsToReturn;
 

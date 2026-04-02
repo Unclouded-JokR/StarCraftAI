@@ -21,6 +21,7 @@ public:
     void setEnemyMain(const BWAPI::TilePosition& tp);
     void assign(BWAPI::Unit unit);
 
+    void drawDebug() const;
 
 private:
     enum class State
@@ -60,4 +61,6 @@ private:
     static bool isDetectorBuilding(BWAPI::Unit unit);
     static bool isWorker(BWAPI::Unit unit);
     static bool isBuilding(BWAPI::Unit unit);
+
+
 };

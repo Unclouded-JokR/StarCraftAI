@@ -410,6 +410,7 @@ void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool for
     if (force || scout->getDistance(target) > reissueDist || !scout->isMoving())
     {
         scout->move(target);
+        currentMoveGoal = target;
         lastMoveIssueFrame = Broodwar->getFrameCount();
     }
 
@@ -1275,4 +1276,152 @@ bool ScoutingProbe::tryConfirmEnemyMainByStartLocations()
     //BWAPI::Broodwar->printf("[Scouting] Enemy main confirmed near start (%d,%d)", foundTp.x, foundTp.y);
     state = State::GasSteal;
     return true;
+}
+
+void ScoutingProbe::drawDebug() const
+{
+    if (!scout || !scout->exists())
+    {
+        return;
+    }
+
+    BWAPI::Position p = scout->getPosition();
+
+    const char* stateName = "Unknown";
+    switch (state)
+    {
+    case State::Search:
+        stateName = "Search";
+        break;
+    case State::GasSteal:
+        stateName = "GasSteal";
+        break;
+    case State::Harass:
+        stateName = "Harass";
+        break;
+    case State::Orbit:
+        stateName = "Orbit";
+        break;
+    case State::ReturningCargo:
+        stateName = "ReturningCargo";
+        break;
+    case State::Done:
+        stateName = "Done";
+        break;
+    }
+
+    BWAPI::Broodwar->drawCircleMap(p, 18, BWAPI::Colors::Yellow, false);
+    BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 46, "\x03Probe Scout");
+    BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 34, "\x11State: %s", stateName);
+
+    if (enemyMainPos.isValid())
+    {
+        BWAPI::Broodwar->drawCircleMap(enemyMainPos, 18, BWAPI::Colors::Red, false);
+        //BWAPI::Broodwar->drawTextMap(enemyMainPos.x + 8, enemyMainPos.y - 8, "\x08" "Enemy Main");
+    }
+
+    if (state == State::Search)
+    {
+        if (nextTarget < startTargets.size())
+        {
+            BWAPI::Position tgt(startTargets[nextTarget]);
+            BWAPI::Broodwar->drawLineMap(p, tgt, BWAPI::Colors::Green);
+            BWAPI::Broodwar->drawCircleMap(tgt, 10, BWAPI::Colors::Green, false);
+            BWAPI::Broodwar->drawTextMap(tgt.x + 6, tgt.y - 6, "\x07Search Target");
+        }
+
+        for (std::size_t i = 0; i < startTargets.size(); ++i)
+        {
+            BWAPI::Position tp(startTargets[i]);
+            BWAPI::Color c = (i == nextTarget) ? BWAPI::Colors::Green : BWAPI::Colors::White;
+            BWAPI::Broodwar->drawCircleMap(tp, 6, c, false);
+            BWAPI::Broodwar->drawTextMap(tp.x + 4, tp.y - 4, "#%d", (int)i);
+        }
+    }
+
+    if (state == State::GasSteal && targetGeyser && targetGeyser->exists())
+    {
+        BWAPI::Position gp = targetGeyser->getPosition();
+        BWAPI::Broodwar->drawLineMap(p, gp, BWAPI::Colors::Orange);
+        BWAPI::Broodwar->drawCircleMap(gp, 14, BWAPI::Colors::Orange, false);
+        BWAPI::Broodwar->drawTextMap(gp.x + 6, gp.y - 6, "\x10Target Geyser");
+
+        BWAPI::Broodwar->drawTextMap(
+            p.x - 40,
+            p.y - 22,
+            "\x10Req:%d Appr:%d Hold:%d",
+            gasStealRequested ? 1 : 0,
+            gasStealApproved ? 1 : 0,
+            gasStealHoldingForMinerals ? 1 : 0
+        );
+    }
+
+    if (state == State::Harass)
+    {
+        BWAPI::Broodwar->drawTextMap(p.x - 40, p.y - 22, "\x08Mode: Harass");
+    }
+
+    if (state == State::Orbit)
+    {
+        BWAPI::Position orbitGoal = currentOrbitPoint();
+        if (orbitGoal.isValid())
+        {
+            BWAPI::Broodwar->drawLineMap(p, orbitGoal, BWAPI::Colors::Cyan);
+            BWAPI::Broodwar->drawCircleMap(orbitGoal, 10, BWAPI::Colors::Cyan, false);
+            BWAPI::Broodwar->drawTextMap(orbitGoal.x + 6, orbitGoal.y - 6, "\x0fOrbit Goal");
+        }
+
+        for (std::size_t i = 0; i < orbitWaypoints.size(); ++i)
+        {
+            BWAPI::Color c = (i == orbitIdx % (orbitWaypoints.empty() ? 1 : orbitWaypoints.size()))
+                ? BWAPI::Colors::Cyan
+                : BWAPI::Colors::Blue;
+
+            BWAPI::Broodwar->drawCircleMap(orbitWaypoints[i], 6, c, false);
+
+            if (i + 1 < orbitWaypoints.size())
+            {
+                BWAPI::Broodwar->drawLineMap(orbitWaypoints[i], orbitWaypoints[i + 1], BWAPI::Colors::Blue);
+            }
+        }
+
+        if (!orbitWaypoints.empty())
+        {
+            BWAPI::Broodwar->drawLineMap(
+                orbitWaypoints.back(),
+                orbitWaypoints.front(),
+                BWAPI::Colors::Blue
+            );
+        }
+    }
+
+    if (!plannedPath.empty())
+    {
+        BWAPI::Position prev = p;
+        for (const BWAPI::Position& wp : plannedPath)
+        {
+            if (!wp.isValid())
+            {
+                continue;
+            }
+
+            BWAPI::Broodwar->drawLineMap(prev, wp, BWAPI::Colors::White);
+            BWAPI::Broodwar->drawCircleMap(wp, 4, BWAPI::Colors::White, true);
+            prev = wp;
+        }
+    }
+
+    if (currentMoveGoal.isValid())
+    {
+        BWAPI::Broodwar->drawLineMap(p, currentMoveGoal, BWAPI::Colors::Green);
+        BWAPI::Broodwar->drawCircleMap(currentMoveGoal, 8, BWAPI::Colors::Green, false);
+    }
+
+    if (aStarEscapeGoal.isValid())
+    {
+        BWAPI::Broodwar->drawLineMap(p, aStarEscapeGoal, BWAPI::Colors::Purple);
+        BWAPI::Broodwar->drawCircleMap(aStarEscapeGoal, 10, BWAPI::Colors::Purple, false);
+        BWAPI::Broodwar->drawTextMap(aStarEscapeGoal.x + 6, aStarEscapeGoal.y - 6, "\x05" "Escape");
+    }
+
 }

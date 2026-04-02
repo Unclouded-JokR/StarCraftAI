@@ -56,6 +56,11 @@ public:
     bool isScout(BWAPI::Unit u) const;      // handy for other modules (e.g., Squad draw)
     bool isCombatScout(BWAPI::Unit u) const;
     bool hasWorkerScout() const;
+
+    void drawDebug() const;
+    void drawGlobalDebugPanel() const;
+    void drawKnownEnemyLocations() const;
+    void drawScoutDebugFor(BWAPI::Unit unit) const;
     void drawScoutTags() const;             // draw labels for all scouts
 
     void setCombatScoutingStarted(bool v) { combatScoutingStarted_ = v; }
@@ -132,5 +137,6 @@ private:
 
     std::vector<BWAPI::Unit> darkTemplarScouts_;
 
+    bool scoutingDebugEnabled_ = true;
 
 };

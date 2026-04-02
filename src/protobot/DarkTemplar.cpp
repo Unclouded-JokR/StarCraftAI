@@ -474,3 +474,78 @@ BWAPI::Unit DarkTemplar::pickTargetFor(BWAPI::Unit dt) const
 
     return nullptr;
 }
+
+void DarkTemplar::drawDebug() const
+{
+    if (!darkTemplar || !darkTemplar->exists())
+    {
+        return;
+    }
+    const char* stateName = "Unknown";
+
+    switch (state)
+    {
+    case State::Idle:
+        stateName = "Idle";
+        break;
+    case State::WaitEnemyMain:
+        stateName = "WaitEnemyMain";
+        break;
+    case State::MoveToEnemyMain:
+        stateName = "MoveToEnemyMain";
+        break;
+    case State::ApproachNatural:
+        stateName = "ApproachNatural";
+        break;
+    case State::AttackEnemyMain:
+        stateName = "AttackEnemyMain";
+        break;
+    case State::Done:
+        stateName = "Done";
+        break;
+    default:
+        stateName = "Unknown";
+        break;
+    }
+   
+
+    BWAPI::Position p = darkTemplar->getPosition();
+
+    BWAPI::Broodwar->drawCircleMap(p, 22, BWAPI::Colors::Purple, false);
+    BWAPI::Broodwar->drawTextMap(p.x - 30, p.y - 46, "\x05DT Scout");
+    BWAPI::Broodwar->drawTextMap(p.x - 30, p.y - 34, "\x11State: %s", stateName);
+
+    BWAPI::Unit target = getLockedTarget();
+    if (target && target->exists())
+    {
+        BWAPI::Broodwar->drawLineMap(p, target->getPosition(), BWAPI::Colors::Red);
+        BWAPI::Broodwar->drawCircleMap(target->getPosition(), 14, BWAPI::Colors::Red, false);
+        BWAPI::Broodwar->drawTextMap(
+            p.x - 30,
+            p.y - 22,
+            "\x08Target: %s",
+            target->getType().getName().c_str()
+        );
+    }
+    else
+    {
+        BWAPI::Broodwar->drawTextMap(p.x - 30, p.y - 22, "\x08Target: None");
+    }
+
+    if (enemyMainPos.isValid())
+    {
+        BWAPI::Broodwar->drawLineMap(p, enemyMainPos, BWAPI::Colors::Green);
+    }
+
+    if (manager)
+    {
+        auto nat = manager->getEnemyNatural();
+        if (nat.has_value())
+        {
+            BWAPI::Position natPos(nat.value());
+            BWAPI::Broodwar->drawLineMap(p, natPos, BWAPI::Colors::Orange);
+        }
+    }
+
+   
+}

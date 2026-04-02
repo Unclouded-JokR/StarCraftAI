@@ -75,7 +75,10 @@ void ScoutingManager::onFrame()
         setEnemyMain(tp); // now it is safe to broadcast
     }
 
-    drawScoutTags();
+    if (scoutingDebugEnabled_) 
+    {
+        drawDebug();
+    }
 }
 
 void ScoutingManager::assignScout(BWAPI::Unit unit) 
@@ -443,6 +446,166 @@ bool ScoutingManager::isCombatScout(BWAPI::Unit u) const
 
 bool ScoutingManager::hasWorkerScout() const { return workerScout_ && workerScout_->exists(); }
 
+namespace
+{
+    struct DrawBehaviorDebugVisitor
+    {
+        void operator()(const std::monostate&) const
+        {
+        }
+
+        void operator()(const ScoutingProbe& b) const
+        {
+            b.drawDebug();
+        }
+
+        void operator()(const ScoutingZealot& b) const
+        {
+            b.drawDebug();
+        }
+
+        void operator()(const ScoutingObserver& b) const
+        {
+            b.drawDebug();
+        }
+
+        void operator()(const DarkTemplar& b) const
+        {
+            b.drawDebug();
+        }
+    };
+}
+
+void ScoutingManager::drawDebug() const
+{
+    if (!scoutingDebugEnabled_)
+    {
+        return;
+    }
+
+    drawGlobalDebugPanel();
+    drawKnownEnemyLocations();
+
+    for (const auto& [id, sb] : behaviors_)
+    {
+        std::visit(DrawBehaviorDebugVisitor{}, sb);
+    }
+}
+
+void ScoutingManager::drawGlobalDebugPanel() const
+{
+
+    int x = 10;
+    int y = 30;
+
+    BWAPI::Broodwar->drawTextScreen(x, y, "\x07Scouting Debug");
+    y += 14;
+
+    BWAPI::Broodwar->drawTextScreen(
+        x,
+        y,
+        "Enemy Main: %s",
+        enemyMainCache_.has_value() ? "\x07Known" : "\x08Unknown"
+    );
+    y += 12;
+
+    BWAPI::Broodwar->drawTextScreen(
+        x,
+        y,
+        "Worker Scout: %s",
+        (workerScout_ && workerScout_->exists()) ? "\x07 Active" : "\x08None"
+    );
+    y += 12;
+
+    BWAPI::Broodwar->drawTextScreen(x, y, "Combat Scouts: %d", numCombatScouts());
+    y += 12;
+
+    BWAPI::Broodwar->drawTextScreen(x, y, "Observer Scouts: %d", (int)observerScouts_.size());
+    y += 12;
+
+    const int totalScouts =
+        (workerScout_ && workerScout_->exists() ? 1 : 0) +
+        (int)combatZealots_.size() +
+        (int)combatDragoons_.size() +
+        (int)observerScouts_.size() +
+        (int)darkTemplarScouts_.size();
+
+    BWAPI::Broodwar->drawTextScreen(x, y, "All Scouts: %d", totalScouts);
+    y += 12;
+
+    BWAPI::Broodwar->drawTextScreen(
+        x,
+        y,
+        "Combat Scouting Started: %s",
+        combatScoutingStarted_ ? "\x07Yes" : "\x08No"
+    );
+}
+
+void ScoutingManager::drawKnownEnemyLocations() const
+{
+
+    if (enemyMainCache_.has_value())
+    {
+        BWAPI::Position p(enemyMainCache_.value());
+        BWAPI::Broodwar->drawCircleMap(p, 96, BWAPI::Colors::Cyan, false);
+        BWAPI::Broodwar->drawTextMap(p.x, p.y - 18, "\x0f Enemy Main");
+    }
+
+}
+
+void ScoutingManager::drawScoutDebugFor(BWAPI::Unit unit) const
+{
+    if (!unit || !unit->exists())
+    {
+        return;
+    }
+
+    const BWAPI::Position p = unit->getPosition();
+
+    BWAPI::Broodwar->drawCircleMap(p, 18, BWAPI::Colors::Green, false);
+
+    const BWAPI::UnitType t = unit->getType();
+
+    const char* role = "Scout";
+
+    if (t == BWAPI::UnitTypes::Protoss_Probe)
+    {
+        role = "Probe Scout";
+    }
+    else if (t == BWAPI::UnitTypes::Protoss_Zealot)
+    {
+        role = "Zealot Scout";
+    }
+    else if (t == BWAPI::UnitTypes::Protoss_Dragoon)
+    {
+        role = "Dragoon Scout";
+    }
+    else if (t == BWAPI::UnitTypes::Protoss_Observer)
+    {
+        role = "Observer Scout";
+    }
+    else if (t == BWAPI::UnitTypes::Protoss_Dark_Templar)
+    {
+        role = "DT Scout";
+    }
+
+    BWAPI::Broodwar->drawTextMap(p.x - 28, p.y - 30, "\x07%s", role);
+
+    if (enemyMainCache_.has_value())
+    {
+        BWAPI::Position mainPos(enemyMainCache_.value());
+        BWAPI::Broodwar->drawLineMap(p, mainPos, BWAPI::Colors::Green);
+    }
+
+    if (enemyNaturalCache_.has_value())
+    {
+        BWAPI::Position natPos(enemyNaturalCache_.value());
+        BWAPI::Broodwar->drawCircleMap(natPos, 16, BWAPI::Colors::Orange, false);
+    }
+}
+
+
+
 void ScoutingManager::drawScoutTags() const
 {
     if (workerScout_ && workerScout_->exists()) 
@@ -505,3 +668,5 @@ BWAPI::Unit ScoutingManager::getAvaliableDetectors()
     // No available observers
     return nullptr;
 }
+
+
