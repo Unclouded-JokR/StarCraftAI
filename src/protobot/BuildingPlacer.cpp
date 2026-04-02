@@ -70,15 +70,16 @@ BWAPI::TilePosition BuildingPlacer::checkBuildingBlocks()
                 if (BWEB::Map::isUsed(powerPlacements) != BWAPI::UnitTypes::None) continue;
 
                 int distance = 0;
-                int distanceToEnemy3 = 0;
+                int distanceToEnemy = 0;
                 theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(powerPlacements), &distance);
-                theMap.GetPath(enemyLoc, BWAPI::Position(block.getTilePosition()), &distanceToEnemy3);
+                if (buildReference->commanderReference->enemy().main.has_value())
+                    theMap.GetPath(BWAPI::Position(buildReference->commanderReference->enemy().main.value()), BWAPI::Position(block.getTilePosition()), &distanceToEnemy);
 
                 if (distance == -1) continue;
 
-                if (distanceToEnemy3 != 0 && enemyLoc != BWAPI::Position(32, 32))
+                if (distanceToEnemy != 0 && buildReference->commanderReference->enemy().main.value())
                 {
-                    finalDistance = static_cast<double>(distance) / distanceToEnemy3;
+                    finalDistance = static_cast<double>(distance) / distanceToEnemy;
                 }
                 else
                 {
@@ -122,16 +123,17 @@ BWAPI::TilePosition BuildingPlacer::checkPowerReserveBlocks()
         if (data.Blocksize == BlockData::SUPPLY && BWEB::Map::isUsed(block.getTilePosition()) == BWAPI::UnitTypes::None)
         {
             int distance = 0;
-            int distanceToEnemy2 = 0;
+            int distanceToEnemy = 0;
             theMap.GetPath(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()), BWAPI::Position(block.getTilePosition()), &distance);
-            theMap.GetPath(enemyLoc, BWAPI::Position(block.getTilePosition()), &distanceToEnemy2);
 
+            if(buildReference->commanderReference->enemy().main.has_value())
+                theMap.GetPath(BWAPI::Position(buildReference->commanderReference->enemy().main.value()), BWAPI::Position(block.getTilePosition()), &distanceToEnemy);
 
             if (distance == -1) continue;
 
-            if (distanceToEnemy2 != 0 && enemyLoc != BWAPI::Position(32, 32))
+            if (distanceToEnemy != 0 && buildReference->commanderReference->enemy().main.has_value())
             {
-                finalDistance = static_cast<double>(distance) / distanceToEnemy2;
+                finalDistance = static_cast<double>(distance) / distanceToEnemy;
             }
             else
             {
@@ -169,11 +171,13 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
             int distanceToNewBase = 0;
             int distanceToEnemy = 0;
             const BWEM::CPPath pathToExpansion = theMap.GetPath(BWAPI::Position(ProtoBot_MainBase), BWAPI::Position(base.Location()), &distanceToNewBase);
-            const BWEM::CPPath pathToEnemy = theMap.GetPath(enemyLoc, BWAPI::Position(base.Location()), &distanceToEnemy);
+
+            if (buildReference->commanderReference->enemy().main.has_value())
+                const BWEM::CPPath pathToEnemy = theMap.GetPath(BWAPI::Position(buildReference->commanderReference->enemy().main.value()), BWAPI::Position(base.Location()), &distanceToEnemy);
 
             if (distanceToNewBase == -1) continue;
 
-            if (distanceToEnemy != 0 && enemyLoc != BWAPI::Position(32, 32))
+            if (distanceToEnemy != 0 && buildReference->commanderReference->enemy().main.value())
             {
                 finalDistance = static_cast<double>(distanceToNewBase) / distanceToEnemy;
             }
@@ -322,11 +326,6 @@ void BuildingPlacer::drawPoweredTiles()
 PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
 {
     PlacementInfo information;
-
-    if (!enemyLoc || enemyLoc == BWAPI::Position(32, 32))
-    {
-        enemyLoc = BWAPI::Position(buildReference->commanderReference->enemy().main.value_or(BWAPI::TilePosition(1, 1)));
-    }
 
     switch(type)
     {

@@ -63,12 +63,6 @@ void ProtoBotCommander::onStart()
 	combatManager.onStart();
 
 	resourceRequests.clear();
-
-	std::cout << "Required Units for Templar\n";
-	for (auto tech : BWAPI::UnitTypes::Protoss_Dark_Templar.requiredUnits())
-	{
-		std::cout << tech.first << " : " << tech.second << "\n";
-	}
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
