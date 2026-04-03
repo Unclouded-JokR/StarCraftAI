@@ -75,6 +75,8 @@ void ScoutingManager::onFrame()
         setEnemyMain(tp); // now it is safe to broadcast
     }
 
+    maybeReturnCombatScoutsToCombat();
+
     if (scoutingDebugEnabled_) 
     {
         drawDebug();
@@ -631,6 +633,148 @@ void ScoutingManager::drawScoutTags() const
         const auto p = u->getPosition();
         //BWAPI::Broodwar->drawTextMap(p.x - 16, p.y + 32, "\x10SCOUT (Observer)");
     }
+}
+
+bool ScoutingManager::combatScoutLockActive() const
+{
+    return BWAPI::Broodwar->getFrameCount() < combatScoutLockUntilFrame_;
+}
+
+int ScoutingManager::combatScoutLockFramesRemaining() const
+{
+    const int remaining = combatScoutLockUntilFrame_ - BWAPI::Broodwar->getFrameCount();
+    return remaining > 0 ? remaining : 0;
+}
+
+void ScoutingManager::maybeReturnCombatScoutsToCombat()
+{
+    std::vector<BWAPI::Unit> candidates;
+
+    candidates.reserve(combatZealots_.size() + combatDragoons_.size());
+
+    for (BWAPI::Unit u : combatZealots_)
+    {
+        if (u && u->exists())
+        {
+            candidates.push_back(u);
+        }
+    }
+
+    for (BWAPI::Unit u : combatDragoons_)
+    {
+        if (u && u->exists())
+        {
+            candidates.push_back(u);
+        }
+    }
+
+    for (BWAPI::Unit u : candidates)
+    {
+        if (!u || !u->exists())
+        {
+            continue;
+        }
+
+        if (isNearActiveCombatSquad(u))
+        {
+            tryReturnScoutToCombat(u);
+        }
+    }
+}
+
+bool ScoutingManager::tryReturnScoutToCombat(BWAPI::Unit unit)
+{
+    if (!unit || !unit->exists() || !commanderRef)
+    {
+        return false;
+    }
+
+    const BWAPI::UnitType t = unit->getType();
+
+    // ONLY ScoutingZealot units (Zealot + Dragoon)
+    if (t != BWAPI::UnitTypes::Protoss_Zealot &&
+        t != BWAPI::UnitTypes::Protoss_Dragoon)
+    {
+        return false;
+    }
+
+    if (!isScout(unit))
+    {
+        return false;
+    }
+
+    const int id = unit->getID();
+
+    // If this was the proxy patrol unit, clear it
+    if (id == proxyPatrolZealotId_)
+    {
+        proxyPatrolZealotId_ = -1;
+    }
+
+    // Remove behavior
+    auto it = behaviors_.find(id);
+    if (it != behaviors_.end())
+    {
+        visit_onUnitDestroy(it->second, unit);
+        behaviors_.erase(it);
+    }
+
+    // Remove from scout tracking
+    unmarkScout(unit);
+
+    // Give back to combat
+    if (commanderRef->combatManager.assignUnit(unit))
+    {
+        lockCombatScoutAssignments(kCombatScoutLockFrames_);
+        return true;
+    }
+
+    return false;
+}
+
+bool ScoutingManager::isNearActiveCombatSquad(BWAPI::Unit unit) const
+{
+    if (!unit || !unit->exists() || !commanderRef)
+    {
+        return false;
+    }
+
+    auto nearAnySquad =
+        [&](const std::vector<Squad*>& squads) -> bool
+        {
+            for (const Squad* squad : squads)
+            {
+                if (!squad || !squad->leader || !squad->leader->exists())
+                {
+                    continue;
+                }
+
+                if (unit->getDistance(squad->leader) <= kScoutReturnToCombatDistPx_)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+    if (nearAnySquad(CombatManager::AttackingSquads))
+    {
+        return true;
+    }
+
+    if (nearAnySquad(CombatManager::ReinforcingSquads))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void ScoutingManager::lockCombatScoutAssignments(int frames)
+{
+    const int now = BWAPI::Broodwar->getFrameCount();
+    combatScoutLockUntilFrame_ = std::max(combatScoutLockUntilFrame_, now + frames);
 }
 
 // Unassign an observer if we have one to give to a squad
