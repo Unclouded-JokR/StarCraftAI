@@ -302,11 +302,53 @@ public:
     void onUnitDestroy(BWAPI::Unit unit);
     double evaluateGameState() const;
 
-    // Utility / debug
+    //************************************//
+    //                                    //
+    //  This is the stuff you care about. //
+    //                                    //
+    //************************************//
+    
+	// Returns all currently visible enemy units.
     const std::set<BWAPI::Unit>& getKnownEnemies() const { return _knownEnemies; }
+    
+    // Returns all enemy buildings, even ones we can't currently see. As long as we have seen the building before and we haven't seen it be destroyed, it's in here.
     const std::map<BWAPI::Unit, EnemyBuildingInfo>& getKnownEnemyBuildings() const { return _knownEnemyBuildings; }
+    
+    // Returns all enemy units, even ones we can't see currently.
     const std::map<int, TrackedEnemy>& getTrackedEnemies() const { return trackedEnemies; }
+    
+    // Returns number of our units by type.
+    FriendlyUnitCounter getFriendlyUnitCounter() const { return friendlyUnitCounter; }
+    
+	// Returns number of our buildings by type.
+    FriendlyBuildingCounter getFriendlyBuildingCounter() const { return friendlyBuildingCounter; }
+    
+    // Returns booleans for each tech upgrade (psionic storm, maelstrom, etc).
+    FriendlyTechCounter getFriendlyTechCounter() const { return friendlyTechCounter; }
+    
+    // Returns information on upgrades (armor, weapons, etc).
+    FriendlyUpgradeCounter getFriendlyUpgradeCounter() const { return friendlyUpgradeCounter; }
 
+    // Returns a list of BWEM base locations that currently have no nearby resource depot.
+    std::vector<const BWEM::Base*> FindUnownedBases() const;
+    
+    // Returns a list of BWEM bases that have one of our resource depots nearby.
+    std::vector<const BWEM::Base*> FindPlayerOwnedBases() const;
+    
+    // Returns a list of BWEM bases that have an enemy resource depot nearby.
+    std::vector<const BWEM::Base*> FindEnemyOwnedBases() const;
+
+	// Enemy capability queries, should be self-explanatory. If the purpose of these functions are not self evident, seek professional help.
+    bool enemyHasAirTech() const;
+    bool enemyHasCloakTech() const;
+
+    //************************************//
+    //                                    //
+    //    End of stuff you care about     //
+    //                                    //
+    //************************************//
+
+    // Utility / debug
     void printKnownEnemies() const;
     void printKnownEnemyBuildings() const;
     void printEnemyBuildingCounter() const;
@@ -318,18 +360,6 @@ public:
     void printFriendlyBuilding();
     void printFriendlyResearch();
     void printFriendlyUpgrades();
-
-	FriendlyUnitCounter getFriendlyUnitCounter() const { return friendlyUnitCounter; }
-	FriendlyBuildingCounter getFriendlyBuildingCounter() const { return friendlyBuildingCounter; }
-	FriendlyTechCounter getFriendlyTechCounter() const { return friendlyTechCounter; }
-	FriendlyUpgradeCounter getFriendlyUpgradeCounter() const { return friendlyUpgradeCounter; }
-
-    // Returns a list of BWEM base locations that currently have no nearby resource depot
-    std::vector<const BWEM::Base*> FindUnownedBases() const;
-    // Returns a list of BWEM bases that have one of our resource depots nearby
-    std::vector<const BWEM::Base*> FindPlayerOwnedBases() const;
-    // Returns a list of BWEM bases that have an enemy resource depot nearby
-    std::vector<const BWEM::Base*> FindEnemyOwnedBases() const;
 
     // Convenience accessors / helpers
     std::vector<const BWEM::Base*> GetPlayerBases() const;
@@ -343,10 +373,6 @@ public:
     // Test / debug helpers
     void TestPrintBaseOwnership() const;
     void TestDrawBaseOwnership() const;
-
-    // Enemy capability queries
-    bool enemyHasAirTech() const;
-    bool enemyHasCloakTech() const;
 
     // Communication to ThreatGrid
     int getEnemyGroundThreatAt(BWAPI::Position p) const;
