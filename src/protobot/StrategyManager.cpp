@@ -207,7 +207,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 			{
 				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
-
 				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
 			}
 		}
