@@ -1245,9 +1245,6 @@ void StrategyManager::updateUnitProductionGoals()
 	}
 	else
 	{
-		std::cout << "Erasing observer scouts\n";
-		std::cout << "Observer requests: " << request_count.observers_requests << "\n";
-		std::cout << "Unit production Game (observers): " << unitProductionCounter.observers << "\n";
 		unitProductionGoals.erase(OBSERVER_SCOUTS);
 	}
 
