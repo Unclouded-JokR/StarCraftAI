@@ -1233,7 +1233,7 @@ void StrategyManager::updateUnitProductionGoals()
 	//Dragoons
 	//Once this is inserted it will not be removed unless something bad happens.
 	//Will be added once we have made + planned 3 zealots or have atleast made 1 dragoon during build order.
-	if ((request_count.zealots_requests + unitProductionCounter.zealots > MAX_EARLY_ZEALOTS || request_count.dragoons_requests + unitProductionCounter.dragoons >= 1))
+	if ((request_count.zealots_requests + unitProductionCounter.zealots == MAX_EARLY_ZEALOTS || request_count.dragoons_requests + unitProductionCounter.dragoons >= 1))
 	{
 		unitProductionGoals.insert(INFINITE_DRAGOONS);
 	}
@@ -1430,6 +1430,7 @@ void StrategyManager::updateUpgradeGoals()
 	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
 	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
+	const int ProtoBot_Squads = commanderReference->combatManager.Squads.size();
 
 	updateUpgradesBeingCreated();
 
@@ -1447,7 +1448,15 @@ void StrategyManager::updateUpgradeGoals()
 
 
 	//Ground Weapons
-
+	if (request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons < 1 
+		&& (ProtoBot_Squads >= 3 || completedUnitsCount.dragoon >= 20))
+	{
+		upgradeProductionGoals.insert(RESEARCH_GROUND_WEAPONS);
+	}
+	else
+	{
+		upgradeProductionGoals.erase(RESEARCH_GROUND_WEAPONS);
+	}
 
 	//Plasma Shields
 
@@ -1462,6 +1471,7 @@ void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resour
 	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
 	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
+	const int ProtoBot_Squads = commanderReference->combatManager.Squads.size();
 
 	for (const UpgradeProductionGoals productionGoal : upgradeProductionGoals)
 	{
@@ -1477,6 +1487,19 @@ void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resour
 						(request_count.singularity_requests + upgradesInProduction.singularity_charge + completedUpgradesCount.singularityCharge + 1) == MAX_SINGULARITY_UPGRADES)
 					{
 						commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Singularity_Charge);
+					}
+				}
+				break;
+			case RESEARCH_GROUND_WEAPONS:
+				for (const BWAPI::Unit unit : forges)
+				{
+					if (commanderReference->alreadySentRequest(unit->getID()) == false &&
+						!unit->isTraining() &&
+						unit->isCompleted() &&
+						ProtoBot_Squads >= 3 &&
+						(request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons + 1) == 1)
+					{
+						commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
 					}
 				}
 				break;
