@@ -141,8 +141,8 @@ void NexusEconomy::onFrame()
 		===========================
 	*/
 
-	std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
-	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
+	//std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
+	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{
@@ -291,7 +291,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 	}
 	else if (unit->getType() == BWAPI::UnitTypes::Resource_Mineral_Field && minerals.find(unit) != minerals.end())
 	{
-		std::cout << "Mineral has been depleted at Nexus " << nexusID << "\n";
+		//std::cout << "Mineral has been depleted at Nexus " << nexusID << "\n";
 
 		resourceWorkerCount[unit] = 0;
 		minerals.erase(unit);
@@ -316,7 +316,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 			if (assignedResource.find(worker)->second == unit)
 			{
 				workersToRelocate.insert(worker);
-				std::cout << "Worker " << worker->getID() << " is assigned to mineral\n";
+				//std::cout << "Worker " << worker->getID() << " is assigned to mineral\n";
 			}
 				
 		}
