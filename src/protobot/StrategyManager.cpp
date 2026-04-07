@@ -1305,7 +1305,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 						!nexusEconomy.nexus->isTraining() &&
 						nexusEconomy.nexus->isCompleted() &&
-						(nexusEconomy.workers.size() < nexusEconomy.workerOverflowAmount || nexusEconomy.vespeneGyser != nullptr) && 
+						nexusEconomy.workers.size() < nexusEconomy.workerOverflowAmount && 
 						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);

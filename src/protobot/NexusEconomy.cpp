@@ -178,8 +178,7 @@ void NexusEconomy::onFrame()
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
 		if (!worker->isCarryingMinerals())
 		{
-			if (assimilator != nullptr && 
-				(resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR || (workers.size() > workerOverflowAmount && assignedResource.find(worker) == assignedResource.end())))
+			if (assimilator != nullptr &&  resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
 			{
 				if (assignedResource[worker]) {
 					resourceWorkerCount[assignedResource[worker]] -= 1;
@@ -204,6 +203,17 @@ void NexusEconomy::onFrame()
 					//std::cout << "worker " << worker->getID() << " assigned to mineral " << closestMineral->getID() << "\n";
 
 
+				}
+				else
+				{
+					if (assignedResource[worker]) {
+						resourceWorkerCount[assignedResource[worker]] -= 1;
+					}
+
+					worker->gather(assimilator);
+					assignedResource[worker] = vespeneGyser;
+					resourceWorkerCount[assimilator] += 1;
+					workerOrder[worker] = 1;
 				}
 
 			}
