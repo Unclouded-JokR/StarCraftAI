@@ -19,6 +19,7 @@
 #include "BuildOrder.h"
 #define FRAMES_BEFORE_TRYAGAIN 72
 #define MAX_ATTEMPTS 3
+#define LARGEST_GYSER_DIATNCE_TO_NEXUS 250
 
 //Units strategy manager cares about, details the units that are being requested and have not been placed yet.
 
