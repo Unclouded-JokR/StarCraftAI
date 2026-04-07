@@ -595,11 +595,11 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 	return false;
 }
 
-bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building, BWAPI::Unit nexus)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && !request.isCheese) return true;
+		if (building == request.unit && request.nexus == nexus && !request.isCheese) return true;
 	}
 	return false;
 }
@@ -616,11 +616,11 @@ bool ProtoBotCommander::upgradeAlreadyRequested(BWAPI::Unit building)
 	return false;
 }
 
-bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit nexus)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
+		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && request.nexus == nexus &&!request.isCheese) return true;
 	}
 	return false;
 }
@@ -760,9 +760,9 @@ void ProtoBotCommander::drawDebugInformation()
 }
 #pragma endregion
 
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Unit nexus)
 {
-	return buildManager.checkUnitIsBeingWarpedIn(building);
+	return buildManager.checkUnitIsBeingWarpedIn(building, nexus);
 }
 
 BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)

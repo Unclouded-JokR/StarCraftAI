@@ -59,9 +59,10 @@ struct ResourceRequest
 	//Minimum frame to start producing a building by
 	int frameToStartBuilding = -1;
 
-	//For now buildings will request to make units but we should remove this later
-	//The strategy manager should request certain units and upgrades and the build manager should find open buildings that can trian them.
+	//Request Identifiers
 	BWAPI::Unit requestedBuilding = nullptr;
+	//Used for Nexuses so we dont clog queue with one assimlator for other nexuses that need them at the same time.
+	BWAPI::Unit nexus = nullptr;
 
 	//New stuff for Debuging
 	int frameRequestCreated = -1;
@@ -163,7 +164,9 @@ public:
 	void drawResouceRequestCount(int x, int y, bool background = true);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
-	bool requestedBuilding(BWAPI::UnitType building);
+	bool requestedBuilding(BWAPI::UnitType building, BWAPI::Unit nexus = nullptr);
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type, BWAPI::Unit nexus = nullptr);
+	bool checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit nexus = nullptr);
 	bool checkCheeseRequest(BWAPI::Unit);
 	bool alreadySentRequest(int unitID);
 
@@ -185,8 +188,6 @@ public:
 	bool isDetectorThreatened(const BWAPI::Position& pos) const;
 
 	//Build Manager Methods
-	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type);
-	bool checkUnitIsPlanned(BWAPI::UnitType building);
 	bool buildOrderCompleted();
 	bool checkWorkerIsConstructing(BWAPI::Unit);
 

@@ -560,7 +560,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
+	if (supplyUsed >= 170 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
 		int numUnits = commanderReference->combatManager.allUnits.size();
 		int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
@@ -1481,11 +1481,9 @@ void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resour
 	}
 }
 
-bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus)
 {
-	return (!commanderReference->requestedBuilding(type)
-		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
-			|| commanderReference->checkUnitIsPlanned(type)));
+	return (!commanderReference->requestedBuilding(type, nexus) && !(commanderReference->checkUnitIsBeingWarpedIn(type, nexus) || commanderReference->checkUnitIsPlanned(type, nexus)));
 }
 
 bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)

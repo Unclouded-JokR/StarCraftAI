@@ -73,7 +73,7 @@ public:
     void resetNaturalWallPlan();
     bool checkWorkerIsConstructing(BWAPI::Unit);
     bool isBuildOrderCompleted();
-    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building);
+    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Unit nexus = nullptr);
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();

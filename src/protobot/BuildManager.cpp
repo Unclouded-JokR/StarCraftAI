@@ -1022,13 +1022,30 @@ bool BuildManager::isBuildOrderCompleted()
     return buildOrderCompleted;
 }
 
-bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit)
+bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit, BWAPI::Unit nexus)
 {
-    for (BWAPI::Unit building : buildings)
+    if (nexus == nullptr)
     {
-        if (unit == building->getType() && !building->isCompleted())
+        for (const BWAPI::Unit building : buildings)
         {
-            return true;
+            if (unit == building->getType() && !building->isCompleted())
+            {
+                return true;
+            }
+        }
+    }
+    else
+    {
+        const BWAPI::Position nexusLocation = nexus->getPosition();
+
+        for (const BWAPI::Unit building : buildings)
+        {
+            if (building->getType() != BWAPI::UnitTypes::Protoss_Assimilator) continue;
+
+            if (unit == building->getType() && !building->isCompleted() && nexusLocation.getApproxDistance(building->getPosition()) < LARGEST_GYSER_DIATNCE_TO_NEXUS)
+            {
+                return true;
+            }
         }
     }
 

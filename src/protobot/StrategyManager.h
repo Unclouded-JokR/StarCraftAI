@@ -284,5 +284,5 @@ public:
 
 	//Not you
 	bool shouldGasSteal();
-	bool checkAlreadyRequested(BWAPI::UnitType type);
+	bool checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus = nullptr);
 };

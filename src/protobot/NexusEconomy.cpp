@@ -141,6 +141,8 @@ void NexusEconomy::onFrame()
 		===========================
 	*/
 
+	BWAPI::Broodwar->printf("Distance to gyser is about %d", nexus->getPosition().getApproxDistance(vespeneGyser->getPosition()));
+
 	std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
 	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
 
