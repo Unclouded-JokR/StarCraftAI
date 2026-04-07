@@ -34,33 +34,6 @@ void EconomyManager::onFrame()
         workerAmount += nexusEconomy.workers.size();
 
     }
-
-    if (workerAmount >= MAX_WORKERS)
-    {
-        for (NexusEconomy& nexusEconomy : nexusEconomies)
-        {
-            nexusEconomy.needWorkers = false;
-            if (totalWorkers == 0)
-            {
-               // std::cout << "no more workers shall be trained\n";
-                totalWorkers = 1;
-            }
-        }
-    }
-    else
-    {
-        for (NexusEconomy& nexusEconomy : nexusEconomies)
-        {
-            nexusEconomy.needWorkers = true;
-            if (totalWorkers == 1)
-            {
-                //std::cout << "need more workers\n";
-                totalWorkers = 0;
-            }
-
-        }
-    }
-
 }
 
 void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
@@ -369,7 +342,8 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
     newNexus.optimalWorkerAmount = newNexus.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
     newNexus.maximumWorkers = newNexus.optimalWorkerAmount + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 
-   //std::cout << mineralsToReturn.size() << "\n";
+    //To keep probe production constant make this to be able to have more workers than nessecary at main or any other base. Transfers should disperse workers.
+    newNexus.workerOverflowAmount = (newNexus.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);;
 }
 
 std::vector<NexusEconomy> EconomyManager::getNexusEconomies()

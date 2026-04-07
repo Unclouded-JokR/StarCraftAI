@@ -193,9 +193,7 @@ const ProductionGoals productionGoalLate =
 };
 
 class StrategyManager
-{
-public:
-	bool isAttackPhase = false;
+{	
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };
@@ -231,14 +229,17 @@ private:
 	ProtoBotProductionCount ProtoBot_createdUnitCount;
 	UpgradesInProduction upgradesInProduction;
 
+	//Buildings that can create units
 	BWAPI::Unitset resourceDepots;
 	BWAPI::Unitset unitProduction; //Units that can create combat units
 	BWAPI::Unitset upgradeProduction; //Units that can research upgrades
 
+	//Buildings that can research upgrades
 	BWAPI::Unitset cybernetics;
 	BWAPI::Unitset forges;
 	BWAPI::Unitset citadels;
 
+	//Workers
 	BWAPI::Unitset workers;
 
 	std::set<UnitProductionGoals> unitProductionGoals;
@@ -257,6 +258,7 @@ public:
 	std::unordered_map<const BWEM::ChokePoint*, bool> PositionsFilled;
 	BWAPI::Position startingChoke;
 	BWAPI::Position lastAttackPos;
+	bool isAttackPhase = false;
 
 	ProtoBotCommander* commanderReference;
 
@@ -275,21 +277,12 @@ public:
 	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
 
-	//Should we pass requests as argument?
-	//Make these pass back stuff we should produce
-	//Same with buildings and such
-	//Make a function that will then process all the requests and filter them out somehow and deny some.
-	// These should be unit sets should be a struct that organizes the unit requests to make addressing what we need to do easier.
-
-	//BWAPI::Unitset plannedUnitProduction();
-	//BWAPI::UpgradeTypes plannedUpgradeProduction();
-	//BWAPI::Unitset plannedBuildingProduction();
-
 	void planUnitProduction(std::vector<ResourceRequest>& resourceRequests);
 	void planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests);
+	void planBuildingProduction(std::vector<ResourceRequest&> resourceRequests);
+	void finalizeProductionPlan(std::vector<ResourceRequest&> resourceRequests);
 
 	//Not you
-	BWAPI::Unitset getProtoBotBuildings();
 	bool shouldGasSteal();
 	bool checkAlreadyRequested(BWAPI::UnitType type);
 };

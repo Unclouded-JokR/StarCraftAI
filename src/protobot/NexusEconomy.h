@@ -8,6 +8,7 @@
 
 #define WORKERS_PER_ASSIMILATOR 3
 #define OPTIMAL_WORKERS_PER_MINERAL 2
+#define MAXIMUM_WORKERS_PER_MINERAL 3
 
 class EconomyManager;
 
@@ -45,6 +46,9 @@ public:
 	//Calculated maximums based on number of minerals.
 	int optimalWorkerAmount;
 	int maximumWorkers;
+
+	//Used to assign excess workers we create to mine gas.
+	int workerOverflowAmount;
 
 	NexusEconomy(BWAPI::Unit nexus, int id, EconomyManager* economyReference);
 	~NexusEconomy();

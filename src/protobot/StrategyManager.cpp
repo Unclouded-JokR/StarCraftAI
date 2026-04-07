@@ -1301,13 +1301,12 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 		switch (productionGoal)
 		{
 			case SATURATE_WORKERS:
-		
 				for (const NexusEconomy nexusEconomy : nexusEconomies)
 				{
 					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 						!nexusEconomy.nexus->isTraining() &&
 						nexusEconomy.nexus->isCompleted() &&
-						nexusEconomy.workers.size() < nexusEconomy.maximumWorkers && 
+						(nexusEconomy.workers.size() < nexusEconomy.workerOverflowAmount || nexusEconomy.vespeneGyser != nullptr) && 
 						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);
@@ -1487,22 +1486,6 @@ bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
 	return (!commanderReference->requestedBuilding(type)
 		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
 			|| commanderReference->checkUnitIsPlanned(type)));
-}
-
-BWAPI::Unitset StrategyManager::getProtoBotBuildings()
-{
-	const BWAPI::Unitset ProtoBot_units = BWAPI::Broodwar->self()->getUnits();
-	BWAPI::Unitset ProtoBot_buildings;
-
-	for (BWAPI::Unit unit : ProtoBot_units)
-	{
-		if (unit->getType().isBuilding() && unit->isCompleted())
-		{
-			ProtoBot_buildings.insert(unit);
-		}
-	}
-
-	return ProtoBot_buildings;
 }
 
 bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)

@@ -141,7 +141,8 @@ void NexusEconomy::onFrame()
 		===========================
 	*/
 
-	//economyReference->commanderReference->timerManager.stopTimer(TimerManager::test);
+	std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
+	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{
@@ -177,7 +178,8 @@ void NexusEconomy::onFrame()
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
 		if (!worker->isCarryingMinerals())
 		{
-			if (assimilator != nullptr && resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
+			if (assimilator != nullptr && 
+				(resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR || (workers.size() > workerOverflowAmount && assignedResource.find(worker) == assignedResource.end())))
 			{
 				if (assignedResource[worker]) {
 					resourceWorkerCount[assignedResource[worker]] -= 1;
@@ -375,15 +377,33 @@ BWAPI::Unit NexusEconomy::GetClosestMineralToWorker(BWAPI::Unit worker)
 
 	if (closestMineral == nullptr)
 	{
-		for (BWAPI::Unit mineral : minerals)
+		//Maximum workers is the calculated value of (# of minerals * OPTIMAL_WORKERS_PER_MINERAL) + (# of gysers * WORKERS_PER_ASSIMILATOR)
+		if (workers.size() <= maximumWorkers)
 		{
-			const int distanceFromWorker = worker->getDistance(mineral);
-			const int workersAssignedToMineral = resourceWorkerCount[mineral];
-
-			if (resourceWorkerCount[mineral] < OPTIMAL_WORKERS_PER_MINERAL && distanceFromWorker < closestMineralDistance)
+			for (BWAPI::Unit mineral : minerals)
 			{
-				closestMineralDistance = distanceFromWorker;
-				closestMineral = mineral;
+				const int distanceFromWorker = worker->getDistance(mineral);
+				const int workersAssignedToMineral = resourceWorkerCount[mineral];
+
+				if (resourceWorkerCount[mineral] < OPTIMAL_WORKERS_PER_MINERAL && distanceFromWorker < closestMineralDistance)
+				{
+					closestMineralDistance = distanceFromWorker;
+					closestMineral = mineral;
+				}
+			}
+		}
+		else
+		{
+			for (BWAPI::Unit mineral : minerals)
+			{
+				const int distanceFromWorker = worker->getDistance(mineral);
+				const int workersAssignedToMineral = resourceWorkerCount[mineral];
+
+				if (resourceWorkerCount[mineral] < MAXIMUM_WORKERS_PER_MINERAL && distanceFromWorker < closestMineralDistance)
+				{
+					closestMineralDistance = distanceFromWorker;
+					closestMineral = mineral;
+				}
 			}
 		}
 	}
