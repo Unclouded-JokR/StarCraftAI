@@ -83,9 +83,9 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	planUnitProduction(resourceRequests);
 	planUpgradeProduction(resourceRequests);
 
-	//drawGameUnitProduction(unitProductionCounter, 5, 238);
-	//drawUnitProductionGoals();
-	//drawUpgradeProductionGoals();
+	drawGameUnitProduction(unitProductionCounter, 5, 238);
+	drawUnitProductionGoals();
+	drawUpgradeProductionGoals();
 
 	std::vector<Action> actionsToReturn;
 
@@ -663,7 +663,7 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 {
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-	std::cout << unit->getType() << " was destroyed and was " << (unit->isCompleted() ? "completed\n" : "not completed\n");
+	//std::cout << unit->getType() << " was destroyed and was " << (unit->isCompleted() ? "completed\n" : "not completed\n");
 
 	//Update Units counts
 	switch (unit->getType())
@@ -1245,6 +1245,9 @@ void StrategyManager::updateUnitProductionGoals()
 	}
 	else
 	{
+		std::cout << "Erasing observer scouts\n";
+		std::cout << "Observer requests: " << request_count.observers_requests << "\n";
+		std::cout << "Unit production Game (observers): " << unitProductionCounter.observers << "\n";
 		unitProductionGoals.erase(OBSERVER_SCOUTS);
 	}
 
@@ -1314,7 +1317,6 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 				break;
 
 			case EARLY_ZEALOTS:
-
 				if (trainingBlock) break;
 
 				for (const BWAPI::Unit building : unitProduction)
@@ -1348,7 +1350,28 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 					}
 				}
 				break;
+			case OBSERVER_SCOUTS:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false)
+				{
+					break;
+				}
 
+				for (const BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Robotics_Facility) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.observers_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, building);
+						//std::cout << "Requesting to build observer\n";
+						//std::cout << "Observer requests: " << request_count.observers_requests << "\n";
+						//std::cout << "Unit production Game (observers): " << unitProductionCounter.observers << "\n";
+					}
+				}
+				break;
 			case INFINITE_DRAGOONS:
 				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dragoon) == false) break;
 
@@ -1361,22 +1384,6 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 						building->isCompleted())
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, building);
-					}
-				}
-				break;
-			case OBSERVER_SCOUTS:
-				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false) break;
-
-				for (const BWAPI::Unit building : unitProduction)
-				{
-					if (building->getType() != BWAPI::UnitTypes::Protoss_Observatory) continue;
-
-					if (commanderReference->alreadySentRequest(building->getID()) == false &&
-						!building->isTraining() &&
-						building->isCompleted() &&
-						(request_count.observatory_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
-					{
-						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, building);
 					}
 				}
 				break;

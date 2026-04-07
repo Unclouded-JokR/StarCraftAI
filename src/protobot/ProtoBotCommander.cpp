@@ -294,7 +294,7 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 				--requestCounter.dragoons_requests;
 			break;
 		case BWAPI::UnitTypes::Protoss_Observer:
-			if (requestCounter.observatory_requests > 0)
+			if (requestCounter.observers_requests > 0)
 				--requestCounter.observers_requests;
 			break;
 		case BWAPI::UnitTypes::Protoss_Dark_Templar:
@@ -458,7 +458,7 @@ void ProtoBotCommander::removeApprovedRequests()
 
 			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
-			std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
+			/*std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
 				<< "\nFrame Request Created = " << it->frameRequestCreated
 				<< "\nFrame Request Approved = " << it->frameRequestApproved
 				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
@@ -466,6 +466,8 @@ void ProtoBotCommander::removeApprovedRequests()
 				<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = " 
 				<< (it->frameRequestApproved - it->frameRequestCreated)
 				<< " (" << seconds << " seconds)" << "\n";
+
+			*/
 
 			//Add time between frames and other stuff.
 

@@ -6,7 +6,7 @@
 #include "StrategyManager.h"
 #include <bwem.h>
 
-#define DEBUG_STATES
+//#define DEBUG_STATES
 #define MAX_REINFORCE_DIST 1500
 #define KITING_FRAME_DELAY 8
 

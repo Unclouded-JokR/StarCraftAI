@@ -155,6 +155,6 @@ private:
 
     std::vector<BWAPI::Unit> darkTemplarScouts_;
 
-    bool scoutingDebugEnabled_ = true;
+    bool scoutingDebugEnabled_ = false;
 
 };

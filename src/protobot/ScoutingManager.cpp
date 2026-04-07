@@ -9,7 +9,7 @@ ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
 void ScoutingManager::onStart() 
 {
     //std::cout << "Scouting Manager Initialized\n";
-    drawScoutTags();
+    //drawScoutTags();
 }
 
 static void visit_start(BehaviorVariant& sb) 
