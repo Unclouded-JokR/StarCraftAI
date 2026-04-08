@@ -82,6 +82,10 @@ void CombatManager::defend(BWAPI::Position position) {
 		squad->info.currentDefensivePosition = position;
 		squad->setState(DefendingState::getInstance());
 	}
+	for (auto& squad : AttackingSquads) {
+		squad->info.currentDefensivePosition = position;
+		squad->setState(DefendingState::getInstance());
+	}
 }
 
 void CombatManager::reinforce(BWAPI::Position position) {

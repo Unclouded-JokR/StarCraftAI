@@ -521,6 +521,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
 	BWAPI::Unit unitToAttack = nullptr;
 	BWAPI::Unit closestUnit = nullptr;
+	BWAPI::Position StartingLocation = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
 	bool enemyNearFriendlyArea = false;
 	int closest = INT_MAX;
 	for (const BWAPI::Unit unit : unitsOnVisison)
@@ -533,7 +534,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			continue; 
 		}
 
-		const int dist = unit->getPosition().getApproxDistance(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		const int dist = unit->getPosition().getApproxDistance(StartingLocation);
 		if (dist < closest) {
 			closest = dist;
 			closestUnit = unit;
@@ -557,12 +558,12 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	// If we have more than two full squads attack. 
 	const int totalSupply = BWAPI::Broodwar->self()->supplyTotal() / 2;
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
+	const int numUnits = commanderReference->combatManager.allUnits.size();
+	constexpr int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
 	if (supplyUsed >= 170 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		int numUnits = commanderReference->combatManager.allUnits.size();
-		int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
 		if (numUnits >= targetCount && numUnits > floor(targetCount / 3))
 		{
 			isAttackPhase = true;
@@ -571,19 +572,18 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				attackPos = unitToAttack->getPosition();
 			}
 			else {
-				// Prioritize attacking known enemy buildings
-				for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
-					if (pair.second.destroyed) {
+				// Both units and buildings are part of getTrackedEnemies()
+				int closestDist = INT_MAX;
+				for (const auto& [_, enemyInfo] : InformationManager::Instance().getTrackedEnemies()) {
+					if (enemyInfo.destroyed) {
 						continue;
 					}
 
-					if (!pair.first->isVisible()) {
-						attackPos = pair.second.lastKnownPosition;
-						break;
-					}
-					else if (pair.first->exists()) {
-						attackPos = pair.first->getPosition();
-						break;
+					const int dist = StartingLocation.getApproxDistance(enemyInfo.lastSeenPos);
+					if (dist < closestDist) {
+						closestDist = dist;
+						attackPos = enemyInfo.lastSeenPos;
+						cout << "Type: " << enemyInfo.type << endl;
 					}
 				}
 			}
