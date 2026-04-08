@@ -1512,7 +1512,7 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
 			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus))
 		{
-			commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
+			commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator, false, false, false, nexusEconomy.nexus);
 		}
 	}
 }

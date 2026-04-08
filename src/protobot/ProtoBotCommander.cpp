@@ -480,7 +480,7 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
-void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement)
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Unit nexus)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
@@ -489,6 +489,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.isWall = isWall;
 	request.isRampPlacement = isRampPlacement;
+	request.nexus = nexus;
 
 	switch (building)
 	{
