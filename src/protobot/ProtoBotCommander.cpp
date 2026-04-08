@@ -75,7 +75,7 @@ void ProtoBotCommander::onFrame()
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
 
-	BWEB::Map::draw();
+	//BWEB::Map::draw();
 
 	removeApprovedRequests();
 
@@ -522,6 +522,24 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	}
 
 	resourceRequests.push_back(request);
+
+	if (building == BWAPI::UnitTypes::Protoss_Assimilator)
+	{
+		int id = (nexus != nullptr ? nexus->getID() : -1);
+		std::cout << "Assimilator has been added to queue for nexus " << id << "\n";
+		std::cout << "Assimilators in queue:\n";
+
+		for (const ResourceRequest& temp : resourceRequests)
+		{
+			if (temp.unit == BWAPI::UnitTypes::Protoss_Assimilator)
+			{
+				int id = (temp.nexus != nullptr ? temp.nexus->getID() : -1);
+
+				std::cout << "Assimilator requested for nexus " << id << "\n";
+			}
+		}
+		std::cout << "=================================\n";
+	}
 }
 
 void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder)

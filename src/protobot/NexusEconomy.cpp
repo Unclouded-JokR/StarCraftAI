@@ -141,8 +141,8 @@ void NexusEconomy::onFrame()
 		===========================
 	*/
 
-	//std::string temp = "Nexus Economy " + std::to_string(nexusID) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
-	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
+	std::string temp = "Nexus ID " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
+	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{
