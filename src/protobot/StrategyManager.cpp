@@ -1290,7 +1290,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 					}
 				}
 				break;
-
+				
 			case EARLY_ZEALOTS:
 				if (trainingBlock) break;
 
@@ -1308,7 +1308,6 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 					}
 				}
 				break;
-
 			case DARK_TEMPLAR_ATTEMPT:
 				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dark_Templar) == false) break;
 
@@ -1362,6 +1361,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 					}
 				}
 				break;
+				
 			default:
 				break;
 		}
@@ -1510,7 +1510,7 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 		if (nexusEconomy.vespeneGyser != nullptr
 			&& nexusEconomy.assimilator == nullptr
 			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
+			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus))
 		{
 			commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
 		}

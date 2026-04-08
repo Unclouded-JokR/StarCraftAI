@@ -75,7 +75,7 @@ void ProtoBotCommander::onFrame()
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
 
-	//BWEB::Walls::draw();
+	BWEB::Map::draw();
 
 	removeApprovedRequests();
 
