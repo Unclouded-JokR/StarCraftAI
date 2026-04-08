@@ -28,6 +28,8 @@ public:
         isProxyPatroller = v;
     }
 
+    void drawDebug() const;
+
 private:
     enum class State
     {

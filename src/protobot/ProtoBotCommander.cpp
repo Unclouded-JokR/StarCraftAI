@@ -63,12 +63,6 @@ void ProtoBotCommander::onStart()
 	combatManager.onStart();
 
 	resourceRequests.clear();
-
-	std::cout << "Required Units for Templar\n";
-	for (auto tech : BWAPI::UnitTypes::Protoss_Dark_Templar.requiredUnits())
-	{
-		std::cout << tech.first << " : " << tech.second << "\n";
-	}
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
@@ -300,7 +294,7 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 				--requestCounter.dragoons_requests;
 			break;
 		case BWAPI::UnitTypes::Protoss_Observer:
-			if (requestCounter.observatory_requests > 0)
+			if (requestCounter.observers_requests > 0)
 				--requestCounter.observers_requests;
 			break;
 		case BWAPI::UnitTypes::Protoss_Dark_Templar:
@@ -464,7 +458,7 @@ void ProtoBotCommander::removeApprovedRequests()
 
 			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
-			std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
+			/*std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
 				<< "\nFrame Request Created = " << it->frameRequestCreated
 				<< "\nFrame Request Approved = " << it->frameRequestApproved
 				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
@@ -472,6 +466,8 @@ void ProtoBotCommander::removeApprovedRequests()
 				<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = " 
 				<< (it->frameRequestApproved - it->frameRequestCreated)
 				<< " (" << seconds << " seconds)" << "\n";
+
+			*/
 
 			//Add time between frames and other stuff.
 
@@ -601,11 +597,11 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 	return false;
 }
 
-bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building)
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building, BWAPI::Unit nexus)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && !request.isCheese) return true;
+		if (building == request.unit && request.nexus == nexus && !request.isCheese) return true;
 	}
 	return false;
 }
@@ -622,11 +618,11 @@ bool ProtoBotCommander::upgradeAlreadyRequested(BWAPI::Unit building)
 	return false;
 }
 
-bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building)
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit nexus)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && !request.isCheese) return true;
+		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && request.nexus == nexus &&!request.isCheese) return true;
 	}
 	return false;
 }
@@ -766,9 +762,9 @@ void ProtoBotCommander::drawDebugInformation()
 }
 #pragma endregion
 
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building)
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Unit nexus)
 {
-	return buildManager.checkUnitIsBeingWarpedIn(building);
+	return buildManager.checkUnitIsBeingWarpedIn(building, nexus);
 }
 
 BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)

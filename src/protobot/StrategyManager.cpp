@@ -207,7 +207,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
 			{
 				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
-
 				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
 			}
 		}
@@ -520,30 +519,37 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 
 #pragma region EnemyCheck
 	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
-
 	BWAPI::Unit unitToAttack = nullptr;
-
+	BWAPI::Unit closestUnit = nullptr;
+	bool enemyNearFriendlyArea = false;
+	int closest = INT_MAX;
 	for (const BWAPI::Unit unit : unitsOnVisison)
 	{
 		if (!unit->exists() || unit == nullptr) {
 			continue;
 		}
 
-		if (unit->getType().isBuilding()) continue;
+		if (unit->isCloaked()) { 
+			continue; 
+		}
 
-		unitToAttack = unit;
-		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unit->getTilePosition());
+		const int dist = unit->getPosition().getApproxDistance(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		if (dist < closest) {
+			closest = dist;
+			closestUnit = unit;
+		}
+	}
 
-		bool found = false;
+	if (closestUnit != nullptr) {
+		unitToAttack = closestUnit;
+		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unitToAttack->getTilePosition());
 		for (const BWEM::Area* area : ProtoBot_Areas)
 		{
 			if (enemyAreaLocation == area) {
-				found = true;
+				enemyNearFriendlyArea = true;
 				break;
 			}
 		}
-
-		isBaseBeingAttacked = (found) ? true : false;
 	}
 #pragma endregion
 
@@ -553,28 +559,32 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	const int supplyUsed = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if (!isBaseBeingAttacked && (supplyUsed >= 150 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY)))
+	if (supplyUsed >= 170 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (numberFullSquads >= NUM_SQUADS_TO_ATTACK && Protobot_Squads.size() > floor(NUM_SQUADS_TO_ATTACK / 2))
+		int numUnits = commanderReference->combatManager.allUnits.size();
+		int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
+		if (numUnits >= targetCount && numUnits > floor(targetCount / 3))
 		{
 			isAttackPhase = true;
-
 			BWAPI::Position attackPos = BWAPI::Positions::Invalid;
+			if (unitToAttack != nullptr && unitToAttack->exists()) {
+				attackPos = unitToAttack->getPosition();
+			}
+			else {
+				// Prioritize attacking known enemy buildings
+				for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
+					if (pair.second.destroyed) {
+						continue;
+					}
 
-			// Prioritize attacking known enemy buildings
-
-			for (const auto& pair : InformationManager::Instance().getKnownEnemyBuildings()) {
-				if (pair.second.destroyed) {
-					continue;
-				}
-
-				if (!pair.first->isVisible()) {
-					attackPos = pair.second.lastKnownPosition;
-					break;
-				}
-				else if (pair.first->exists()) {
-					attackPos = pair.first->getPosition();
-					break;
+					if (!pair.first->isVisible()) {
+						attackPos = pair.second.lastKnownPosition;
+						break;
+					}
+					else if (pair.first->exists()) {
+						attackPos = pair.first->getPosition();
+						break;
+					}
 				}
 			}
 
@@ -600,8 +610,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 #pragma endregion
 
 #pragma region Defend
-	if (isBaseBeingAttacked) {
-		if (unitToAttack != nullptr && unitToAttack->exists()) {
+	if (!isAttackPhase) {
+		if (unitToAttack != nullptr && unitToAttack->exists() && enemyNearFriendlyArea) {
 			int closestDist = 0;
 
 			Action attack;
@@ -609,9 +619,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 			attack.reinforcePosition = unitToAttack->getPosition();
 			actionsToReturn.push_back(attack);
 		}
-	}
-	else {
-		if (Protobot_IdleSquads.size() != 0 && !isAttackPhase)
+
+		if (Protobot_IdleSquads.size() != 0)
 		{
 			int distanceToClosestChoke = INT_MAX;
 			BWAPI::WalkPosition areaToDefend = BWAPI::WalkPositions::Invalid;
@@ -654,7 +663,7 @@ void StrategyManager::onUnitDestroy(BWAPI::Unit unit)
 {
 	if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
 
-	std::cout << unit->getType() << " was destroyed and was " << (unit->isCompleted() ? "completed\n" : "not completed\n");
+	//std::cout << unit->getType() << " was destroyed and was " << (unit->isCompleted() ? "completed\n" : "not completed\n");
 
 	//Update Units counts
 	switch (unit->getType())
@@ -1224,7 +1233,7 @@ void StrategyManager::updateUnitProductionGoals()
 	//Dragoons
 	//Once this is inserted it will not be removed unless something bad happens.
 	//Will be added once we have made + planned 3 zealots or have atleast made 1 dragoon during build order.
-	if ((request_count.zealots_requests + unitProductionCounter.zealots > MAX_EARLY_ZEALOTS || request_count.dragoons_requests + unitProductionCounter.dragoons >= 1))
+	if ((request_count.zealots_requests + unitProductionCounter.zealots == MAX_EARLY_ZEALOTS || request_count.dragoons_requests + unitProductionCounter.dragoons >= 1))
 	{
 		unitProductionGoals.insert(INFINITE_DRAGOONS);
 	}
@@ -1291,13 +1300,12 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 		switch (productionGoal)
 		{
 			case SATURATE_WORKERS:
-		
-				for (NexusEconomy nexusEconomy : nexusEconomies)
+				for (const NexusEconomy nexusEconomy : nexusEconomies)
 				{
 					if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 						!nexusEconomy.nexus->isTraining() &&
 						nexusEconomy.nexus->isCompleted() &&
-						nexusEconomy.workers.size() < nexusEconomy.maximumWorkers && 
+						nexusEconomy.workers.size() < nexusEconomy.workerOverflowAmount && 
 						(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Probe, nexusEconomy.nexus);
@@ -1306,10 +1314,9 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 				break;
 
 			case EARLY_ZEALOTS:
-
 				if (trainingBlock) break;
 
-				for (BWAPI::Unit building : unitProduction)
+				for (const BWAPI::Unit building : unitProduction)
 				{
 					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
 
@@ -1327,7 +1334,7 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 			case DARK_TEMPLAR_ATTEMPT:
 				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Dark_Templar) == false) break;
 
-				for (BWAPI::Unit building : unitProduction)
+				for (const BWAPI::Unit building : unitProduction)
 				{
 					if (building->getType() != BWAPI::UnitTypes::Protoss_Gateway) continue;
 
@@ -1337,6 +1344,28 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 						(request_count.dark_templars_requests + unitProductionCounter.dark_templars + 1) <= MAX_EARLY_ZEALOTS)
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dark_Templar, building);
+					}
+				}
+				break;
+			case OBSERVER_SCOUTS:
+				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false)
+				{
+					break;
+				}
+
+				for (const BWAPI::Unit building : unitProduction)
+				{
+					if (building->getType() != BWAPI::UnitTypes::Protoss_Robotics_Facility) continue;
+
+					if (commanderReference->alreadySentRequest(building->getID()) == false &&
+						!building->isTraining() &&
+						building->isCompleted() &&
+						(request_count.observers_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					{
+						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, building);
+						//std::cout << "Requesting to build observer\n";
+						//std::cout << "Observer requests: " << request_count.observers_requests << "\n";
+						//std::cout << "Unit production Game (observers): " << unitProductionCounter.observers << "\n";
 					}
 				}
 				break;
@@ -1352,22 +1381,6 @@ void StrategyManager::planUnitProduction(std::vector<ResourceRequest>& resourceR
 						building->isCompleted())
 					{
 						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Dragoon, building);
-					}
-				}
-				break;
-			case OBSERVER_SCOUTS:
-				if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false) break;
-
-				for (const BWAPI::Unit building : unitProduction)
-				{
-					if (building->getType() != BWAPI::UnitTypes::Protoss_Observatory) continue;
-
-					if (commanderReference->alreadySentRequest(building->getID()) == false &&
-						!building->isTraining() &&
-						building->isCompleted() &&
-						(request_count.observatory_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
-					{
-						commanderReference->requestUnit(BWAPI::UnitTypes::Protoss_Observer, building);
 					}
 				}
 				break;
@@ -1417,6 +1430,7 @@ void StrategyManager::updateUpgradeGoals()
 	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
 	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
+	const int ProtoBot_Squads = commanderReference->combatManager.Squads.size();
 
 	updateUpgradesBeingCreated();
 
@@ -1434,7 +1448,15 @@ void StrategyManager::updateUpgradeGoals()
 
 
 	//Ground Weapons
-
+	if (request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons < 1 
+		&& (ProtoBot_Squads >= 3 || completedUnitsCount.dragoon >= 20))
+	{
+		upgradeProductionGoals.insert(RESEARCH_GROUND_WEAPONS);
+	}
+	else
+	{
+		upgradeProductionGoals.erase(RESEARCH_GROUND_WEAPONS);
+	}
 
 	//Plasma Shields
 
@@ -1449,6 +1471,7 @@ void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resour
 	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
 	const FriendlyUnitCounter completedUnitsCount = InformationManager::Instance().getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter completedUpgradesCount = InformationManager::Instance().getFriendlyUpgradeCounter();
+	const int ProtoBot_Squads = commanderReference->combatManager.Squads.size();
 
 	for (const UpgradeProductionGoals productionGoal : upgradeProductionGoals)
 	{
@@ -1467,31 +1490,26 @@ void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resour
 					}
 				}
 				break;
+			case RESEARCH_GROUND_WEAPONS:
+				for (const BWAPI::Unit unit : forges)
+				{
+					if (commanderReference->alreadySentRequest(unit->getID()) == false &&
+						!unit->isTraining() &&
+						unit->isCompleted() &&
+						ProtoBot_Squads >= 3 &&
+						(request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons + 1) == 1)
+					{
+						commanderReference->requestUpgrade(unit, BWAPI::UpgradeTypes::Protoss_Ground_Weapons);
+					}
+				}
+				break;
 		}
 	}
 }
 
-bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus)
 {
-	return (!commanderReference->requestedBuilding(type)
-		&& !(commanderReference->checkUnitIsBeingWarpedIn(type)
-			|| commanderReference->checkUnitIsPlanned(type)));
-}
-
-BWAPI::Unitset StrategyManager::getProtoBotBuildings()
-{
-	const BWAPI::Unitset ProtoBot_units = BWAPI::Broodwar->self()->getUnits();
-	BWAPI::Unitset ProtoBot_buildings;
-
-	for (BWAPI::Unit unit : ProtoBot_units)
-	{
-		if (unit->getType().isBuilding() && unit->isCompleted())
-		{
-			ProtoBot_buildings.insert(unit);
-		}
-	}
-
-	return ProtoBot_buildings;
+	return (!commanderReference->requestedBuilding(type, nexus) && !(commanderReference->checkUnitIsBeingWarpedIn(type, nexus) || commanderReference->checkUnitIsPlanned(type, nexus)));
 }
 
 bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)

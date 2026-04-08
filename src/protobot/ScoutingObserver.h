@@ -29,6 +29,8 @@ public:
     // manager provides this after assign()
     void setObserverSlot(int idx) { slotIndex = idx; }
 
+    void drawDebug() const;
+
 private:
     enum class State { Idle, MoveToPost, Hold, AvoidDetection, Done };
 

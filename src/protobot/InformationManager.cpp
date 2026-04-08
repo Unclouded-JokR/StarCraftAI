@@ -1,6 +1,7 @@
 #include "InformationManager.h"
 #include "ProtoBotCommander.h"
 #include <algorithm>
+// If you are trying to get info from here, check the getter descriptions in the header file, if you are still confused on what you need @ me on discord
 
 // Singleton helpers
 InformationManager::InformationManager() : commanderReference(nullptr)

@@ -56,6 +56,11 @@ public:
     bool isScout(BWAPI::Unit u) const;      // handy for other modules (e.g., Squad draw)
     bool isCombatScout(BWAPI::Unit u) const;
     bool hasWorkerScout() const;
+
+    void drawDebug() const;
+    void drawGlobalDebugPanel() const;
+    void drawKnownEnemyLocations() const;
+    void drawScoutDebugFor(BWAPI::Unit unit) const;
     void drawScoutTags() const;             // draw labels for all scouts
 
     void setCombatScoutingStarted(bool v) { combatScoutingStarted_ = v; }
@@ -63,8 +68,30 @@ public:
 
     bool canAcceptWorkerScout() const { return !combatScoutingStarted_ && !workerScout_; }
 
+    bool combatScoutLockActive() const;
+    int combatScoutLockFramesRemaining() const;
+
+    void maybeReturnCombatScoutsToCombat();
+    bool tryReturnScoutToCombat(BWAPI::Unit unit);
+    bool isNearActiveCombatSquad(BWAPI::Unit unit) const;
+    void lockCombatScoutAssignments(int frames);
+
+    int combatScoutLockUntilFrame_ = 0;
+    static constexpr int kScoutReturnToCombatDistPx_ = 10 * 32;
+    static constexpr int kCombatScoutLockFrames_ = 24 * 10;
+
     bool canAcceptCombatScout(BWAPI::UnitType t) const
     {
+        if (t == BWAPI::UnitTypes::Protoss_Dark_Templar)
+        {
+            return true;
+        }
+
+        if (combatScoutLockActive())
+        {
+            return false;
+        }
+
         if (t == BWAPI::UnitTypes::Protoss_Zealot)
         {
             return int(combatZealots_.size()) < maxZealotScouts_;
@@ -75,15 +102,11 @@ public:
             return int(combatDragoons_.size()) < maxDragoonScouts_;
         }
 
-        if (t == BWAPI::UnitTypes::Protoss_Dark_Templar)
-        {
-            return true;
-        }
-
         return false;
     }
 
     bool canAcceptObserverScout() const { return (int)observerScouts_.size() < maxObserverScouts_; }
+
 
     int numCombatScouts() const 
     {
@@ -132,5 +155,6 @@ private:
 
     std::vector<BWAPI::Unit> darkTemplarScouts_;
 
+    bool scoutingDebugEnabled_ = false;
 
 };

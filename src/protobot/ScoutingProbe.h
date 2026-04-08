@@ -25,6 +25,8 @@ public:
     void assign(BWAPI::Unit unit);
     bool hasScout() const { return scout && scout->exists(); }
 
+    void drawDebug() const;
+
 
 private:
     enum class State { Search, GasSteal, Harass, Orbit, ReturningCargo, Done };

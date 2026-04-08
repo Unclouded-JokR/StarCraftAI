@@ -664,3 +664,114 @@ void ScoutingObserver::rebuildSlot3Checkpoints()
     slot3NextIdx = 0;
     slot3CurTarget = BWAPI::Positions::Invalid;
 }
+
+void ScoutingObserver::drawDebug() const
+{
+    if (!observer || !observer->exists())
+    {
+        return;
+    }
+
+    BWAPI::Position p = observer->getPosition();
+
+    BWAPI::Broodwar->drawCircleMap(p, 20, BWAPI::Colors::Cyan, false);
+    BWAPI::Broodwar->drawTextMap(p.x - 34, p.y - 42, "\x0fObserver Scout");
+    BWAPI::Broodwar->drawTextMap(p.x - 34, p.y - 30, "\x11Slot: %d", slotIndex);
+
+    const char* stateName = "Unknown";
+
+    switch (state)
+    {
+    case State::Idle:
+        stateName = "Idle";
+        break;
+    case State::MoveToPost:
+        stateName = "MoveToPost";
+        break;
+    case State::Hold:
+        stateName = "Hold";
+        break;
+    case State::AvoidDetection:
+        stateName = "AvoidDetection";
+        break;
+    case State::Done:
+        stateName = "Done";
+        break;
+    }
+
+    BWAPI::Broodwar->drawTextMap(p.x - 34, p.y - 18, "\x11State: %s", stateName);
+
+    BWAPI::Position tgt = BWAPI::Positions::Invalid;
+
+    if (slotIndex == 3)
+    {
+        if (slot3CurTarget.isValid())
+        {
+            tgt = slot3CurTarget;
+        }
+        else if (slot3HomeSet)
+        {
+            tgt = slot3Home;
+        }
+    }
+    else
+    {
+        tgt = postTarget();
+    }
+
+    if (tgt.isValid())
+    {
+        BWAPI::Broodwar->drawLineMap(p, tgt, BWAPI::Colors::Green);
+        BWAPI::Broodwar->drawCircleMap(tgt, 10, BWAPI::Colors::Green, false);
+    }
+
+    if (enemyMainPos.isValid())
+    {
+        BWAPI::Broodwar->drawCircleMap(enemyMainPos, 24, BWAPI::Colors::Red, false);
+        BWAPI::Broodwar->drawTextMap(enemyMainPos.x - 20, enemyMainPos.y - 18, "\x08Enemy Main");
+    }
+
+    for (int i = 0; i < (int)posts.size(); ++i)
+    {
+        BWAPI::Color c = BWAPI::Colors::White;
+
+        if (i == 0)
+        {
+            c = BWAPI::Colors::Yellow;
+        }
+        else if (i == 1)
+        {
+            c = BWAPI::Colors::Cyan;
+        }
+        else if (i == 2)
+        {
+            c = BWAPI::Colors::Purple;
+        }
+        else if (i == 3)
+        {
+            c = BWAPI::Colors::Orange;
+        }
+
+        BWAPI::Broodwar->drawCircleMap(posts[i], 8, c, true);
+        BWAPI::Broodwar->drawTextMap(posts[i].x + 6, posts[i].y - 6, "#%d", i);
+    }
+
+    if (slotIndex == 3)
+    {
+        for (int i = 0; i < (int)slot3Checkpoints.size(); ++i)
+        {
+            BWAPI::Broodwar->drawCircleMap(slot3Checkpoints[i], 6, BWAPI::Colors::Orange, false);
+
+            if (i + 1 < (int)slot3Checkpoints.size())
+            {
+                BWAPI::Broodwar->drawLineMap(slot3Checkpoints[i], slot3Checkpoints[i + 1], BWAPI::Colors::Orange);
+            }
+        }
+
+        if (slot3HomeSet)
+        {
+            BWAPI::Broodwar->drawCircleMap(slot3Home, 10, BWAPI::Colors::Blue, false);
+            BWAPI::Broodwar->drawTextMap(slot3Home.x + 6, slot3Home.y - 6, "\x10Obs Home");
+        }
+    }
+}
