@@ -6,6 +6,7 @@
 #include "StrategyManager.h"
 
 //#define DEBUG_CM
+//#define DRAW_SQUAD_BOXES = false
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 11
 using namespace std;
@@ -33,22 +34,26 @@ public:
     static vector<Squad*> ReinforcingSquads;
     static vector<Squad*> IdleSquads;
 
+    // Functions for other systems to acceses CombatManager
     void onStart();
     void onFrame();
     void onUnitDestroy(BWAPI::Unit unit);
+    void onSendText(std::string text);
+    bool assignUnit(BWAPI::Unit unit);
     void attack(BWAPI::Position position);
     void defend(BWAPI::Position position);
     void reinforce(BWAPI::Position position);
     Squad* addSquad(BWAPI::Unit leaderUnit);
     void removeSquad(Squad* squad);
-    bool assignUnit(BWAPI::Unit unit);
-    bool isAssigned(BWAPI::Unit unit);
-    void drawDebugInfo();
     BWAPI::Unit getAvailableUnit();
     BWAPI::Unit getAvailableUnit(function<bool(BWAPI::Unit)> filter);
-
-    void handleTextCommand(std::string text);
-
     // Adding in this to strip scouts from squad if they somehow make it in -Marshall
     bool detachUnit(BWAPI::Unit unit);
+
+
+private:
+    bool isAssigned(BWAPI::Unit unit);
+    void drawDebugInfo();
+
+    bool combat_debug_on = false;
 };

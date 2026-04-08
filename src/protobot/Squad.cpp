@@ -11,7 +11,10 @@ Squad::Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor)
 void Squad::onFrame() {
 	// Process current squad state
 	info.currentState->Update(this);
+
+#ifdef DEBUG_SQUAD
 	drawDebugInfo();
+#endif
 }
 
 void Squad::setState(SquadState& newState) {
@@ -107,6 +110,34 @@ void Squad::addUnit(BWAPI::Unit unit) {
 #ifdef DEBUG_SQUAD
 	BWAPI::Broodwar->printf("Unit %d added to Squad %d", unit->getID(), squadId);
 #endif
+}
+
+void Squad::drawSquadBox() {
+	int leftMost = 0;
+	int topMost = 0;
+	int rightMost = 0;
+	int bottomMost = 0;
+	const int offset = 16;
+
+	// Boundary box of the squad
+	for (const auto& unit : info.units) {
+		const int dist = unit->getPosition().getApproxDistance(leader->getPosition());
+		const int maxDist = 300;
+		if (dist < maxDist) {
+			const int x = unit->getPosition().x - leader->getPosition().x;
+			const int y = unit->getPosition().y - leader->getPosition().y;
+
+			if (x < leftMost) { leftMost = x; }
+			if (x > rightMost) { rightMost = x; }
+			if (y < topMost) { topMost = y; }
+			if (y > bottomMost) { bottomMost = y; }
+		}
+	}
+
+	// Drawing squad boundary box (color based on squad state)
+	const BWAPI::Position topLeft = (leader->getPosition() + BWAPI::Position(leftMost - offset, topMost - offset)).makeValid();
+	const BWAPI::Position bottomRight = (leader->getPosition() + BWAPI::Position(rightMost + offset, bottomMost + offset)).makeValid();
+	BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, CombatManager::stateColorMap[info.currentState]);
 }
 
 void Squad::drawDebugInfo() {

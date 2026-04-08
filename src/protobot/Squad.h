@@ -52,6 +52,7 @@ public:
 	void setState(SquadState& newState);
 	void removeUnit(BWAPI::Unit unit);
 	void addUnit(BWAPI::Unit unit);
+	void drawSquadBox();
 	void drawDebugInfo();
 
 	bool operator==(const Squad& other) noexcept(true) {

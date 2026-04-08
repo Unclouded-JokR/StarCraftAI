@@ -36,31 +36,9 @@ void CombatManager::onFrame() {
 	for (const auto& squad : Squads) {
 		squad->onFrame();
 
-#ifdef DEBUG_CM
-		int leftMost = 0;
-		int topMost = 0;
-		int rightMost = 0;
-		int bottomMost = 0;
-
-		// Boundary box of the squad
-		for (const auto& unit : squad->info.units) {
-			int dist = unit->getPosition().getApproxDistance(squad->leader->getPosition());
-			if (dist < 500) {
-				int x = unit->getPosition().x - squad->leader->getPosition().x;
-				int y = unit->getPosition().y - squad->leader->getPosition().y;
-
-				if (x < leftMost) { leftMost = x; }
-				if (x > rightMost) { rightMost = x; }
-				if (y < topMost) { topMost = y; }
-				if (y > bottomMost) { bottomMost = y; }
-			}
+		if (combat_debug_on) {
+			squad->drawSquadBox();
 		}
-
-		// Drawing squad boundary box (color based on squad state)
-		const BWAPI::Position topLeft = squad->leader->getPosition() + BWAPI::Position(leftMost, topMost);
-		const BWAPI::Position bottomRight = squad->leader->getPosition() + BWAPI::Position(rightMost, bottomMost);
-		BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, stateColorMap[squad->info.currentState]);
-#endif 
 	}
 
 #ifdef DRAW_PRECACHE //In A-StarPathfinding.h
@@ -246,7 +224,12 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 	return nullptr;
 }
 
-void CombatManager::handleTextCommand(std::string text) {
+void CombatManager::onSendText(std::string text) {
+	// DEBUG TEXT COMMANDS
+	if (text == "/toggle_squadboxes") {
+		combat_debug_on = !combat_debug_on;
+	}
+
 	//PRESET POSITIONS FOR USE IN CUSTOM MAPS
 	BWAPI::Position leftPos = BWAPI::Position(0, 0);
 	BWAPI::Position rightPos = BWAPI::Position(0, 0);
@@ -311,11 +294,13 @@ void CombatManager::handleTextCommand(std::string text) {
 #endif
 		}
 
+#ifdef ASTAR_COMMANDING
 		vector<BWAPI::Position> positions = squad->info.currentPath.positions;
 		const int dist = squad->info.currentPath.distance;
 		if (positions.size() > 1) {
 			BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size() - 1).x, positions.at(positions.size() - 1).y, dist);
 		}
+#endif
 	}
 }
 

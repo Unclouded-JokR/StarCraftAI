@@ -105,10 +105,6 @@ void ReinforcingState::Update(Squad* squad) {
 	int searchRadius = 100;
 	BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsInRadius(squad->info.currentReinforcePosition, searchRadius, BWAPI::Filter::IsEnemy);
 
-#ifdef DEBUG_STATES
-	BWAPI::Broodwar->drawCircleMap(squad->info.currentReinforcePosition, searchRadius, BWAPI::Colors::Yellow);
-#endif
-
 	if (enemies.empty()) {
 		squad->setState(DefendingState::getInstance());
 		return;

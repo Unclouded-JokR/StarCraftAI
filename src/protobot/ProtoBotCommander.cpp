@@ -220,7 +220,7 @@ void ProtoBotCommander::onSendText(std::string text)
 		drawUnitDebug = false;
 	}
 
-	combatManager.handleTextCommand(text);
+	combatManager.onSendText(text);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
