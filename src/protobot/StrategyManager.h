@@ -192,8 +192,37 @@ const ProductionGoals productionGoalLate =
 	4, 8, 3, 1, 1, 1, 1, 1
 };
 
+struct PossibleUnitRequest {
+	BWAPI::UnitType unit;
+	BWAPI::Unit trainer;
+};
+
+struct PossibleUpgradeRequest {
+	BWAPI::UpgradeType upgrade;
+	BWAPI::Unit trainer;
+};
+
+struct PossibleBuildingRequest {
+	BWAPI::UnitType building;
+
+	//Used for assimilators
+	BWAPI::Unit nexus = nullptr;
+};
+
+struct PossibleRequests
+{
+	//When units is populated with things we can create it automatically orders them in a priority based on the UnitProductionGoals list.
+	std::vector<PossibleUnitRequest> units;
+	std::vector<PossibleBuildingRequest> supplyBuildings;
+
+	std::vector<PossibleUpgradeRequest> upgrades;
+
+	//This should only be one request so we can project forward
+	PossibleBuildingRequest buildings;
+};
+
 class StrategyManager
-{	
+{
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };
@@ -279,10 +308,10 @@ public:
 	void updateUnitProductionGoals();
 	void updateUpgradeGoals();
 
-	void planUnitProduction(std::vector<ResourceRequest>& resourceRequests);
-	void planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests);
-	void planBuildingProduction(std::vector<ResourceRequest>& resourceRequests);
-	void finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests);
+	void planUnitProduction(PossibleRequests&);
+	void planUpgradeProduction(PossibleRequests&);
+	void planBuildingProduction(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
+	void finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
 
 	//Not you
 	bool shouldGasSteal();
