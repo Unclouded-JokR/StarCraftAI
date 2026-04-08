@@ -10,8 +10,8 @@
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 4
-#define SUPPLY_THRESHOLD_MIDGAME 6
-#define SUPPLY_THRESHOLD_LATEGAME 9
+#define SUPPLY_THRESHOLD_MIDGAME 9
+#define SUPPLY_THRESHOLD_LATEGAME 15
 #define MIDGAME_TIME 5
 #define LATEGAME_TIME 15
 #define MAX_SUPPLY 200
@@ -247,6 +247,8 @@ private:
 
 	bool opponentRaceNotKnown = true;
 
+	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
+
 	const double workerIncomePerFrameMinerals = 0.044;
 	const double workerIncomePerFrameGas = 0.069;
 	double ourIncomePerFrameMinerals = 0.0;
@@ -279,8 +281,8 @@ public:
 
 	void planUnitProduction(std::vector<ResourceRequest>& resourceRequests);
 	void planUpgradeProduction(std::vector<ResourceRequest>& resourceRequests);
-	void planBuildingProduction(std::vector<ResourceRequest&> resourceRequests);
-	void finalizeProductionPlan(std::vector<ResourceRequest&> resourceRequests);
+	void planBuildingProduction(std::vector<ResourceRequest>& resourceRequests);
+	void finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests);
 
 	//Not you
 	bool shouldGasSteal();

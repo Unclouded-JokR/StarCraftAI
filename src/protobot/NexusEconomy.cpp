@@ -299,7 +299,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 		BWAPI::Unitset workersToRelocate;
 		for (BWAPI::Unit worker : workers)
 		{
-			/*if (workersToRelocate.size() == OPTIMAL_WORKERS_PER_MINERAL) break;
+			if (workersToRelocate.size() == OPTIMAL_WORKERS_PER_MINERAL) break;
 
 			if (assignedResource.find(worker) == assignedResource.end())
 			{
@@ -310,15 +310,7 @@ bool NexusEconomy::OnUnitDestroy(BWAPI::Unit unit)
 				BWAPI::Unit mineral = assignedResource[worker];
 				resourceWorkerCount[mineral] -= 1;
 				workersToRelocate.insert(worker);
-			}*/
-
-
-			if (assignedResource.find(worker)->second == unit)
-			{
-				workersToRelocate.insert(worker);
-				//std::cout << "Worker " << worker->getID() << " is assigned to mineral\n";
 			}
-				
 		}
 
 		//std::cout << "Worker size before: " << workers.size() << "\n";

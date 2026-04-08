@@ -127,15 +127,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 	std::vector<Squad*> Protobot_Squads = commanderReference->combatManager.Squads;
 	BWAPI::Unitset buildings = commanderReference->buildManager.getBuildings();
 
-	int numberFullSquads = 0;
-
-	for (const Squad* squad : Protobot_Squads)
-	{
-		if (squad->info.units.size() == MAX_SQUAD_SIZE) numberFullSquads++;
-	}
-
-	//std::cout << "Reserving " << getTotalMineralsNeeded() << " out of " << BWAPI::Broodwar->self()->minerals() << "\n";
-
 	//Supply threshold is how close we want to get to the supply cap before building a pylon to cover supply costs.
 	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
 
@@ -148,7 +139,17 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 		supplyThreshold = SUPPLY_THRESHOLD_LATEGAME;
 	}
 
-	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2);
+	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
+
+
+	int numberFullSquads = 0;
+
+	for (const Squad* squad : Protobot_Squads)
+	{
+		if (squad->info.units.size() == MAX_SQUAD_SIZE) numberFullSquads++;
+	}
+
+	//std::cout << "Reserving " << getTotalMineralsNeeded() << " out of " << BWAPI::Broodwar->self()->minerals() << "\n";
 
 	//Get Enemy Building information.
     const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = InformationManager::Instance().getKnownEnemyBuildings();
@@ -187,30 +188,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest> &resou
 		}
 	}
 
-	if (buildOrderCompleted)
-	{
-		//Pylon requests, Once build order is completed run this method to make sure we have enough supply to do things.
-		if (spenderManager.plannedSupply(resourceRequests, buildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
-		{
-			//std::cout << "EXPAND ACTION: Requesting to build Pylon\n";
-
-			commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Pylon);
-		}
-
-		//Assimilators for nexus's as well if we need any.
-		for (const NexusEconomy& nexusEconomy : nexusEconomies)
-		{
-			if (nexusEconomy.vespeneGyser != nullptr
-				&& nexusEconomy.assimilator == nullptr
-				&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-				&& nexusEconomy.lifetime >= 500
-				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
-			{
-				//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
-			}
-		}
-	}
+	if (buildOrderCompleted) planBuildingProduction(resourceRequests);
 
 	//First is minerals avalible, Second is gas avalible
 	std::pair<int, int> resourcesAvalible = std::make_pair(spenderManager.getPlannedMinerals(resourceRequests), spenderManager.getPlannedGas(resourceRequests));
@@ -1506,6 +1484,44 @@ void StrategyManager::planUpgradeProduction(std::vector<ResourceRequest>& resour
 		}
 	}
 }
+
+void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resourceRequests)
+{
+	const FriendlyBuildingCounter ProtoBot_buildings = InformationManager::Instance().getFriendlyBuildingCounter();
+	const FriendlyUnitCounter ProtoBot_units = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUpgradeCounter ProtoBot_upgrade = InformationManager::Instance().getFriendlyUpgradeCounter();
+	const FriendlyTechCounter ProtoBot_tech = InformationManager::Instance().getFriendlyTechCounter();
+	BWAPI::Unitset incompleteBuildings = commanderReference->buildManager.getBuildings();
+	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+	//Better solution would be supply at a rate of roughly (#nexus / probe build time + #gateways / zealot build time + ...) 
+	//This is not really an acurrate way to get supply use projection but it "works" 
+	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
+
+	//Pylon requests: Once build order is completed, run this check to make sure we have enough supply to do things.
+	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
+	{
+		commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Pylon);
+	}
+
+	//Assimilators for nexus's
+	for (const NexusEconomy& nexusEconomy : nexusEconomies)
+	{
+		if (nexusEconomy.vespeneGyser != nullptr
+			&& nexusEconomy.assimilator == nullptr
+			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
+			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
+		{
+			commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
+		}
+	}
+}
+
+void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests)
+{
+
+}
+
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus)
 {
