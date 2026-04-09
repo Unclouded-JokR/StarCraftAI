@@ -153,11 +153,8 @@ void NexusEconomy::onFrame()
 				workerOrder[worker] = 1;
 			}
 		}
-	
-
 
 		if (minerals.size() == 0) break;
-
 
 		//If a worker is constructing skip over them until they are done.
 		if (economyReference->workerIsConstructing(worker) || worker->isConstructing() || worker->isMoving() || workerOrder[worker] == 5)
@@ -174,7 +171,7 @@ void NexusEconomy::onFrame()
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
 		if (!worker->isCarryingMinerals())
 		{
-			if (assimilator != nullptr &&  resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
+			if (assimilator != nullptr && resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
 			{
 				if (assignedResource[worker]) {
 					resourceWorkerCount[assignedResource[worker]] -= 1;
@@ -200,17 +197,6 @@ void NexusEconomy::onFrame()
 
 
 				}
-				else
-				{
-					if (assignedResource[worker]) {
-						resourceWorkerCount[assignedResource[worker]] -= 1;
-					}
-
-					worker->gather(assimilator);
-					assignedResource[worker] = vespeneGyser;
-					resourceWorkerCount[assimilator] += 1;
-					workerOrder[worker] = 1;
-				}
 
 			}
 
@@ -223,14 +209,9 @@ void NexusEconomy::onFrame()
 			{
 				worker->rightClick(assignedResource[worker]);
 			}
-			
+
 			//continue;
 		}
-
-
-
-
-
 
 		if (worker->isCarryingMinerals() && worker->isIdle())
 		{
@@ -241,9 +222,6 @@ void NexusEconomy::onFrame()
 			worker->rightClick(nexus);
 			workerOrder[worker] = 1;
 		}
-
-
-
 	}
 
 	/*
