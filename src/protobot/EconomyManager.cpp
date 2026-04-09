@@ -95,6 +95,8 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 */
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
+    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
     switch (unit->getType())
     {
     case BWAPI::UnitTypes::Protoss_Nexus:

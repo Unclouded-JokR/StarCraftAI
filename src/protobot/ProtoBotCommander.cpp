@@ -394,7 +394,7 @@ void ProtoBotCommander::removeApprovedRequests()
 {
 	for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
 	{
-		if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
+		if (it->state == ResourceRequest::State::Accepted_Completed || (it->attempts == MAX_ATTEMPTS && it->fromBuildOrder == false))
 		{
 			const ResourceRequest::Type request_type = it->type;
 			int mineralCost = -1;
