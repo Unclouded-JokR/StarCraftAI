@@ -2,6 +2,16 @@
 
 void AttackingState::Enter(Squad* squad) {
 	CombatManager::AttackingSquads.push_back(squad);
+	const vector<BWEM::Area>& areas = bwemMap.Areas();
+	
+	// Grabbing all chokepoints for use in kiting through chokepoints
+	for (int i = 0; i < areas.size(); i++) {
+		const BWEM::Area* area = bwemMap.GetArea(BWAPI::WalkPosition(areas.at(i).Top()));
+		for (const BWEM::ChokePoint* cp : area->ChokePoints()) {
+			chokepointPositions.insert(BWAPI::Position(cp->Center()));
+		}
+	}
+
 #ifdef DEBUG_STATES
 	cout << "(" << squad->info.squadId << ")" << "Entered ATTACKING state" << endl;
 #endif
@@ -23,11 +33,21 @@ void AttackingState::Update(Squad* squad) {
 
 	for (BWAPI::Unit& unit : squad->info.units)
 	{
+		BWAPI::Position closestCPPosition = BWAPI::Positions::Invalid;
+		int closestDist = INT_MAX;
+		for (BWAPI::Position cpCenter : chokepointPositions) {
+			const int dist = unit->getPosition().getApproxDistance(cpCenter);
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestCPPosition = cpCenter;
+			}
+		}
+
 		if (unit->getType() == BWAPI::UnitTypes::Protoss_Zealot) {
 			KitingBehaviors::kitingMelee(unit, squad->info.currentAttackPosition);
 		}
 		else if (unit->getType() == BWAPI::UnitTypes::Protoss_Dragoon) {
-			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition);
+			KitingBehaviors::kitingRanged(unit, squad->info.currentAttackPosition, closestCPPosition);
 		}
 	}
 }
@@ -167,7 +187,7 @@ void KitingBehaviors::kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos) {
 	}
 }
 
-void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos) {
+void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, BWAPI::Position closestCP) {
 	// If unit or target is invalid, return
 	if (!unit) {
 		return;
@@ -188,13 +208,34 @@ void KitingBehaviors::kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos) 
 	}
 
 	if (unit->getGroundWeaponCooldown() == 0) {
-		unit->attack(targetPos);
+		BWAPI::Unit attackingUnit = nullptr;
+		if (unit->isUnderAttack()) {
+			BWAPI::Unitset enemies = unit->getLastAttackingPlayer()->getUnits();
+			for (const auto& enemyUnit : enemies) {
+				if (!enemyUnit->exists()) {
+					continue;
+				}
+				
+				if (enemyUnit->getOrderTarget() == unit) {
+					attackingUnit = enemyUnit;
+					break;
+				}
+			}
+		}
+
+		if (attackingUnit != nullptr) {
+			unit->attack(attackingUnit);
+		}
+		else {
+			unit->attack(targetPos);
+		}
 	}
 	else {
-		// Only kite forward if not under attack and attacking a building
-		// Otherwise, kite away
-		if (unit->isAttacking() && unit->getOrderTarget()->isVisible() && unit->getOrderTarget()->getType().isBuilding()) {
-			unit->move(unit->getOrderTargetPosition());
+		// If within range of a CP, move forwards (to your DOOM) to give space for army to enter chokepoint
+		constexpr int minDist = 150;
+		if (closestCP != BWAPI::Positions::Invalid && unit->getPosition().getApproxDistance(closestCP) < minDist) {
+			BWAPI::Broodwar->drawCircleMap(closestCP, minDist, BWAPI::Colors::Yellow);
+			unit->move(targetPos);
 		}
 		else {
 			unit->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
