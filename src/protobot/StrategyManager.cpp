@@ -1574,9 +1574,9 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 
 const BWEM::Base& StrategyManager::getBaseReference(BWAPI::Unit nexus)
 {
-	for (const BWEM::Area* area : ProtoBot_Areas)
+	for (const BWEM::Area& area : theMap.Areas())
 	{
-		for (const BWEM::Base& base : area->Bases())
+		for (const BWEM::Base& base : area.Bases())
 		{
 			if (base.Location() == nexus->getTilePosition()) return base;
 		}

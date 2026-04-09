@@ -523,7 +523,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 
 	resourceRequests.push_back(request);
 
-	/*if (building == BWAPI::UnitTypes::Protoss_Assimilator)
+	if (building == BWAPI::UnitTypes::Protoss_Assimilator)
 	{
 		int id = (nexus != nullptr ? nexus->getID() : -1);
 		std::cout << "Assimilator has been added to queue for nexus " << id << "\n";
@@ -539,7 +539,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 			}
 		}
 		std::cout << "=================================\n";
-	}*/
+	}
 }
 
 void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder)
