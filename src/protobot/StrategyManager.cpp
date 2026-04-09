@@ -1604,7 +1604,7 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 
 	for (const PossibleBuildingRequest& unitRequest : possibleRequestList.supplyBuildings)
 	{
-		commanderReference->requestBuilding(unitRequest.building, false, false, false, unitRequest.nexusPosition);
+		commanderReference->requestBuilding(unitRequest.building, false, false, false, unitRequest.nexusPosition, unitRequest.base);
 	}
 
 	for (const PossibleUpgradeRequest& unitRequest : possibleRequestList.upgrades)

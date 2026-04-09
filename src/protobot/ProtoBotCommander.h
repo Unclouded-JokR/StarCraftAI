@@ -156,7 +156,7 @@ public:
 
 	//Resource Requests Methods
 	void removeApprovedRequests();
-	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
+	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid, const BWEM::Base* baseLocation = nullptr);
 	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
 	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);

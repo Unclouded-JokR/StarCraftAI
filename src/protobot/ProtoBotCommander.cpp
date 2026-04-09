@@ -79,6 +79,16 @@ void ProtoBotCommander::onFrame()
 
 	removeApprovedRequests();
 
+	//Draw circle over nexus's that have a request
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (request.nexusPositionRef != BWAPI::Positions::Invalid 
+			&& request.base != nullptr)
+		{
+			BWAPI::Broodwar->drawCircleMap(request.nexusPositionRef, 10, BWAPI::Colors::Red, true);
+		}
+	}
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -492,7 +502,7 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
-void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Position nexusPosition)
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Position nexusPosition, const BWEM::Base* baseLocation)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
@@ -502,6 +512,9 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.isWall = isWall;
 	request.isRampPlacement = isRampPlacement;
 	request.nexusPositionRef = nexusPosition;
+	request.base = baseLocation;
+	
+
 
 	switch (building)
 	{
