@@ -402,6 +402,7 @@ BWAPI::Unit NexusEconomy::GetClosestMineralToWorker(BWAPI::Unit worker)
 		}
 		else
 		{
+			//This doesnt work if we never build and assimialtor so will need to add edge case.
 			for (BWAPI::Unit mineral : minerals)
 			{
 				const int distanceFromWorker = worker->getDistance(mineral);
