@@ -712,7 +712,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     {
                         if (request.gotPositionToBuild == false)
                         {
-                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit, request.base);
                         }
                         //placementInfo = buildingPlacer.getPositionToBuild(request.unit);
 

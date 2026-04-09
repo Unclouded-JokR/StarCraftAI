@@ -61,8 +61,10 @@ struct ResourceRequest
 
 	//Request Identifiers
 	BWAPI::Unit requestedBuilding = nullptr;
+
 	//Used for Nexuses so we dont clog queue with one assimlator for other nexuses that need them at the same time.
 	BWAPI::Unit nexus = nullptr;
+	const BWEM::Base* base = nullptr;
 
 	//New stuff for Debuging
 	int frameRequestCreated = -1;
@@ -154,7 +156,7 @@ public:
 
 	//Resource Requests Methods
 	void removeApprovedRequests();
-	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false, BWAPI::Unit nexus = nullptr);
+	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false, const BWAPI::Unit nexus = nullptr);
 	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
 	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);

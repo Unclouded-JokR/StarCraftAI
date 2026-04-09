@@ -7,6 +7,7 @@
 #include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
+#include "BWEM/src/bwem.h"
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 4
@@ -207,6 +208,7 @@ struct PossibleBuildingRequest {
 
 	//Used for assimilators
 	BWAPI::Unit nexus = nullptr;
+	const BWEM::Base* base = nullptr;
 };
 
 struct PossibleRequests
@@ -315,6 +317,7 @@ public:
 	void planUpgradeProduction(PossibleRequests&);
 	void planBuildingProduction(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
 	void finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
+	const BWEM::Base& getBaseReference(BWAPI::Unit nexus);
 
 	//Not you
 	bool shouldGasSteal();

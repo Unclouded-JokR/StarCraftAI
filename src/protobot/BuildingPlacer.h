@@ -81,13 +81,13 @@ public:
 	BuildManager* buildReference;
 
 	BuildingPlacer(BuildManager* buildReference);
-	PlacementInfo getPositionToBuild(BWAPI::UnitType);
+	PlacementInfo getPositionToBuild(BWAPI::UnitType, const BWEM::Base*);
 	bool alreadyUsingTiles(BWAPI::TilePosition, int, int, bool assimilator);
 	bool checkPower(BWAPI::TilePosition, BWAPI::UnitType);
 	BWAPI::TilePosition checkBuildingBlocks();
 	BWAPI::TilePosition checkPowerReserveBlocks();
 	BWAPI::TilePosition findAvailableExpansion();
-	BWAPI::TilePosition findAvailableGyser();
+	BWAPI::TilePosition findAvailableGyser(const BWEM::Base*);
 	BWAPI::TilePosition findAvaliblePlacement(BWAPI::UnitType);
 
 	void drawPoweredTiles();

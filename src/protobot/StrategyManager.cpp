@@ -1559,6 +1559,7 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			PossibleBuildingRequest assimilator;
 			assimilator.building = BWAPI::UnitTypes::Protoss_Assimilator;
 			assimilator.nexus = nexusEconomy.nexus;
+			assimilator.base = &getBaseReference(nexusEconomy.nexus);
 
 			std::cout << "Nexus does not have assimlator...requesting\n";
 			std::cout << "Nexus ID: " << nexusEconomy.nexus->getID() << "\n";
@@ -1568,6 +1569,19 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			possibleRequestList.supplyBuildings.push_back(assimilator);
 		}
 	}
+}
+
+const BWEM::Base& StrategyManager::getBaseReference(BWAPI::Unit nexus)
+{
+	for (const BWEM::Area* area : ProtoBot_Areas)
+	{
+		for (const BWEM::Base& base : area->Bases())
+		{
+			if (base.Location() == nexus->getTilePosition()) return base;
+		}
+	}
+
+	std::cout << "WARNING BASE NOT FOUND\n";
 }
 
 void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests, PossibleRequests& possibleRequestList)

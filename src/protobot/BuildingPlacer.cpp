@@ -197,44 +197,65 @@ BWAPI::TilePosition BuildingPlacer::findAvailableExpansion()
     return closestDistance;
 }
 
-BWAPI::TilePosition BuildingPlacer::findAvailableGyser()
+BWAPI::TilePosition BuildingPlacer::findAvailableGyser(const BWEM::Base* base)
 {
     //std::cout << "Checking for open gysers\n";
     BWAPI::TilePosition availableGyser = BWAPI::TilePositions::Invalid;
 
-    for (const BWEM::Area& area : theMap.Areas())
+    if (base != nullptr)
     {
-        for (const BWEM::Base& base : area.Bases())
+        std::vector<BWEM::Geyser*> gysers = base->Geysers();
+
+        for (const BWEM::Geyser* gyser : gysers)
         {
-            if (base.Geysers().size() == 0) continue;
+            const BWAPI::Unit unit = gyser->Unit();
 
-            BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(base.Location()),
-                BWAPI::Position(32 * (base.Location().x + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth())), 32 * (base.Location().y + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight()))));
-
-            bool nexusOnLocation = false;
-
-            for (const BWAPI::Unit unit : units)
+            if (unit && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser &&
+                !alreadyUsingTiles(gyser->TopLeft(), unit->getType().tileWidth(), unit->getType().tileHeight(), true))
             {
-                if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
-                {
-                    nexusOnLocation = true;
-                    break;
-                }
+                return gyser->TopLeft();
             }
-
-            //We do not own the base.
-            if (nexusOnLocation == false) continue;
-
-            std::vector<BWEM::Geyser*> gysers = base.Geysers();
-
-            for (const BWEM::Geyser* gyser : gysers)
+        }
+    }
+    else
+    {
+        for (const BWEM::Area& area : theMap.Areas())
+        {
+            for (const BWEM::Base& base : area.Bases())
             {
-                const BWAPI::Unit unit = gyser->Unit();
+                if (base.Geysers().size() == 0) continue;
 
-                if (unit && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser && 
-                    !alreadyUsingTiles(gyser->TopLeft(), unit->getType().tileWidth(), unit->getType().tileHeight(), true))
+                //Can change this to use the nexus reference
+
+
+                BWAPI::Unitset units = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(base.Location()),
+                    BWAPI::Position(32 * (base.Location().x + (BWAPI::UnitTypes::Protoss_Nexus.tileWidth())), 32 * (base.Location().y + (BWAPI::UnitTypes::Protoss_Nexus.tileHeight()))));
+
+                bool nexusOnLocation = false;
+
+                for (const BWAPI::Unit unit : units)
                 {
-                    return gyser->TopLeft();
+                    if (unit->getType() == BWAPI::UnitTypes::Protoss_Nexus && unit->getPlayer() == BWAPI::Broodwar->self())
+                    {
+                        nexusOnLocation = true;
+                        break;
+                    }
+                }
+
+                //We do not own the base.
+                if (nexusOnLocation == false) continue;
+
+                std::vector<BWEM::Geyser*> gysers = base.Geysers();
+
+                for (const BWEM::Geyser* gyser : gysers)
+                {
+                    const BWAPI::Unit unit = gyser->Unit();
+
+                    if (unit && unit->getType() == BWAPI::UnitTypes::Resource_Vespene_Geyser &&
+                        !alreadyUsingTiles(gyser->TopLeft(), unit->getType().tileWidth(), unit->getType().tileHeight(), true))
+                    {
+                        return gyser->TopLeft();
+                    }
                 }
             }
         }
@@ -323,7 +344,7 @@ void BuildingPlacer::drawPoweredTiles()
     }
 }
 
-PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
+PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type, const BWEM::Base* base)
 {
     PlacementInfo information;
 
@@ -347,7 +368,7 @@ PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type)
         break;
         case BWAPI::UnitTypes::Protoss_Assimilator:
         {
-            const BWAPI::TilePosition pos = findAvailableGyser();
+            const BWAPI::TilePosition pos = findAvailableGyser(base);
 
             if (pos == BWAPI::TilePositions::Invalid)
             {
