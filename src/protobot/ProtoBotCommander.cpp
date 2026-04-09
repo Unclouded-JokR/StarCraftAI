@@ -183,15 +183,22 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 		//Need to check this for tech and upgrades;
 		for (ResourceRequest& request : resourceRequests)
 		{
-			if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-				request.unit == unit->getType())
+			if (request.nexusPositionRef != BWAPI::Positions::Invalid)
 			{
-				request.state = ResourceRequest::State::Accepted_Completed;
+				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+					request.unit == unit->getType() &&
+					request.nexusPositionRef.getApproxDistance(unit->getPosition()) < LARGEST_GYSER_DIATNCE_TO_NEXUS)
+				{
+					request.state = ResourceRequest::State::Accepted_Completed;
+				}
 			}
-			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-				request.unit == unit->getType())
+			else
 			{
-				request.state = ResourceRequest::State::Accepted_Completed;
+				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+					request.unit == unit->getType())
+				{
+					request.state = ResourceRequest::State::Accepted_Completed;
+				}
 			}
 		}
 	}
@@ -480,7 +487,7 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
-void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Unit nexus)
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Position nexusPosition)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
@@ -489,7 +496,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.isWall = isWall;
 	request.isRampPlacement = isRampPlacement;
-	request.nexus = nexus;
+	request.nexusPositionRef = nexusPosition;
 
 	switch (building)
 	{
@@ -523,19 +530,16 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 
 	resourceRequests.push_back(request);
 
-	if (building == BWAPI::UnitTypes::Protoss_Assimilator)
+	if (building == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 	{
-		int id = (nexus != nullptr ? nexus->getID() : -1);
-		std::cout << "Assimilator has been added to queue for nexus " << id << "\n";
+		std::cout << "Assimilator has been added to queue for nexus at location " << request.nexusPositionRef << "\n";
 		std::cout << "Assimilators in queue:\n";
 
 		for (const ResourceRequest& temp : resourceRequests)
 		{
-			if (temp.unit == BWAPI::UnitTypes::Protoss_Assimilator)
+			if (temp.unit == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 			{
-				int id = (temp.nexus != nullptr ? temp.nexus->getID() : -1);
-
-				std::cout << "Assimilator requested for nexus " << id << "\n";
+				std::cout << "Assimilator requested for nexus at location " << request.nexusPositionRef << "\n";
 			}
 		}
 		std::cout << "=================================\n";
@@ -616,11 +620,16 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 	return false;
 }
 
-bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building, BWAPI::Unit nexus)
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && request.nexus == nexus && !request.isCheese) return true;
+		if (building == request.unit && request.nexusPositionRef == nexusPosition && !request.isCheese)
+		{
+			//if (request.nexusPositionRef != BWAPI::Positions::Invalid) std::cout << "Nexus at " << request.nexusPositionRef << " already has assimilator requested\n";
+
+			return true;
+		}
 	}
 	return false;
 }
@@ -637,15 +646,17 @@ bool ProtoBotCommander::upgradeAlreadyRequested(BWAPI::Unit building)
 	return false;
 }
 
-bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit nexus)
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Position nexusPosition)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
 		if (building == request.unit
 			&& (request.state == ResourceRequest::State::Approved_InProgress || request.state == ResourceRequest::State::PendingApproval || request.state == ResourceRequest::State::Approved_BeingBuilt)
-			&& request.nexus == nexus
+			&& request.nexusPositionRef == nexusPosition
 			&& !request.isCheese)
 		{
+			//if (request.nexusPositionRef != BWAPI::Positions::Invalid) std::cout << "Nexus at " << request.nexusPositionRef << " already has assimilator planned\n";
+
 			return true;
 		}
 	}
@@ -787,9 +798,9 @@ void ProtoBotCommander::drawDebugInformation()
 }
 #pragma endregion
 
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Unit nexus)
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Position nexusPosition)
 {
-	return buildManager.checkUnitIsBeingWarpedIn(building, nexus);
+	return buildManager.checkUnitIsBeingWarpedIn(building, nexusPosition);
 }
 
 BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)

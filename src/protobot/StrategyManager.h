@@ -207,7 +207,7 @@ struct PossibleBuildingRequest {
 	BWAPI::UnitType building;
 
 	//Used for assimilators
-	BWAPI::Unit nexus = nullptr;
+	BWAPI::Position nexusPosition = BWAPI::Positions::Invalid;
 	const BWEM::Base* base = nullptr;
 };
 
@@ -321,5 +321,7 @@ public:
 
 	//Not you
 	bool shouldGasSteal();
-	bool checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus = nullptr);
+	
+	//Assimilators require special case.
+	bool checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
 };
