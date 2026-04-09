@@ -386,7 +386,7 @@ BWAPI::Unit NexusEconomy::GetClosestMineralToWorker(BWAPI::Unit worker)
 	if (closestMineral == nullptr)
 	{
 		//Maximum workers is the calculated value of (# of minerals * OPTIMAL_WORKERS_PER_MINERAL) + (# of gysers * WORKERS_PER_ASSIMILATOR)
-		if (workers.size() <= maximumWorkers)
+		if (workers.size() < maximumWorkers)
 		{
 			for (BWAPI::Unit mineral : minerals)
 			{
