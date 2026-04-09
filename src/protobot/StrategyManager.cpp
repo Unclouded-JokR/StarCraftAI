@@ -1545,7 +1545,11 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			assimilator.building = BWAPI::UnitTypes::Protoss_Assimilator;
 			assimilator.nexus = nexusEconomy.nexus;
 
-			//CHANGE THIS TO NOT DO THIS IN SUPPLY BUILDINGS
+			std::cout << "Nexus does not have assimlator...requesting\n";
+			std::cout << "Nexus ID: " << nexusEconomy.nexus->getID() << "\n";
+			std::cout << "Has Gyser: " << (nexusEconomy.vespeneGyser == nullptr ? "no\n" : "yes\n");
+			std::cout << "Has Assimilator: " << (nexusEconomy.assimilator == nullptr ? "false\n" : "true\n");
+
 			possibleRequestList.supplyBuildings.push_back(assimilator);
 		}
 	}

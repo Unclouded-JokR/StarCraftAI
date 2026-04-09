@@ -17,7 +17,6 @@ void EconomyManager::onStart()
 
 void EconomyManager::onFrame()
 {
-    int workerAmount = 0;
     for (NexusEconomy& nexusEconomy : nexusEconomies)
     {
         nexusEconomy.onFrame();
@@ -30,9 +29,6 @@ void EconomyManager::onFrame()
                 nexusEconomy.assignWorkerBulk();
             }
         }
-
-        workerAmount += nexusEconomy.workers.size();
-
     }
 }
 
@@ -319,7 +315,6 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
     BWAPI::Unitset mineralsToReturn;
     BWAPI::Unitset geysersToReturn;
 
-
     if (myBase)
     {
         for (const auto* mineral : myBase->Minerals()) 
@@ -335,6 +330,16 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
                 if (geyser == nullptr) continue;
 
                 newNexus.vespeneGyser = geyser->Unit();
+
+                BWAPI::Unitset unitsOnGeyser = BWAPI::Broodwar->getUnitsInRectangle(BWAPI::Position(geyser->TopLeft()), BWAPI::Position(geyser->BottomRight()));
+
+                for (BWAPI::Unit unit : unitsOnGeyser)
+                {
+                    if (unit->getPlayer() == BWAPI::Broodwar->self() && unit->getType().isRefinery() && unit->exists())
+                    {
+                        newNexus.assimilator = unit;
+                    }
+                }
             }
         }
     }
