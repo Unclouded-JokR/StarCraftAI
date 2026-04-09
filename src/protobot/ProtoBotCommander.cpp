@@ -641,7 +641,13 @@ bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && request.nexus == nexus && !request.isCheese) return true;
+		if (building == request.unit
+			&& (request.state == ResourceRequest::State::Approved_InProgress || request.state == ResourceRequest::State::PendingApproval || request.state == ResourceRequest::State::Approved_BeingBuilt)
+			&& request.nexus == nexus
+			&& !request.isCheese)
+		{
+			return true;
+		}
 	}
 	return false;
 }
