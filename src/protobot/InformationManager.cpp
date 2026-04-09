@@ -735,7 +735,7 @@ void InformationManager::onUnitDestroy(BWAPI::Unit unit)
 		// Mark in trackedEnemies
 		auto it = trackedEnemies.find(id);
 		if (it != trackedEnemies.end())
-			it->second.destroyed = true;
+			trackedEnemies.erase(it);
 
 		if (unit->getPlayer() == BWAPI::Broodwar->enemy())
 		{

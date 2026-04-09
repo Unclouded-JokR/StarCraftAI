@@ -545,35 +545,52 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	constexpr int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if (supplyUsed >= 170 || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
+	if ((supplyUsed >= 170 && numUnits > targetCount) || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (numUnits >= targetCount && numUnits > floor(targetCount / 3))
+		if (numUnits < floor(targetCount / 3)) {
+			isAttackPhase = false;
+		}
+		else
 		{
-			isAttackPhase = true;
 			BWAPI::Position attackPos = BWAPI::Positions::Invalid;
-			if (unitToAttack != nullptr && unitToAttack->exists()) {
-				attackPos = unitToAttack->getPosition();
-			}
-			else {
-				// Both units and buildings are part of getTrackedEnemies()
-				int closestDist = INT_MAX;
-				for (const auto& [_, enemyInfo] : InformationManager::Instance().getTrackedEnemies()) {
-					if (enemyInfo.destroyed) {
-						continue;
+			bool fromTracked = false;
+
+			// If not currently targetting a unit for fixing the attack position bug during attack phase, behave normally and find units to attack
+			if (unitForFix == nullptr) {
+				if (unitToAttack != nullptr && unitToAttack->exists() && !unitToAttack->isCloaked()) {
+					attackPos = unitToAttack->getPosition();
+				}
+				else {
+					// Both units and buildings are part of getTrackedEnemies()
+					int closestDist = INT_MAX;
+					for (const auto& [_, enemyInfo] : InformationManager::Instance().getTrackedEnemies()) {
+						if (enemyInfo.destroyed) {
+							continue;
+						}
+
+						const int dist = StartingLocation.getApproxDistance(enemyInfo.lastSeenPos);
+						if (dist < closestDist) {
+							closestDist = dist;
+							attackPos = enemyInfo.lastSeenPos;
+							fromTracked = true;
+						}
 					}
 
-					const int dist = StartingLocation.getApproxDistance(enemyInfo.lastSeenPos);
-					if (dist < closestDist) {
-						closestDist = dist;
-						attackPos = enemyInfo.lastSeenPos;
-						cout << "Type: " << enemyInfo.type << endl;
+					// If no valid attack position, pick enemy base first if there is any
+					if (attackPos == BWAPI::Positions::Invalid && enemyBaselocations.size() > 0) {
+						attackPos = enemyBaselocations.at(enemyBaselocations.size() - 1);
 					}
 				}
 			}
+			else if (unitForFix->exists()) {
+				attackPos = unitForFix->getPosition();
+			}
 
-			// If no valid attack position, pick enemy base first if there is any
-			if (attackPos == BWAPI::Positions::Invalid && enemyBaselocations.size() > 0) {
-				attackPos = enemyBaselocations.at(enemyBaselocations.size() - 1);
+			if (BWAPI::Broodwar->getFrameCount() % 30 == 0 && unitForFix == nullptr) {
+				BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(attackPos), BWAPI::Filter::IsEnemy);
+				if (enemies.empty()) {
+					unitForFix = BWAPI::Broodwar->getClosestUnit(attackPos, BWAPI::Filter::IsEnemy && BWAPI::Filter::IsVisible);
+				}
 			}
 
 			// Send action only if theres a new, valid attack position
@@ -584,10 +601,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 				actionsToReturn.push_back(attack);
 
 				lastAttackPos = attackPos;
+				isAttackPhase = true;
 			}
-		}
-		else {
-			isAttackPhase = false;
 		}
 	}
 #pragma endregion

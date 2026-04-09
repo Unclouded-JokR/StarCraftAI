@@ -23,6 +23,7 @@ public:
 	void Update(Squad* squad);
 	void Exit(Squad* squad);
 	static SquadState& getInstance();
+	set<BWAPI::Position> chokepointPositions;
 private:
 	AttackingState() {};
 	AttackingState(const AttackingState&);
@@ -71,5 +72,5 @@ private:
 class KitingBehaviors {
 public:
 	static void kitingMelee(BWAPI::Unit unit, BWAPI::Position targetPos);
-	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos);
+	static void kitingRanged(BWAPI::Unit unit, BWAPI::Position targetPos, BWAPI::Position closestCPPosition=BWAPI::Positions::Invalid);
 };

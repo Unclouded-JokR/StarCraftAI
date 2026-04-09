@@ -289,7 +289,10 @@ public:
 	std::unordered_map<const BWEM::ChokePoint*, bool> PositionsFilled;
 	BWAPI::Position startingChoke;
 	BWAPI::Position lastAttackPos;
+
+	// Variables for attack phase logic
 	bool isAttackPhase = false;
+	BWAPI::Unit unitForFix = nullptr;
 
 	ProtoBotCommander* commanderReference;
 
