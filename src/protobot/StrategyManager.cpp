@@ -1555,8 +1555,12 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			&& nexusEconomy.assimilator == nullptr
 			&& nexusEconomy.nexus != nullptr
 			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition()))
+			&& !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition())
+			&& !commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition()))
 		{
+			//Putting this here to avoid O(N) loop over BWEM references
+			if (commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Assimilator, &getBaseReference(nexusEconomy.nexus))) continue;
+
 			PossibleBuildingRequest assimilator;
 			assimilator.building = BWAPI::UnitTypes::Protoss_Assimilator;
 
@@ -1612,7 +1616,7 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Position nexusPosition)
 {
-	return (!commanderReference->requestedBuilding(type, nexusPosition) && !(commanderReference->checkUnitIsBeingWarpedIn(type, nexusPosition) || commanderReference->checkUnitIsPlanned(type, nexusPosition)));
+	return (!commanderReference->requestedBuilding(type, nexusPosition) && !(commanderReference->checkUnitIsBeingWarpedIn(type) || commanderReference->checkUnitIsPlanned(type, nexusPosition)));
 }
 
 bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)

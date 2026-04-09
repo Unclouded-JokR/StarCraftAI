@@ -183,13 +183,18 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 		//Need to check this for tech and upgrades;
 		for (ResourceRequest& request : resourceRequests)
 		{
-			if (request.nexusPositionRef != BWAPI::Positions::Invalid)
+			if (request.nexusPositionRef != BWAPI::Positions::Invalid && request.base != nullptr)
 			{
 				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-					request.unit == unit->getType() &&
-					request.nexusPositionRef.getApproxDistance(unit->getPosition()) < LARGEST_GYSER_DIATNCE_TO_NEXUS)
+					request.unit == unit->getType())
 				{
-					request.state = ResourceRequest::State::Accepted_Completed;
+					for (BWEM::Geyser* geyer : request.base->Geysers())
+					{
+						if (unit->getPosition() == geyer->Pos())
+						{
+							request.state = ResourceRequest::State::Accepted_Completed;
+						}
+					}
 				}
 			}
 			else
@@ -798,9 +803,9 @@ void ProtoBotCommander::drawDebugInformation()
 }
 #pragma endregion
 
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Position nexusPosition)
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, const BWEM::Base* nexus)
 {
-	return buildManager.checkUnitIsBeingWarpedIn(building, nexusPosition);
+	return buildManager.checkUnitIsBeingWarpedIn(building, nexus);
 }
 
 BWAPI::Unit ProtoBotCommander::getUnitToBuild(BWAPI::Position buildLocation)
