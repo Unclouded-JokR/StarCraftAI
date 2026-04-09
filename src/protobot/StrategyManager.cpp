@@ -1303,7 +1303,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 					!nexusEconomy.nexus->isTraining() &&
 					nexusEconomy.nexus->isCompleted() &&
-					nexusEconomy.workers.size() < nexusEconomy.workerOverflowAmount &&
+					nexusEconomy.workers.size() < nexusEconomy.maximumWorkers &&
 					(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 				{
 					PossibleUnitRequest probe;
