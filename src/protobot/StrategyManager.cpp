@@ -1561,6 +1561,7 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			assimilator.nexus = nexusEconomy.nexus;
 			assimilator.base = &getBaseReference(nexusEconomy.nexus);
 
+			//Check to make sure correct base is being found and used.
 			std::cout << "Nexus does not have assimlator...requesting\n";
 			std::cout << "Nexus ID: " << nexusEconomy.nexus->getID() << "\n";
 			std::cout << "Has Gyser: " << (nexusEconomy.vespeneGyser == nullptr ? "no\n" : "yes\n");
