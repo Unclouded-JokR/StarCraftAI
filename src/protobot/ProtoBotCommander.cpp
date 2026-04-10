@@ -423,31 +423,31 @@ void ProtoBotCommander::removeApprovedRequests()
 		if (it->state == ResourceRequest::State::Accepted_Completed || (it->attempts == MAX_ATTEMPTS && it->fromBuildOrder == false))
 		{
 			const ResourceRequest::Type request_type = it->type;
-			int mineralCost = -1;
-			int gasCost = -1;
-			std::string bwapiType_string;
-			std::string type_string;
-			std::string frame_string = (it->frameToStartBuilding == -1 ? "N\\A" : std::to_string(it->frameToStartBuilding));
+			//int mineralCost = -1;
+			//int gasCost = -1;
+			//std::string bwapiType_string;
+			//std::string type_string;
+			//std::string frame_string = (it->frameToStartBuilding == -1 ? "N\\A" : std::to_string(it->frameToStartBuilding));
 
 			switch (request_type)
 			{
 			case ResourceRequest::Unit:
-				type_string = "Unit";
+				/*type_string = "Unit";
 				mineralCost = it->unit.mineralPrice();
 				gasCost = it->unit.gasPrice();
-				bwapiType_string = it->unit.toString();
+				bwapiType_string = it->unit.toString();*/
 				break;
 			case ResourceRequest::Building:
-				type_string = "Building";
+				/*type_string = "Building";
 				mineralCost = it->unit.mineralPrice();
 				gasCost = it->unit.gasPrice();
-				bwapiType_string = it->unit.toString();
+				bwapiType_string = it->unit.toString();*/
 				break;
 			case ResourceRequest::Upgrade:
-				type_string = "Upgrade";
+				/*type_string = "Upgrade";
 				mineralCost = it->upgrade.mineralPrice();
 				gasCost = it->upgrade.gasPrice();
-				bwapiType_string = it->upgrade.toString();
+				bwapiType_string = it->upgrade.toString();*/
 
 				switch (it->upgrade)
 				{
@@ -475,14 +475,14 @@ void ProtoBotCommander::removeApprovedRequests()
 
 				break;
 			case ResourceRequest::Tech:
-				type_string = "Tech";
+				/*type_string = "Tech";
 				mineralCost = it->tech.mineralPrice();
 				gasCost = it->tech.gasPrice();
-				bwapiType_string = it->tech.toString();
+				bwapiType_string = it->tech.toString();*/
 				break;
 			}
 
-			double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
+			//double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
 			/*std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
 				<< "\nFrame Request Created = " << it->frameRequestCreated
@@ -550,7 +550,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 
 	resourceRequests.push_back(request);
 
-	if (building == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
+	/*if (building == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 	{
 		std::cout << "Assimilator has been added to queue for nexus at location " << request.nexusPositionRef << "\n";
 		std::cout << "Assimilators in queue:\n";
@@ -563,7 +563,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 			}
 		}
 		std::cout << "=================================\n";
-	}
+	}*/
 }
 
 void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder)

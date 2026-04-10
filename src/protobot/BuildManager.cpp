@@ -890,7 +890,7 @@ void BuildManager::onUnitCreate(BWAPI::Unit unit)
     //Remove worker once a building is being warped in.
     for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
     {
-        if (unit->getTilePosition() == BWAPI::TilePosition(it->requestedPositionToBuild) && unit->getType() == it->buildingToConstruct)
+        if (BWAPI::Position(unit->getTilePosition()) == it->requestedPositionToBuild && unit->getType() == it->buildingToConstruct)
         {
             //std::cout << "Builder placed down " << unit->getType() << ", removing from builders\n";
             it = builders.erase(it);
