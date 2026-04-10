@@ -186,7 +186,6 @@ void ProtoBotCommander::onUnitDestroy(BWAPI::Unit unit)
 void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 {
 	InformationManager::Instance().onUnitMorph(unit);
-	buildManager.onUnitMorph(unit);
 
 	//Remove unit from resource requests. Refinery sends an onUnitMorph event not a seperate onCreate/onComplete event
 	if (unit->getPlayer() == BWAPI::Broodwar->self())
@@ -203,6 +202,7 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 						if (unit->getPosition() == geyer->Pos())
 						{
 							request.state = ResourceRequest::State::Accepted_Completed;
+
 						}
 					}
 				}
@@ -218,6 +218,9 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 			}
 		}
 	}
+
+	//Remove builder
+	buildManager.onUnitMorph(unit);
 }
 
 void ProtoBotCommander::onSendText(std::string text)

@@ -976,8 +976,10 @@ void BuildManager::onUnitMorph(BWAPI::Unit unit)
     {
         for (std::vector<Builder>::iterator it = builders.begin(); it != builders.end(); ++it)
         {
-            if (unit->getType() == it->buildingToConstruct)
+            if (unit->getType() == it->buildingToConstruct && BWAPI::Position(unit->getTilePosition()) == it->requestedPositionToBuild)
             {
+                //std::cout << "Assimilator built at location: " << BWAPI::Position(unit->getTilePosition()) << "\n";
+                //std::cout << "Builder assigned to place at location: " << it->requestedPositionToBuild << "\n";
                 it = builders.erase(it);
                 break;
             }
