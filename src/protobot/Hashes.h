@@ -10,6 +10,13 @@ struct unitHash {
 };
 
 // Hash for storing BWAPI::TilePositions 
+struct PositionHash {
+	std::size_t operator()(const BWAPI::Position& tile) const {
+		return std::hash<int>()(0.5 * (tile.x + tile.y) * (tile.x + tile.y + 1) + tile.y);
+	}
+};
+
+// Hash for storing BWAPI::TilePositions 
 struct TilePositionHash {
 	std::size_t operator()(const BWAPI::TilePosition& tile) const {
 		return std::hash<int>()(0.5 * (tile.x + tile.y) * (tile.x + tile.y + 1) + tile.y);

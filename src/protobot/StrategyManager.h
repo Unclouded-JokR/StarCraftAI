@@ -7,6 +7,7 @@
 #include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
+#include "Hashes.h"
 
 #define FRAMES_PER_SECOND 24
 #define SUPPLY_THRESHOLD_EARLYGAME 4
@@ -292,7 +293,7 @@ public:
 
 	// Variables for attack phase logic
 	bool isAttackPhase = false;
-	std::set<BWAPI::Position> phantomPositions; // set of positions of phantom units (weird starcraft bug where unit exists after death)
+	std::unordered_set<BWAPI::Position, PositionHash> phantomPositions; // set of positions of phantom units (weird starcraft bug where unit exists after death)
 	ProtoBotCommander* commanderReference;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);

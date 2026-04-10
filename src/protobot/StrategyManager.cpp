@@ -503,7 +503,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 #pragma region EnemyCheck
 	BWAPI::Unitset unitsOnVisison = BWAPI::Broodwar->enemy()->getUnits();
 	BWAPI::Unit unitToAttack = nullptr;
-	BWAPI::Unit closestUnit = nullptr;
 	BWAPI::Position StartingLocation = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
 	bool enemyNearFriendlyArea = false;
 	int closest = INT_MAX;
@@ -517,20 +516,14 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 			continue;
 		}
 
-		if (phantomPositions.find(unit->getPosition()) != phantomPositions.end()) {
-			cout << "phantomPosition detected in enemy check. ignoring" << unit->getPosition() << endl;
-			continue;
-		}
-
 		const int dist = unit->getPosition().getApproxDistance(StartingLocation);
 		if (dist < closest) {
 			closest = dist;
-			closestUnit = unit;
+			unitToAttack = unit;
 		}
 	}
 
-	if (closestUnit != nullptr) {
-		unitToAttack = closestUnit;
+	if (unitToAttack != nullptr) {
 		const BWEM::Area* enemyAreaLocation = theMap.GetNearestArea(unitToAttack->getTilePosition());
 		for (const BWEM::Area* area : ProtoBot_Areas)
 		{
@@ -550,24 +543,22 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	constexpr int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if ((supplyUsed >= 170 && numUnits > targetCount) || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
+	if (supplyUsed >= 170 || numUnits > targetCount || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
 		if (numUnits > floor(targetCount / 3)) {
 			isAttackPhase = true;
 			BWAPI::Position attackPos = BWAPI::Positions::Invalid;
 
 			if (unitToAttack){
+				const bool isPhantom = phantomPositions.find(unitToAttack->getPosition()) != phantomPositions.end();
 				// Every 60 frames, checks if the position from unitToAttack is actually existing (fixing phantom position bug)
-				if (BWAPI::Broodwar->getFrameCount() % 60 == 0
-					&& phantomPositions.find(attackPos) == phantomPositions.end()
-					&& BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(attackPos), BWAPI::Filter::IsEnemy).empty()) {
-
-					cout << "Inserted into phantomPositions from unitToAttack" << attackPos << endl;
-					phantomPositions.insert(attackPos);
-				}
-
-				if (phantomPositions.find(unitToAttack->getPosition()) != phantomPositions.end()){
-					attackPos = unitToAttack->getPosition();
+				if (!isPhantom) {
+					if (BWAPI::Broodwar->getFrameCount() % 60 == 0 && BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(unitToAttack->getPosition()), BWAPI::Filter::IsEnemy).empty()) {
+						phantomPositions.insert(unitToAttack->getPosition());
+					}
+					else{
+						attackPos = unitToAttack->getPosition();
+					}
 				}
 			}
 			
@@ -579,18 +570,21 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 						continue;
 					}
 
-					// Every 60 frames, checks if the position from unitToAttack is actually existing (fixing phantom position bug)
-					if (BWAPI::Broodwar->getFrameCount() % 60 == 0
-						&& phantomPositions.find(enemyInfo.lastSeenPos) == phantomPositions.end()
-						&& BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(enemyInfo.lastSeenPos), BWAPI::Filter::IsEnemy).empty()) {
-
-						cout << "Inserted into phantomPositions from trackedEnemies" << enemyInfo.lastSeenPos << endl;
-						phantomPositions.insert(enemyInfo.lastSeenPos);
+					if (enemyInfo.type.hasPermanentCloak()) {
 						continue;
 					}
 
-					if (phantomPositions.find(enemyInfo.lastSeenPos) != phantomPositions.end()) {
-						cout << "phantomPosition detected in trackedEnemies. ignoring" << enemyInfo.lastSeenPos << endl;
+					// Every 60 frames, checks if the position from unitToAttack is actually existing (fixing phantom position bug)
+					const bool isPhantom = phantomPositions.find(enemyInfo.lastSeenPos) != phantomPositions.end();
+
+					if (isPhantom) {
+						continue;
+					}
+					if (BWAPI::Broodwar->getFrameCount() % 60 == 0
+						&& !isPhantom
+						&& BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(enemyInfo.lastSeenPos), BWAPI::Filter::IsEnemy && BWAPI::Filter::IsVisible).empty()) {
+
+						phantomPositions.insert(enemyInfo.lastSeenPos);
 						continue;
 					}
 
