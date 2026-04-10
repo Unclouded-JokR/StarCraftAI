@@ -1315,7 +1315,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 					!nexusEconomy.nexus->isTraining() &&
 					nexusEconomy.nexus->isCompleted() &&
-					nexusEconomy.workers.size() < nexusEconomy.workerOverflowAmount &&
+					nexusEconomy.workers.size() < nexusEconomy.maximumWorkers &&
 					(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 				{
 					PossibleUnitRequest probe;
@@ -1565,21 +1565,46 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 	{
 		if (nexusEconomy.vespeneGyser != nullptr
 			&& nexusEconomy.assimilator == nullptr
+			&& nexusEconomy.nexus != nullptr
 			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-			&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus))
+			&& !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition())
+			&& !commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition()))
 		{
+			//Putting this here to avoid O(N) loop over BWEM references
+			if (commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Assimilator, &getBaseReference(nexusEconomy.nexus))) continue;
+
 			PossibleBuildingRequest assimilator;
 			assimilator.building = BWAPI::UnitTypes::Protoss_Assimilator;
-			assimilator.nexus = nexusEconomy.nexus;
 
+			assimilator.base = &getBaseReference(nexusEconomy.nexus);
+
+			//Change this to position to be extra careful
+			assimilator.nexusPosition = assimilator.base->Center();
+
+			//Check to make sure correct base is being found and used.
 			std::cout << "Nexus does not have assimlator...requesting\n";
 			std::cout << "Nexus ID: " << nexusEconomy.nexus->getID() << "\n";
 			std::cout << "Has Gyser: " << (nexusEconomy.vespeneGyser == nullptr ? "no\n" : "yes\n");
 			std::cout << "Has Assimilator: " << (nexusEconomy.assimilator == nullptr ? "false\n" : "true\n");
+			std::cout << "BWAPI::Position: " << assimilator.nexusPosition << "\n";
+			std::cout << "BWEM Base location: " << assimilator.base->Center() << "\n";
 
 			possibleRequestList.supplyBuildings.push_back(assimilator);
 		}
 	}
+}
+
+const BWEM::Base& StrategyManager::getBaseReference(BWAPI::Unit nexus)
+{
+	for (const BWEM::Area& area : theMap.Areas())
+	{
+		for (const BWEM::Base& base : area.Bases())
+		{
+			if (base.Location() == nexus->getTilePosition()) return base;
+		}
+	}
+
+	std::cout << "WARNING BASE NOT FOUND\n";
 }
 
 void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests, PossibleRequests& possibleRequestList)
@@ -1591,7 +1616,7 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 
 	for (const PossibleBuildingRequest& unitRequest : possibleRequestList.supplyBuildings)
 	{
-		commanderReference->requestBuilding(unitRequest.building, false, false, false, unitRequest.nexus);
+		commanderReference->requestBuilding(unitRequest.building, false, false, false, unitRequest.nexusPosition, unitRequest.base);
 	}
 
 	for (const PossibleUpgradeRequest& unitRequest : possibleRequestList.upgrades)
@@ -1601,9 +1626,9 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 }
 
 
-bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus)
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Position nexusPosition)
 {
-	return (!commanderReference->requestedBuilding(type, nexus) && !(commanderReference->checkUnitIsBeingWarpedIn(type, nexus) || commanderReference->checkUnitIsPlanned(type, nexus)));
+	return (!commanderReference->requestedBuilding(type, nexusPosition) && !(commanderReference->checkUnitIsBeingWarpedIn(type) || commanderReference->checkUnitIsPlanned(type, nexusPosition)));
 }
 
 bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)

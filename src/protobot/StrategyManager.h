@@ -7,6 +7,7 @@
 #include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
+#include "BWEM/src/bwem.h"
 #include "Hashes.h"
 
 #define FRAMES_PER_SECOND 24
@@ -207,7 +208,8 @@ struct PossibleBuildingRequest {
 	BWAPI::UnitType building;
 
 	//Used for assimilators
-	BWAPI::Unit nexus = nullptr;
+	BWAPI::Position nexusPosition = BWAPI::Positions::Invalid;
+	const BWEM::Base* base = nullptr;
 };
 
 struct PossibleRequests
@@ -315,8 +317,11 @@ public:
 	void planUpgradeProduction(PossibleRequests&);
 	void planBuildingProduction(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
 	void finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
+	const BWEM::Base& getBaseReference(BWAPI::Unit nexus);
 
 	//Not you
 	bool shouldGasSteal();
-	bool checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Unit nexus = nullptr);
+	
+	//Assimilators require special case.
+	bool checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
 };

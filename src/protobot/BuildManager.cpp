@@ -712,7 +712,7 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     {
                         if (request.gotPositionToBuild == false)
                         {
-                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit);
+                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit, request.base);
                         }
                         //placementInfo = buildingPlacer.getPositionToBuild(request.unit);
 
@@ -1022,7 +1022,7 @@ bool BuildManager::isBuildOrderCompleted()
     return buildOrderCompleted;
 }
 
-bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit, BWAPI::Unit nexus)
+bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit, const BWEM::Base* nexus)
 {
     if (nexus == nullptr)
     {
@@ -1036,15 +1036,18 @@ bool BuildManager::checkUnitIsBeingWarpedIn(BWAPI::UnitType unit, BWAPI::Unit ne
     }
     else
     {
-        const BWAPI::Position nexusLocation = nexus->getPosition();
-
         for (const BWAPI::Unit building : buildings)
         {
             if (building->getType() != BWAPI::UnitTypes::Protoss_Assimilator) continue;
 
-            if (unit == building->getType() && !building->isCompleted() && nexusLocation.getApproxDistance(building->getPosition()) < LARGEST_GYSER_DIATNCE_TO_NEXUS)
+            if (unit == building->getType() && !building->isCompleted())
             {
-                return true;
+                for (BWEM::Geyser* geyer : nexus->Geysers())
+                {
+                    if (building->getPosition() == geyer->Pos()) return true;
+                }
+
+                //if (nexusPosition != BWAPI::Positions::Invalid) std::cout << "Nexus at " << nexusPosition << " already has assimilator requested: " << "(Approx. distance " << nexusPosition.getApproxDistance(building->getPosition()) << ")\n";
             }
         }
     }

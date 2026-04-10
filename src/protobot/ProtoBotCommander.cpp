@@ -79,6 +79,16 @@ void ProtoBotCommander::onFrame()
 
 	removeApprovedRequests();
 
+	//Draw circle over nexus's that have a request
+	for (const ResourceRequest& request : resourceRequests)
+	{
+		if (request.nexusPositionRef != BWAPI::Positions::Invalid 
+			&& request.base != nullptr)
+		{
+			BWAPI::Broodwar->drawCircleMap(request.nexusPositionRef, 10, BWAPI::Colors::Red, true);
+		}
+	}
+
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
@@ -183,15 +193,27 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 		//Need to check this for tech and upgrades;
 		for (ResourceRequest& request : resourceRequests)
 		{
-			if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-				request.unit == unit->getType())
+			if (request.nexusPositionRef != BWAPI::Positions::Invalid && request.base != nullptr)
 			{
-				request.state = ResourceRequest::State::Accepted_Completed;
+				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+					request.unit == unit->getType())
+				{
+					for (BWEM::Geyser* geyer : request.base->Geysers())
+					{
+						if (unit->getPosition() == geyer->Pos())
+						{
+							request.state = ResourceRequest::State::Accepted_Completed;
+						}
+					}
+				}
 			}
-			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-				request.unit == unit->getType())
+			else
 			{
-				request.state = ResourceRequest::State::Accepted_Completed;
+				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
+					request.unit == unit->getType())
+				{
+					request.state = ResourceRequest::State::Accepted_Completed;
+				}
 			}
 		}
 	}
@@ -394,7 +416,7 @@ void ProtoBotCommander::removeApprovedRequests()
 {
 	for (std::vector<ResourceRequest>::iterator it = resourceRequests.begin(); it != resourceRequests.end();)
 	{
-		if (it->state == ResourceRequest::State::Accepted_Completed || it->attempts == MAX_ATTEMPTS)
+		if (it->state == ResourceRequest::State::Accepted_Completed || (it->attempts == MAX_ATTEMPTS && it->fromBuildOrder == false))
 		{
 			const ResourceRequest::Type request_type = it->type;
 			int mineralCost = -1;
@@ -480,7 +502,7 @@ void ProtoBotCommander::removeApprovedRequests()
 	}
 }
 
-void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Unit nexus)
+void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuildOrder, bool isWall, bool isRampPlacement, BWAPI::Position nexusPosition, const BWEM::Base* baseLocation)
 {
 	ResourceRequest request;
 	request.type = ResourceRequest::Type::Building;
@@ -489,7 +511,10 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.isWall = isWall;
 	request.isRampPlacement = isRampPlacement;
-	request.nexus = nexus;
+	request.nexusPositionRef = nexusPosition;
+	request.base = baseLocation;
+	
+
 
 	switch (building)
 	{
@@ -523,19 +548,16 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 
 	resourceRequests.push_back(request);
 
-	if (building == BWAPI::UnitTypes::Protoss_Assimilator)
+	if (building == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 	{
-		int id = (nexus != nullptr ? nexus->getID() : -1);
-		std::cout << "Assimilator has been added to queue for nexus " << id << "\n";
+		std::cout << "Assimilator has been added to queue for nexus at location " << request.nexusPositionRef << "\n";
 		std::cout << "Assimilators in queue:\n";
 
 		for (const ResourceRequest& temp : resourceRequests)
 		{
-			if (temp.unit == BWAPI::UnitTypes::Protoss_Assimilator)
+			if (temp.unit == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 			{
-				int id = (temp.nexus != nullptr ? temp.nexus->getID() : -1);
-
-				std::cout << "Assimilator requested for nexus " << id << "\n";
+				std::cout << "Assimilator requested for nexus at location " << request.nexusPositionRef << "\n";
 			}
 		}
 		std::cout << "=================================\n";
@@ -616,11 +638,16 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 	return false;
 }
 
-bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building, BWAPI::Unit nexus)
+bool ProtoBotCommander::requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && request.nexus == nexus && !request.isCheese) return true;
+		if (building == request.unit && request.nexusPositionRef == nexusPosition && !request.isCheese)
+		{
+			//if (request.nexusPositionRef != BWAPI::Positions::Invalid) std::cout << "Nexus at " << request.nexusPositionRef << " already has assimilator requested\n";
+
+			return true;
+		}
 	}
 	return false;
 }
@@ -637,11 +664,19 @@ bool ProtoBotCommander::upgradeAlreadyRequested(BWAPI::Unit building)
 	return false;
 }
 
-bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit nexus)
+bool ProtoBotCommander::checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Position nexusPosition)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (building == request.unit && request.state == ResourceRequest::State::Approved_InProgress && request.nexus == nexus &&!request.isCheese) return true;
+		if (building == request.unit
+			&& (request.state == ResourceRequest::State::Approved_InProgress || request.state == ResourceRequest::State::PendingApproval || request.state == ResourceRequest::State::Approved_BeingBuilt)
+			&& request.nexusPositionRef == nexusPosition
+			&& !request.isCheese)
+		{
+			//if (request.nexusPositionRef != BWAPI::Positions::Invalid) std::cout << "Nexus at " << request.nexusPositionRef << " already has assimilator planned\n";
+
+			return true;
+		}
 	}
 	return false;
 }
@@ -781,7 +816,7 @@ void ProtoBotCommander::drawDebugInformation()
 }
 #pragma endregion
 
-bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Unit nexus)
+bool ProtoBotCommander::checkUnitIsBeingWarpedIn(BWAPI::UnitType building, const BWEM::Base* nexus)
 {
 	return buildManager.checkUnitIsBeingWarpedIn(building, nexus);
 }

@@ -61,8 +61,10 @@ struct ResourceRequest
 
 	//Request Identifiers
 	BWAPI::Unit requestedBuilding = nullptr;
+
 	//Used for Nexuses so we dont clog queue with one assimlator for other nexuses that need them at the same time.
-	BWAPI::Unit nexus = nullptr;
+	BWAPI::Position nexusPositionRef = BWAPI::Positions::Invalid;
+	const BWEM::Base* base = nullptr;
 
 	//New stuff for Debuging
 	int frameRequestCreated = -1;
@@ -154,7 +156,7 @@ public:
 
 	//Resource Requests Methods
 	void removeApprovedRequests();
-	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false, BWAPI::Unit nexus = nullptr);
+	void requestBuilding(BWAPI::UnitType building, bool fromBuildOrder = false, bool isWall = false, bool isRampPlacement = false, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid, const BWEM::Base* baseLocation = nullptr);
 	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
 	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
@@ -164,9 +166,9 @@ public:
 	void drawResouceRequestCount(int x, int y, bool background = true);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
-	bool requestedBuilding(BWAPI::UnitType building, BWAPI::Unit nexus = nullptr);
-	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type, BWAPI::Unit nexus = nullptr);
-	bool checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Unit nexus = nullptr);
+	bool requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition);
+	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type, const BWEM::Base* nexus = nullptr);
+	bool checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
 	bool checkCheeseRequest(BWAPI::Unit);
 	bool alreadySentRequest(int unitID);
 

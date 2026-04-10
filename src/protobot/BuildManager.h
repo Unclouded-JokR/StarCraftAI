@@ -19,7 +19,7 @@
 #include "BuildOrder.h"
 #define FRAMES_BEFORE_TRYAGAIN 72
 #define MAX_ATTEMPTS 3
-#define LARGEST_GYSER_DIATNCE_TO_NEXUS 250
+#define LARGEST_GYSER_DIATNCE_TO_NEXUS 300
 
 //Units strategy manager cares about, details the units that are being requested and have not been placed yet.
 
@@ -74,7 +74,7 @@ public:
     void resetNaturalWallPlan();
     bool checkWorkerIsConstructing(BWAPI::Unit);
     bool isBuildOrderCompleted();
-    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building, BWAPI::Unit nexus = nullptr);
+    bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building, const BWEM::Base* nexus = nullptr);
 
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();

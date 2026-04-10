@@ -95,6 +95,8 @@ void EconomyManager::onUnitDestroy(BWAPI::Unit unit)
 */
 void EconomyManager::assignUnit(BWAPI::Unit unit)
 {
+    if (unit->getPlayer() != BWAPI::Broodwar->self()) return;
+
     switch (unit->getType())
     {
     case BWAPI::UnitTypes::Protoss_Nexus:
@@ -348,7 +350,7 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
     newNexus.maximumWorkers = newNexus.optimalWorkerAmount + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 
     //To keep probe production constant make this to be able to have more workers than nessecary at main or any other base. Transfers should disperse workers.
-    newNexus.workerOverflowAmount = (newNexus.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);;
+    newNexus.workerOverflowAmount = (newNexus.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 }
 
 std::vector<NexusEconomy> EconomyManager::getNexusEconomies()
