@@ -714,8 +714,6 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                         {
                             request.placementInfo = buildingPlacer.getPositionToBuild(request.unit, request.base);
                         }
-                        //placementInfo = buildingPlacer.getPositionToBuild(request.unit);
-
 
                         if (request.placementInfo.position == BWAPI::Positions::Invalid && request.gotPositionToBuild == false)
                         {

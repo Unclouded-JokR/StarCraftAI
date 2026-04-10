@@ -188,17 +188,17 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 	InformationManager::Instance().onUnitMorph(unit);
 	buildManager.onUnitMorph(unit);
 
+	//Remove unit from resource requests. Refinery sends an onUnitMorph event not a seperate onCreate/onComplete event
 	if (unit->getPlayer() == BWAPI::Broodwar->self())
 	{
-		//Need to check this for tech and upgrades;
 		for (ResourceRequest& request : resourceRequests)
 		{
-			if (request.nexusPositionRef != BWAPI::Positions::Invalid && request.base != nullptr)
+			if (request.base != nullptr)
 			{
 				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
 					request.unit == unit->getType())
 				{
-					for (BWEM::Geyser* geyer : request.base->Geysers())
+					for (const BWEM::Geyser* geyer : request.base->Geysers())
 					{
 						if (unit->getPosition() == geyer->Pos())
 						{
@@ -210,7 +210,8 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 			else
 			{
 				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-					request.unit == unit->getType())
+					request.unit == unit->getType() &&
+					request.base == nullptr)
 				{
 					request.state = ResourceRequest::State::Accepted_Completed;
 				}
@@ -514,8 +515,6 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.nexusPositionRef = nexusPosition;
 	request.base = baseLocation;
 	
-
-
 	switch (building)
 	{
 		case BWAPI::UnitTypes::Protoss_Gateway:
@@ -557,7 +556,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 		{
 			if (temp.unit == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 			{
-				std::cout << "Assimilator requested for nexus at location " << request.nexusPositionRef << "\n";
+				std::cout << "Assimilator requested for nexus at location " << temp.nexusPositionRef << "\n";
 			}
 		}
 		std::cout << "=================================\n";

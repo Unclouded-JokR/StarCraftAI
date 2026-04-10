@@ -1566,17 +1566,22 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 		if (nexusEconomy.vespeneGyser != nullptr
 			&& nexusEconomy.assimilator == nullptr
 			&& nexusEconomy.nexus != nullptr
-			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-			&& !commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition())
-			&& !commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Assimilator, nexusEconomy.nexus->getPosition()))
+			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3)
 		{
-			//Putting this here to avoid O(N) loop over BWEM references
-			if (commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Assimilator, &getBaseReference(nexusEconomy.nexus))) continue;
+			const BWEM::Base* base = &getBaseReference(nexusEconomy.nexus);
+
+			//Unit is already planned in this case
+			if (commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Assimilator, &getBaseReference(nexusEconomy.nexus))
+				|| commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Assimilator, base->Center())
+				|| commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Assimilator, base->Center()))
+			{
+				continue;
+			}
 
 			PossibleBuildingRequest assimilator;
 			assimilator.building = BWAPI::UnitTypes::Protoss_Assimilator;
 
-			assimilator.base = &getBaseReference(nexusEconomy.nexus);
+			assimilator.base = base;
 
 			//Change this to position to be extra careful
 			assimilator.nexusPosition = assimilator.base->Center();
