@@ -292,8 +292,7 @@ public:
 
 	// Variables for attack phase logic
 	bool isAttackPhase = false;
-	BWAPI::Unit unitForFix = nullptr;
-
+	std::set<BWAPI::Position> phantomPositions; // set of positions of phantom units (weird starcraft bug where unit exists after death)
 	ProtoBotCommander* commanderReference;
 
 	StrategyManager(ProtoBotCommander* commanderToAsk);

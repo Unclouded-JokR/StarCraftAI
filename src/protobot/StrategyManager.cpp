@@ -517,6 +517,11 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 			continue;
 		}
 
+		if (phantomPositions.find(unit->getPosition()) != phantomPositions.end()) {
+			cout << "phantomPosition detected in enemy check. ignoring" << unit->getPosition() << endl;
+			continue;
+		}
+
 		const int dist = unit->getPosition().getApproxDistance(StartingLocation);
 		if (dist < closest) {
 			closest = dist;
@@ -547,54 +552,63 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	//Add timer on supply cap to make us attack so we dont waste time.
 	if ((supplyUsed >= 170 && numUnits > targetCount) || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
-		if (numUnits < floor(targetCount / 3)) {
-			isAttackPhase = false;
-		}
-		else
-		{
+		if (numUnits > floor(targetCount / 3)) {
+			isAttackPhase = true;
 			BWAPI::Position attackPos = BWAPI::Positions::Invalid;
-			bool fromTracked = false;
 
-			// If not currently targetting a unit for fixing the attack position bug during attack phase, behave normally and find units to attack
-			if (unitForFix == nullptr) {
-				if (unitToAttack != nullptr && unitToAttack->exists() && !unitToAttack->isCloaked()) {
+			if (unitToAttack){
+				// Every 60 frames, checks if the position from unitToAttack is actually existing (fixing phantom position bug)
+				if (BWAPI::Broodwar->getFrameCount() % 60 == 0
+					&& phantomPositions.find(attackPos) == phantomPositions.end()
+					&& BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(attackPos), BWAPI::Filter::IsEnemy).empty()) {
+
+					cout << "Inserted into phantomPositions from unitToAttack" << attackPos << endl;
+					phantomPositions.insert(attackPos);
+				}
+
+				if (phantomPositions.find(unitToAttack->getPosition()) != phantomPositions.end()){
 					attackPos = unitToAttack->getPosition();
 				}
-				else {
-					// Both units and buildings are part of getTrackedEnemies()
-					int closestDist = INT_MAX;
-					for (const auto& [_, enemyInfo] : InformationManager::Instance().getTrackedEnemies()) {
-						if (enemyInfo.destroyed) {
-							continue;
-						}
-
-						const int dist = StartingLocation.getApproxDistance(enemyInfo.lastSeenPos);
-						if (dist < closestDist) {
-							closestDist = dist;
-							attackPos = enemyInfo.lastSeenPos;
-							fromTracked = true;
-						}
+			}
+			
+			// If no enemy in vision found, attack closest unit or building from trackedEnemies
+			if (attackPos == BWAPI::Positions::Invalid){
+				int closestDist = INT_MAX;
+				for (const auto& [_, enemyInfo] : InformationManager::Instance().getTrackedEnemies()) {
+					if (enemyInfo.destroyed) {
+						continue;
 					}
 
-					// If no valid attack position, pick enemy base first if there is any
-					if (attackPos == BWAPI::Positions::Invalid && enemyBaselocations.size() > 0) {
-						attackPos = enemyBaselocations.at(enemyBaselocations.size() - 1);
+					// Every 60 frames, checks if the position from unitToAttack is actually existing (fixing phantom position bug)
+					if (BWAPI::Broodwar->getFrameCount() % 60 == 0
+						&& phantomPositions.find(enemyInfo.lastSeenPos) == phantomPositions.end()
+						&& BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(enemyInfo.lastSeenPos), BWAPI::Filter::IsEnemy).empty()) {
+
+						cout << "Inserted into phantomPositions from trackedEnemies" << enemyInfo.lastSeenPos << endl;
+						phantomPositions.insert(enemyInfo.lastSeenPos);
+						continue;
+					}
+
+					if (phantomPositions.find(enemyInfo.lastSeenPos) != phantomPositions.end()) {
+						cout << "phantomPosition detected in trackedEnemies. ignoring" << enemyInfo.lastSeenPos << endl;
+						continue;
+					}
+
+					const int dist = StartingLocation.getApproxDistance(enemyInfo.lastSeenPos);
+					if (dist < closestDist) {
+						closestDist = dist;
+						attackPos = enemyInfo.lastSeenPos;
 					}
 				}
 			}
-			else if (unitForFix->exists()) {
-				attackPos = unitForFix->getPosition();
-			}
 
-			if (BWAPI::Broodwar->getFrameCount() % 30 == 0 && unitForFix == nullptr) {
-				BWAPI::Unitset enemies = BWAPI::Broodwar->getUnitsOnTile(BWAPI::TilePosition(attackPos), BWAPI::Filter::IsEnemy);
-				if (enemies.empty()) {
-					unitForFix = BWAPI::Broodwar->getClosestUnit(attackPos, BWAPI::Filter::IsEnemy && BWAPI::Filter::IsVisible);
-				}
+			// If all other attack position methods failed, attack an enemy base
+			if (attackPos == BWAPI::Positions::Invalid && enemyBaselocations.size() > 0) {
+				attackPos = enemyBaselocations.at(enemyBaselocations.size() - 1);
 			}
 
 			// Send action only if theres a new, valid attack position
-			if (attackPos != lastAttackPos && attackPos != BWAPI::Positions::Invalid) {
+			if (attackPos != BWAPI::Positions::Invalid && attackPos != lastAttackPos) {
 				Action attack;
 				attack.type = Action::ACTION_ATTACK;
 				attack.attackPosition = attackPos;
@@ -603,6 +617,10 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 				lastAttackPos = attackPos;
 				isAttackPhase = true;
 			}
+		}
+		else {
+			lastAttackPos = BWAPI::Positions::Invalid;
+			isAttackPhase = false;
 		}
 	}
 #pragma endregion
