@@ -166,7 +166,7 @@ public:
 	void drawResouceRequestCount(int x, int y, bool background = true);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
-	bool requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition);
+	bool requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
 	bool checkUnitIsBeingWarpedIn(BWAPI::UnitType type, const BWEM::Base* nexus = nullptr);
 	bool checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
 	bool checkCheeseRequest(BWAPI::Unit);

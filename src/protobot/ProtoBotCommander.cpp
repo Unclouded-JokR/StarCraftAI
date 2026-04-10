@@ -202,6 +202,8 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 						if (unit->getPosition() == geyer->Pos())
 						{
 							request.state = ResourceRequest::State::Accepted_Completed;
+							std::cout << "Assimilator created at position: " << unit->getPosition() << "\n";
+							std::cout << "Assimilator created at tile position: " << BWAPI::Position(unit->getTilePosition()) << "\n";
 
 						}
 					}
@@ -213,6 +215,8 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 					request.unit == unit->getType() &&
 					request.base == nullptr)
 				{
+					std::cout << "Assimilator created at position: " << unit->getPosition() << "\n";
+					std::cout << "Assimilator created at tile position: " << BWAPI::Position(unit->getTilePosition()) << "\n";
 					request.state = ResourceRequest::State::Accepted_Completed;
 				}
 			}
@@ -550,7 +554,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 
 	resourceRequests.push_back(request);
 
-	/*if (building == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
+	if (building == BWAPI::UnitTypes::Protoss_Assimilator && fromBuildOrder == false)
 	{
 		std::cout << "Assimilator has been added to queue for nexus at location " << request.nexusPositionRef << "\n";
 		std::cout << "Assimilators in queue:\n";
@@ -563,7 +567,7 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 			}
 		}
 		std::cout << "=================================\n";
-	}*/
+	}
 }
 
 void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder)

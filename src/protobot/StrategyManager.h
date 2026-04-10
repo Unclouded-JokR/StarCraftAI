@@ -323,5 +323,5 @@ public:
 	bool shouldGasSteal();
 	
 	//Assimilators require special case.
-	bool checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);
+	bool checkAlreadyRequested(BWAPI::UnitType type);
 };

@@ -1571,7 +1571,7 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			const BWEM::Base* base = &getBaseReference(nexusEconomy.nexus);
 
 			//Unit is already planned in this case
-			if (commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Assimilator, &getBaseReference(nexusEconomy.nexus))
+			if (commanderReference->checkUnitIsBeingWarpedIn(BWAPI::UnitTypes::Protoss_Assimilator, base)
 				|| commanderReference->requestedBuilding(BWAPI::UnitTypes::Protoss_Assimilator, base->Center())
 				|| commanderReference->checkUnitIsPlanned(BWAPI::UnitTypes::Protoss_Assimilator, base->Center()))
 			{
@@ -1587,12 +1587,12 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			assimilator.nexusPosition = assimilator.base->Center();
 
 			//Check to make sure correct base is being found and used.
-			/*std::cout << "Nexus does not have assimlator...requesting\n";
+			std::cout << "Nexus does not have assimlator...requesting\n";
 			std::cout << "Nexus ID: " << nexusEconomy.nexus->getID() << "\n";
 			std::cout << "Has Gyser: " << (nexusEconomy.vespeneGyser == nullptr ? "no\n" : "yes\n");
 			std::cout << "Has Assimilator: " << (nexusEconomy.assimilator == nullptr ? "false\n" : "true\n");
 			std::cout << "BWAPI::Position: " << assimilator.nexusPosition << "\n";
-			std::cout << "BWEM Base location: " << assimilator.base->Center() << "\n";*/
+			std::cout << "BWEM Base location: " << assimilator.base->Center() << "\n";
 
 			possibleRequestList.supplyBuildings.push_back(assimilator);
 		}
@@ -1631,9 +1631,9 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 }
 
 
-bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type, BWAPI::Position nexusPosition)
+bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
 {
-	return (!commanderReference->requestedBuilding(type, nexusPosition) && !(commanderReference->checkUnitIsBeingWarpedIn(type) || commanderReference->checkUnitIsPlanned(type, nexusPosition)));
+	return !(commanderReference->requestedBuilding(type) || commanderReference->checkUnitIsBeingWarpedIn(type) || commanderReference->checkUnitIsPlanned(type));
 }
 
 bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)
