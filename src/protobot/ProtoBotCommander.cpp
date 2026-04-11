@@ -276,7 +276,7 @@ void ProtoBotCommander::onSendText(std::string text)
 		drawBWEBDebug = false;
 		drawToolsDebug = true;
 	}
-	else if (text == "off")
+	else if (text == "/off")
 	{
 		drawUnitDebug = false;
 		strategyManager.drawStrategyDebug = false;
@@ -855,7 +855,7 @@ void ProtoBotCommander::drawDebugInformation()
 	}
 	else if (strategyManager.drawStrategyDebug)
 	{
-		drawResourceRequestQueue(1, 25);
+		drawResourceRequestQueue(2, 35);
 	}
 }
 #pragma endregion

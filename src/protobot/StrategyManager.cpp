@@ -1058,8 +1058,8 @@ void StrategyManager::drawGameUnitProduction(UnitProductionGameCounter& unitProd
 
 void StrategyManager::drawUpgradeProductionGoals()
 {
-	int x = 250;
-	int y = 250;
+	int x = 5;
+	int y = 230;
 	BWAPI::Broodwar->drawTextScreen(x, y, "Upgarde Production Goals:");
 	int index = 0;
 	for (const UpgradeProductionGoals goal : upgradeProductionGoals)
@@ -1095,8 +1095,8 @@ void StrategyManager::drawUpgradeProductionGoals()
 
 void StrategyManager::drawUnitProductionGoals()
 {
-	int x = 250;
-	int y = 300;
+	int x = 5;
+	int y = 170;
 	BWAPI::Broodwar->drawTextScreen(x, y, "Production Goals:");
 	int index = 0;
 
@@ -1317,7 +1317,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 					!nexusEconomy.nexus->isTraining() &&
 					nexusEconomy.nexus->isCompleted() &&
-					nexusEconomy.workers.size() < nexusEconomy.maximumWorkers &&
+					nexusEconomy.workers.size() < (nexusEconomy.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0) &&
 					(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
 				{
 					PossibleUnitRequest probe;
