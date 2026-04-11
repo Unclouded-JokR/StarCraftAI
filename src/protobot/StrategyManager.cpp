@@ -1590,13 +1590,14 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			assimilator.nexusPosition = assimilator.base->Center();
 
 			//Check to make sure correct base is being found and used.
+			/*
 			std::cout << "Nexus does not have assimlator...requesting\n";
 			std::cout << "Nexus ID: " << nexusEconomy.nexus->getID() << "\n";
 			std::cout << "Has Gyser: " << (nexusEconomy.vespeneGyser == nullptr ? "no\n" : "yes\n");
 			std::cout << "Has Assimilator: " << (nexusEconomy.assimilator == nullptr ? "false\n" : "true\n");
 			std::cout << "BWAPI::Position: " << assimilator.nexusPosition << "\n";
 			std::cout << "BWEM Base location: " << assimilator.base->Center() << "\n";
-
+			*/
 			possibleRequestList.supplyBuildings.push_back(assimilator);
 		}
 	}
