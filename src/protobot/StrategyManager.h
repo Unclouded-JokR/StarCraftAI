@@ -253,11 +253,9 @@ private:
 	void updateUpgradesBeingCreated();
 
 	//Debug methods
-	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 	void drawUnitProductionGoals();
 	void drawUpgradeProductionGoals();
 
-	UnitProductionGameCounter unitProductionCounter;
 	ProtoBotProductionCount ProtoBot_createdUnitCount;
 	UpgradesInProduction upgradesInProduction;
 
@@ -309,6 +307,8 @@ public:
 	void onUnitComplete(BWAPI::Unit);
 
 	//New stuff I am adding
+	UnitProductionGameCounter unitProductionCounter;
+
 	BWAPI::Race opponentRace = BWAPI::Races::Unknown;
 
 	//Have these update active goals.
@@ -320,6 +320,8 @@ public:
 	void planBuildingProduction(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
 	void finalizeProductionPlan(std::vector<ResourceRequest>& resourceRequests, PossibleRequests&);
 	const BWEM::Base& getBaseReference(BWAPI::Unit nexus);
+
+	void drawGameUnitProduction(UnitProductionGameCounter& unitProduction, int x, int y, bool background = true);
 
 	//Not you
 	bool shouldGasSteal();

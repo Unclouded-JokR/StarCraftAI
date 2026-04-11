@@ -258,7 +258,7 @@ void ProtoBotCommander::onSendText(std::string text)
 		drawBWEBDebug = false;
 		drawToolsDebug = false;
 	}
-	else if (text == "/unit")
+	else if (text == "/info")
 	{
 		drawUnitDebug = true;
 		strategyManager.drawStrategyDebug = false;
@@ -836,13 +836,13 @@ void ProtoBotCommander::drawDebugInformation()
 	if (drawUnitDebug)
 	{
 		//Need to find a place to put this on the screen, might need to have a /command to get the stuff I need.
-		drawBwapiResourceInfo(5, 240);
+		drawBwapiResourceInfo(5, 180);
 
 		drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
 		drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
-		drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);
+		drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 5, 105);
 		timerManager.displayTimers(490, 225);
-		drawResourceRequestQueue(1, 25);
+		strategyManager.drawGameUnitProduction(strategyManager.unitProductionCounter, 5, 30);
 	}
 	else if (drawBWEBDebug)
 	{
@@ -852,6 +852,10 @@ void ProtoBotCommander::drawDebugInformation()
 	{
 		Tools::DrawUnitCommands();
 		Tools::DrawUnitBoundingBoxes();
+	}
+	else if (strategyManager.drawStrategyDebug)
+	{
+		drawResourceRequestQueue(1, 25);
 	}
 }
 #pragma endregion

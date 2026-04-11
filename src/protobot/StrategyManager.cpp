@@ -97,7 +97,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 	if (drawStrategyDebug)
 	{
-		drawGameUnitProduction(unitProductionCounter, 5, 238);
 		drawUnitProductionGoals();
 		drawUpgradeProductionGoals();
 	}
