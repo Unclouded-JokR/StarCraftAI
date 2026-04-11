@@ -249,7 +249,7 @@ void ProtoBotCommander::onSendText(std::string text)
 		drawBWEBDebug = true;
 		drawToolsDebug = false;
 	}
-	else if (text == "/strategy")
+	else if (text == "/strat")
 	{
 		drawUnitDebug = false;
 		strategyManager.drawStrategyDebug = true;
