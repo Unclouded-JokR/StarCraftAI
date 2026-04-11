@@ -5,8 +5,8 @@
 #include "BOIDS.h"
 #include "StrategyManager.h"
 
-//#define DEBUG_CM
-//#define DRAW_SQUAD_BOXES = false
+#define DEBUG_CM
+#define DRAW_SQUAD_BOXES = true
 //#define ASTAR_COMMANDING
 #define FRAMES_BETWEEN_CACHING 11
 using namespace std;
@@ -33,6 +33,7 @@ public:
     static vector<Squad*> DefendingSquads;
     static vector<Squad*> ReinforcingSquads;
     static vector<Squad*> IdleSquads;
+    bool combat_debug_on = false;
 
     // Functions for other systems to acceses CombatManager
     void onStart();
@@ -54,6 +55,4 @@ public:
 private:
     bool isAssigned(BWAPI::Unit unit);
     void drawDebugInfo();
-
-    bool combat_debug_on = false;
 };

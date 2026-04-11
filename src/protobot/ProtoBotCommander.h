@@ -127,6 +127,8 @@ public:
 
 	//Need to have some sort of debug class that can control what we are seeing on our screen for showing information.
 	bool drawUnitDebug = false;
+	bool drawBWEBDebug = false;
+	bool drawToolsDebug = false;
 
 	std::vector<ResourceRequest> resourceRequests;
 

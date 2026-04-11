@@ -75,19 +75,7 @@ void ProtoBotCommander::onFrame()
 	// Draw some relevent information to the screen to help us debug the bot
 	drawDebugInformation();
 
-	//BWEB::Map::draw();
-
 	removeApprovedRequests();
-
-	//Draw circle over nexus's that have a request
-	for (const ResourceRequest& request : resourceRequests)
-	{
-		if (request.nexusPositionRef != BWAPI::Positions::Invalid 
-			&& request.base != nullptr)
-		{
-			BWAPI::Broodwar->drawCircleMap(request.nexusPositionRef, 10, BWAPI::Colors::Red, true);
-		}
-	}
 
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
@@ -234,14 +222,68 @@ void ProtoBotCommander::onSendText(std::string text)
 		m_mapTools.toggleDraw();
 	}
 	
-	if (text == "/unitdebug_on")
-	{
-		drawUnitDebug = true;
-	}
-	
-	if (text == "/unitdebug_off")
+	if (text == "/combat")
 	{
 		drawUnitDebug = false;
+		strategyManager.drawStrategyDebug = false;
+		scoutingManager.scoutingDebugEnabled_ = false;
+		combatManager.combat_debug_on = true;
+		drawBWEBDebug = false;
+		drawToolsDebug = false;
+	}
+	else if (text == "/scout")
+	{
+		drawUnitDebug = false;
+		strategyManager.drawStrategyDebug = false;
+		scoutingManager.scoutingDebugEnabled_ = true;
+		combatManager.combat_debug_on = false;
+		drawBWEBDebug = false;
+		drawToolsDebug = false;
+	}
+	else if (text == "/build")
+	{
+		drawUnitDebug = false;
+		strategyManager.drawStrategyDebug = false;
+		scoutingManager.scoutingDebugEnabled_ = false;
+		combatManager.combat_debug_on = false;
+		drawBWEBDebug = true;
+		drawToolsDebug = false;
+	}
+	else if (text == "/strategy")
+	{
+		drawUnitDebug = false;
+		strategyManager.drawStrategyDebug = true;
+		scoutingManager.scoutingDebugEnabled_ = false;
+		combatManager.combat_debug_on = false;
+		drawBWEBDebug = false;
+		drawToolsDebug = false;
+	}
+	else if (text == "/unit")
+	{
+		drawUnitDebug = true;
+		strategyManager.drawStrategyDebug = false;
+		scoutingManager.scoutingDebugEnabled_ = false;
+		combatManager.combat_debug_on = false;
+		drawBWEBDebug = false;
+		drawToolsDebug = false;
+	}
+	else if (text == "/tools")
+	{
+		drawUnitDebug = false;
+		strategyManager.drawStrategyDebug = false;
+		scoutingManager.scoutingDebugEnabled_ = false;
+		combatManager.combat_debug_on = false;
+		drawBWEBDebug = false;
+		drawToolsDebug = true;
+	}
+	else if (text == "off")
+	{
+		drawUnitDebug = false;
+		strategyManager.drawStrategyDebug = false;
+		scoutingManager.scoutingDebugEnabled_ = false;
+		combatManager.combat_debug_on = false;
+		drawBWEBDebug = false;
+		drawToolsDebug = false;
 	}
 
 	combatManager.onSendText(text);
@@ -801,24 +843,31 @@ void ProtoBotCommander::drawBwapiResourceInfo(int x, int y, bool background)
 
 void ProtoBotCommander::drawDebugInformation()
 {
-	Tools::DrawUnitCommands();
-	Tools::DrawUnitBoundingBoxes();
-
 	// Display the game frame rate as text in the upper left area of the screen
 	BWAPI::Broodwar->drawTextScreen(5, 5, "%cFrame: %d", BWAPI::Text::White, BWAPI::Broodwar->getFrameCount());
 	BWAPI::Broodwar->drawTextScreen(100, 5, "%cFPS: %d", BWAPI::Text::White, BWAPI::Broodwar->getFPS());
 	BWAPI::Broodwar->drawTextScreen(170, 5, "%cOpponent Race: %s", BWAPI::Text::White, strategyManager.opponentRace.c_str());
 
-	if (!drawUnitDebug) return;
+	if (drawUnitDebug)
+	{
+		//Need to find a place to put this on the screen, might need to have a /command to get the stuff I need.
+		drawBwapiResourceInfo(5, 240);
 
-	//Need to find a place to put this on the screen, might need to have a /command to get the stuff I need.
-	//drawBwapiResourceInfo(5, 102);
-
-	drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
-	drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
-	drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);
-	timerManager.displayTimers(490, 225);
-	drawResourceRequestQueue(1, 25);
+		drawBuildingCount(InformationManager::Instance().getFriendlyBuildingCounter(), 490, 30);
+		drawUpgradeCount(InformationManager::Instance().getFriendlyUpgradeCounter(), 490, 152);
+		drawUnitCount(InformationManager::Instance().getFriendlyUnitCounter(), 1, 165);
+		timerManager.displayTimers(490, 225);
+		drawResourceRequestQueue(1, 25);
+	}
+	else if (drawBWEBDebug)
+	{
+		BWEB::Map::draw();
+	}
+	else if (drawToolsDebug)
+	{
+		Tools::DrawUnitCommands();
+		Tools::DrawUnitBoundingBoxes();
+	}
 }
 #pragma endregion
 

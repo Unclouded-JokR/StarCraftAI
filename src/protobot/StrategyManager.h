@@ -295,6 +295,8 @@ public:
 
 	// Variables for attack phase logic
 	bool isAttackPhase = false;
+	bool drawStrategyDebug = false;
+
 	std::unordered_set<BWAPI::Position, PositionHash> phantomPositions; // set of positions of phantom units (weird starcraft bug where unit exists after death)
 	ProtoBotCommander* commanderReference;
 

@@ -36,6 +36,8 @@ using BehaviorVariant = std::variant<
 
 class ScoutingManager {
 public:
+    bool scoutingDebugEnabled_ = false;
+
     explicit ScoutingManager(ProtoBotCommander* commander = nullptr);
 
     void onStart();
@@ -154,7 +156,4 @@ private:
     void releaseObserverSlot(int unitId);
 
     std::vector<BWAPI::Unit> darkTemplarScouts_;
-
-    bool scoutingDebugEnabled_ = false;
-
 };

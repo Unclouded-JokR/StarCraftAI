@@ -95,9 +95,12 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 	finalizeProductionPlan(resourceRequests, unitsWeCanCreate);
 
-	drawGameUnitProduction(unitProductionCounter, 5, 238);
-	drawUnitProductionGoals();
-	drawUpgradeProductionGoals();
+	if (drawStrategyDebug)
+	{
+		drawGameUnitProduction(unitProductionCounter, 5, 238);
+		drawUnitProductionGoals();
+		drawUpgradeProductionGoals();
+	}
 
 
 	//Debug: Drawing choke points to get an idea on where the BWEM can have us position squads
