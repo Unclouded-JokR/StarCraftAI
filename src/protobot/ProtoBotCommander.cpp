@@ -190,8 +190,6 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 						if (unit->getPosition() == geyer->Pos())
 						{
 							request.state = ResourceRequest::State::Accepted_Completed;
-							//std::cout << "Assimilator created at position: " << unit->getPosition() << "\n";
-							//std::cout << "Assimilator created at tile position: " << BWAPI::Position(unit->getTilePosition()) << "\n";
 
 						}
 					}
@@ -203,9 +201,8 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 					request.unit == unit->getType() &&
 					request.base == nullptr)
 				{
-					//std::cout << "Assimilator created at position: " << unit->getPosition() << "\n";
-					//std::cout << "Assimilator created at tile position: " << BWAPI::Position(unit->getTilePosition()) << "\n";
 					request.state = ResourceRequest::State::Accepted_Completed;
+					//std::cout << "Assimilator with no base assigned set to complete\n";
 				}
 			}
 		}
