@@ -5,6 +5,8 @@ namespace BuildOrders
     std::vector<BuildOrder> createAll()
     {
         std::vector<BuildOrder> buildOrders;
+        /*
+       
         // Note: For build orders that end before placing a 3rd pylon, use BuildManager::findNaturalRampPlacement to get the custom TilePosition
         // 1) 2 Gateway Observer vs Terran
         {
@@ -256,6 +258,71 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::Train, BWAPI::UnitTypes::Protoss_Dragoon, 4, {BuildTriggerType::AtSupply, 33} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Pylon, 1, {BuildTriggerType::AtSupply, 41} });
             bo.steps.push_back({ BuildStepType::Train, BWAPI::UnitTypes::Protoss_Dragoon, 4, {BuildTriggerType::AtSupply, 41} });
+
+            buildOrders.push_back(std::move(bo));
+        }
+        */
+
+        {
+            BuildOrder bo;
+            bo.name = 1;
+            bo.vsRace = BWAPI::Races::Terran;
+            bo.blockUnitTrainingUntilSupply = 0;
+
+            bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 8} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 13} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 15} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Citadel_of_Adun, 1, {BuildTriggerType::AtSupply, 26} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 29} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Templar_Archives, 1, {BuildTriggerType::AtSupply, 29} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 38} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Forge, 1, {BuildTriggerType::AtSupply, 40} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Nexus, 1, {BuildTriggerType::AtSupply, 45} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 65} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 70} });
+
+            buildOrders.push_back(std::move(bo));
+        }
+
+        {
+            BuildOrder bo;
+            bo.name = 2;
+            bo.vsRace = BWAPI::Races::Protoss;
+            bo.blockUnitTrainingUntilSupply = 0;
+
+            bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 8} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 13} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 15} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 29} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 33} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 35} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Forge, 1, {BuildTriggerType::AtSupply, 50} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Nexus, 1, {BuildTriggerType::AtSupply, 60} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Citadel_of_Adun, 1, {BuildTriggerType::AtSupply, 65} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Templar_Archives, 1, {BuildTriggerType::AtSupply, 70} });
+
+            buildOrders.push_back(std::move(bo));
+        }
+
+        {
+            BuildOrder bo;
+            bo.name = 3;
+            bo.vsRace = BWAPI::Races::Zerg;
+            bo.blockUnitTrainingUntilSupply = 0;
+
+            bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 8} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 13} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 15} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 29} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 33} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 35} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Forge, 1, {BuildTriggerType::AtSupply, 50} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Nexus, 1, {BuildTriggerType::AtSupply, 60} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Citadel_of_Adun, 1, {BuildTriggerType::AtSupply, 65} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Templar_Archives, 1, {BuildTriggerType::AtSupply, 70} });
 
             buildOrders.push_back(std::move(bo));
         }

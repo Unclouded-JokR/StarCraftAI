@@ -544,7 +544,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	constexpr int targetCount = NUM_SQUADS_TO_ATTACK * MAX_SQUAD_SIZE;
 
 	//Add timer on supply cap to make us attack so we dont waste time.
-	if (supplyUsed >= 170 || numUnits > targetCount || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
+	if (supplyUsed >= MINIMUM_SUPPLY_TO_ALL_IN || numUnits > targetCount || (totalSupply == MAX_SUPPLY && supplyUsed + 1 == MAX_SUPPLY))
 	{
 		if (numUnits > floor(targetCount / 3)) {
 			isAttackPhase = true;

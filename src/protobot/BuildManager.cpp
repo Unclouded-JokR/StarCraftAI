@@ -1093,19 +1093,9 @@ std::string BuildManager::buildOrderNameToString(int name) const
 {
     switch (name)
     {
-        case 1: return "2 Gateway Observer";
-        case 2: return "3 Gate Robo";
-        case 3: return "Proxy Gateways vs. Zerg";
-        case 4: return "12 Nexus vs Terran";
-        case 5: return "28 Nexus vs. Terran";
-        case 6: return "9/9 Gateways vs. Zerg";
-        case 7: return "9/10 Gateways vs. Zerg";
-        case 8: return "10/12 Gateways vs. Zerg";
-        case 9: return "9/9 Gateways vs. Protoss";
-        case 10: return "9/10 Gateways vs. Protoss";
-        case 11: return "10/12 Gateways vs. Protoss";
-        case 12: return "4 Gate Goon vs. Protoss";
-        default: return "Unknown";
+        case 1: return "2 Gateway Dark Templar vs Terran";
+        case 2: return "2 Gateway Dark Templar vs Protoss";
+        case 3: return "2 Gateway Observer vs Zerg";
     }
 }
 
@@ -1118,7 +1108,7 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
 {
     srand(time(0));
 
-    if (buildOrders.empty())
+    /*if (buildOrders.empty())
     {
         buildOrderActive = false;
         buildOrderCompleted = true;
@@ -1140,20 +1130,27 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
     {
         for (int i = 0; i < (int)buildOrders.size(); i++)
             candidates.push_back(i);
+    }*/
+
+    std::vector<int> candidates;
+    for (int i = 0; i < (int)buildOrders.size(); i++)
+    {
+        if (buildOrders[i].vsRace == enemyRace)
+            candidates.push_back(i);
     }
 
     //activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
-    activeBuildOrderIndex = 4;
+    activeBuildOrderIndex = 0;
     activeBuildOrderStep = 0;
     buildOrderActive = true;
     buildOrderCompleted = false;
 
-    //std::cout << "Selected Build Order: " << buildOrderNameToString(buildOrders[activeBuildOrderIndex].name) << "\n";
+    std::cout << "Selected Build Order: " << buildOrderNameToString(buildOrders[activeBuildOrderIndex].name) << "\n";
 }
 
 void BuildManager::selectRandomBuildOrder()
 {
-    const auto enemyRace = (BWAPI::Broodwar->enemy() ? BWAPI::Broodwar->enemy()->getRace() : BWAPI::Races::Unknown);
+    const BWAPI::Race enemyRace = (BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Unknown ? BWAPI::Broodwar->enemy()->getRace() : BWAPI::Races::Unknown);
     selectBuildOrderAgainstRace(enemyRace);
 }
 
