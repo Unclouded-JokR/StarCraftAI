@@ -186,12 +186,12 @@ const ProductionGoals productionGoalEarly =
 
 const ProductionGoals productionGoalMid =
 {
-	3, 8, 1, 1, 1, 1, 0, 0
+	2, 8, 1, 1, 1, 1, 0, 0
 };
 
 const ProductionGoals productionGoalLate =
 {
-	4, 8, 3, 1, 1, 1, 1, 1
+	3, 8, 2, 1, 1, 1, 1, 1
 };
 
 struct PossibleUnitRequest {

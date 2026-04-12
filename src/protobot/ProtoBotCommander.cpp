@@ -197,6 +197,7 @@ void ProtoBotCommander::onUnitMorph(BWAPI::Unit unit)
 			}
 			else
 			{
+				//Request is cheese most likely
 				if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
 					request.unit == unit->getType() &&
 					request.base == nullptr)

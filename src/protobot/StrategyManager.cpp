@@ -1469,7 +1469,15 @@ void StrategyManager::updateUpgradeGoals()
 	}
 
 	//Ground Armor
-
+	if (request_count.groundArmor_requests + upgradesInProduction.ground_armor + completedUpgradesCount.groundArmor < 1
+		&& (ProtoBot_Squads >= 5))
+	{
+		upgradeProductionGoals.insert(RESEARCH_GROUND_ARMOR);
+	}
+	else
+	{
+		upgradeProductionGoals.erase(RESEARCH_GROUND_ARMOR);
+	}
 
 	//Ground Weapons
 	if (request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons < 1
@@ -1525,13 +1533,30 @@ void StrategyManager::planUpgradeProduction(PossibleRequests& possibleRequestLis
 					!unit->isTraining() &&
 					unit->isCompleted() &&
 					ProtoBot_Squads >= 3 &&
-					(request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons + 1) == 1)
+					(request_count.groundWeapons_requests + upgradesInProduction.ground_weapons + completedUpgradesCount.groundWeapons + 1) <= 1)
 				{
 					PossibleUpgradeRequest groundWeapons;
 					groundWeapons.upgrade = BWAPI::UpgradeTypes::Protoss_Ground_Weapons;
 					groundWeapons.trainer = unit;
 
 					possibleRequestList.upgrades.push_back(groundWeapons);
+				}
+			}
+			break;
+		case RESEARCH_GROUND_ARMOR:
+			for (const BWAPI::Unit unit : forges)
+			{
+				if (commanderReference->alreadySentRequest(unit->getID()) == false &&
+					!unit->isTraining() &&
+					unit->isCompleted() &&
+					ProtoBot_Squads >= 3 &&
+					(request_count.groundArmor_requests + upgradesInProduction.ground_armor + completedUpgradesCount.groundArmor + 1) <= 1)
+				{
+					PossibleUpgradeRequest groundArmor;
+					groundArmor.upgrade = BWAPI::UpgradeTypes::Protoss_Ground_Armor;
+					groundArmor.trainer = unit;
+
+					possibleRequestList.upgrades.push_back(groundArmor);
 				}
 			}
 			break;

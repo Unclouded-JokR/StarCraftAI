@@ -108,10 +108,14 @@ namespace BuildOrders
             bo.steps.push_back({ BuildStepType::ScoutWorker, BWAPI::UnitTypes::None, 1, {BuildTriggerType::AtSupply, 8} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 10} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Cybernetics_Core, 1, {BuildTriggerType::AtSupply, 13} });
-            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 27} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 1, {BuildTriggerType::AtSupply, 15} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Robotics_Facility, 1, {BuildTriggerType::AtSupply, 29} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Gateway, 2, {BuildTriggerType::AtSupply, 33} });
             bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Observatory, 1, {BuildTriggerType::AtSupply, 35} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Forge, 1, {BuildTriggerType::AtSupply, 50} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Nexus, 1, {BuildTriggerType::AtSupply, 60} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Citadel_of_Adun, 1, {BuildTriggerType::AtSupply, 65} });
+            bo.steps.push_back({ BuildStepType::Build, BWAPI::UnitTypes::Protoss_Templar_Archives, 1, {BuildTriggerType::AtSupply, 70} });
 
             buildOrders.push_back(std::move(bo));
         }
