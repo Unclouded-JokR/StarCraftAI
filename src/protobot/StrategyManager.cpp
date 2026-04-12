@@ -1550,10 +1550,10 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 
 	//Better solution would be supply at a rate of roughly (#nexus / probe build time + #gateways / zealot build time + ...) 
 	//This is not really an acurrate way to get supply use projection but it "works" 
-	//const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
+	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
 
 	//Pylon requests: Once build order is completed, run this check to make sure we have enough supply to do things.
-	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
+	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
 	{
 		PossibleBuildingRequest pylon;
 		pylon.building = BWAPI::UnitTypes::Protoss_Pylon;
