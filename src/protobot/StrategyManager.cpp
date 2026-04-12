@@ -90,8 +90,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	planUpgradeProduction(unitsWeCanCreate);
 
 	//Only plan buildings once we are out of a Build Order.
-	if (buildOrderCompleted)
-		planBuildingProduction(resourceRequests, unitsWeCanCreate);
+	planBuildingProduction(resourceRequests, unitsWeCanCreate);
 
 	finalizeProductionPlan(resourceRequests, unitsWeCanCreate);
 
@@ -1551,10 +1550,10 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 
 	//Better solution would be supply at a rate of roughly (#nexus / probe build time + #gateways / zealot build time + ...) 
 	//This is not really an acurrate way to get supply use projection but it "works" 
-	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
+	//const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
 
 	//Pylon requests: Once build order is completed, run this check to make sure we have enough supply to do things.
-	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
+	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= supplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
 	{
 		PossibleBuildingRequest pylon;
 		pylon.building = BWAPI::UnitTypes::Protoss_Pylon;
@@ -1568,7 +1567,7 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 		if (nexusEconomy.vespeneGyser != nullptr
 			&& nexusEconomy.assimilator == nullptr
 			&& nexusEconomy.nexus != nullptr
-			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3)
+			&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 2)
 		{
 			const BWEM::Base* base = &getBaseReference(nexusEconomy.nexus);
 
