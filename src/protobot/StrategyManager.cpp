@@ -134,7 +134,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted)
 	{
-		std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
+		//std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
 		minutesPassedIndex++;
 	}
 
@@ -259,7 +259,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
-					std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
 					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
 
