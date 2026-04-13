@@ -165,7 +165,7 @@ struct EnemyBuildingCounter
     int zergUltraliskCavern = 0;
 };
 
-struct enemyTechCounter
+struct EnemyTechCounter
 {
 	bool stimPacks = false;
 	bool lockdown = false;
@@ -203,7 +203,7 @@ struct enemyTechCounter
     bool darkArchonMeld = false;
 };
 
-struct enemyUpgradeCounter
+struct EnemyUpgradeCounter
 {
     int infantryArmor = 0;
     int infantryWeapons = 0;
@@ -272,8 +272,8 @@ private:
 	FriendlyTechCounter friendlyTechCounter;
     FriendlyUpgradeCounter friendlyUpgradeCounter;
 	EnemyBuildingCounter enemyBuildingCounter;
-    enemyTechCounter enemyTechCounter;
-    enemyUpgradeCounter enemyUpgradeCounter;
+    EnemyTechCounter enemyTechCounter;
+    EnemyUpgradeCounter enemyUpgradeCounter;
     void incrementFriendlyUnit(FriendlyUnitCounter& counter, BWAPI::UnitType type);
 	void incrementFriendlyBuilding(FriendlyBuildingCounter& counter, BWAPI::UnitType type);
 	void decrementFriendlyUnit(FriendlyUnitCounter& counter, BWAPI::UnitType type);
@@ -288,6 +288,7 @@ public:
 
     // Singleton access
     static InformationManager& Instance();
+
     void SetCommander(ProtoBotCommander* commander);
 
     std::vector<BWAPI::Position> EnemyBaseLocations;

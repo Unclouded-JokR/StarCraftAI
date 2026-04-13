@@ -59,9 +59,13 @@ void StrategyManager::onStart()
 
 	spenderManager.onStart();
 
-	//Set active goals
-	//activeGoals.insert(SATURATE_WORKERS);
-	//activeGoals.insert(EARLY_ZEALOTS);
+	//Reset counters
+	const ProtoBotProductionCount newProtoBot_createdUnitCount;
+	ProtoBot_createdUnitCount = newProtoBot_createdUnitCount;
+	const UpgradesInProduction newupgradesInProduction;
+	upgradesInProduction = newupgradesInProduction;
+	const UnitProductionGameCounter newunitProductionCounter;
+	unitProductionCounter = newunitProductionCounter;
 
 	//Check for opponent race and unit counts;
 	opponentRace = BWAPI::Broodwar->enemy()->getRace();
@@ -117,14 +121,22 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 	//In-Game Time book keeping
 	const int frame = BWAPI::Broodwar->getFrameCount();
-	const int seconds = frame / FRAMES_PER_SECOND;
-	const int minutes = seconds / 60;
+	const int totalSeconds = frame / FRAMES_PER_SECOND;
+	const int seconds = totalSeconds % 60;
+	const int minutes = totalSeconds / 60;
+
+	//BWAPI::Broodwar->drawTextScreen(5, 30, "%cMinutes: %d", BWAPI::Text::White, minutes);
+	//BWAPI::Broodwar->drawTextScreen(5, 40, "%cSeconds: %d", BWAPI::Text::White, seconds);
 
 	//Estimate income
 	ourIncomePerFrameMinerals = workerIncomePerFrameMinerals * activeMiners();
 	outIncomePerFrameGas = workerIncomePerFrameGas * activeDrillers();
 
-	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted) minutesPassedIndex++;
+	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted)
+	{
+		std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
+		minutesPassedIndex++;
+	}
 
 	//ProtoBot unit information
 	const FriendlyBuildingCounter ProtoBot_buildings = InformationManager::Instance().getFriendlyBuildingCounter();
@@ -247,7 +259,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
-					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
 					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
 
@@ -487,7 +499,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
 
-	if (buildOrderCompleted)
+	if (buildOrderCompleted || (BWAPI::Broodwar->self()->supplyUsed() / 2) > 15)
 	{
 		//change this to frames since last info gained
 		if (frame - frameSinceLastScout >= 24 * 20) {
@@ -1479,7 +1491,7 @@ void StrategyManager::updateUpgradeGoals()
 
 	//Ground Armor
 	if (request_count.groundArmor_requests + upgradesInProduction.ground_armor + completedUpgradesCount.groundArmor < 1
-		&& (ProtoBot_Squads >= 5))
+		&& (ProtoBot_Squads >= 4))
 	{
 		upgradeProductionGoals.insert(RESEARCH_GROUND_ARMOR);
 	}

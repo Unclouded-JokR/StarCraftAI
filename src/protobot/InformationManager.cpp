@@ -28,6 +28,28 @@ void InformationManager::onStart()
 	//influenceMap.onStart();
 	threatGrid.onStart();
 
+
+	FriendlyUnitCounter newfriendlyUnitCounter;
+	friendlyUnitCounter = newfriendlyUnitCounter;
+
+	FriendlyBuildingCounter newfriendlyBuildingCounter;
+	friendlyBuildingCounter = newfriendlyBuildingCounter;
+
+	FriendlyTechCounter newfriendlyTechCounter;
+	friendlyTechCounter = newfriendlyTechCounter;
+
+	FriendlyUpgradeCounter newfriendlyUpgradeCounter;
+	friendlyUpgradeCounter = newfriendlyUpgradeCounter;
+
+	EnemyBuildingCounter newenemyBuildingCounter;
+	enemyBuildingCounter = newenemyBuildingCounter;
+
+	EnemyTechCounter newenemyTechCounter;
+	enemyTechCounter = newenemyTechCounter;
+
+	EnemyUpgradeCounter newenemyUpgradeCounter;
+	enemyUpgradeCounter = newenemyUpgradeCounter;
+
 	//std::cout << "Information Manager Initialized\n";
 }
 

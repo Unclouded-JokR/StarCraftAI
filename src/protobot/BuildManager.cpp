@@ -1139,8 +1139,8 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
             candidates.push_back(i);
     }
 
-    //activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
-    activeBuildOrderIndex = 0;
+    activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
+    //activeBuildOrderIndex = 0;
     activeBuildOrderStep = 0;
     buildOrderActive = true;
     buildOrderCompleted = false;
@@ -1150,7 +1150,7 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
 
 void BuildManager::selectRandomBuildOrder()
 {
-    const BWAPI::Race enemyRace = (BWAPI::Broodwar->enemy()->getRace() == BWAPI::Races::Unknown ? BWAPI::Broodwar->enemy()->getRace() : BWAPI::Races::Unknown);
+    const BWAPI::Race enemyRace = (BWAPI::Broodwar->enemy()->getRace() != BWAPI::Races::Unknown ? BWAPI::Broodwar->enemy()->getRace() : BWAPI::Races::Unknown);
     selectBuildOrderAgainstRace(enemyRace);
 }
 

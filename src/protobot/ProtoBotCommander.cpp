@@ -63,6 +63,9 @@ void ProtoBotCommander::onStart()
 	combatManager.onStart();
 
 	resourceRequests.clear();
+
+	ProtoBotRequestCounter newRequestCounter;
+	requestCounter = newRequestCounter;
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
