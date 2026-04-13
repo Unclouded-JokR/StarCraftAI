@@ -7,7 +7,6 @@
 #include <set>
 #include "../starterbot/Tools.h"
 #include "SpenderManager.h"
-#include "BWEM/src/bwem.h"
 #include "Hashes.h"
 
 #define FRAMES_PER_SECOND 24
@@ -229,7 +228,7 @@ class StrategyManager
 {
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
-	std::vector<int> expansionTimes = { 3, 6, 9, 13, 18 };
+	std::vector<int> expansionTimes = { 5, 10, 20, 30, 40, 50};
 	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate };
 	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;

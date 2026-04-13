@@ -1470,7 +1470,7 @@ void StrategyManager::updateUpgradeGoals()
 
 	//Ground Armor
 	if (request_count.groundArmor_requests + upgradesInProduction.ground_armor + completedUpgradesCount.groundArmor < 1
-		&& (ProtoBot_Squads >= 5))
+		&& (ProtoBot_Squads >= 4))
 	{
 		upgradeProductionGoals.insert(RESEARCH_GROUND_ARMOR);
 	}
