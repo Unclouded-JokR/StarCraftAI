@@ -59,9 +59,13 @@ void StrategyManager::onStart()
 
 	spenderManager.onStart();
 
-	//Set active goals
-	//activeGoals.insert(SATURATE_WORKERS);
-	//activeGoals.insert(EARLY_ZEALOTS);
+	//Reset counters
+	const ProtoBotProductionCount newProtoBot_createdUnitCount;
+	ProtoBot_createdUnitCount = newProtoBot_createdUnitCount;
+	const UpgradesInProduction newupgradesInProduction;
+	upgradesInProduction = newupgradesInProduction;
+	const UnitProductionGameCounter newunitProductionCounter;
+	unitProductionCounter = newunitProductionCounter;
 
 	//Check for opponent race and unit counts;
 	opponentRace = BWAPI::Broodwar->enemy()->getRace();
@@ -1588,6 +1592,9 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 	//Pylon requests: Once build order is completed, run this check to make sure we have enough supply to do things.
 	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
 	{
+		std::cout << "Supply is close to full...building pylon\n";
+		std::cout << "Gateways: " << ProtoBot_buildings.gateway << "\n";
+		std::cout << "Nexus: " << ProtoBot_buildings.nexus << "\n";
 		PossibleBuildingRequest pylon;
 		pylon.building = BWAPI::UnitTypes::Protoss_Pylon;
 
