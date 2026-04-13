@@ -1592,9 +1592,6 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 	//Pylon requests: Once build order is completed, run this check to make sure we have enough supply to do things.
 	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
 	{
-		std::cout << "Supply is close to full...building pylon\n";
-		std::cout << "Gateways: " << ProtoBot_buildings.gateway << "\n";
-		std::cout << "Nexus: " << ProtoBot_buildings.nexus << "\n";
 		PossibleBuildingRequest pylon;
 		pylon.building = BWAPI::UnitTypes::Protoss_Pylon;
 
