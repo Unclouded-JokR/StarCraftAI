@@ -22,6 +22,13 @@ CombatManager::CombatManager(ProtoBotCommander* commanderReference) : commanderR
 void CombatManager::onStart(){
 	AStar::clearPathCache();
 	AStar::fillUncachedAreaPairs();
+	Squads.clear();
+	unitSquadMap.clear();
+	globalAttackPosition = BWAPI::Positions::Invalid;
+	AttackingSquads.clear();
+	DefendingSquads.clear();
+	ReinforcingSquads.clear();
+	IdleSquads.clear();
 }
 
 void CombatManager::onFrame() {
