@@ -121,8 +121,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	const int seconds = totalSeconds % 60;
 	const int minutes = totalSeconds / 60;
 
-	BWAPI::Broodwar->drawTextScreen(5, 30, "%cMinutes: %d", BWAPI::Text::White, minutes);
-	BWAPI::Broodwar->drawTextScreen(5, 40, "%cSeconds: %d", BWAPI::Text::White, seconds);
+	//BWAPI::Broodwar->drawTextScreen(5, 30, "%cMinutes: %d", BWAPI::Text::White, minutes);
+	//BWAPI::Broodwar->drawTextScreen(5, 40, "%cSeconds: %d", BWAPI::Text::White, seconds);
 
 	//Estimate income
 	ourIncomePerFrameMinerals = workerIncomePerFrameMinerals * activeMiners();
@@ -495,7 +495,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
 
-	if (buildOrderCompleted)
+	if (buildOrderCompleted || (BWAPI::Broodwar->self()->supplyUsed() / 2) > 15)
 	{
 		//change this to frames since last info gained
 		if (frame - frameSinceLastScout >= 24 * 20) {
