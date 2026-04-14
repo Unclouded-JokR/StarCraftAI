@@ -67,6 +67,21 @@ void StrategyManager::onStart()
 	const UnitProductionGameCounter newunitProductionCounter;
 	unitProductionCounter = newunitProductionCounter;
 
+	unitProduction.clear();
+	resourceDepots.clear();
+	upgradeProduction.clear();
+	cybernetics.clear();
+	forges.clear();
+	citadels.clear();
+	workers.clear();
+
+	std::set<UnitProductionGoals> unitProductionGoals;
+	std::set<UpgradeProductionGoals> upgradeProductionGoals;
+
+
+	//Reset race just in case
+	opponentRace = BWAPI::Races::Unknown;
+
 	//Check for opponent race and unit counts;
 	opponentRace = BWAPI::Broodwar->enemy()->getRace();
 	std::cout << "Unit Race is " << opponentRace << "\n";

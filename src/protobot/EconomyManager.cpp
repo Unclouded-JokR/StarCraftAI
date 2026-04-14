@@ -12,7 +12,7 @@ EconomyManager::EconomyManager(ProtoBotCommander* commanderReference) : commande
 #pragma region BWAPI EVENTS
 void EconomyManager::onStart()
 {
-
+    nexusEconomies.clear();
 }
 
 void EconomyManager::onFrame()

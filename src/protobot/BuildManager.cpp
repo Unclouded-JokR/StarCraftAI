@@ -575,6 +575,7 @@ void BuildManager::onStart()
 
     buildingPlacer.onStart();
     builders.clear();
+    buildings.clear();
 
     initBuildOrdersOnStart();
     selectRandomBuildOrder();
