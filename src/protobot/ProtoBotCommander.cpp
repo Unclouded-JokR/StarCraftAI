@@ -42,6 +42,8 @@ void ProtoBotCommander::onStart()
 
 	const BWAPI::Unitset units = BWAPI::Broodwar->self()->getUnits();
 
+	economyManager.onStart();
+
 	//Get nexus and create a new instace of a NexusEconomy
 	//Need to do this because when units are created at the beggining of the game a nexus economy does not exist.
 	for (BWAPI::Unit unit : units)
@@ -57,7 +59,6 @@ void ProtoBotCommander::onStart()
 	*/
     InformationManager::Instance().onStart();
 	strategyManager.onStart();
-	economyManager.onStart();
 	scoutingManager.onStart();
 	buildManager.onStart();
 	combatManager.onStart();
