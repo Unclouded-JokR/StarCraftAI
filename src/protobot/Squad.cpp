@@ -12,6 +12,18 @@ void Squad::onFrame() {
 	// Process current squad state
 	info.currentState->Update(this);
 
+	// No matter the state, observer should have same behavior.
+	// If not in danger, stay above leader.
+	// Else, run towards base (typically away from enemies)
+	if (observer != nullptr && leader != nullptr) {
+		if (observer->getUnitsInRadius(100, BWAPI::Filter::CanAttack).empty()) {
+			observer->move(leader->getPosition());
+		}
+		else {
+			observer->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		}
+	}
+
 #ifdef DEBUG_SQUAD
 	drawDebugInfo();
 #endif
@@ -80,6 +92,9 @@ void Squad::removeUnit(BWAPI::Unit unit){
 			leader = closestUnit;
 		}
 	}
+	else if (unit == observer) {
+		observer = nullptr;
+	}
 	else {
 		info.units.erase(std::remove(info.units.begin(), info.units.end(), unit), info.units.end());
 	}
@@ -110,6 +125,14 @@ void Squad::addUnit(BWAPI::Unit unit) {
 #ifdef DEBUG_SQUAD
 	BWAPI::Broodwar->printf("Unit %d added to Squad %d", unit->getID(), squadId);
 #endif
+}
+
+void Squad::addObserver(BWAPI::Unit unreservedObserver) {
+	if (unreservedObserver == nullptr) {
+		return;
+	}
+
+	observer = unreservedObserver;
 }
 
 void Squad::drawSquadBox() {

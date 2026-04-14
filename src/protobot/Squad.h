@@ -43,7 +43,8 @@ public:
 
 class Squad {
 public:
-	BWAPI::Unit leader;
+	BWAPI::Unit leader = nullptr;
+	BWAPI::Unit observer = nullptr;
 	SquadInfo info;
 
 	Squad(BWAPI::Unit leader, int squadId, BWAPI::Color squadColor);
@@ -52,6 +53,7 @@ public:
 	void setState(SquadState& newState);
 	void removeUnit(BWAPI::Unit unit);
 	void addUnit(BWAPI::Unit unit);
+	void addObserver(BWAPI::Unit observer);
 	void drawSquadBox();
 	void drawDebugInfo();
 

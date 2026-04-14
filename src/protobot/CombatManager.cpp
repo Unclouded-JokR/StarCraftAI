@@ -41,6 +41,11 @@ void CombatManager::onFrame() {
 	}*/
 
 	for (const auto& squad : Squads) {
+		if (!detachedObservers.empty()) {
+			squad->addObserver(detachedObservers.front());
+			detachedObservers.erase(detachedObservers.begin());
+		}
+
 		squad->onFrame();
 
 		if (combat_debug_on) {
@@ -146,6 +151,11 @@ void CombatManager::removeSquad(Squad* squad) {
 	ReinforcingSquads.erase(remove(ReinforcingSquads.begin(), ReinforcingSquads.end(), squad), ReinforcingSquads.end());
 	AttackingSquads.erase(remove(AttackingSquads.begin(), AttackingSquads.end(), squad), AttackingSquads.end());
 
+	// Check if observer is left
+	if (squad->observer != nullptr) {
+		detachedObservers.push_back(squad->observer);
+	}
+
 	// Handling filled chokepoint locations in strategy manager
 	for (const auto& cp : commanderReference->strategyManager.ProtoBotArea_SquadPlacements) {
 		if (cp != nullptr && squad->info.currentDefensivePosition == BWAPI::Position(cp->Center())) {
@@ -229,6 +239,16 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 	}
 
 	return nullptr;
+}
+
+void CombatManager::receiveObserver(BWAPI::Unit _observer) {
+	for (const auto& squad : Squads) {
+		if (squad->observer == nullptr && _observer != nullptr) {
+			squad->addObserver(_observer);
+			unitSquadMap[_observer] = squad;
+			return;
+		}
+	}
 }
 
 void CombatManager::onSendText(std::string text) {
