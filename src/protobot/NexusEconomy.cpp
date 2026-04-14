@@ -171,14 +171,16 @@ void NexusEconomy::onFrame()
 		//If a worker is not carrying minerals and hasnt been assigned to one, assign them to farm. 
 		if (!worker->isCarryingMinerals())
 		{
-			if (assimilator != nullptr && resourceWorkerCount[assimilator] < WORKERS_PER_ASSIMILATOR)
+			if (assimilator != nullptr 
+				&& resourceWorkerCount[assimilator] + 1 <= WORKERS_PER_ASSIMILATOR
+				&& (workers.size() >= minerals.size() || minerals.size() == 0))
 			{
 				if (assignedResource[worker]) {
 					resourceWorkerCount[assignedResource[worker]] -= 1;
 				}
 
 				worker->gather(assimilator);
-				assignedResource[worker] = vespeneGyser;
+				assignedResource[worker] = assimilator;
 				resourceWorkerCount[assimilator] += 1;
 				workerOrder[worker] = 1;
 
@@ -213,7 +215,7 @@ void NexusEconomy::onFrame()
 			//continue;
 		}
 
-		if (worker->isCarryingMinerals() && worker->isIdle())
+		if ((worker->isCarryingMinerals() || worker->isCarryingGas()) && worker->isIdle())
 		{
 			//BWAPI::Unit assignedMineral = assignedResource[worker];
 			//assignedResource.erase(worker);

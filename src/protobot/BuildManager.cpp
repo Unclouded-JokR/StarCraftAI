@@ -575,6 +575,7 @@ void BuildManager::onStart()
 
     buildingPlacer.onStart();
     builders.clear();
+    buildings.clear();
 
     initBuildOrdersOnStart();
     selectRandomBuildOrder();
@@ -1106,8 +1107,6 @@ void BuildManager::initBuildOrdersOnStart()
 
 void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
 {
-    srand(time(0));
-
     /*if (buildOrders.empty())
     {
         buildOrderActive = false;
@@ -1139,7 +1138,7 @@ void BuildManager::selectBuildOrderAgainstRace(BWAPI::Race enemyRace)
             candidates.push_back(i);
     }
 
-    activeBuildOrderIndex = candidates[std::rand() % candidates.size()];
+    activeBuildOrderIndex = candidates[0];
     //activeBuildOrderIndex = 0;
     activeBuildOrderStep = 0;
     buildOrderActive = true;

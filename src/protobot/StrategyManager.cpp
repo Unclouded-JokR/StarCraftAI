@@ -67,6 +67,21 @@ void StrategyManager::onStart()
 	const UnitProductionGameCounter newunitProductionCounter;
 	unitProductionCounter = newunitProductionCounter;
 
+	unitProduction.clear();
+	resourceDepots.clear();
+	upgradeProduction.clear();
+	cybernetics.clear();
+	forges.clear();
+	citadels.clear();
+	workers.clear();
+
+	std::set<UnitProductionGoals> unitProductionGoals;
+	std::set<UpgradeProductionGoals> upgradeProductionGoals;
+
+
+	//Reset race just in case
+	opponentRace = BWAPI::Races::Unknown;
+
 	//Check for opponent race and unit counts;
 	opponentRace = BWAPI::Broodwar->enemy()->getRace();
 	std::cout << "Unit Race is " << opponentRace << "\n";
@@ -134,7 +149,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted)
 	{
-		std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
+		//std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
 		minutesPassedIndex++;
 	}
 
@@ -259,7 +274,7 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 
 				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 				{
-					std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
 					minutesPassedIndex++;
 					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
 
@@ -1239,6 +1254,7 @@ void StrategyManager::updateUnitProductionGoals()
 	//Need a way to check tech tree to make sure we can build
 	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
 	const FriendlyBuildingCounter completedBuildingsCount = InformationManager::Instance().getFriendlyBuildingCounter();
+	FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
 	std::vector<Squad*> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
 	//Probes
@@ -1271,8 +1287,11 @@ void StrategyManager::updateUnitProductionGoals()
 	}
 
 	//Minimum Observer Production
-	if (request_count.observers_requests + unitProductionCounter.observers < MAX_OBSERVERS_FOR_SCOUTING)
+	if (request_count.observers_requests + ProtoBot_createdUnitCount.created_observers < MAX_OBSERVERS_FOR_SCOUTING && ProtoBot_currentUnits.observer < MAX_OBSERVERS_FOR_SCOUTING)
 	{
+		std::cout << "Observer Requests = " << request_count.observers_requests << "\n";
+		std::cout << "Created Units = " << ProtoBot_createdUnitCount.created_observers << "\n";
+		std::cout << "Current Observer Count = " << ProtoBot_currentUnits.observer << "\n";
 		unitProductionGoals.insert(OBSERVER_SCOUTS);
 	}
 	else
@@ -1324,8 +1343,12 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 	//Prevents construction of units outside Build Order.
 	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
 	const std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+	FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
 
-	//Add tech tree into production.
+	int workerRequestsThisFrame = 0;
+	int zealotRequestsThisFrame = 0;
+	int darkTemplarRequestsThisFrame = 0;
+	int observerRequestsThisFrame = 0;
 
 	for (const UnitProductionGoals productionGoal : unitProductionGoals)
 	{
@@ -1337,18 +1360,22 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 					!nexusEconomy.nexus->isTraining() &&
 					nexusEconomy.nexus->isCompleted() &&
-					nexusEconomy.workers.size() < (nexusEconomy.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0) &&
-					(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
+					nexusEconomy.workers.size() < ((nexusEconomy.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) &&
+					(request_count.worker_requests + workerRequestsThisFrame + unitProductionCounter.worker + 1) <= MAX_WORKERS)
 				{
 					PossibleUnitRequest probe;
 					probe.unit = BWAPI::UnitTypes::Protoss_Probe;
 					probe.trainer = nexusEconomy.nexus;
 
+					//std::cout << nexusEconomy.workers.size() << " < " << ((nexusEconomy.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) << "\n";
+					//std::cout << "Production counter: " << unitProductionCounter.worker << "\n";
+					//std::cout << "ProtoBot_createdUnitCount: " << ProtoBot_createdUnitCount.created_workers << "\n";
+
+					workerRequestsThisFrame++;
 					possibleRequestList.units.push_back(probe);
 				}
 			}
 			break;
-
 		case EARLY_ZEALOTS:
 			if (trainingBlock) break;
 
@@ -1360,12 +1387,13 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(building->getID()) == false &&
 					!building->isTraining() &&
 					building->isCompleted() &&
-					(request_count.zealots_requests + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
+					(request_count.zealots_requests + zealotRequestsThisFrame + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
 				{
 					PossibleUnitRequest zealot;
 					zealot.unit = BWAPI::UnitTypes::Protoss_Zealot;
 					zealot.trainer = building;
 
+					zealotRequestsThisFrame++;
 					possibleRequestList.units.push_back(zealot);
 				}
 			}
@@ -1386,6 +1414,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 					darkTemplar.unit = BWAPI::UnitTypes::Protoss_Dark_Templar;
 					darkTemplar.trainer = building;
 
+					darkTemplarRequestsThisFrame++;
 					possibleRequestList.units.push_back(darkTemplar);
 				}
 			}
@@ -1400,12 +1429,13 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(building->getID()) == false &&
 					!building->isTraining() &&
 					building->isCompleted() &&
-					(request_count.observers_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					(request_count.observers_requests + observerRequestsThisFrame + ProtoBot_createdUnitCount.created_observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
 				{
 					PossibleUnitRequest observer;
 					observer.unit = BWAPI::UnitTypes::Protoss_Observer;
 					observer.trainer = building;
 
+					observerRequestsThisFrame++;
 					possibleRequestList.units.push_back(observer);
 				}
 			}
