@@ -1340,7 +1340,10 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
 	const std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
 
-	//Add tech tree into production.
+	int workerRequestsThisFrame = 0;
+	int zealotRequestsThisFrame = 0;
+	int darkTemplarRequestsThisFrame = 0;
+	int observerRequestsThisFrame = 0;
 
 	for (const UnitProductionGoals productionGoal : unitProductionGoals)
 	{
@@ -1352,18 +1355,22 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 					!nexusEconomy.nexus->isTraining() &&
 					nexusEconomy.nexus->isCompleted() &&
-					nexusEconomy.workers.size() < (nexusEconomy.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0) &&
-					(request_count.worker_requests + ProtoBot_createdUnitCount.created_workers + 1) <= MAX_WORKERS)
+					nexusEconomy.workers.size() < ((nexusEconomy.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) &&
+					(request_count.worker_requests + workerRequestsThisFrame + unitProductionCounter.worker + 1) <= MAX_WORKERS)
 				{
 					PossibleUnitRequest probe;
 					probe.unit = BWAPI::UnitTypes::Protoss_Probe;
 					probe.trainer = nexusEconomy.nexus;
 
+					std::cout << nexusEconomy.workers.size() << " < " << ((nexusEconomy.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) << "\n";
+					std::cout << "Production counter: " << unitProductionCounter.worker << "\n";
+					std::cout << "ProtoBot_createdUnitCount: " << ProtoBot_createdUnitCount.created_workers << "\n";
+
+					workerRequestsThisFrame++;
 					possibleRequestList.units.push_back(probe);
 				}
 			}
 			break;
-
 		case EARLY_ZEALOTS:
 			if (trainingBlock) break;
 
@@ -1375,12 +1382,13 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(building->getID()) == false &&
 					!building->isTraining() &&
 					building->isCompleted() &&
-					(request_count.zealots_requests + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
+					(request_count.zealots_requests + zealotRequestsThisFrame + unitProductionCounter.zealots + 1) <= MAX_EARLY_ZEALOTS)
 				{
 					PossibleUnitRequest zealot;
 					zealot.unit = BWAPI::UnitTypes::Protoss_Zealot;
 					zealot.trainer = building;
 
+					zealotRequestsThisFrame++;
 					possibleRequestList.units.push_back(zealot);
 				}
 			}
@@ -1401,6 +1409,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 					darkTemplar.unit = BWAPI::UnitTypes::Protoss_Dark_Templar;
 					darkTemplar.trainer = building;
 
+					darkTemplarRequestsThisFrame++;
 					possibleRequestList.units.push_back(darkTemplar);
 				}
 			}
@@ -1415,12 +1424,13 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(building->getID()) == false &&
 					!building->isTraining() &&
 					building->isCompleted() &&
-					(request_count.observers_requests + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+					(request_count.observers_requests + observerRequestsThisFrame + unitProductionCounter.observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
 				{
 					PossibleUnitRequest observer;
 					observer.unit = BWAPI::UnitTypes::Protoss_Observer;
 					observer.trainer = building;
 
+					observerRequestsThisFrame++;
 					possibleRequestList.units.push_back(observer);
 				}
 			}

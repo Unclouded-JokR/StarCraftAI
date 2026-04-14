@@ -349,6 +349,9 @@ void EconomyManager::getMineralsAtBase(BWAPI::TilePosition nexusLocation, NexusE
     newNexus.optimalWorkerAmount = newNexus.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL;
     newNexus.maximumWorkers = newNexus.optimalWorkerAmount + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 
+    std::cout << "# of Minerals at nexus location: " << newNexus.minerals.size() << "\n";
+    std::cout << "# Geyser at nexus location? " << (newNexus.vespeneGyser != nullptr ? "true\n" : "false\n");
+
     //To keep probe production constant make this to be able to have more workers than nessecary at main or any other base. Transfers should disperse workers.
     newNexus.workerOverflowAmount = (newNexus.minerals.size() * MAXIMUM_WORKERS_PER_MINERAL) + (newNexus.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0);
 }
