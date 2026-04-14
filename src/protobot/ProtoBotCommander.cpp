@@ -84,7 +84,7 @@ void ProtoBotCommander::onFrame()
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
-	//timerManager.startTimer(TimerManager::All);
+	timerManager.startTimer(TimerManager::All);
 
 	// Update our MapTools information
 	timerManager.startTimer(TimerManager::MapTools);
