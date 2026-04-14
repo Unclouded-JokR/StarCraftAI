@@ -43,7 +43,7 @@ void CombatManager::onFrame() {
 	for (const auto& squad : Squads) {
 		if (!detachedObservers.empty()) {
 			squad->addObserver(detachedObservers.front());
-			detachedObservers.erase(detachedObservers.begin());
+			detachedObservers.pop();
 		}
 
 		squad->onFrame();
@@ -153,7 +153,7 @@ void CombatManager::removeSquad(Squad* squad) {
 
 	// Check if observer is left
 	if (squad->observer != nullptr) {
-		detachedObservers.push_back(squad->observer);
+		detachedObservers.push(squad->observer);
 	}
 
 	// Handling filled chokepoint locations in strategy manager

@@ -54,7 +54,7 @@ public:
 
 
 private:
-    vector<BWAPI::Unit> detachedObservers;
+    queue<BWAPI::Unit> detachedObservers;
     bool isAssigned(BWAPI::Unit unit);
     void drawDebugInfo();
 };
