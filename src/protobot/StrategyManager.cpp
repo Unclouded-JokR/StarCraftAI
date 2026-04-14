@@ -1362,9 +1362,9 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 					probe.unit = BWAPI::UnitTypes::Protoss_Probe;
 					probe.trainer = nexusEconomy.nexus;
 
-					std::cout << nexusEconomy.workers.size() << " < " << ((nexusEconomy.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) << "\n";
-					std::cout << "Production counter: " << unitProductionCounter.worker << "\n";
-					std::cout << "ProtoBot_createdUnitCount: " << ProtoBot_createdUnitCount.created_workers << "\n";
+					//std::cout << nexusEconomy.workers.size() << " < " << ((nexusEconomy.minerals.size() * OPTIMAL_WORKERS_PER_MINERAL) + (nexusEconomy.vespeneGyser != nullptr ? WORKERS_PER_ASSIMILATOR : 0)) << "\n";
+					//std::cout << "Production counter: " << unitProductionCounter.worker << "\n";
+					//std::cout << "ProtoBot_createdUnitCount: " << ProtoBot_createdUnitCount.created_workers << "\n";
 
 					workerRequestsThisFrame++;
 					possibleRequestList.units.push_back(probe);
