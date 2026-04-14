@@ -74,36 +74,36 @@ void ProtoBotCommander::onStart()
 void ProtoBotCommander::onFrame()
 {
 	// Draw unit health bars, which brood war unfortunately does not do
-	//Tools::DrawUnitHealthBars();
+	Tools::DrawUnitHealthBars();
 
 	// Draw some relevent information to the screen to help us debug the bot
-	//drawDebugInformation();
+	drawDebugInformation();
 
 	removeApprovedRequests();
 
 	/*
 	* Do not touch this code, these are lines of code from StarterBot that we need to have our bot functioning.
 	*/
-	//timerManager.startTimer(TimerManager::All);
+	timerManager.startTimer(TimerManager::All);
 
 	// Update our MapTools information
-	//timerManager.startTimer(TimerManager::MapTools);
+	timerManager.startTimer(TimerManager::MapTools);
 	m_mapTools.onFrame();
-	//timerManager.stopTimer(TimerManager::MapTools);
+	timerManager.stopTimer(TimerManager::MapTools);
 
 	/*
 	* Protobot Modules
 	*/
 
-	//timerManager.startTimer(TimerManager::Information);
+	timerManager.startTimer(TimerManager::Information);
     InformationManager::Instance().onFrame();
-	//timerManager.stopTimer(TimerManager::Information);
+	timerManager.stopTimer(TimerManager::Information);
 
-	//timerManager.startTimer(TimerManager::Economy);
+	timerManager.startTimer(TimerManager::Economy);
 	economyManager.onFrame();
-	//timerManager.stopTimer(TimerManager::Economy);
+	timerManager.stopTimer(TimerManager::Economy);
 
-	//timerManager.startTimer(TimerManager::Strategy);
+	timerManager.startTimer(TimerManager::Strategy);
 	std::vector<Action> actions = strategyManager.onFrame(resourceRequests);
 
 	bool issuedScoutThisFrame = false;
@@ -133,22 +133,22 @@ void ProtoBotCommander::onFrame()
 			break;
 		}
 	}
-	//timerManager.stopTimer(TimerManager::Strategy);
+	timerManager.stopTimer(TimerManager::Strategy);
 
-	//timerManager.startTimer(TimerManager::Build);
+	timerManager.startTimer(TimerManager::Build);
 	buildManager.onFrame(resourceRequests);
-	//timerManager.stopTimer(TimerManager::Build);
+	timerManager.stopTimer(TimerManager::Build);
 
 	//Uncomment this once onFrame does not steal a worker.
-	//timerManager.startTimer(TimerManager::Scouting);
+	timerManager.startTimer(TimerManager::Scouting);
 	scoutingManager.onFrame();
-	//timerManager.stopTimer(TimerManager::Scouting);
+	timerManager.stopTimer(TimerManager::Scouting);
 
-	//timerManager.startTimer(TimerManager::Combat);
+	timerManager.startTimer(TimerManager::Combat);
 	combatManager.onFrame();
-	//timerManager.stopTimer(TimerManager::Combat);
+	timerManager.stopTimer(TimerManager::Combat);
 
-	//timerManager.stopTimer(TimerManager::All);
+	timerManager.stopTimer(TimerManager::All);
 }
 
 void ProtoBotCommander::onEnd(bool isWinner)
