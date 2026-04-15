@@ -1289,9 +1289,9 @@ void StrategyManager::updateUnitProductionGoals()
 	//Minimum Observer Production
 	if (request_count.observers_requests + ProtoBot_createdUnitCount.created_observers < MAX_OBSERVERS_FOR_SCOUTING && ProtoBot_currentUnits.observer < MAX_OBSERVERS_FOR_SCOUTING)
 	{
-		std::cout << "Observer Requests = " << request_count.observers_requests << "\n";
-		std::cout << "Created Units = " << ProtoBot_createdUnitCount.created_observers << "\n";
-		std::cout << "Current Observer Count = " << ProtoBot_currentUnits.observer << "\n";
+		//std::cout << "Observer Requests = " << request_count.observers_requests << "\n";
+		//std::cout << "Created Units = " << ProtoBot_createdUnitCount.created_observers << "\n";
+		//std::cout << "Current Observer Count = " << ProtoBot_currentUnits.observer << "\n";
 		unitProductionGoals.insert(OBSERVER_SCOUTS);
 	}
 	else

@@ -213,7 +213,9 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
     //Pylon first pass. These units should have priority.
     for (ResourceRequest& request : requests)
     {
-        if (request.state == ResourceRequest::State::PendingApproval && request.type == ResourceRequest::Type::Building && request.unit == BWAPI::UnitTypes::Protoss_Pylon)
+        if (request.state == ResourceRequest::State::PendingApproval 
+            && request.type == ResourceRequest::Type::Building 
+            && request.unit == BWAPI::UnitTypes::Protoss_Pylon)
         {
             mineralPrice = request.unit.mineralPrice();
             gasPrice = request.unit.gasPrice();

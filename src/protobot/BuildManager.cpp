@@ -685,108 +685,72 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                 }
                 else
                 {
-                    //BWAPI::Position placementPos = BWAPI::Positions::Invalid;
-                    //BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
-                    //PlacementInfo placementInfo;
-                    bool usingChosenSpecialTile = false;
+                    if (request.placementPos == BWAPI::Positions::Invalid) request.placementInfo = buildingPlacer.getPositionToBuild(request.unit, request.base);
 
-                    if (request.isWall || request.isRampPlacement)
+                    if (request.placementInfo.position == BWAPI::Positions::Invalid && request.gotPositionToBuild == false)
                     {
-                        request.tileToPlace = resolveSpecialBuildTile(request);
-                        if (!request.tileToPlace.isValid())
-                            continue;
+                        const PlacementInfo::PlacementFlag flag_info = request.placementInfo.flag;
 
-                        if (!BWAPI::Broodwar->canBuildHere(request.tileToPlace, request.unit))
+                        switch (flag_info)
                         {
-                            const bool needsPower = (BWAPI::Broodwar->self()->getRace() == BWAPI::Races::Protoss && request.unit.requiresPsi());
-                            if (needsPower && !BWAPI::Broodwar->hasPower(request.tileToPlace, request.unit))
-                                continue;
-
-                            // Otherwise it may be blocked by a moving unit, retry later
-                            continue;
+                        case PlacementInfo::NO_POWER:
+                            //should create a new pylon request by inserting a pylon in the front of the queue.
+                            //std::cout << "FAILED: NO POWER\n";
+                            break;
+                        case PlacementInfo::NO_BLOCKS:
+                            //Wait for a bit and kill the request if no blocks are added
+                            //std::cout << "FAILED: NO BLOCKS\n";
+                            break;
+                        case PlacementInfo::NO_GYSERS:
+                            //Shouldnt happen but okay
+                            //std::cout << "FAILED: NO GYSERS\n";
+                            break;
+                        case PlacementInfo::NO_PLACEMENTS:
+                            //Wait for a bit and kill the request if no placements are added.
+                            //std::cout << "FAILED: NO PLACEMENTS\n";
+                            break;
+                        case PlacementInfo::NO_EXPANSIONS:
+                            //kill the expansion request.
+                            //std::cout << "FAILED: NO EXPANSION\n";
+                            break;
                         }
 
-                        request.placementPos = BWAPI::Position(request.tileToPlace);
-                        usingChosenSpecialTile = true;
+                        request.attempts++;
                     }
                     else
                     {
-                        if (request.gotPositionToBuild == false)
-                        {
-                            request.placementInfo = buildingPlacer.getPositionToBuild(request.unit, request.base);
-                        }
-
-                        if (request.placementInfo.position == BWAPI::Positions::Invalid && request.gotPositionToBuild == false)
-                        {
-                            const PlacementInfo::PlacementFlag flag_info = request.placementInfo.flag;
-
-                            switch (flag_info)
-                            {
-                            case PlacementInfo::NO_POWER:
-                                //should create a new pylon request by inserting a pylon in the front of the queue.
-                                //std::cout << "FAILED: NO POWER\n";
-                                break;
-                            case PlacementInfo::NO_BLOCKS:
-                                //Wait for a bit and kill the request if no blocks are added
-                                //std::cout << "FAILED: NO BLOCKS\n";
-                                break;
-                            case PlacementInfo::NO_GYSERS:
-                                //Shouldnt happen but okay
-                                //std::cout << "FAILED: NO GYSERS\n";
-                                break;
-                            case PlacementInfo::NO_PLACEMENTS:
-                                //Wait for a bit and kill the request if no placements are added.
-                                //std::cout << "FAILED: NO PLACEMENTS\n";
-                                break;
-                            case PlacementInfo::NO_EXPANSIONS:
-                                //kill the expansion request.
-                                //std::cout << "FAILED: NO EXPANSION\n";
-                                break;
-                            }
-
-                            request.attempts++;
-
-                            continue;
-                        }
-
-
                         request.placementPos = request.placementInfo.position;
                         request.tileToPlace = request.placementInfo.topLeft;
+
+                        const BWAPI::Unit workerAvalible = getUnitToBuild(request.placementPos);
+
+                        if (workerAvalible == nullptr) continue;
+
+                        Path pathToLocation;
+                        if (request.unit.isResourceDepot())
+                        {
+                            //std::cout << "Trying to build Nexus\n";
+                            pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
+                        }
+                        else if (request.unit.isRefinery())
+                        {
+                            //std::cout << "Trying to build assimlator\n";
+                            pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos, true);
+                        }
+                        else
+                        {
+                            //std::cout << "Trying to build regular building\n";
+                            pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
+                        }
+
+                        Builder temp = Builder(workerAvalible, request.unit, request.placementPos, pathToLocation);
+                        builders.push_back(temp);
+
+                        request.state = ResourceRequest::State::Approved_BeingBuilt;
+                        request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+
+                        BWEB::Map::addUsed(request.placementInfo.topLeft, request.unit);
                     }
-
-                    const BWAPI::Unit workerAvalible = getUnitToBuild(request.placementPos);
-
-                    if (workerAvalible == nullptr)
-                    {
-                        request.gotPositionToBuild = true;
-                        continue;
-                    }
-
-
-                    Path pathToLocation;
-                    if (request.unit.isResourceDepot())
-                    {
-                        //std::cout << "Trying to build Nexus\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
-                    }
-                    else if(request.unit.isRefinery())
-                    {
-                        //std::cout << "Trying to build assimlator\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos, true);
-                    }
-                    else
-                    {                                                                                                                           
-                        //std::cout << "Trying to build regular building\n";
-                        pathToLocation = AStar::GeneratePath(workerAvalible->getPosition(), workerAvalible->getType(), request.placementPos);
-                    }
-
-                    Builder temp = Builder(workerAvalible, request.unit, request.placementPos, pathToLocation);
-                    builders.push_back(temp);
-
-                    request.state = ResourceRequest::State::Approved_BeingBuilt;
-                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
-
-                    BWEB::Map::addUsed(usingChosenSpecialTile ? request.tileToPlace : request.placementInfo.topLeft, request.unit);
                 }
                 break;
             }
