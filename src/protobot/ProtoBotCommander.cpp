@@ -665,7 +665,7 @@ bool ProtoBotCommander::alreadySentRequest(int unitID)
 {
 	for (const ResourceRequest& request : resourceRequests)
 	{
-		if (request.requestedBuilding != nullptr)
+		if (request.type == ResourceRequest::Type::Unit && request.requestedBuilding != nullptr)
 		{
 			if (unitID == request.requestedBuilding->getID()) return true;
 		}
