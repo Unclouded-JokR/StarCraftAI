@@ -130,7 +130,7 @@ void Squad::observerOnFrame() {
 	// If not in danger, stay above leader.
 	// Else, run towards base (typically away from enemies)
 	if (observer != nullptr && leader != nullptr) {
-		if (observer->isUnderAttack() || observer->getUnitsInRadius(100, BWAPI::Filter::IsEnemy && BWAPI::Filter::CanAttack).empty()) {
+		if (!observer->isUnderAttack() || observer->getUnitsInRadius(100, BWAPI::Filter::IsEnemy && BWAPI::Filter::CanAttack).empty()) {
 			observer->move(leader->getPosition());
 		}
 		else {
