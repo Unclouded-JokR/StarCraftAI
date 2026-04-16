@@ -228,7 +228,7 @@ class StrategyManager
 {
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
-	std::vector<int> expansionTimes = { 5, 10, 20, 30, 40, 50};
+	std::vector<int> expansionTimes = { 5, 10, 15, 20, 25, 30, 35, 40, 50};
 	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate };
 	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;
