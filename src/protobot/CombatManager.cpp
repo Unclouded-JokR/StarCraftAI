@@ -24,7 +24,6 @@ void CombatManager::onStart(){
 	AStar::fillUncachedAreaPairs();
 	Squads.clear();
 	unitSquadMap.clear();
-	globalAttackPosition = BWAPI::Positions::Invalid;
 	AttackingSquads.clear();
 	DefendingSquads.clear();
 	ReinforcingSquads.clear();
@@ -41,9 +40,20 @@ void CombatManager::onFrame() {
 	}*/
 
 	for (const auto& squad : Squads) {
-		if (!detachedObservers.empty()) {
-			squad->addObserver(detachedObservers.front());
-			detachedObservers.pop();
+
+		// If this squad has an available slot for observer, check if it can get one
+		if (squad->observer == nullptr) {
+			if (!detachedObservers.empty()) {
+				squad->addObserver(detachedObservers.front());
+				unitSquadMap[detachedObservers.front()] = squad;
+				detachedObservers.pop();
+			}
+			else {
+				BWAPI::Unit observer = commanderReference->scoutingManager.getAvaliableDetectors();
+				if (observer != nullptr) {
+					squad->observer = observer;
+				}
+			}
 		}
 
 		squad->onFrame();
@@ -80,9 +90,7 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	}
 }
 
-void CombatManager::attack(BWAPI::Position position) {
-	globalAttackPosition = position;
-	
+void CombatManager::attack(BWAPI::Position position) {	
 	for (const auto& squad : Squads) {
 		squad->info.commandPos = position;
 		squad->setState(AttackingState::getInstance());
@@ -128,13 +136,19 @@ Squad* CombatManager::addSquad(BWAPI::Unit leaderUnit) {
 	const int id = Squads.size() + 1;
 
 	Squad* newSquad = new Squad(leaderUnit, id, randomColor);
+	BWAPI::Unit detector = commanderReference->scoutingManager.getAvaliableDetectors();
+
 	Squads.push_back(newSquad);
 
 	newSquad->setState(IdleState::getInstance());
-
 	if (commanderReference->strategyManager.isAttackPhase) {
-		newSquad->info.commandPos = globalAttackPosition;
-		newSquad->setState(AttackingState::getInstance());
+		for (const auto& attackingSquad : AttackingSquads) {
+			if (attackingSquad->info.currentAttackPosition != BWAPI::Positions::Invalid) {
+				newSquad->info.commandPos = globalAttackPosition;
+				newSquad->setState(AttackingState::getInstance());
+				break;
+			}
+		}
 	}
 
 #ifdef DEBUG_CM
@@ -153,6 +167,7 @@ void CombatManager::removeSquad(Squad* squad) {
 
 	// Check if observer is left
 	if (squad->observer != nullptr) {
+		unitSquadMap.erase(squad->observer);
 		detachedObservers.push(squad->observer);
 	}
 
@@ -239,16 +254,6 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 	}
 
 	return nullptr;
-}
-
-void CombatManager::receiveObserver(BWAPI::Unit _observer) {
-	for (const auto& squad : Squads) {
-		if (squad->observer == nullptr && _observer != nullptr) {
-			squad->addObserver(_observer);
-			unitSquadMap[_observer] = squad;
-			return;
-		}
-	}
 }
 
 void CombatManager::onSendText(std::string text) {
