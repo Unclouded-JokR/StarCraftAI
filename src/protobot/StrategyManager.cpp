@@ -646,7 +646,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 				actionsToReturn.push_back(attack);
 
 				lastAttackPos = attackPos;
-				isAttackPhase = true;
 			}
 		}
 		else {

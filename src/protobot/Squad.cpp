@@ -12,17 +12,7 @@ void Squad::onFrame() {
 	// Process current squad state
 	info.currentState->Update(this);
 
-	// No matter the state, observer should have same behavior.
-	// If not in danger, stay above leader.
-	// Else, run towards base (typically away from enemies)
-	if (observer != nullptr && leader != nullptr) {
-		if (observer->getUnitsInRadius(100, BWAPI::Filter::CanAttack).empty()) {
-			observer->move(leader->getPosition());
-		}
-		else {
-			observer->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
-		}
-	}
+	observerOnFrame();
 
 #ifdef DEBUG_SQUAD
 	drawDebugInfo();
@@ -135,12 +125,33 @@ void Squad::addObserver(BWAPI::Unit unreservedObserver) {
 	observer = unreservedObserver;
 }
 
+void Squad::observerOnFrame() {
+	// No matter the state, observer should have same behavior.
+	// If not in danger, stay above leader.
+	// Else, run towards base (typically away from enemies)
+	if (observer != nullptr && leader != nullptr) {
+		if (observer->isUnderAttack() || observer->getUnitsInRadius(100, BWAPI::Filter::IsEnemy && BWAPI::Filter::CanAttack).empty()) {
+			observer->move(leader->getPosition());
+		}
+		else {
+			observer->move(BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation()));
+		}
+	}
+}
+
 void Squad::drawSquadBox() {
 	int leftMost = 0;
 	int topMost = 0;
 	int rightMost = 0;
 	int bottomMost = 0;
-	const int offset = 16;
+	constexpr int offset = 16;
+
+	// Something for making observer more visible in group
+	if (observer != nullptr) {
+		const BWAPI::Position topLeft = BWAPI::Position(observer->getPosition().x - offset, observer->getPosition().y - offset);
+		const BWAPI::Position bottomRight = BWAPI::Position(observer->getPosition().x + offset, observer->getPosition().y + offset);
+		BWAPI::Broodwar->drawBoxMap(topLeft, bottomRight, BWAPI::Colors::Purple);
+	}
 
 	// Boundary box of the squad
 	for (const auto& unit : info.units) {

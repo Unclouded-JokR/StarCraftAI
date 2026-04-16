@@ -54,6 +54,7 @@ public:
 	void removeUnit(BWAPI::Unit unit);
 	void addUnit(BWAPI::Unit unit);
 	void addObserver(BWAPI::Unit observer);
+	void observerOnFrame();
 	void drawSquadBox();
 	void drawDebugInfo();
 
