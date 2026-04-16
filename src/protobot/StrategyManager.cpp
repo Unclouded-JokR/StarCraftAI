@@ -1341,7 +1341,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 
 	//Prevents construction of units outside Build Order.
 	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
-	const std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+	const std::vector<NexusEconomy>& nexusEconomies = commanderReference->getNexusEconomies();
 	FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
 
 	int workerRequestsThisFrame = 0;
@@ -1354,7 +1354,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 		switch (productionGoal)
 		{
 		case SATURATE_WORKERS:
-			for (const NexusEconomy nexusEconomy : nexusEconomies)
+			for (const NexusEconomy& nexusEconomy : nexusEconomies)
 			{
 				if (commanderReference->alreadySentRequest(nexusEconomy.nexus->getID()) == false &&
 					!nexusEconomy.nexus->isTraining() &&
