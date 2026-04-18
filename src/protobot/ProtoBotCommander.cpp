@@ -67,6 +67,8 @@ void ProtoBotCommander::onStart()
 
 	ProtoBotRequestCounter newRequestCounter;
 	requestCounter = newRequestCounter;
+
+	requestCount = 0;
 	//std::cout << "============================\n";
 	//std::cout << "Agent Start\n";
 }
@@ -321,6 +323,10 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 	{
 		switch (unit->getType())
 		{
+		case BWAPI::UnitTypes::Protoss_Pylon:
+			if (requestCounter.pylons_requests > 0)
+				--requestCounter.pylons_requests;
+			break;
 		case BWAPI::UnitTypes::Protoss_Gateway:
 			if (requestCounter.gateway_requests > 0)
 				--requestCounter.gateway_requests;
@@ -345,12 +351,10 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 			if (requestCounter.observatory_requests > 0)
 				--requestCounter.observatory_requests;
 			break;
-
 		case BWAPI::UnitTypes::Protoss_Citadel_of_Adun:
 			if (requestCounter.citadel_requests > 0)
 				--requestCounter.citadel_requests;
 			break;
-
 		case BWAPI::UnitTypes::Protoss_Templar_Archives:
 			if (requestCounter.templarArchives_requests > 0)
 				--requestCounter.templarArchives_requests;
@@ -565,9 +569,15 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	request.isRampPlacement = isRampPlacement;
 	request.nexusPositionRef = nexusPosition;
 	request.base = baseLocation;
+	request.requestNumber = ++requestCount;
+
 	
 	switch (building)
 	{
+		case BWAPI::UnitTypes::Protoss_Pylon:
+			requestCounter.pylons_requests++;
+			std::cout << "Pylons in queue = " << requestCounter.pylons_requests << "\n";
+			break;
 		case BWAPI::UnitTypes::Protoss_Gateway:
 			requestCounter.gateway_requests++;
 			break;
@@ -607,6 +617,7 @@ void ProtoBotCommander::requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingTo
 	request.frameRequestCreated = BWAPI::Broodwar->getFrameCount();
 	request.requestedBuilding = buildingToTrain;
 	request.fromBuildOrder = fromBuildOrder;
+	request.requestNumber = ++requestCount;
 
 	switch (unit)
 	{
@@ -638,6 +649,7 @@ void ProtoBotCommander::requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgr
 	request.upgrade = upgrade;
 	request.requestedBuilding = unit;
 	request.fromBuildOrder = fromBuildOrder;
+	request.requestNumber = ++requestCount;
 
 	switch (request.upgrade)
 	{

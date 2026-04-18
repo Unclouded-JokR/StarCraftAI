@@ -89,6 +89,7 @@ public:
 	BWAPI::TilePosition findAvailableExpansion();
 	BWAPI::TilePosition findAvailableGyser(const BWEM::Base*);
 	BWAPI::TilePosition findAvaliblePlacement(BWAPI::UnitType);
+	int numberOfFullPoweredLargePlacements();
 
 	void drawPoweredTiles();
 

@@ -83,6 +83,8 @@ struct ResourceRequest
 	BWAPI::Position placementPos = BWAPI::Positions::Invalid;
 	BWAPI::TilePosition tileToPlace = BWAPI::TilePositions::Invalid;
 	PlacementInfo placementInfo;
+
+	size_t requestNumber = -1;
 };
 
 struct ProtoBotRequestCounter {
@@ -103,6 +105,7 @@ struct ProtoBotRequestCounter {
 	int citadel_requests = 0;
 	int templarArchives_requests = 0;
 	int photon_cannon_requests = 0;
+	int pylons_requests = 0;
 
 	//Upgrades
 	int singularity_requests = 0;
@@ -129,6 +132,8 @@ public:
 	bool drawUnitDebug = false;
 	bool drawBWEBDebug = false;
 	bool drawToolsDebug = false;
+
+	int requestCount = 0;
 
 	std::vector<ResourceRequest> resourceRequests;
 

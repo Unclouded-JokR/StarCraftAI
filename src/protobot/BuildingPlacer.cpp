@@ -344,6 +344,22 @@ void BuildingPlacer::drawPoweredTiles()
     }
 }
 
+int BuildingPlacer::numberOfFullPoweredLargePlacements()
+{
+    int poweredLargePlacements = 0;
+
+    for (BWEB::Block block : ProtoBot_Blocks)
+    {
+        BlockData& data = Block_Information[block.getTilePosition()];
+
+        if (data.Power_State != BlockData::FULLY_POWERED) continue;
+
+        poweredLargePlacements += data.Large_Placements;
+    }
+
+    return poweredLargePlacements;
+}
+
 PlacementInfo BuildingPlacer::getPositionToBuild(BWAPI::UnitType type, const BWEM::Base* base)
 {
     PlacementInfo information;
@@ -442,6 +458,8 @@ void BuildingPlacer::onStart()
     AreasOccupied.clear();
     ProtoBot_Blocks.clear();
     Area_Blocks.clear();
+    Powered_LargePlacements = 0;
+    Powered_MediumPlacements = 0;
 
     //Assign main area since we will always own this area at the start of the game
     const BWAPI::TilePosition ProtoBot_MainBase = BWAPI::Broodwar->self()->getStartLocation();
@@ -574,6 +592,8 @@ void BuildingPlacer::onUnitComplete(BWAPI::Unit unit)
                     if (data.Used_Power_Placements == data.PowerTiles.size())
                     {
                         data.Power_State = BlockData::FULLY_POWERED;
+                        Powered_LargePlacements += data.Large_Placements;
+                        Powered_MediumPlacements += data.Medium_Placements;
                     }
                     else
                     {
@@ -664,6 +684,24 @@ void BuildingPlacer::onUnitDestroy(BWAPI::Unit unit)
                     else
                     {
                         data.Power_State = BlockData::NOT_POWERED;
+                        if (Powered_LargePlacements - data.Large_Placements > 0)
+                        {
+                            Powered_LargePlacements -= data.Large_Placements;
+                        }
+                        else
+                        {
+                            Powered_LargePlacements = 0;
+                        }
+
+                        if (Powered_MediumPlacements - data.Medium_Placements > 0)
+                        {
+                            Powered_MediumPlacements -= data.Medium_Placements;
+                        }
+                        else
+                        {
+                            Powered_MediumPlacements = 0;
+                        }
+                        
                     }
 
                     break;

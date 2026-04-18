@@ -669,9 +669,15 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     request.requestedBuilding->isCompleted() &&
                     request.requestedBuilding->isPowered())
                 {
-                    request.requestedBuilding->train(request.unit);
-                    request.state = ResourceRequest::State::Accepted_Completed;
-                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+                    if (request.requestedBuilding->train(request.unit))
+                    {
+                        request.state = ResourceRequest::State::Accepted_Completed;
+                        request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+                    }
+                    else
+                    {
+                        std::cout << "Failed to train unit for whatever reason\n";
+                    }
                 }
 
                 break;
@@ -761,9 +767,15 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     request.requestedBuilding->isCompleted() &&
                     request.requestedBuilding->isPowered())
                 {
-                    request.requestedBuilding->upgrade(request.upgrade);
-                    request.state = ResourceRequest::State::Accepted_Completed;
-                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+                    if (request.requestedBuilding->upgrade(request.upgrade))
+                    {
+                        request.state = ResourceRequest::State::Accepted_Completed;
+                        request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+                    }
+                    else
+                    {
+                        std::cout << "Failed to upgrade for whatever reason\n";
+                    }
                 }
                 break;
             }
@@ -774,9 +786,15 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
                     request.requestedBuilding->isCompleted() &&
                     request.requestedBuilding->isPowered())
                 {
-                    request.requestedBuilding->upgrade(request.upgrade);
-                    request.state = ResourceRequest::State::Accepted_Completed;
-                    request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+                    if (request.requestedBuilding->upgrade(request.upgrade))
+                    {
+                        request.state = ResourceRequest::State::Accepted_Completed;
+                        request.frameRequestServiced = BWAPI::Broodwar->getFrameCount();
+                    }
+                    else
+                    {
+                        std::cout << "Failed to research tech for whatever reason\n";
+                    }
                 }
                 break;
             }

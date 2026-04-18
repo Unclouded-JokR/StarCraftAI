@@ -140,27 +140,13 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 	const int seconds = totalSeconds % 60;
 	const int minutes = totalSeconds / 60;
 
-	//BWAPI::Broodwar->drawTextScreen(5, 30, "%cMinutes: %d", BWAPI::Text::White, minutes);
-	//BWAPI::Broodwar->drawTextScreen(5, 40, "%cSeconds: %d", BWAPI::Text::White, seconds);
-
 	//Estimate income
 	ourIncomePerFrameMinerals = workerIncomePerFrameMinerals * activeMiners();
 	outIncomePerFrameGas = workerIncomePerFrameGas * activeDrillers();
 
-	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted)
-	{
-		//std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
-		minutesPassedIndex++;
-	}
-
-	//ProtoBot unit information
-	const FriendlyBuildingCounter ProtoBot_buildings = InformationManager::Instance().getFriendlyBuildingCounter();
-	const FriendlyUnitCounter ProtoBot_units = InformationManager::Instance().getFriendlyUnitCounter();
-	const FriendlyUpgradeCounter ProtoBot_upgrade = InformationManager::Instance().getFriendlyUpgradeCounter();
-	const FriendlyTechCounter ProtoBot_tech = InformationManager::Instance().getFriendlyTechCounter();
+	//ProtoBot Squads
 	std::vector<Squad*> Protobot_IdleSquads = commanderReference->combatManager.IdleSquads;
 	std::vector<Squad*> Protobot_Squads = commanderReference->combatManager.Squads;
-	BWAPI::Unitset buildings = commanderReference->buildManager.getBuildings();
 
 	//Supply threshold is how close we want to get to the supply cap before building a pylon to cover supply costs.
 	int supplyThreshold = SUPPLY_THRESHOLD_EARLYGAME;
@@ -174,9 +160,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 		supplyThreshold = SUPPLY_THRESHOLD_LATEGAME;
 	}
 
-	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
-
-
 	int numberFullSquads = 0;
 
 	for (const Squad* squad : Protobot_Squads)
@@ -184,34 +167,8 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 		if (squad->info.units.size() == MAX_SQUAD_SIZE) numberFullSquads++;
 	}
 
-	//std::cout << "Reserving " << getTotalMineralsNeeded() << " out of " << BWAPI::Broodwar->self()->minerals() << "\n";
-
 	//Get Enemy Building information.
 	const std::map<BWAPI::Unit, EnemyBuildingInfo>& enemyBuildingInfo = InformationManager::Instance().getKnownEnemyBuildings();
-
-	//Check how many of our Nexus Economies are completed and saturated.
-	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
-	int completedNexusEconomy = 0;
-	int saturatedNexus = 0;
-
-	for (NexusEconomy nexusEconomy : nexusEconomies)
-	{
-		/*
-		* Nexus Economy considered complete if
-		*  - Nexus Economy has no gyser to farm and has a worker assigned to every mineral
-		*  - Nexus Economy HAS a gyser to farm and has assimilator assigned (no need to check worker size since nexus economy builds assimialtor at > mineral.size())
-		*/
-		if (nexusEconomy.lifetime < 500) continue;
-
-		if ((nexusEconomy.vespeneGyser != nullptr && (nexusEconomy.assimilator != nullptr && nexusEconomy.assimilator->isCompleted())) ||
-			(nexusEconomy.vespeneGyser == nullptr && nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3))
-		{
-			completedNexusEconomy++;
-		}
-	}
-
-	//4 Gateways per nexus should be built
-	saturatedNexus = (ProtoBot_buildings.gateway / 4);
 
 	std::vector<BWAPI::Position> enemyBaselocations;
 	for (const auto [unit, building] : enemyBuildingInfo)
@@ -223,295 +180,6 @@ std::vector<Action> StrategyManager::onFrame(std::vector<ResourceRequest>& resou
 		}
 	}
 
-	//First is minerals avalible, Second is gas avalible
-	std::pair<int, int> resourcesAvalible = std::make_pair(spenderManager.getPlannedMinerals(resourceRequests), spenderManager.getPlannedGas(resourceRequests));
-	const ProtoBotRequestCounter& requests = commanderReference->requestCounter;
-
-	/*std::cout
-	<< "ProtoBotRequestCounter {\n"
-	<< "  nexus_requests: " << requests.nexus_requests << "\n"
-	<< "  gateway_requests: " << requests.gateway_requests << "\n"
-	<< "  forge_requests: " << requests.forge_requests << "\n"
-	<< "  cybernetics_requests: " << requests.cybernetics_requests << "\n"
-	<< "  robotics_requests: " << requests.robotics_requests << "\n"
-	<< "  observatory_requests: " << requests.observatory_requests << "\n"
-	<< "  citadel_requests: " << requests.citadel_requests << "\n"
-	<< "  templarArchives_requests: " << requests.templarArchives_requests << "\n"
-	<< "}\n";*/
-
-	if (buildOrderCompleted)
-	{
-		if (ProtoBot_ProductionFocus == ProductionFocus::UNIT_PRODUCTION && !(ProductionGoal_index >= ProtoBot_ProductionGoals.size()))
-		{
-			if (timer + 1 >= (UNIT_PRODUCTION_TIME + (DELAY_PER_PRODUCTION * ProductionGoal_index)))
-			{
-				ProtoBot_ProductionFocus = ProductionFocus::EXPANDING_INFLUENCE;
-			}
-
-			//Should build gateway's or nexus's if we have enough minerals. Need to make sure we are not over saturating nexuses.
-
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
-			{
-				//Not expanding properlly after having enough gateways
-				if (ProtoBot_buildings.nexus == saturatedNexus)
-				{
-					//std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
-				}
-
-				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
-				{
-					mineralExcessToExpand *= 2;
-					//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
-				}
-
-				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
-				{
-					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
-					minutesPassedIndex++;
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
-				}
-			}
-
-			//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
-			if (canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible))
-			{
-				//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
-
-				//4 Gateways per nexus economy
-				if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
-				{
-					//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Gateway);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Gateway.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Gateway.gasPrice();
-				}
-			}
-
-			timer++;
-		}
-		else if (ProtoBot_ProductionFocus == ProductionFocus::EXPANDING_INFLUENCE && !(ProductionGoal_index >= ProtoBot_ProductionGoals.size()))
-		{
-			//Add timer to push production goals after a certain amount of frames
-			if (!metProductionGoal(ProtoBot_buildings))
-			{
-				//Nexus
-				//On expanding influence we should create a new nexus immedietly
-				if (ProtoBot_buildings.nexus + incompleteBuildings.nexus + requests.nexus_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).nexusCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Nexus.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Nexus.gasPrice();
-				}
-
-				//Gateway
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Gateway) &&
-					ProtoBot_buildings.gateway + incompleteBuildings.gateway + requests.gateway_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Gateway, resourcesAvalible) &&
-					ProtoBot_buildings.nexus >= ProtoBot_ProductionGoals.at(ProductionGoal_index).nexusCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Gateway);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Gateway.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Gateway.gasPrice();
-				}
-
-				//Forge
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Forge) &&
-					ProtoBot_buildings.forge + incompleteBuildings.forge + requests.forge_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Forge, resourcesAvalible) &&
-					ProtoBot_buildings.gateway >= ProtoBot_ProductionGoals.at(ProductionGoal_index).gatewayCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Forge);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Forge.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Forge.gasPrice();
-				}
-
-				//Cybernetics
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Cybernetics_Core) &&
-					ProtoBot_buildings.cyberneticsCore + incompleteBuildings.cyberneticsCore + requests.cybernetics_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Cybernetics_Core, resourcesAvalible) &&
-					ProtoBot_buildings.forge >= ProtoBot_ProductionGoals.at(ProductionGoal_index).forgeCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Cybernetics_Core.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Cybernetics_Core.gasPrice();
-				}
-
-				//Robotics
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Robotics_Facility) &&
-					ProtoBot_buildings.roboticsFacility + incompleteBuildings.roboticsFacility + requests.robotics_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Robotics_Facility, resourcesAvalible) &&
-					ProtoBot_buildings.cyberneticsCore >= ProtoBot_ProductionGoals.at(ProductionGoal_index).cyberneticsCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Robotics_Facility);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Robotics_Facility.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Robotics_Facility.gasPrice();
-				}
-
-				//Observatory
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Observatory) &&
-					ProtoBot_buildings.observatory + incompleteBuildings.observatory + requests.observatory_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Observatory, resourcesAvalible) &&
-					ProtoBot_buildings.roboticsFacility >= ProtoBot_ProductionGoals.at(ProductionGoal_index).roboticsCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Observatory);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Observatory.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Observatory.gasPrice();
-				}
-
-				//Citadel
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) &&
-					ProtoBot_buildings.citadelOfAdun + incompleteBuildings.citadelOfAdun + requests.citadel_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Citadel_of_Adun, resourcesAvalible) &&
-					ProtoBot_buildings.observatory >= ProtoBot_ProductionGoals.at(ProductionGoal_index).observatoryCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Citadel_of_Adun);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Citadel_of_Adun.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Citadel_of_Adun.gasPrice();
-				}
-
-				//Templar Archives
-				if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Templar_Archives) &&
-					ProtoBot_buildings.templarArchives + incompleteBuildings.templarArchives + requests.templarArchives_requests < ProtoBot_ProductionGoals.at(ProductionGoal_index).templarArchivesCount &&
-					canAfford(BWAPI::UnitTypes::Protoss_Templar_Archives, resourcesAvalible) &&
-					ProtoBot_buildings.citadelOfAdun >= ProtoBot_ProductionGoals.at(ProductionGoal_index).citadelCount)
-				{
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Templar_Archives);
-
-					resourcesAvalible.first -= BWAPI::UnitTypes::Protoss_Templar_Archives.mineralPrice();
-					resourcesAvalible.second -= BWAPI::UnitTypes::Protoss_Templar_Archives.gasPrice();
-				}
-			}
-			else
-			{
-				//std::cout << "Met Production Goal\n";
-				timer = 0;
-				ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
-				ProductionGoal_index++;
-			}
-		}
-		else
-		{
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
-			{
-				//Not expanding properlly after having enough gateways
-				if (ProtoBot_buildings.nexus == saturatedNexus)
-				{
-					//std::cout << "EXPAND ACTION: Requesting to expand (4 gateways saturating nexus)\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-				}
-
-				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
-				{
-					mineralExcessToExpand *= 2;
-					//std::cout << "EXPAND ACTION: Requesting to expand (mineral surplus)\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-				}
-
-				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
-				{
-					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
-					minutesPassedIndex++;
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Nexus);
-				}
-			}
-
-			//If a nexus economy has an gyser to place an assimlator at, place one when we have more than: numbers of minerals + 3 workers.
-			for (const NexusEconomy& nexusEconomy : nexusEconomies)
-			{
-				if (nexusEconomy.vespeneGyser != nullptr
-					&& nexusEconomy.assimilator == nullptr
-					&& nexusEconomy.workers.size() >= nexusEconomy.minerals.size() + 3
-					&& nexusEconomy.lifetime >= 500
-					&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Assimilator))
-				{
-					//std::cout << "EXPAND ACTION: Checking nexus economy " << nexusEconomy.nexusID << " needs assimilator\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Assimilator);
-				}
-			}
-
-			//Only create 4 gateways per completed nexus economy or 2 gateway and 1 robotics facility.
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway) && ProtoBot_buildings.pylon >= 1)
-			{
-				//std::cout << "Number of \"completed\" Nexus Economies = " << completedNexusEconomy << "\n";
-
-				//4 Gateways per nexus economy
-				if (ProtoBot_buildings.gateway < ProtoBot_buildings.nexus * 4)
-				{
-					//std::cout << "BUILD ACTION: Requesting to warp Gateway\n";
-					commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Gateway);
-				}
-			}
-
-			//1 forge for now but if we want upgrades 2/3 for armor and weapons we need to know when to go some of these buildings.
-			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Forge) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Forge) && ProtoBot_buildings.forge < 1 && (ProtoBot_buildings.gateway >= 1))
-			{
-				//std::cout << "BUILD ACTION: Requesting to warp Forge\n";
-
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Forge);
-			}
-
-			//Only need 1 cybernetics core
-			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Cybernetics_Core) && ProtoBot_buildings.cyberneticsCore < 1 && ProtoBot_buildings.gateway >= 1)
-			{
-				//std::cout << "build action: requesting to warp forge\n";
-
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Cybernetics_Core);
-			}
-
-			//Should only build 1 robotics facility
-			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Robotics_Facility) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Robotics_Facility) && ProtoBot_buildings.roboticsFacility < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
-			{
-				//std::cout << "build action: requesting to warp robotics facility\n";
-
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Robotics_Facility);
-			}
-
-			//Only 1 observatory
-			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Observatory) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Observatory) && ProtoBot_buildings.observatory < 1 && ProtoBot_buildings.roboticsFacility >= 1)
-			{
-				//std::cout << "Build Action: requesting to warp observatory\n";
-
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Observatory);
-			}
-
-			//2/3 Forge upgrade units
-
-			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Citadel_of_Adun) && ProtoBot_buildings.citadelOfAdun < 1 && ProtoBot_buildings.cyberneticsCore >= 1)
-			{
-				//std::cout << "build action: requesting to warp citadel of adun\n";
-
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Citadel_of_Adun);
-			}
-
-			if (haveRequiredTech(BWAPI::UnitTypes::Protoss_Templar_Archives) && checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Templar_Archives) && ProtoBot_buildings.templarArchives < 1 && ProtoBot_buildings.citadelOfAdun >= 1)
-			{
-				//std::cout << "build action: requesting to warp templar archives\n";
-
-				commanderReference->requestBuilding(BWAPI::UnitTypes::Protoss_Templar_Archives);
-			}
-		}
-	}
-
-	//Move this to inside if so we dont scout during build order unless instructed.
 #pragma region Scout
 
 	if (buildOrderCompleted || (BWAPI::Broodwar->self()->supplyUsed() / 2) > 15)
@@ -1645,19 +1313,36 @@ void StrategyManager::planUpgradeProduction(PossibleRequests& possibleRequestLis
 
 void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resourceRequests, PossibleRequests& possibleRequestList)
 {
+	//ProtoBot Information
 	const FriendlyBuildingCounter ProtoBot_buildings = InformationManager::Instance().getFriendlyBuildingCounter();
 	const FriendlyUnitCounter ProtoBot_units = InformationManager::Instance().getFriendlyUnitCounter();
 	const FriendlyUpgradeCounter ProtoBot_upgrade = InformationManager::Instance().getFriendlyUpgradeCounter();
 	const FriendlyTechCounter ProtoBot_tech = InformationManager::Instance().getFriendlyTechCounter();
 	BWAPI::Unitset incompleteBuildings = commanderReference->buildManager.getBuildings();
+	const ProtoBotRequestCounter& request_count = commanderReference->requestCounter;
 	std::vector<NexusEconomy> nexusEconomies = commanderReference->getNexusEconomies();
+
+	const int frame = BWAPI::Broodwar->getFrameCount();
+	const int totalSeconds = frame / FRAMES_PER_SECOND;
+	const int seconds = totalSeconds % 60;
+	const int minutes = totalSeconds / 60;
+
+	//Building logic
+	const bool buildOrderCompleted = commanderReference->buildOrderCompleted();
+
+	if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes && !buildOrderCompleted)
+	{
+		//std::cout << expansionTimes[minutesPassedIndex] << " minutes have passed (while in build order)\n";
+		minutesPassedIndex++;
+	}
 
 	//Better solution would be supply at a rate of roughly (#nexus / probe build time + #gateways / zealot build time + ...) 
 	//This is not really an acurrate way to get supply use projection but it "works" 
 	const int dynamicSupplyThreshold = supplyThreshold + (ProtoBot_buildings.gateway * 2) + (ProtoBot_buildings.nexus * 1);
 
 	//Pylon requests: Once build order is completed, run this check to make sure we have enough supply to do things.
-	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY))
+	if (spenderManager.plannedSupply(resourceRequests, incompleteBuildings) <= dynamicSupplyThreshold && ((BWAPI::Broodwar->self()->supplyTotal() / 2) != MAX_SUPPLY)
+		&& commanderReference->requestCounter.pylons_requests + 1 <= MAX_PYLON_REQUESTS)
 	{
 		PossibleBuildingRequest pylon;
 		pylon.building = BWAPI::UnitTypes::Protoss_Pylon;
@@ -1703,6 +1388,61 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 			possibleRequestList.supplyBuildings.push_back(assimilator);
 		}
 	}
+
+	//Nexus
+	if (buildOrderCompleted)
+	{
+		if (ProtoBot_ProductionFocus == ProductionFocus::UNIT_PRODUCTION && !(ProductionGoal_index >= ProtoBot_ProductionGoals.size()))
+		{
+			if (timer + 1 >= (UNIT_PRODUCTION_TIME + (DELAY_PER_PRODUCTION * ProductionGoal_index)))
+			{
+				ProtoBot_ProductionFocus = ProductionFocus::EXPANDING_INFLUENCE;
+			}
+
+			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
+			{
+				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
+				{
+					mineralExcessToExpand *= 2;
+					PossibleBuildingRequest nexus;
+					nexus.building = BWAPI::UnitTypes::Protoss_Nexus;
+
+					possibleRequestList.supplyBuildings.push_back(nexus);
+				}
+
+				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
+				{
+					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+					minutesPassedIndex++;
+					PossibleBuildingRequest nexus;
+					nexus.building = BWAPI::UnitTypes::Protoss_Nexus;
+
+					possibleRequestList.supplyBuildings.push_back(nexus);
+				}
+			}
+		}
+
+		//Number of gateways we currently have created/are making.
+		if (buildOrderCompleted)
+		{
+			int gateways = 0;
+			const int poweredLargePlacements = commanderReference->buildManager.buildingPlacer.Powered_LargePlacements;
+
+			for (const BWAPI::Unit building : unitProduction)
+			{
+				if (building->getType() == BWAPI::UnitTypes::Protoss_Gateway) gateways++;
+			}
+
+			if ((gateways + request_count.gateway_requests < (MAX_GATEWAYS_PER_COMPLETED_NEXUS * ProtoBot_buildings.nexus) && gateways + request_count.gateway_requests < poweredLargePlacements)
+				&& checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Gateway))
+			{
+				PossibleBuildingRequest gateway;
+				gateway.building = BWAPI::UnitTypes::Protoss_Gateway;
+
+				possibleRequestList.supplyBuildings.push_back(gateway);
+			}
+		}
+	}
 }
 
 const BWEM::Base& StrategyManager::getBaseReference(BWAPI::Unit nexus)
@@ -1722,7 +1462,7 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 {
 	for (const PossibleUnitRequest& unitRequest : possibleRequestList.units)
 	{
-		commanderReference->requestUnit(unitRequest.unit, unitRequest.trainer);
+		commanderReference->requestUnit(unitRequest.unit, unitRequest.trainer, false);
 	}
 
 	for (const PossibleBuildingRequest& unitRequest : possibleRequestList.supplyBuildings)
@@ -1732,7 +1472,7 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 
 	for (const PossibleUpgradeRequest& unitRequest : possibleRequestList.upgrades)
 	{
-		commanderReference->requestUpgrade(unitRequest.trainer, unitRequest.upgrade);
+		commanderReference->requestUpgrade(unitRequest.trainer, unitRequest.upgrade, false);
 	}
 }
 

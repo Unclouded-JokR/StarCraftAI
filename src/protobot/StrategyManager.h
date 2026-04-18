@@ -18,7 +18,10 @@
 #define MAX_SUPPLY 200
 #define NUM_SQUADS_TO_ATTACK 4
 #define MINIMUM_SUPPLY_TO_ALL_IN 150
+#define MAX_GATEWAYS_PER_COMPLETED_NEXUS 4
 
+//Adding this here because we can accidentally flood the queue
+#define MAX_PYLON_REQUESTS 5
 
 #define MAX_EARLY_ZEALOTS 3
 #define MAX_WORKERS 75
