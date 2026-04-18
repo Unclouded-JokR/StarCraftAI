@@ -64,6 +64,25 @@ void DarkTemplar::onUnitDestroy(BWAPI::Unit unit)
     }
 }
 
+static bool isValidDTTarget(BWAPI::Unit dt, BWAPI::Unit enemy)
+{
+    if (!dt || !dt->exists() || !enemy || !enemy->exists())
+    {
+        return false;
+    }
+
+    if (enemy->isFlying())
+    {
+        return false;
+    }
+
+    if (!dt->canAttackUnit(enemy))
+    {
+        return false;
+    }
+
+    return true;
+}
 
 
 
@@ -350,6 +369,11 @@ BWAPI::Unit DarkTemplar::findApproachTarget(BWAPI::Unit dt) const
             continue;
         }
 
+        if (!isValidDTTarget(dt, enemy))
+        {
+            continue;
+        }
+
         if (d < bestDist)
         {
             bestDist = d;
@@ -415,7 +439,13 @@ BWAPI::Unit DarkTemplar::pickTargetFor(BWAPI::Unit dt) const
 
     for (BWAPI::Unit enemy : BWAPI::Broodwar->enemy()->getUnits())
     {
+
         if (!enemy || !enemy->exists())
+        {
+            continue;
+        }
+
+        if (!isValidDTTarget(dt, enemy))
         {
             continue;
         }

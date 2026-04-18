@@ -91,6 +91,40 @@ namespace
     }
 }
 
+static bool canBeKitedByScoutUnit(BWAPI::Unit self, BWAPI::Unit enemy)
+{
+    if (!self || !self->exists() || !enemy || !enemy->exists())
+    {
+        return false;
+    }
+
+    const auto selfType = self->getType();
+    const auto enemyType = enemy->getType();
+
+    if (!enemyType.canAttack())
+    {
+        return false;
+    }
+
+    if (enemyType.isWorker())
+    {
+        return false;
+    }
+
+    // Melee ground scouts like zealots should never try to fight air.
+    if (selfType == BWAPI::UnitTypes::Protoss_Zealot && enemy->isFlying())
+    {
+        return false;
+    }
+
+    if (!self->canAttackUnit(enemy))
+    {
+        return false;
+    }
+
+    return true;
+}
+
 void ScoutingZealot::onStart() {
     // We only act when assigned + enemy main becomes known
     state = State::Idle;
@@ -309,12 +343,19 @@ void ScoutingZealot::onFrame() {
         // advance target when reached
         if (!proxyCurTarget.isValid() || zealot->getDistance(proxyCurTarget) <= 96)
         {
-            if (proxyNextIdx >= (int)proxyPoints.size())
+            if (proxyPoints.empty())
+            {
+                proxyCurTarget = BWAPI::Positions::Invalid;
+                break;
+            }
+
+            if (proxyNextIdx < 0 || proxyNextIdx >= (int)proxyPoints.size())
             {
                 proxyNextIdx = 0;
             }
 
-            proxyCurTarget = proxyPoints[proxyNextIdx++];
+            proxyCurTarget = proxyPoints[proxyNextIdx];
+            ++proxyNextIdx;
         }
 
         BWAPI::Position tgt = proxyCurTarget;
@@ -1241,14 +1282,7 @@ BWAPI::Unit ScoutingZealot::findPrimaryThreat(int radiusPx) const
             continue;
         }
 
-        const auto t = e->getType();
-
-        if (t.isWorker())
-        {
-            continue;
-        }
-
-        if (!t.canAttack())
+        if (!canBeKitedByScoutUnit(zealot, e))
         {
             continue;
         }
@@ -1448,19 +1482,7 @@ bool ScoutingZealot::isGoodKiteTarget(BWAPI::Unit u, int radiusPx) const
         return false;
     }
 
-    const auto t = u->getType();
-
-    if (t.isWorker())
-    {
-        return false;
-    }
-
-    if (!t.canAttack())
-    {
-        return false;
-    }
-
-    if (!zealot->canAttackUnit(u))
+    if (!canBeKitedByScoutUnit(zealot, u))
     {
         return false;
     }

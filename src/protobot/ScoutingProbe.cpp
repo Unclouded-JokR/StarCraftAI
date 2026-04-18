@@ -422,7 +422,7 @@ void ScoutingProbe::issueMoveToward(const Position& p, int reissueDist, bool for
 bool ScoutingProbe::seeAnyEnemyBuildingNear(const Position& p, int radius) const {
     for (auto& u : Broodwar->enemy()->getUnits()) {
         if (!u || !u->exists()) continue;
-        if (!u->getType().isResourceDepot()) continue;
+        if (!u->getType().isBuilding()) continue;
         if (u->getPosition().isValid() && u->getDistance(p) <= radius) return true;
     }
     return false;
