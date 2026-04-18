@@ -1312,7 +1312,8 @@ void StrategyManager::updateUnitProductionGoals()
 			if (squad->observer != nullptr) squadObserverCount++;
 		}
 
-		if ((request_count.observers_requests + squadObserverCount + ProtoBot_createdUnitCount.created_observers) - MAX_OBSERVERS_FOR_SCOUTING < ProtoBot_Squads.size() && ProtoBot_currentUnits.observer < (ProtoBot_Squads.size() + MAX_OBSERVERS_FOR_SCOUTING))
+		if ((request_count.observers_requests + squadObserverCount + ProtoBot_createdUnitCount.created_observers) - MAX_OBSERVERS_FOR_SCOUTING < ProtoBot_Squads.size() 
+			&& (ProtoBot_currentUnits.observer < (ProtoBot_Squads.size() + MAX_OBSERVERS_FOR_SCOUTING) || ProtoBot_currentUnits.observer < (MAX_OBSERVERS_FOR_SCOUTING + MAX_OBSERVERS_FOR_INVIS_UNITS)))
 		{
 			unitProductionGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
 		}
