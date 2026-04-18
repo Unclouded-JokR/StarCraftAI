@@ -27,7 +27,7 @@ void NexusEconomy::checkGasSteal()
 	for (const BWAPI::Unit unit : resourcesInRectangle)
 	{
 
-		if (unit->getType().isRefinery() && !unit->isBeingConstructed() && unit->getPlayer() != BWAPI::Broodwar->self()) {
+		if (unit->getType().isRefinery() && unit->getPlayer() != BWAPI::Broodwar->self()) {
 			//std::cout << "Gas steal detected...\n";
 			for (auto u : workers)
 			{

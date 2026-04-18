@@ -983,7 +983,6 @@ void BuildManager::onUnitDiscover(BWAPI::Unit unit)
 }
 #pragma endregion
 
-#pragma region Spender Manager Methods
 bool BuildManager::checkWorkerIsConstructing(BWAPI::Unit unit)
 {
     for (Builder& builder : builders)
@@ -998,7 +997,6 @@ BWAPI::Unitset BuildManager::getBuildings()
 {
     return buildings;
 }
-#pragma endregion
 
 bool BuildManager::isBuildOrderCompleted()
 {
