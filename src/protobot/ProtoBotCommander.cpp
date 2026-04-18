@@ -576,7 +576,6 @@ void ProtoBotCommander::requestBuilding(BWAPI::UnitType building, bool fromBuild
 	{
 		case BWAPI::UnitTypes::Protoss_Pylon:
 			requestCounter.pylons_requests++;
-			std::cout << "Pylons in queue = " << requestCounter.pylons_requests << "\n";
 			break;
 		case BWAPI::UnitTypes::Protoss_Gateway:
 			requestCounter.gateway_requests++;

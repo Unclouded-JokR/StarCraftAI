@@ -227,7 +227,7 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
                 request.frameRequestApproved = BWAPI::Broodwar->getFrameCount();
                 currentMineralCount -= mineralPrice;
                 currentGasCount -= gasPrice;
-                std::cout << "Able to afford " << request.unit.getName() << " (Request Number " << request.requestNumber << ") : Setting to approved(Frame : " << request.frameRequestApproved << ")\n";
+                //std::cout << "Able to afford " << request.unit.getName() << " (Request Number " << request.requestNumber << ") : Setting to approved(Frame : " << request.frameRequestApproved << ")\n";
             }
         }
     }
@@ -245,21 +245,21 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
                 gasPrice = request.unit.gasPrice();
                 canAffordRequest = canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount);
 
-                if (canAffordRequest) std::cout << "Able to afford " << request.unit.getName() << " (Request Number " << request.requestNumber << ")";
+                //if (canAffordRequest) std::cout << "Able to afford " << request.unit.getName() << " (Request Number " << request.requestNumber << ")";
                 break;
             case ResourceRequest::Type::Upgrade:
                 mineralPrice = request.upgrade.mineralPrice();
                 gasPrice = request.upgrade.gasPrice();
                 canAffordRequest = canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount);
 
-                if (canAffordRequest) std::cout << "Able to afford " << request.upgrade.getName() << " (Request Number " << request.requestNumber << ")";
+                //if (canAffordRequest) std::cout << "Able to afford " << request.upgrade.getName() << " (Request Number " << request.requestNumber << ")";
                 break;
             case ResourceRequest::Type::Tech:
                 mineralPrice = request.tech.mineralPrice();
                 gasPrice = request.tech.gasPrice();
                 canAffordRequest = canAfford(mineralPrice, gasPrice, currentMineralCount, currentGasCount);
 
-                if (canAffordRequest) std::cout << "Able to afford " << request.tech.getName() << " (Request Number " << request.requestNumber << ")";
+                //if (canAffordRequest) std::cout << "Able to afford " << request.tech.getName() << " (Request Number " << request.requestNumber << ")";
                 break;
         }
 
@@ -271,7 +271,7 @@ void SpenderManager::OnFrame(std::vector<ResourceRequest> &requests)
             currentMineralCount -= mineralPrice;
             currentGasCount -= gasPrice;
 
-            std::cout << " : Setting to approved (Frame: " << request.frameRequestApproved << ")\n";
+            //std::cout << " : Setting to approved (Frame: " << request.frameRequestApproved << ")\n";
         }
         else
         {
