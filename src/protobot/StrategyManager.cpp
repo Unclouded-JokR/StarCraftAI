@@ -1456,7 +1456,8 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 				if (commanderReference->alreadySentRequest(building->getID()) == false &&
 					!building->isTraining() &&
 					building->isCompleted() &&
-					(request_count.observers_requests + observerRequestsThisFrame + ProtoBot_createdUnitCount.created_observers + 1) <= (ProtoBot_Squads.size() + MAX_OBSERVERS_FOR_SCOUTING))
+					((request_count.observers_requests + observerRequestsThisFrame + ProtoBot_createdUnitCount.created_observers + 1) <= (ProtoBot_Squads.size() + MAX_OBSERVERS_FOR_SCOUTING) ||
+					(request_count.observers_requests + observerRequestsThisFrame + ProtoBot_createdUnitCount.created_observers + 1) <= (MAX_OBSERVERS_FOR_INVIS_UNITS + MAX_OBSERVERS_FOR_SCOUTING)))
 				{
 					PossibleUnitRequest observer;
 					observer.unit = BWAPI::UnitTypes::Protoss_Observer;
