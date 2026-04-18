@@ -1299,23 +1299,29 @@ void StrategyManager::updateUnitProductionGoals()
 	}
 
 	//Constant Observer Production
-	/*if (InformationManager::Instance().enemyHasCloakTech())
+	std::cout << "Number of Squads: " << ProtoBot_Squads.size() << "\n";
+	if (InformationManager::Instance().enemyHasCloakTech())
 	{
-		int numObservers = (request_count.observers_requests + unitProductionCounter.observers) - MAX_OBSERVERS_FOR_SCOUTING
+		//Current Observers we have.
+		int numObservers = (request_count.observers_requests + ProtoBot_currentUnits.observer) - MAX_OBSERVERS_FOR_SCOUTING;
 
 		//Check to make sure negative unit count doesnt happen from scouting observers.
 		//Can probably work with matthew to make sure we can check what squads have a observer.
-		numObersvers = (numObservers < 0 ? 0 : numObservers)
-
-		if ((request_count.observers_requests + unitProductionCounter.observers) - MAX_OBSERVERS_FOR_SCOUTING < ProtoBot_Squads.size())
+		int squadObserverCount = 0;
+		for (Squad* squad : ProtoBot_Squads)
 		{
-			activeGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
+			if (squad->observer != nullptr) squadObserverCount++;
+		}
+
+		if ((request_count.observers_requests + squadObserverCount + ProtoBot_createdUnitCount.created_observers) - MAX_OBSERVERS_FOR_SCOUTING < ProtoBot_Squads.size() && ProtoBot_currentUnits.observer < (ProtoBot_Squads.size() + MAX_OBSERVERS_FOR_SCOUTING))
+		{
+			unitProductionGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
 		}
 		else
 		{
-			activeGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
+			unitProductionGoals.insert(INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS);
 		}
-	}*/
+	}
 
 	//Dark Templars
 	if (opponentRace == BWAPI::Races::Terran || opponentRace == BWAPI::Races::Protoss)
@@ -1342,7 +1348,8 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 	//Prevents construction of units outside Build Order.
 	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
 	const std::vector<NexusEconomy>& nexusEconomies = commanderReference->getNexusEconomies();
-	FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
+	const FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
+	std::vector<Squad*> ProtoBot_Squads = commanderReference->combatManager.Squads;
 
 	int workerRequestsThisFrame = 0;
 	int zealotRequestsThisFrame = 0;
@@ -1429,6 +1436,27 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 					!building->isTraining() &&
 					building->isCompleted() &&
 					(request_count.observers_requests + observerRequestsThisFrame + ProtoBot_createdUnitCount.created_observers + 1) <= MAX_OBSERVERS_FOR_SCOUTING)
+				{
+					PossibleUnitRequest observer;
+					observer.unit = BWAPI::UnitTypes::Protoss_Observer;
+					observer.trainer = building;
+
+					observerRequestsThisFrame++;
+					possibleRequestList.units.push_back(observer);
+				}
+			}
+			break;
+		case INVISIBLE_UNIT_DETECTED_SQUADS_NEED_OBSERVERS:
+			if (trainingBlock || haveRequiredTech(BWAPI::UnitTypes::Protoss_Observer) == false) break;
+
+			for (const BWAPI::Unit building : unitProduction)
+			{
+				if (building->getType() != BWAPI::UnitTypes::Protoss_Robotics_Facility) continue;
+
+				if (commanderReference->alreadySentRequest(building->getID()) == false &&
+					!building->isTraining() &&
+					building->isCompleted() &&
+					(request_count.observers_requests + observerRequestsThisFrame + ProtoBot_createdUnitCount.created_observers + 1) <= (ProtoBot_Squads.size() + MAX_OBSERVERS_FOR_SCOUTING))
 				{
 					PossibleUnitRequest observer;
 					observer.unit = BWAPI::UnitTypes::Protoss_Observer;
