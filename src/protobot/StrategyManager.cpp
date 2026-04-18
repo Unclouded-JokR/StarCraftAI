@@ -1299,7 +1299,6 @@ void StrategyManager::updateUnitProductionGoals()
 	}
 
 	//Constant Observer Production
-	std::cout << "Number of Squads: " << ProtoBot_Squads.size() << "\n";
 	if (InformationManager::Instance().enemyHasCloakTech())
 	{
 		//Current Observers we have.
