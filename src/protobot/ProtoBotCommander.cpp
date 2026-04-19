@@ -422,27 +422,6 @@ void ProtoBotCommander::onUnitComplete(BWAPI::Unit unit)
 		}
 	}
 
-	/*
-	if (unit_type == BWAPI::UnitTypes::Protoss_Zealot || unit_type == BWAPI::UnitTypes::Protoss_Dragoon)
-	{
-		if (scoutingManager.canAcceptCombatScout(unit_type))
-		{
-			scoutingManager.assignScout(unit);
-			BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
-			return;
-		}
-	}*/
-
-	if (unit_type == BWAPI::UnitTypes::Protoss_Observer)
-	{
-		if (scoutingManager.canAcceptObserverScout())
-		{
-			scoutingManager.assignScout(unit);
-			//BWAPI::Broodwar->printf("[Commander] Assigned %s %d to Scouting", unit_type.c_str(), unit->getID());
-			return;
-		}
-	}
-
 	if (unit_type == BWAPI::UnitTypes::Protoss_Dark_Templar)
 	{
 		scoutingManager.assignScout(unit);
@@ -480,6 +459,7 @@ void ProtoBotCommander::removeApprovedRequests()
 			//std::string bwapiType_string;
 			//std::string type_string;
 			//std::string frame_string = (it->frameToStartBuilding == -1 ? "N\\A" : std::to_string(it->frameToStartBuilding));
+			//double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
 
 			switch (request_type)
 			{
@@ -487,7 +467,15 @@ void ProtoBotCommander::removeApprovedRequests()
 				/*type_string = "Unit";
 				mineralCost = it->unit.mineralPrice();
 				gasCost = it->unit.gasPrice();
-				bwapiType_string = it->unit.toString();*/
+				bwapiType_string = it->unit.toString();
+
+				std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
+					<< "\nFrame Request Created = " << it->frameRequestCreated
+					<< "\nFrame Request Approved = " << it->frameRequestApproved
+					<< "\nFrame Request Serviced = " << it->frameRequestServiced
+					<< "\nFrame Request Removed = "
+					<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = "
+					<< (it->frameRequestApproved - it->frameRequestCreated) << "\n";*/
 				break;
 			case ResourceRequest::Building:
 				/*type_string = "Building";
@@ -533,21 +521,6 @@ void ProtoBotCommander::removeApprovedRequests()
 				bwapiType_string = it->tech.toString();*/
 				break;
 			}
-
-			//double seconds = double(it->frameRequestApproved - it->frameRequestCreated) / 24.0;
-
-			/*std::cout << "Request for " << type_string << " (" << bwapiType_string << ") "
-				<< "\nFrame Request Created = " << it->frameRequestCreated
-				<< "\nFrame Request Approved = " << it->frameRequestApproved
-				<< "\nFrame Request Serviced = " << it->frameRequestServiced 
-				<< "\nFrame Request Removed = " 
-				<< BWAPI::Broodwar->getFrameCount() << "\nTotal Frames to Complete = " 
-				<< (it->frameRequestApproved - it->frameRequestCreated)
-				<< " (" << seconds << " seconds)" << "\n";
-
-			*/
-
-			//Add time between frames and other stuff.
 
 			it = resourceRequests.erase(it);
 		}
@@ -941,7 +914,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
 	auto isValidUnit = [](BWAPI::Unit u)
 		{
-			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self();
+			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self() && u->getType() == BWAPI::UnitTypes::Protoss_Probe;
 		};
 
 	const int frame = BWAPI::Broodwar->getFrameCount();
@@ -974,7 +947,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		BWAPI::Unit u = combatManager.getAvailableUnit(
 			[](BWAPI::Unit x)
 			{
-				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Zealot;
+				return x && x->exists() && x->getPlayer() == BWAPI::Broodwar->self() && x->getType() == BWAPI::UnitTypes::Protoss_Zealot;
 			}
 		);
 
@@ -990,7 +963,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		BWAPI::Unit u = combatManager.getAvailableUnit(
 			[](BWAPI::Unit x)
 			{
-				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Dragoon;
+				return x && x->exists() && x->getPlayer() == BWAPI::Broodwar->self() && x->getType() == BWAPI::UnitTypes::Protoss_Dragoon;
 			}
 		);
 
@@ -1006,7 +979,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 		BWAPI::Unit u = combatManager.getAvailableUnit(
 			[](BWAPI::Unit x)
 			{
-				return x && x->exists() && x->getType() == BWAPI::UnitTypes::Protoss_Observer;
+				return x && x->exists() && x->getPlayer() == BWAPI::Broodwar->self() && x->getType() == BWAPI::UnitTypes::Protoss_Observer;
 			}
 		);
 
