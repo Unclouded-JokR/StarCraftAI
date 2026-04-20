@@ -311,11 +311,6 @@ void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)
 			{
 				request.state = ResourceRequest::State::Accepted_Completed;
 			}
-			else if (request.state == ResourceRequest::State::Approved_BeingBuilt &&
-				request.unit == unit->getType())
-			{
-				request.state = ResourceRequest::State::Accepted_Completed;
-			}
 		}
 	}
 
@@ -914,7 +909,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
 	auto isValidUnit = [](BWAPI::Unit u)
 		{
-			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self();
+			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self() && !u->getType().isBuilding();
 		};
 
 	const int frame = BWAPI::Broodwar->getFrameCount();

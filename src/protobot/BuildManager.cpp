@@ -590,66 +590,6 @@ void BuildManager::onFrame(std::vector<ResourceRequest>& resourceRequests)
         enqueueNaturalWallAtChoke();
 
     buildingPlacer.drawPoweredTiles();
-    
-    // Debug drawing for natural wall setup
-	/*  
-    const auto* naturalChoke = this->naturalChoke;
-    if (naturalChoke)
-    {
-
-        if (naturalWallOpeningTile.isValid())
-        {
-            BWAPI::Broodwar->drawBoxMap(BWAPI::Position(naturalWallOpeningTile), BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(32, 32), BWAPI::Colors::Orange, false);
-            BWAPI::Broodwar->drawTextMap(BWAPI::Position(naturalWallOpeningTile) + BWAPI::Position(4, 4), "Wall gap / A*");
-        }
-        for (const auto& gapTile : naturalWallGapTiles)
-        {
-            if (!gapTile.isValid()) continue;
-            BWAPI::Broodwar->drawBoxMap(BWAPI::Position(gapTile), BWAPI::Position(gapTile) + BWAPI::Position(32, 32), BWAPI::Colors::Green, false);
-        }
-        for (const auto& t : naturalWallPathTiles)
-        {
-            if (!t.isValid()) continue;
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(32, 32);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Yellow, false);
-        }
-
-        BWEB::Walls::draw();
-        for (const auto& pylonTile : naturalWallPylonTiles)
-        {
-            if (!pylonTile.isValid()) continue;
-            const BWAPI::Position tl = BWAPI::Position(pylonTile);
-            const BWAPI::Position br = tl + BWAPI::Position(64, 64);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Green, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall pylon");
-        }
-        for (const auto& t : naturalWallCannonTiles)
-        {
-            if (!t.isValid()) continue;
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(64, 64);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Purple, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall cannon");
-        }
-        for (const auto& t : naturalWallForgeTiles)
-        {
-            if (!t.isValid()) continue;
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(96, 64);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Cyan, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall forge");
-        }
-        for (const auto& t : naturalWallGatewayTiles)
-        {
-            if (!t.isValid()) continue;
-            const BWAPI::Position tl = BWAPI::Position(t);
-            const BWAPI::Position br = tl + BWAPI::Position(128, 96);
-            BWAPI::Broodwar->drawBoxMap(tl, br, BWAPI::Colors::Red, false);
-            BWAPI::Broodwar->drawTextMap(tl + BWAPI::Position(4, 4), "Wall gateway");
-        }
-    }
-    */
 
     //Have to have loop that can check if a building can create a unit and is powered.
     //Might also need to have some data that shows what each building is doing but might be too complictaed for this approach.
