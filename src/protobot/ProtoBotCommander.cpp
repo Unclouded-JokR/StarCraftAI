@@ -969,7 +969,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 
 		if (isValidUnit(u))
 		{
-			std::cout << "Assigning Dragoon to scout\n";
+			//std::cout << "Assigning Dragoon to scout\n";
 			scoutingManager.assignScout(u);
 			return u;
 		}
