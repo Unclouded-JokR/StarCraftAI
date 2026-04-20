@@ -914,7 +914,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 {
 	auto isValidUnit = [](BWAPI::Unit u)
 		{
-			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self() && u->getType() == BWAPI::UnitTypes::Protoss_Probe;
+			return u && u->exists() && u->getPlayer() == BWAPI::Broodwar->self();
 		};
 
 	const int frame = BWAPI::Broodwar->getFrameCount();
@@ -969,6 +969,7 @@ BWAPI::Unit ProtoBotCommander::getUnitToScout()
 
 		if (isValidUnit(u))
 		{
+			std::cout << "Assigning Dragoon to scout\n";
 			scoutingManager.assignScout(u);
 			return u;
 		}
