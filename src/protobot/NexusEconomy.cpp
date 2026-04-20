@@ -137,8 +137,8 @@ void NexusEconomy::onFrame()
 		===========================
 	*/
 
-	//std::string temp = "Nexus ID " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
-	//BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
+	std::string temp = "Nexus ID " + std::to_string(nexus->getID()) + "\n" + "Worker Size : " + std::to_string(workers.size()) + "\nMinerals : " + std::to_string(minerals.size());
+	BWAPI::Broodwar->drawTextMap(BWAPI::Position(nexus->getPosition().x, nexus->getPosition().y), temp.c_str());
 
 	for (BWAPI::Unit worker : workers)
 	{
@@ -560,8 +560,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	//Get idle units if possible.
 	for (BWAPI::Unit unit : workers)
 	{
-
-		if (unit->isIdle())
+		if (unit->isIdle() && unit->isCompleted())
 		{
 			if (assignedResource.find(unit) != assignedResource.end())
 			{
@@ -595,7 +594,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 
 	for (BWAPI::Unit unit : workers)
 	{
-		if (!unit->isCarryingMinerals() && unit->isGatheringMinerals() && !unit->isMoving())
+		if (!unit->isCarryingMinerals() && unit->isGatheringMinerals() && !unit->isMoving() && unit->isCompleted())
 		{
 			unitToReturn = unit;
 			break;
@@ -619,7 +618,7 @@ BWAPI::Unit NexusEconomy::getWorkerToScout()
 	int index = 0;
 	for (BWAPI::Unit unit : workers)
 	{
-		if (/*index == random && */ !unit->isMoving())
+		if (/*index == random && */ !unit->isMoving() && unit->isCompleted())
 		{
 			BWAPI::Unit assignedMineral = assignedResource[unit];
 			//resourceWorkerCount[assignedMineral] -= 1;
