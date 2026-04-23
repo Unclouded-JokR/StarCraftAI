@@ -18,10 +18,33 @@ Running ProtoBot
 Windows
 --
 
-To run ProtoBot on Windows, go to StarCraftAI/bin and execute RunProtoBotAndStarcraft.bat. This will launch up ProtoBot and StarCraft: Brood War
+To run ProtoBot on <b>Windows</b>, do the following:
+
+Navigate to <b>/StarCraftAI/bin</b> and execute <b>RunProtoBotAndStarcraft.bat</b>. 
+\n This will launch up ProtoBot and StarCraft: Brood War. 
+\n ProtoBot will automatically connect to the game lobby and begin playing!
 
 Linux
 --
 
-To run ProtoBot on Linux, 
+To run ProtoBot on <b>Linux</b>, run the following commands:
+<pre>
+  <code>
+    sudo apt update
+    sudo apt install build-essential mingw-w64 make
+  </code>
+</pre>
+
+This will install <b>make</b>, <b>linux g++</b> and a Windows cross-compiler <b>i686-w64-mingw32-g++</b>
+
+Once installed, navigate to the makefile in the base StarCraftAI folder.
+\n Edit the flag <b>BIN_DIR</b> to point to the path ./bin_linux.
+
+Once all packages are installed and the <b>BIN_DIR</b> flag has been changed, go to the directory where the makefile is located (should be <b>/StarCraftAI</b>) and run the commands:
+<pre>
+  <code>
+    make clean
+    make
+  </code>
+</pre>
 */

@@ -103,11 +103,24 @@ Installation</h1>
 Running ProtoBot</h1>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
 Windows</h2>
-<p>To run ProtoBot on Windows, go to StarCraftAI/bin and execute RunProtoBotAndStarcraft.bat. This will launch up ProtoBot and StarCraft: Brood War</p>
+<p>To run ProtoBot on <b>Windows</b>, do the following:</p>
+<p>Navigate to <b>/StarCraftAI/bin</b> and execute <b>RunProtoBotAndStarcraft.bat</b>. <br  />
+ This will launch up ProtoBot and StarCraft: Brood War. <br  />
+ ProtoBot will automatically connect to the game lobby and begin playing!</p>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md3"></a>
 Linux</h2>
-<p>To run ProtoBot on Linux, </p>
-</div></div><!-- PageDoc -->
+<p>To run ProtoBot on <b>Linux</b>, run the following commands: </p><pre>
+  <code>
+    sudo apt update
+    sudo apt install build-essential mingw-w64 make
+  </code> </pre><p>This will install <b>make</b>, <b>linux g++</b> and a Windows cross-compiler <b>i686-w64-mingw32-g++</b></p>
+<p>Once installed, navigate to the makefile in the base StarCraftAI folder. <br  />
+ Edit the flag <b>BIN_DIR</b> to point to the path ./bin_linux.</p>
+<p>Once all packages are installed and the <b>BIN_DIR</b> flag has been changed, go to the directory where the makefile is located (should be <b>/StarCraftAI</b>) and run the commands: </p><pre>
+  <code>
+    make clean
+    make
+  </code> </pre> </div></div><!-- PageDoc -->
 <a href="doxygen_crawl.html"></a>
 </div><!-- contents -->
 </div><!-- doc-content -->
