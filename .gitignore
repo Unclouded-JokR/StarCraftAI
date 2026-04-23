@@ -38,7 +38,7 @@ bin/ReplayData.txt
 bin/ReplayParser.exe
 bin/RunReplayParserAndStarcraft.bat
 bin/replaydata
-doxygen_docs/html/*
+/doxygen_docs
 # Linux
 bin_linux/src
 !libgcc_s_dw2-1.dll
@@ -56,5 +56,3 @@ bin/visualstudio/SpenderManager.cpp.d
 bin/visualstudio/Squad.cpp.d
 bin/visualstudio/Timer.cpp.d
 bin/visualstudio/TimerManager.cpp.d
-html/
-latex/
