@@ -13,6 +13,10 @@
 
 class SquadState;
 
+/// <summary>
+/// Contains general information about a squad, such as its units, positions, and current state. 
+/// \n This class is used by the Squad class to store and manage squad information.
+/// </summary>
 class SquadInfo {
 public:
 	int squadId;
@@ -41,6 +45,14 @@ public:
 	}
 };
 
+/// \brief The Squad class represents a group of combat units owned by ProtoBot.
+/// <summary>
+/// Base squad structure that holds its leader, observer, as well as its methods.
+/// \n Information is stored inside of a SquadInfo class.
+/// 
+/// \n\n Every squad has a leader and methods for adding and removing units.
+/// \n Squad behavior is defined by its state and onFrame(), which calls the current state's Update() method.
+/// </summary>
 class Squad {
 public:
 	BWAPI::Unit leader = nullptr;
@@ -54,6 +66,12 @@ public:
 	void removeUnit(BWAPI::Unit unit);
 	void addUnit(BWAPI::Unit unit);
 	void addObserver(BWAPI::Unit observer);
+
+	/// \brief Defines the behavior of the observer unit in the squad.
+	/// <summary>
+	/// \n If the observer is not under attack, it will stay above the leader. 
+	/// \n If the observer is under attack, it will run towards the base (typically away from enemies).
+	/// </summary>
 	void observerOnFrame();
 	void drawSquadBox();
 	void drawDebugInfo();
@@ -64,7 +82,4 @@ public:
 	bool operator!=(const Squad& other) noexcept(true) {
 		return !(*this == other);
 	}
-
-private:
-	void pathHandler();
 };

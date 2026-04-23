@@ -27,25 +27,6 @@ void Squad::setState(SquadState& newState) {
 	info.currentState->Enter(this);
 }
 
-void Squad::pathHandler() {
-	const int distThreshold = 1;
-	if (info.currentPath.positions.empty() == false && info.currentPathIdx < info.currentPath.positions.size()) {
-		const BWAPI::Position target = BWAPI::Position(info.currentPath.positions.at(info.currentPathIdx));
-		if (leader->getDistance(target) <= distThreshold){
-			info.currentPathIdx += 1;
-		}
-		else if (leader->getTargetPosition() != target) {
-			leader->attack(target);
-		}
-	}
-
-	for (pair<BWAPI::Position, BWAPI::Position> rect : rectCoordinates) {
-		BWAPI::Broodwar->drawBoxMap(rect.first, rect.second, BWAPI::Colors::Yellow);
-	}
-
-	AStar::drawPath(info.currentPath);
-}
-
 void Squad::removeUnit(BWAPI::Unit unit){
 	if (unit == nullptr) {
 		return;
