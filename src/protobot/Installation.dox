@@ -47,4 +47,10 @@ Once all packages are installed and the <b>BIN_DIR</b> flag has been changed, go
     make
   </code>
 </pre>
+
+Additional Documentation
+==
+
+Functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
+\n It can be found here: https://bwapi.github.io/
 */
