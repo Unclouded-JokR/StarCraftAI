@@ -11,11 +11,15 @@
 class ProtoBotCommander;
 class ScoutingManager;
 
-// Concrete behavior for a Probe scout (your current logic moved here)
+/// <summary>
+/// ScoutingProbe handles the initial scouting of the enemy base. The probe then steals gas if available and then starts a cycle
+/// of harassing enemy workers then orbiting their base.
+/// </summary>
 class ScoutingProbe {
 public:
     explicit ScoutingProbe(ProtoBotCommander* commander, ScoutingManager* manager)
-        : commanderRef(commander), manager(manager) {}
+        : commanderRef(commander), manager(manager) {
+    }
 
     void onStart();
     void onFrame();
@@ -29,7 +33,26 @@ public:
 
 
 private:
-    enum class State { Search, GasSteal, Harass, Orbit, ReturningCargo, Done };
+    enum class State
+    {
+        /// <summary>Visiting potential enemy start locations</summary>
+        Search,
+
+        /// <summary>Attempting to steal enemy gas</summary>
+        GasSteal,
+
+        /// <summary>Attacking enemy workers</summary>
+        Harass,
+
+        /// <summary>Circling enemy base while avoiding threats</summary>
+        Orbit,
+
+        /// <summary>Returning carried resources</summary>
+        ReturningCargo,
+
+        /// <summary>Behavior finished</summary>
+        Done
+    };
 
     // core refs
     ProtoBotCommander* commanderRef = nullptr;

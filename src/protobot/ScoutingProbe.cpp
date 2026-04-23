@@ -1,3 +1,22 @@
+/// <summary>
+/// Implements scouting behavior for a Protoss Probe in ProtoBot.
+/// 
+/// Responsibilities:
+/// - Locate the enemy base
+/// - Attempt gas stealing
+/// - Harass enemy workers
+/// - Orbit enemy base while avoiding threats
+/// 
+/// Behavior is implemented as a finite state machine with the following states:
+/// - Search
+/// - GasSteal
+/// - Harass
+/// - Orbit
+/// - ReturningCargo
+/// - Done
+/// </summary>
+
+
 #include "ScoutingProbe.h"
 #include "ProtoBotCommander.h"
 #include "ScoutingManager.h"
@@ -115,6 +134,16 @@ namespace {
     }
 }
 
+/// <summary>
+/// Initializes the scouting probe state.
+/// 
+/// Sets up scouting targets and resets all internal state:
+/// - Enemy base tracking
+/// - Gas steal state
+/// - Orbit pathing
+/// - Movement tracking
+/// </summary>
+
 void ScoutingProbe::onStart() {
     if (!Map::Instance().Initialized()) {
         //Broodwar->printf("ScoutingProbe: BWEM not initialized.");
@@ -141,6 +170,17 @@ void ScoutingProbe::onStart() {
     stuckFrames = 0;
 }
 
+/// <summary>
+/// Assigns a unit as the scouting probe.
+/// 
+/// Initializes tracking values such as HP/shields and determines
+/// the starting state of the probe.
+/// 
+/// If the unit is carrying resources, transitions to ReturningCargo,
+/// otherwise begins scouting.
+/// </summary>
+/// <param name="unit">The unit to assign as the scout</param>
+
 void ScoutingProbe::assign(BWAPI::Unit unit) {
     if (!unit || !unit->exists()) return;
     scout = unit;
@@ -164,6 +204,23 @@ void ScoutingProbe::onUnitDestroy(BWAPI::Unit unit) {
         state = State::Done;
     }
 }
+
+/// <summary>
+/// Main update loop executed every frame.
+/// 
+/// Drives probe behavior using a finite state machine.
+/// Handles:
+/// - Threat detection
+/// - Movement and pathing
+/// - State transitions
+/// 
+/// States handled:
+/// - Search
+/// - GasSteal
+/// - Harass
+/// - Orbit
+/// - ReturningCargo
+/// </summary>
 
 void ScoutingProbe::onFrame() {
     if (!scout || !scout->exists() || state == State::Done) return;
@@ -439,6 +496,20 @@ bool ScoutingProbe::anyRefineryOn(BWAPI::Unit geyser) const {
     return false;
 }
 
+
+/// <summary>
+/// Attempts to perform a gas steal on the enemy geyser.
+/// 
+/// Workflow:
+/// - Request permission from strategy manager
+/// - Wait for approval and sufficient minerals
+/// - Move to target geyser
+/// - Attempt to build Assimilator
+/// 
+/// Handles retries, movement, and fallback behavior.
+/// </summary>
+/// <returns>True if still handling gas steal logic, false otherwise</returns>
+
 bool ScoutingProbe::tryGasSteal()
 {
     if (gasStealDone)
@@ -615,6 +686,13 @@ bool ScoutingProbe::tryGasSteal()
     return true;
 }
 
+/// <summary>
+/// Attempts to harass nearby enemy workers.
+/// 
+/// Selects the closest valid worker near the enemy main base
+/// and issues an attack command.
+/// </summary>
+/// <returns>True if a worker was targeted, false otherwise</returns>
 
 bool ScoutingProbe::tryHarassWorker() {
     if (!scout || !scout->exists() || !enemyMainPos.isValid()) return false;
@@ -634,6 +712,15 @@ bool ScoutingProbe::tryHarassWorker() {
     //Broodwar->drawCircleMap(best->getPosition(), 10, Colors::Red, true);
     return true;
 }
+
+/// <summary>
+/// Generates orbit waypoints around the enemy base.
+/// 
+/// Creates a circular set of safe positions around the enemy main
+/// to allow continuous movement while avoiding threats.
+/// 
+/// Waypoints are snapped to valid walkable positions.
+/// </summary>
 
 void ScoutingProbe::ensureOrbitWaypoints() {
     if (!orbitWaypoints.empty())
@@ -1008,6 +1095,16 @@ BWAPI::Unit ScoutingProbe::findAssimilatorOnTargetGeyser() const
     return nullptr;
 }
 
+/// <summary>
+/// Generates an A* path to a target position.
+/// 
+/// Ensures the path is valid and avoids obstacles.
+/// Optionally adjusts the goal to a safe reachable position.
+/// </summary>
+/// <param name="goal">Target position</param>
+/// <param name="interactableEndpoint">Whether the endpoint must be directly reachable</param>
+/// <returns>True if a valid path was generated</returns>
+
 bool ScoutingProbe::planAStarPathTo(const BWAPI::Position& goal, bool interactableEndpoint)
 {
     plannedPath.clear();
@@ -1083,7 +1180,7 @@ void ScoutingProbe::followPlannedPath(const BWAPI::Position& finalGoal, int reis
         needReplan = true;
     }
 
-    
+
 
     if (needReplan)
     {
@@ -1125,6 +1222,15 @@ void ScoutingProbe::followPlannedPath(const BWAPI::Position& finalGoal, int reis
     BWAPI::Position wp = plannedPath.empty() ? finalGoal : plannedPath.front();
     issueMoveToward(wp, reissueDist, false);
 }
+
+/// <summary>
+/// Detects whether the probe is stuck.
+/// 
+/// Compares position changes over time to determine
+/// if the unit is not making meaningful movement.
+/// </summary>
+/// <param name="now">Current frame count</param>
+/// <returns>True if the probe is considered stuck</returns>
 
 bool ScoutingProbe::isStuck(int now)
 {
@@ -1223,7 +1329,7 @@ bool ScoutingProbe::tryConfirmEnemyMainByStartLocations()
     BWAPI::Unit found = nullptr;
     BWAPI::TilePosition foundTp = BWAPI::TilePositions::Invalid;
 
-    static constexpr int kStartConfirmRadius = 9000; 
+    static constexpr int kStartConfirmRadius = 9000;
 
     for (auto& e : BWAPI::Broodwar->enemy()->getUnits())
     {
@@ -1277,6 +1383,20 @@ bool ScoutingProbe::tryConfirmEnemyMainByStartLocations()
     state = State::GasSteal;
     return true;
 }
+
+
+/// <summary>
+/// Draws debug information on the game map.
+/// 
+/// Displays:
+/// - Current state
+/// - Movement targets
+/// - Orbit waypoints
+/// - Planned paths
+/// - Escape goals
+/// 
+/// Used for debugging and visualization.
+/// </summary>
 
 void ScoutingProbe::drawDebug() const
 {

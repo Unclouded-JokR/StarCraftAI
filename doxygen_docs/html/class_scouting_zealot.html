@@ -91,22 +91,40 @@ $(function(){initNavTree('class_scouting_zealot.html','','class_scouting_zealot-
   <div class="headertitle"><div class="title">ScoutingZealot Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p><a class="el" href="class_scouting_zealot.html" title="ScoutingZealot Controls scouting behavior for Zealot and Dragoon units. Combines positioning,...">ScoutingZealot</a> Controls scouting behavior for Zealot and Dragoon units. Combines positioning, threat detection, and movement control to provide safe and consistent map scouting.  
+ <a href="#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a43e4f065865c1f9737f4adbf17150f3a" id="r_a43e4f065865c1f9737f4adbf17150f3a"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a43e4f065865c1f9737f4adbf17150f3a">ScoutingZealot</a> (<a class="el" href="class_proto_bot_commander.html">ProtoBotCommander</a> *commander, <a class="el" href="class_scouting_manager.html">ScoutingManager</a> *manager)</td></tr>
 <tr class="memitem:a6bc4a39c0bd8f6998848092c591b387a" id="r_a6bc4a39c0bd8f6998848092c591b387a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a6bc4a39c0bd8f6998848092c591b387a">onStart</a> ()</td></tr>
+<tr class="memdesc:a6bc4a39c0bd8f6998848092c591b387a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the zealot scouting state.  <br /></td></tr>
 <tr class="memitem:a7fe491fd1a6261f5e18ab2a4ccd8d6b1" id="r_a7fe491fd1a6261f5e18ab2a4ccd8d6b1"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a7fe491fd1a6261f5e18ab2a4ccd8d6b1">onFrame</a> ()</td></tr>
+<tr class="memdesc:a7fe491fd1a6261f5e18ab2a4ccd8d6b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main update loop executed every frame.  <br /></td></tr>
 <tr class="memitem:acc0d0bf839960c9601062203415489eb" id="r_acc0d0bf839960c9601062203415489eb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#acc0d0bf839960c9601062203415489eb">onUnitDestroy</a> (BWAPI::Unit unit)</td></tr>
+<tr class="memdesc:acc0d0bf839960c9601062203415489eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles cleanup when the scouting unit is destroyed.  <br /></td></tr>
 <tr class="memitem:a15cf375bc3ef21212e13295c418e87dc" id="r_a15cf375bc3ef21212e13295c418e87dc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a15cf375bc3ef21212e13295c418e87dc">setEnemyMain</a> (const BWAPI::TilePosition &amp;tp)</td></tr>
+<tr class="memdesc:a15cf375bc3ef21212e13295c418e87dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the enemy main base location and updates scouting behavior.  <br /></td></tr>
 <tr class="memitem:a564a77e9e1292867c9e988dedb4c1147" id="r_a564a77e9e1292867c9e988dedb4c1147"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a564a77e9e1292867c9e988dedb4c1147">assign</a> (BWAPI::Unit unit)</td></tr>
+<tr class="memdesc:a564a77e9e1292867c9e988dedb4c1147"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a unit as a scouting zealot.  <br /></td></tr>
 <tr class="memitem:abe088d2187bf751c5f5a225735a55684" id="r_abe088d2187bf751c5f5a225735a55684"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#abe088d2187bf751c5f5a225735a55684">hasScout</a> () const</td></tr>
 <tr class="memitem:a42259f7a95bfc1ad5cbb89e3388af9e5" id="r_a42259f7a95bfc1ad5cbb89e3388af9e5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a42259f7a95bfc1ad5cbb89e3388af9e5">setProxyPatroller</a> (bool v)</td></tr>
 <tr class="memitem:a450d2d22e84553a68e1780debe45086d" id="r_a450d2d22e84553a68e1780debe45086d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a450d2d22e84553a68e1780debe45086d">drawDebug</a> () const</td></tr>
+<tr class="memdesc:a450d2d22e84553a68e1780debe45086d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draws debug information for the scouting unit.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00010">10</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
+<div class="textblock"><p><a class="el" href="class_scouting_zealot.html" title="ScoutingZealot Controls scouting behavior for Zealot and Dragoon units. Combines positioning,...">ScoutingZealot</a> Controls scouting behavior for Zealot and Dragoon units. Combines positioning, threat detection, and movement control to provide safe and consistent map scouting. </p>
+<p>/// Uses a state-driven system to:</p><ul>
+<li>Move toward and hold the enemy natural edge</li>
+<li>Avoid entering the enemy main base</li>
+<li>React to threats using retreat and kiting logic</li>
+<li>Patrol proxy locations to detect early enemy structures </li>
+</ul>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00023">23</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a43e4f065865c1f9737f4adbf17150f3a" name="a43e4f065865c1f9737f4adbf17150f3a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a43e4f065865c1f9737f4adbf17150f3a">&#9670;&#160;</a></span>ScoutingZealot()</h2>
@@ -135,10 +153,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00013">13</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   14</span>        : commanderRef(commander), manager(manager)</div>
-<div class="line"><span class="lineno">   15</span>    {</div>
-<div class="line"><span class="lineno">   16</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00026">26</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   27</span>        : commanderRef(commander), manager(manager)</div>
+<div class="line"><span class="lineno">   28</span>    {</div>
+<div class="line"><span class="lineno">   29</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -158,26 +176,38 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00137">137</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  137</span>                                          {</div>
-<div class="line"><span class="lineno">  138</span> </div>
-<div class="line"><span class="lineno">  139</span>    <span class="keywordflow">if</span> (!unit || !unit-&gt;exists()) <span class="keywordflow">return</span>;</div>
-<div class="line"><span class="lineno">  140</span> </div>
-<div class="line"><span class="lineno">  141</span>    zealot = unit;</div>
-<div class="line"><span class="lineno">  142</span>    <span class="comment">//BWAPI::Broodwar-&gt;printf(&quot;[ZealotScout] assign id=%d type=%s&quot;,</span></div>
-<div class="line"><span class="lineno">  143</span>        <span class="comment">//zealot-&gt;getID(), zealot-&gt;getType().c_str());</span></div>
-<div class="line"><span class="lineno">  144</span> </div>
-<div class="line"><span class="lineno">  145</span>    <span class="keywordflow">if</span> (isProxyPatroller)</div>
-<div class="line"><span class="lineno">  146</span>    {</div>
-<div class="line"><span class="lineno">  147</span>        proxyPoints.clear();</div>
-<div class="line"><span class="lineno">  148</span>        proxyNextIdx = 0;</div>
-<div class="line"><span class="lineno">  149</span>        proxyCurTarget = BWAPI::Positions::Invalid;</div>
-<div class="line"><span class="lineno">  150</span>        proxyRebuildReadyFrame = BWAPI::Broodwar-&gt;getFrameCount() + 1;</div>
-<div class="line"><span class="lineno">  151</span>        state = State::ProxyPatrol;</div>
-<div class="line"><span class="lineno">  152</span>        <span class="keywordflow">return</span>;</div>
-<div class="line"><span class="lineno">  153</span>    }</div>
-<div class="line"><span class="lineno">  154</span>    state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;</div>
-<div class="line"><span class="lineno">  155</span>}</div>
+<p>Assigns a unit as a scouting zealot. </p>
+<p>Initializes behavior based on role:</p><ul>
+<li>Proxy patrol zealots begin patrol setup</li>
+<li>Standard scouts wait for or move toward enemy natural</li>
+</ul>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">unit</td><td>Unit to assign as scout</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00155">155</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  155</span>                                          {</div>
+<div class="line"><span class="lineno">  156</span> </div>
+<div class="line"><span class="lineno">  157</span>    <span class="keywordflow">if</span> (!unit || !unit-&gt;exists()) <span class="keywordflow">return</span>;</div>
+<div class="line"><span class="lineno">  158</span> </div>
+<div class="line"><span class="lineno">  159</span>    zealot = unit;</div>
+<div class="line"><span class="lineno">  160</span>    <span class="comment">//BWAPI::Broodwar-&gt;printf(&quot;[ZealotScout] assign id=%d type=%s&quot;,</span></div>
+<div class="line"><span class="lineno">  161</span>        <span class="comment">//zealot-&gt;getID(), zealot-&gt;getType().c_str());</span></div>
+<div class="line"><span class="lineno">  162</span> </div>
+<div class="line"><span class="lineno">  163</span>    <span class="keywordflow">if</span> (isProxyPatroller)</div>
+<div class="line"><span class="lineno">  164</span>    {</div>
+<div class="line"><span class="lineno">  165</span>        proxyPoints.clear();</div>
+<div class="line"><span class="lineno">  166</span>        proxyNextIdx = 0;</div>
+<div class="line"><span class="lineno">  167</span>        proxyCurTarget = BWAPI::Positions::Invalid;</div>
+<div class="line"><span class="lineno">  168</span>        proxyRebuildReadyFrame = BWAPI::Broodwar-&gt;getFrameCount() + 1;</div>
+<div class="line"><span class="lineno">  169</span>        state = State::ProxyPatrol;</div>
+<div class="line"><span class="lineno">  170</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><span class="lineno">  171</span>    }</div>
+<div class="line"><span class="lineno">  172</span>    state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;</div>
+<div class="line"><span class="lineno">  173</span>}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -196,141 +226,149 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l01493">1493</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno"> 1494</span>{</div>
-<div class="line"><span class="lineno"> 1495</span>    <span class="keywordflow">if</span> (!zealot || !zealot-&gt;exists())</div>
-<div class="line"><span class="lineno"> 1496</span>    {</div>
-<div class="line"><span class="lineno"> 1497</span>        <span class="keywordflow">return</span>;</div>
-<div class="line"><span class="lineno"> 1498</span>    }</div>
-<div class="line"><span class="lineno"> 1499</span> </div>
-<div class="line"><span class="lineno"> 1500</span>    BWAPI::Position p = zealot-&gt;getPosition();</div>
-<div class="line"><span class="lineno"> 1501</span> </div>
-<div class="line"><span class="lineno"> 1502</span>    <span class="keyword">const</span> <span class="keywordtype">char</span>* stateName = <span class="stringliteral">&quot;Unknown&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1503</span> </div>
-<div class="line"><span class="lineno"> 1504</span>    <span class="keywordflow">switch</span> (state)</div>
-<div class="line"><span class="lineno"> 1505</span>    {</div>
-<div class="line"><span class="lineno"> 1506</span>    <span class="keywordflow">case</span> State::Idle:</div>
-<div class="line"><span class="lineno"> 1507</span>        stateName = <span class="stringliteral">&quot;Idle&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1508</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1509</span>    <span class="keywordflow">case</span> State::WaitEnemyMain:</div>
-<div class="line"><span class="lineno"> 1510</span>        stateName = <span class="stringliteral">&quot;WaitEnemyMain&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1511</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1512</span>    <span class="keywordflow">case</span> State::ProxyPatrol:</div>
-<div class="line"><span class="lineno"> 1513</span>        stateName = <span class="stringliteral">&quot;ProxyPatrol&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1514</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1515</span>    <span class="keywordflow">case</span> State::MoveToNatural:</div>
-<div class="line"><span class="lineno"> 1516</span>        stateName = <span class="stringliteral">&quot;MoveToNatural&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1517</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1518</span>    <span class="keywordflow">case</span> State::HoldEdge:</div>
-<div class="line"><span class="lineno"> 1519</span>        stateName = <span class="stringliteral">&quot;HoldEdge&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1520</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1521</span>    <span class="keywordflow">case</span> State::Reposition:</div>
-<div class="line"><span class="lineno"> 1522</span>        stateName = <span class="stringliteral">&quot;Reposition&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1523</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1524</span>    <span class="keywordflow">case</span> State::Done:</div>
-<div class="line"><span class="lineno"> 1525</span>        stateName = <span class="stringliteral">&quot;Done&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1526</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno"> 1527</span>    }</div>
-<div class="line"><span class="lineno"> 1528</span> </div>
-<div class="line"><span class="lineno"> 1529</span>    BWAPI::Broodwar-&gt;drawCircleMap(p, 20, BWAPI::Colors::Green, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1530</span> </div>
-<div class="line"><span class="lineno"> 1531</span>    <span class="keyword">const</span> <span class="keywordtype">char</span>* label = zealot-&gt;getType() == BWAPI::UnitTypes::Protoss_Dragoon</div>
-<div class="line"><span class="lineno"> 1532</span>        ? <span class="stringliteral">&quot;Dragoon Scout&quot;</span></div>
-<div class="line"><span class="lineno"> 1533</span>        : <span class="stringliteral">&quot;Zealot Scout&quot;</span>;</div>
-<div class="line"><span class="lineno"> 1534</span> </div>
-<div class="line"><span class="lineno"> 1535</span>    BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 46, <span class="stringliteral">&quot;\x07%s&quot;</span>, label);</div>
-<div class="line"><span class="lineno"> 1536</span>    BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 34, <span class="stringliteral">&quot;\x11State: %s&quot;</span>, stateName);</div>
-<div class="line"><span class="lineno"> 1537</span> </div>
-<div class="line"><span class="lineno"> 1538</span>    <span class="keywordflow">if</span> (isProxyPatroller)</div>
-<div class="line"><span class="lineno"> 1539</span>    {</div>
-<div class="line"><span class="lineno"> 1540</span>        BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 22, <span class="stringliteral">&quot;\x10Role: Proxy Patrol&quot;</span>);</div>
-<div class="line"><span class="lineno"> 1541</span>    }</div>
-<div class="line"><span class="lineno"> 1542</span>    <span class="keywordflow">else</span></div>
-<div class="line"><span class="lineno"> 1543</span>    {</div>
-<div class="line"><span class="lineno"> 1544</span>        BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 22, <span class="stringliteral">&quot;\x10Role: Natural Edge&quot;</span>);</div>
-<div class="line"><span class="lineno"> 1545</span>    }</div>
-<div class="line"><span class="lineno"> 1546</span> </div>
-<div class="line"><span class="lineno"> 1547</span>    <span class="keywordflow">if</span> (enemyMainPos.isValid())</div>
-<div class="line"><span class="lineno"> 1548</span>    {</div>
-<div class="line"><span class="lineno"> 1549</span>        BWAPI::Broodwar-&gt;drawCircleMap(enemyMainPos, 20, BWAPI::Colors::Red, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1550</span>        BWAPI::Broodwar-&gt;drawTextMap(enemyMainPos.x + 8, enemyMainPos.y - 8, <span class="stringliteral">&quot;\x08Enemy Main&quot;</span>);</div>
-<div class="line"><span class="lineno"> 1551</span>    }</div>
-<div class="line"><span class="lineno"> 1552</span> </div>
-<div class="line"><span class="lineno"> 1553</span>    <span class="keywordflow">if</span> (enemyNaturalPos.isValid())</div>
-<div class="line"><span class="lineno"> 1554</span>    {</div>
-<div class="line"><span class="lineno"> 1555</span>        BWAPI::Broodwar-&gt;drawCircleMap(enemyNaturalPos, 18, BWAPI::Colors::Cyan, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1556</span>        BWAPI::Broodwar-&gt;drawTextMap(enemyNaturalPos.x + 8, enemyNaturalPos.y - 8, <span class="stringliteral">&quot;\x0f&quot;</span> <span class="stringliteral">&quot;Enemy Natural&quot;</span>);</div>
-<div class="line"><span class="lineno"> 1557</span>    }</div>
-<div class="line"><span class="lineno"> 1558</span> </div>
-<div class="line"><span class="lineno"> 1559</span>    <span class="keywordflow">if</span> (state == State::MoveToNatural || state == State::HoldEdge || state == State::Reposition)</div>
-<div class="line"><span class="lineno"> 1560</span>    {</div>
-<div class="line"><span class="lineno"> 1561</span>        BWAPI::Position perch = cachedPerch.isValid() ? cachedPerch : enemyNaturalPos;</div>
-<div class="line"><span class="lineno"> 1562</span> </div>
-<div class="line"><span class="lineno"> 1563</span>        <span class="keywordflow">if</span> (perch.isValid())</div>
-<div class="line"><span class="lineno"> 1564</span>        {</div>
-<div class="line"><span class="lineno"> 1565</span>            BWAPI::Broodwar-&gt;drawLineMap(p, perch, BWAPI::Colors::Green);</div>
-<div class="line"><span class="lineno"> 1566</span>            BWAPI::Broodwar-&gt;drawCircleMap(perch, 10, BWAPI::Colors::Green, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1567</span>            BWAPI::Broodwar-&gt;drawTextMap(perch.x + 6, perch.y - 6, <span class="stringliteral">&quot;\x07Perch&quot;</span>);</div>
-<div class="line"><span class="lineno"> 1568</span>        }</div>
-<div class="line"><span class="lineno"> 1569</span>    }</div>
-<div class="line"><span class="lineno"> 1570</span> </div>
-<div class="line"><span class="lineno"> 1571</span>    <span class="keywordflow">if</span> (state == State::ProxyPatrol)</div>
-<div class="line"><span class="lineno"> 1572</span>    {</div>
-<div class="line"><span class="lineno"> 1573</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (int)proxyPoints.size(); ++i)</div>
-<div class="line"><span class="lineno"> 1574</span>        {</div>
-<div class="line"><span class="lineno"> 1575</span>            BWAPI::Color c = (i == proxyNextIdx - 1) ? BWAPI::Colors::Orange : BWAPI::Colors::Yellow;</div>
-<div class="line"><span class="lineno"> 1576</span> </div>
-<div class="line"><span class="lineno"> 1577</span>            BWAPI::Broodwar-&gt;drawCircleMap(proxyPoints[i], 7, c, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1578</span>            BWAPI::Broodwar-&gt;drawTextMap(proxyPoints[i].x + 5, proxyPoints[i].y - 5, <span class="stringliteral">&quot;#%d&quot;</span>, i);</div>
-<div class="line"><span class="lineno"> 1579</span> </div>
-<div class="line"><span class="lineno"> 1580</span>            <span class="keywordflow">if</span> (i + 1 &lt; (<span class="keywordtype">int</span>)proxyPoints.size())</div>
-<div class="line"><span class="lineno"> 1581</span>            {</div>
-<div class="line"><span class="lineno"> 1582</span>                BWAPI::Broodwar-&gt;drawLineMap(proxyPoints[i], proxyPoints[i + 1], BWAPI::Colors::Orange);</div>
-<div class="line"><span class="lineno"> 1583</span>            }</div>
-<div class="line"><span class="lineno"> 1584</span>        }</div>
-<div class="line"><span class="lineno"> 1585</span> </div>
-<div class="line"><span class="lineno"> 1586</span>        <span class="keywordflow">if</span> (proxyCurTarget.isValid())</div>
-<div class="line"><span class="lineno"> 1587</span>        {</div>
-<div class="line"><span class="lineno"> 1588</span>            BWAPI::Broodwar-&gt;drawLineMap(p, proxyCurTarget, BWAPI::Colors::Orange);</div>
-<div class="line"><span class="lineno"> 1589</span>            BWAPI::Broodwar-&gt;drawCircleMap(proxyCurTarget, 10, BWAPI::Colors::Orange, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1590</span>            BWAPI::Broodwar-&gt;drawTextMap(proxyCurTarget.x + 6, proxyCurTarget.y - 6, <span class="stringliteral">&quot;\x10Proxy Target&quot;</span>);</div>
-<div class="line"><span class="lineno"> 1591</span>        }</div>
-<div class="line"><span class="lineno"> 1592</span>    }</div>
-<div class="line"><span class="lineno"> 1593</span> </div>
-<div class="line"><span class="lineno"> 1594</span>    BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
-<div class="line"><span class="lineno"> 1595</span>    <span class="keywordflow">if</span> (threat &amp;&amp; threat-&gt;exists())</div>
-<div class="line"><span class="lineno"> 1596</span>    {</div>
-<div class="line"><span class="lineno"> 1597</span>        BWAPI::Broodwar-&gt;drawLineMap(p, threat-&gt;getPosition(), BWAPI::Colors::Red);</div>
-<div class="line"><span class="lineno"> 1598</span>        BWAPI::Broodwar-&gt;drawCircleMap(threat-&gt;getPosition(), 12, BWAPI::Colors::Red, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1599</span>        BWAPI::Broodwar-&gt;drawTextMap(</div>
-<div class="line"><span class="lineno"> 1600</span>            threat-&gt;getPosition().x + 6,</div>
-<div class="line"><span class="lineno"> 1601</span>            threat-&gt;getPosition().y - 6,</div>
-<div class="line"><span class="lineno"> 1602</span>            <span class="stringliteral">&quot;\x08Threat&quot;</span></div>
-<div class="line"><span class="lineno"> 1603</span>        );</div>
-<div class="line"><span class="lineno"> 1604</span>    }</div>
-<div class="line"><span class="lineno"> 1605</span> </div>
-<div class="line"><span class="lineno"> 1606</span>    <span class="keywordflow">if</span> (lastAttackTarget &amp;&amp; lastAttackTarget-&gt;exists())</div>
-<div class="line"><span class="lineno"> 1607</span>    {</div>
-<div class="line"><span class="lineno"> 1608</span>        BWAPI::Broodwar-&gt;drawLineMap(p, lastAttackTarget-&gt;getPosition(), BWAPI::Colors::Purple);</div>
-<div class="line"><span class="lineno"> 1609</span>        BWAPI::Broodwar-&gt;drawCircleMap(lastAttackTarget-&gt;getPosition(), 10, BWAPI::Colors::Purple, <span class="keyword">false</span>);</div>
-<div class="line"><span class="lineno"> 1610</span>        BWAPI::Broodwar-&gt;drawTextMap(</div>
-<div class="line"><span class="lineno"> 1611</span>            p.x - 40,</div>
-<div class="line"><span class="lineno"> 1612</span>            p.y - 10,</div>
-<div class="line"><span class="lineno"> 1613</span>            <span class="stringliteral">&quot;\x05Attack: %s&quot;</span>,</div>
-<div class="line"><span class="lineno"> 1614</span>            lastAttackTarget-&gt;getType().getName().c_str()</div>
-<div class="line"><span class="lineno"> 1615</span>        );</div>
-<div class="line"><span class="lineno"> 1616</span>    }</div>
-<div class="line"><span class="lineno"> 1617</span> </div>
-<div class="line"><span class="lineno"> 1618</span>    <span class="keywordflow">if</span> (cachedPerch.isValid())</div>
+<p>Draws debug information for the scouting unit. </p>
+<p>Displays:</p><ul>
+<li>Current state</li>
+<li>Target positions</li>
+<li>Threats and attack targets</li>
+<li>Proxy patrol routes </li>
+</ul>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l01616">1616</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno"> 1617</span>{</div>
+<div class="line"><span class="lineno"> 1618</span>    <span class="keywordflow">if</span> (!zealot || !zealot-&gt;exists())</div>
 <div class="line"><span class="lineno"> 1619</span>    {</div>
-<div class="line"><span class="lineno"> 1620</span>        BWAPI::Broodwar-&gt;drawCircleMap(cachedPerch, 8, BWAPI::Colors::Blue, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1620</span>        <span class="keywordflow">return</span>;</div>
 <div class="line"><span class="lineno"> 1621</span>    }</div>
 <div class="line"><span class="lineno"> 1622</span> </div>
-<div class="line"><span class="lineno"> 1623</span>    <span class="keywordflow">if</span> (lastIssuedGoal.isValid())</div>
-<div class="line"><span class="lineno"> 1624</span>    {</div>
-<div class="line"><span class="lineno"> 1625</span>        BWAPI::Broodwar-&gt;drawLineMap(p, lastIssuedGoal, BWAPI::Colors::White);</div>
-<div class="line"><span class="lineno"> 1626</span>    }</div>
-<div class="line"><span class="lineno"> 1627</span>}</div>
+<div class="line"><span class="lineno"> 1623</span>    BWAPI::Position p = zealot-&gt;getPosition();</div>
+<div class="line"><span class="lineno"> 1624</span> </div>
+<div class="line"><span class="lineno"> 1625</span>    <span class="keyword">const</span> <span class="keywordtype">char</span>* stateName = <span class="stringliteral">&quot;Unknown&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1626</span> </div>
+<div class="line"><span class="lineno"> 1627</span>    <span class="keywordflow">switch</span> (state)</div>
+<div class="line"><span class="lineno"> 1628</span>    {</div>
+<div class="line"><span class="lineno"> 1629</span>    <span class="keywordflow">case</span> State::Idle:</div>
+<div class="line"><span class="lineno"> 1630</span>        stateName = <span class="stringliteral">&quot;Idle&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1631</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1632</span>    <span class="keywordflow">case</span> State::WaitEnemyMain:</div>
+<div class="line"><span class="lineno"> 1633</span>        stateName = <span class="stringliteral">&quot;WaitEnemyMain&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1634</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1635</span>    <span class="keywordflow">case</span> State::ProxyPatrol:</div>
+<div class="line"><span class="lineno"> 1636</span>        stateName = <span class="stringliteral">&quot;ProxyPatrol&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1637</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1638</span>    <span class="keywordflow">case</span> State::MoveToNatural:</div>
+<div class="line"><span class="lineno"> 1639</span>        stateName = <span class="stringliteral">&quot;MoveToNatural&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1640</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1641</span>    <span class="keywordflow">case</span> State::HoldEdge:</div>
+<div class="line"><span class="lineno"> 1642</span>        stateName = <span class="stringliteral">&quot;HoldEdge&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1643</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1644</span>    <span class="keywordflow">case</span> State::Reposition:</div>
+<div class="line"><span class="lineno"> 1645</span>        stateName = <span class="stringliteral">&quot;Reposition&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1646</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1647</span>    <span class="keywordflow">case</span> State::Done:</div>
+<div class="line"><span class="lineno"> 1648</span>        stateName = <span class="stringliteral">&quot;Done&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1649</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno"> 1650</span>    }</div>
+<div class="line"><span class="lineno"> 1651</span> </div>
+<div class="line"><span class="lineno"> 1652</span>    BWAPI::Broodwar-&gt;drawCircleMap(p, 20, BWAPI::Colors::Green, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1653</span> </div>
+<div class="line"><span class="lineno"> 1654</span>    <span class="keyword">const</span> <span class="keywordtype">char</span>* label = zealot-&gt;getType() == BWAPI::UnitTypes::Protoss_Dragoon</div>
+<div class="line"><span class="lineno"> 1655</span>        ? <span class="stringliteral">&quot;Dragoon Scout&quot;</span></div>
+<div class="line"><span class="lineno"> 1656</span>        : <span class="stringliteral">&quot;Zealot Scout&quot;</span>;</div>
+<div class="line"><span class="lineno"> 1657</span> </div>
+<div class="line"><span class="lineno"> 1658</span>    BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 46, <span class="stringliteral">&quot;\x07%s&quot;</span>, label);</div>
+<div class="line"><span class="lineno"> 1659</span>    BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 34, <span class="stringliteral">&quot;\x11State: %s&quot;</span>, stateName);</div>
+<div class="line"><span class="lineno"> 1660</span> </div>
+<div class="line"><span class="lineno"> 1661</span>    <span class="keywordflow">if</span> (isProxyPatroller)</div>
+<div class="line"><span class="lineno"> 1662</span>    {</div>
+<div class="line"><span class="lineno"> 1663</span>        BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 22, <span class="stringliteral">&quot;\x10Role: Proxy Patrol&quot;</span>);</div>
+<div class="line"><span class="lineno"> 1664</span>    }</div>
+<div class="line"><span class="lineno"> 1665</span>    <span class="keywordflow">else</span></div>
+<div class="line"><span class="lineno"> 1666</span>    {</div>
+<div class="line"><span class="lineno"> 1667</span>        BWAPI::Broodwar-&gt;drawTextMap(p.x - 40, p.y - 22, <span class="stringliteral">&quot;\x10Role: Natural Edge&quot;</span>);</div>
+<div class="line"><span class="lineno"> 1668</span>    }</div>
+<div class="line"><span class="lineno"> 1669</span> </div>
+<div class="line"><span class="lineno"> 1670</span>    <span class="keywordflow">if</span> (enemyMainPos.isValid())</div>
+<div class="line"><span class="lineno"> 1671</span>    {</div>
+<div class="line"><span class="lineno"> 1672</span>        BWAPI::Broodwar-&gt;drawCircleMap(enemyMainPos, 20, BWAPI::Colors::Red, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1673</span>        BWAPI::Broodwar-&gt;drawTextMap(enemyMainPos.x + 8, enemyMainPos.y - 8, <span class="stringliteral">&quot;\x08Enemy Main&quot;</span>);</div>
+<div class="line"><span class="lineno"> 1674</span>    }</div>
+<div class="line"><span class="lineno"> 1675</span> </div>
+<div class="line"><span class="lineno"> 1676</span>    <span class="keywordflow">if</span> (enemyNaturalPos.isValid())</div>
+<div class="line"><span class="lineno"> 1677</span>    {</div>
+<div class="line"><span class="lineno"> 1678</span>        BWAPI::Broodwar-&gt;drawCircleMap(enemyNaturalPos, 18, BWAPI::Colors::Cyan, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1679</span>        BWAPI::Broodwar-&gt;drawTextMap(enemyNaturalPos.x + 8, enemyNaturalPos.y - 8, <span class="stringliteral">&quot;\x0f&quot;</span> <span class="stringliteral">&quot;Enemy Natural&quot;</span>);</div>
+<div class="line"><span class="lineno"> 1680</span>    }</div>
+<div class="line"><span class="lineno"> 1681</span> </div>
+<div class="line"><span class="lineno"> 1682</span>    <span class="keywordflow">if</span> (state == State::MoveToNatural || state == State::HoldEdge || state == State::Reposition)</div>
+<div class="line"><span class="lineno"> 1683</span>    {</div>
+<div class="line"><span class="lineno"> 1684</span>        BWAPI::Position perch = cachedPerch.isValid() ? cachedPerch : enemyNaturalPos;</div>
+<div class="line"><span class="lineno"> 1685</span> </div>
+<div class="line"><span class="lineno"> 1686</span>        <span class="keywordflow">if</span> (perch.isValid())</div>
+<div class="line"><span class="lineno"> 1687</span>        {</div>
+<div class="line"><span class="lineno"> 1688</span>            BWAPI::Broodwar-&gt;drawLineMap(p, perch, BWAPI::Colors::Green);</div>
+<div class="line"><span class="lineno"> 1689</span>            BWAPI::Broodwar-&gt;drawCircleMap(perch, 10, BWAPI::Colors::Green, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1690</span>            BWAPI::Broodwar-&gt;drawTextMap(perch.x + 6, perch.y - 6, <span class="stringliteral">&quot;\x07Perch&quot;</span>);</div>
+<div class="line"><span class="lineno"> 1691</span>        }</div>
+<div class="line"><span class="lineno"> 1692</span>    }</div>
+<div class="line"><span class="lineno"> 1693</span> </div>
+<div class="line"><span class="lineno"> 1694</span>    <span class="keywordflow">if</span> (state == State::ProxyPatrol)</div>
+<div class="line"><span class="lineno"> 1695</span>    {</div>
+<div class="line"><span class="lineno"> 1696</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; (int)proxyPoints.size(); ++i)</div>
+<div class="line"><span class="lineno"> 1697</span>        {</div>
+<div class="line"><span class="lineno"> 1698</span>            BWAPI::Color c = (i == proxyNextIdx - 1) ? BWAPI::Colors::Orange : BWAPI::Colors::Yellow;</div>
+<div class="line"><span class="lineno"> 1699</span> </div>
+<div class="line"><span class="lineno"> 1700</span>            BWAPI::Broodwar-&gt;drawCircleMap(proxyPoints[i], 7, c, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1701</span>            BWAPI::Broodwar-&gt;drawTextMap(proxyPoints[i].x + 5, proxyPoints[i].y - 5, <span class="stringliteral">&quot;#%d&quot;</span>, i);</div>
+<div class="line"><span class="lineno"> 1702</span> </div>
+<div class="line"><span class="lineno"> 1703</span>            <span class="keywordflow">if</span> (i + 1 &lt; (<span class="keywordtype">int</span>)proxyPoints.size())</div>
+<div class="line"><span class="lineno"> 1704</span>            {</div>
+<div class="line"><span class="lineno"> 1705</span>                BWAPI::Broodwar-&gt;drawLineMap(proxyPoints[i], proxyPoints[i + 1], BWAPI::Colors::Orange);</div>
+<div class="line"><span class="lineno"> 1706</span>            }</div>
+<div class="line"><span class="lineno"> 1707</span>        }</div>
+<div class="line"><span class="lineno"> 1708</span> </div>
+<div class="line"><span class="lineno"> 1709</span>        <span class="keywordflow">if</span> (proxyCurTarget.isValid())</div>
+<div class="line"><span class="lineno"> 1710</span>        {</div>
+<div class="line"><span class="lineno"> 1711</span>            BWAPI::Broodwar-&gt;drawLineMap(p, proxyCurTarget, BWAPI::Colors::Orange);</div>
+<div class="line"><span class="lineno"> 1712</span>            BWAPI::Broodwar-&gt;drawCircleMap(proxyCurTarget, 10, BWAPI::Colors::Orange, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1713</span>            BWAPI::Broodwar-&gt;drawTextMap(proxyCurTarget.x + 6, proxyCurTarget.y - 6, <span class="stringliteral">&quot;\x10Proxy Target&quot;</span>);</div>
+<div class="line"><span class="lineno"> 1714</span>        }</div>
+<div class="line"><span class="lineno"> 1715</span>    }</div>
+<div class="line"><span class="lineno"> 1716</span> </div>
+<div class="line"><span class="lineno"> 1717</span>    BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
+<div class="line"><span class="lineno"> 1718</span>    <span class="keywordflow">if</span> (threat &amp;&amp; threat-&gt;exists())</div>
+<div class="line"><span class="lineno"> 1719</span>    {</div>
+<div class="line"><span class="lineno"> 1720</span>        BWAPI::Broodwar-&gt;drawLineMap(p, threat-&gt;getPosition(), BWAPI::Colors::Red);</div>
+<div class="line"><span class="lineno"> 1721</span>        BWAPI::Broodwar-&gt;drawCircleMap(threat-&gt;getPosition(), 12, BWAPI::Colors::Red, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1722</span>        BWAPI::Broodwar-&gt;drawTextMap(</div>
+<div class="line"><span class="lineno"> 1723</span>            threat-&gt;getPosition().x + 6,</div>
+<div class="line"><span class="lineno"> 1724</span>            threat-&gt;getPosition().y - 6,</div>
+<div class="line"><span class="lineno"> 1725</span>            <span class="stringliteral">&quot;\x08Threat&quot;</span></div>
+<div class="line"><span class="lineno"> 1726</span>        );</div>
+<div class="line"><span class="lineno"> 1727</span>    }</div>
+<div class="line"><span class="lineno"> 1728</span> </div>
+<div class="line"><span class="lineno"> 1729</span>    <span class="keywordflow">if</span> (lastAttackTarget &amp;&amp; lastAttackTarget-&gt;exists())</div>
+<div class="line"><span class="lineno"> 1730</span>    {</div>
+<div class="line"><span class="lineno"> 1731</span>        BWAPI::Broodwar-&gt;drawLineMap(p, lastAttackTarget-&gt;getPosition(), BWAPI::Colors::Purple);</div>
+<div class="line"><span class="lineno"> 1732</span>        BWAPI::Broodwar-&gt;drawCircleMap(lastAttackTarget-&gt;getPosition(), 10, BWAPI::Colors::Purple, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1733</span>        BWAPI::Broodwar-&gt;drawTextMap(</div>
+<div class="line"><span class="lineno"> 1734</span>            p.x - 40,</div>
+<div class="line"><span class="lineno"> 1735</span>            p.y - 10,</div>
+<div class="line"><span class="lineno"> 1736</span>            <span class="stringliteral">&quot;\x05Attack: %s&quot;</span>,</div>
+<div class="line"><span class="lineno"> 1737</span>            lastAttackTarget-&gt;getType().getName().c_str()</div>
+<div class="line"><span class="lineno"> 1738</span>        );</div>
+<div class="line"><span class="lineno"> 1739</span>    }</div>
+<div class="line"><span class="lineno"> 1740</span> </div>
+<div class="line"><span class="lineno"> 1741</span>    <span class="keywordflow">if</span> (cachedPerch.isValid())</div>
+<div class="line"><span class="lineno"> 1742</span>    {</div>
+<div class="line"><span class="lineno"> 1743</span>        BWAPI::Broodwar-&gt;drawCircleMap(cachedPerch, 8, BWAPI::Colors::Blue, <span class="keyword">false</span>);</div>
+<div class="line"><span class="lineno"> 1744</span>    }</div>
+<div class="line"><span class="lineno"> 1745</span> </div>
+<div class="line"><span class="lineno"> 1746</span>    <span class="keywordflow">if</span> (lastIssuedGoal.isValid())</div>
+<div class="line"><span class="lineno"> 1747</span>    {</div>
+<div class="line"><span class="lineno"> 1748</span>        BWAPI::Broodwar-&gt;drawLineMap(p, lastIssuedGoal, BWAPI::Colors::White);</div>
+<div class="line"><span class="lineno"> 1749</span>    }</div>
+<div class="line"><span class="lineno"> 1750</span>}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -357,8 +395,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00024">24</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   24</span>{ <span class="keywordflow">return</span> zealot &amp;&amp; zealot-&gt;exists(); }</div>
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00037">37</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   37</span>{ <span class="keywordflow">return</span> zealot &amp;&amp; zealot-&gt;exists(); }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -377,207 +415,217 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00184">184</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  184</span>                             {</div>
-<div class="line"><span class="lineno">  185</span>    <span class="keywordflow">if</span> (!zealot || !zealot-&gt;exists() || state == State::Done) <span class="keywordflow">return</span>;</div>
-<div class="line"><span class="lineno">  186</span>    <span class="comment">/*</span></div>
-<div class="line"><span class="lineno">  187</span><span class="comment">    BWAPI::Broodwar-&gt;drawTextMap(zealot-&gt;getPosition(),</span></div>
-<div class="line"><span class="lineno">  188</span><span class="comment">        &quot;\x11Zealot[%d] %s&quot;, zealot-&gt;getID(),</span></div>
-<div class="line"><span class="lineno">  189</span><span class="comment">           (state == State::Idle ?              &quot;Idle&quot; :</span></div>
-<div class="line"><span class="lineno">  190</span><span class="comment">            state == State::ProxyPatrol ?       &quot;ProxyPatrol&quot; :</span></div>
-<div class="line"><span class="lineno">  191</span><span class="comment">            state == State::WaitEnemyMain ?     &quot;WaitEnemyMain&quot; :</span></div>
-<div class="line"><span class="lineno">  192</span><span class="comment">            state == State::MoveToNatural ?     &quot;MoveToNatural&quot; :</span></div>
-<div class="line"><span class="lineno">  193</span><span class="comment">            state == State::HoldEdge ?          &quot;HoldEdge&quot; :</span></div>
-<div class="line"><span class="lineno">  194</span><span class="comment">            state == State::Reposition ?        &quot;Reposition&quot; : &quot;Done&quot;));</span></div>
-<div class="line"><span class="lineno">  195</span><span class="comment">    */</span></div>
-<div class="line"><span class="lineno">  196</span> </div>
-<div class="line"><span class="lineno">  197</span>    <span class="comment">// --- hard avoid enemy main every frame ---</span></div>
-<div class="line"><span class="lineno">  198</span>    <span class="keywordflow">if</span> (enemyMainTile.has_value() &amp;&amp; zealot &amp;&amp; zealot-&gt;exists()) {</div>
-<div class="line"><span class="lineno">  199</span>        <span class="keyword">const</span> <span class="keyword">auto</span>* mainArea = BWEM::Map::Instance().GetArea(*enemyMainTile);</div>
-<div class="line"><span class="lineno">  200</span>        <span class="keyword">const</span> <span class="keyword">auto</span>* hereArea = BWEM::Map::Instance().GetArea(zealot-&gt;getTilePosition());</div>
-<div class="line"><span class="lineno">  201</span>        <span class="keywordflow">if</span> (mainArea &amp;&amp; hereArea == mainArea) {</div>
-<div class="line"><span class="lineno">  202</span>            <span class="comment">//BWAPI::Broodwar-&gt;drawTextMap(zealot-&gt;getPosition(), &quot;\x08[AVOID MAIN]&quot;);</span></div>
-<div class="line"><span class="lineno">  203</span>            issueMove(pickEdgeOfVisionSpot(), <span class="comment">/*force*/</span><span class="keyword">true</span>);</div>
-<div class="line"><span class="lineno">  204</span>            <span class="keywordflow">return</span>;</div>
-<div class="line"><span class="lineno">  205</span>        }</div>
-<div class="line"><span class="lineno">  206</span>    }</div>
-<div class="line"><span class="lineno">  207</span> </div>
-<div class="line"><span class="lineno">  208</span>    <span class="keywordflow">switch</span> (state) {</div>
-<div class="line"><span class="lineno">  209</span>    <span class="keywordflow">case</span> State::Idle:</div>
-<div class="line"><span class="lineno">  210</span>        <span class="comment">// wait until we know the main</span></div>
-<div class="line"><span class="lineno">  211</span>        <span class="keywordflow">if</span> (isProxyPatroller)</div>
-<div class="line"><span class="lineno">  212</span>        {</div>
-<div class="line"><span class="lineno">  213</span>            proxyRebuildReadyFrame = BWAPI::Broodwar-&gt;getFrameCount() + 1;</div>
-<div class="line"><span class="lineno">  214</span>            state = State::ProxyPatrol;</div>
-<div class="line"><span class="lineno">  215</span>        }</div>
-<div class="line"><span class="lineno">  216</span>        <span class="keywordflow">else</span></div>
-<div class="line"><span class="lineno">  217</span>        {</div>
-<div class="line"><span class="lineno">  218</span>            state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;</div>
-<div class="line"><span class="lineno">  219</span>        }</div>
-<div class="line"><span class="lineno">  220</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  221</span> </div>
-<div class="line"><span class="lineno">  222</span>    <span class="keywordflow">case</span> State::WaitEnemyMain:</div>
-<div class="line"><span class="lineno">  223</span>        <span class="comment">// commander will call setEnemyMain() once your Probe finds it</span></div>
-<div class="line"><span class="lineno">  224</span>        <span class="keywordflow">if</span> (commanderRef) </div>
-<div class="line"><span class="lineno">  225</span>        {</div>
-<div class="line"><span class="lineno">  226</span>            <span class="keyword">const</span> <span class="keyword">auto</span>&amp; e = commanderRef-&gt;enemy();</div>
-<div class="line"><span class="lineno">  227</span>            <span class="keywordflow">if</span> (e.main.has_value()) </div>
-<div class="line"><span class="lineno">  228</span>            {</div>
-<div class="line"><span class="lineno">  229</span>                setEnemyMain(*e.main);       </div>
-<div class="line"><span class="lineno">  230</span>                <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  231</span>            }</div>
-<div class="line"><span class="lineno">  232</span>        }</div>
-<div class="line"><span class="lineno">  233</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  234</span> </div>
-<div class="line"><span class="lineno">  235</span>    <span class="keywordflow">case</span> State::MoveToNatural:</div>
-<div class="line"><span class="lineno">  236</span>    {</div>
-<div class="line"><span class="lineno">  237</span>        <span class="keywordflow">if</span> (!enemyMainPos.isValid())</div>
-<div class="line"><span class="lineno">  238</span>        {</div>
-<div class="line"><span class="lineno">  239</span>            state = State::WaitEnemyMain;</div>
-<div class="line"><span class="lineno">  240</span>            <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  241</span>        }</div>
-<div class="line"><span class="lineno">  242</span> </div>
-<div class="line"><span class="lineno">  243</span>        <span class="keywordflow">if</span> (!enemyNaturalPos.isValid())</div>
-<div class="line"><span class="lineno">  244</span>        {</div>
-<div class="line"><span class="lineno">  245</span>            computeEnemyNatural();</div>
-<div class="line"><span class="lineno">  246</span>        }</div>
-<div class="line"><span class="lineno">  247</span> </div>
-<div class="line"><span class="lineno">  248</span>        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
-<div class="line"><span class="lineno">  249</span> </div>
-<div class="line"><span class="lineno">  250</span>        <span class="keywordflow">if</span> (threat || zealot-&gt;isUnderAttack())</div>
-<div class="line"><span class="lineno">  251</span>        {</div>
-<div class="line"><span class="lineno">  252</span>            lastThreatFrame = BWAPI::Broodwar-&gt;getFrameCount();</div>
-<div class="line"><span class="lineno">  253</span>            returnStateAfterReposition = State::MoveToNatural;</div>
-<div class="line"><span class="lineno">  254</span>            state = State::Reposition;</div>
-<div class="line"><span class="lineno">  255</span> </div>
-<div class="line"><span class="lineno">  256</span>            retreatHomeMicro(threat);</div>
-<div class="line"><span class="lineno">  257</span>            <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  258</span>        }</div>
-<div class="line"><span class="lineno">  259</span> </div>
-<div class="line"><span class="lineno">  260</span>        <span class="keywordflow">if</span> (enemyNaturalPos.isValid())</div>
-<div class="line"><span class="lineno">  261</span>        {</div>
-<div class="line"><span class="lineno">  262</span>            <span class="keyword">const</span> BWAPI::Position perch = pickNaturalChokeSpot();</div>
-<div class="line"><span class="lineno">  263</span>            issueMove(perch);</div>
-<div class="line"><span class="lineno">  264</span> </div>
-<div class="line"><span class="lineno">  265</span>            <span class="keywordflow">if</span> (zealot-&gt;getDistance(perch) &lt; 96)</div>
-<div class="line"><span class="lineno">  266</span>            {</div>
-<div class="line"><span class="lineno">  267</span>                state = State::HoldEdge;</div>
-<div class="line"><span class="lineno">  268</span>            }</div>
-<div class="line"><span class="lineno">  269</span>        }</div>
-<div class="line"><span class="lineno">  270</span> </div>
-<div class="line"><span class="lineno">  271</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  272</span>    }</div>
-<div class="line"><span class="lineno">  273</span> </div>
-<div class="line"><span class="lineno">  274</span>    <span class="keywordflow">case</span> State::HoldEdge:</div>
-<div class="line"><span class="lineno">  275</span>    {</div>
-<div class="line"><span class="lineno">  276</span>        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
-<div class="line"><span class="lineno">  277</span> </div>
-<div class="line"><span class="lineno">  278</span>        <span class="keywordflow">if</span> (threat || zealot-&gt;isUnderAttack())</div>
-<div class="line"><span class="lineno">  279</span>        {</div>
-<div class="line"><span class="lineno">  280</span>            lastThreatFrame = BWAPI::Broodwar-&gt;getFrameCount();</div>
-<div class="line"><span class="lineno">  281</span>            returnStateAfterReposition = State::HoldEdge;</div>
-<div class="line"><span class="lineno">  282</span>            state = State::Reposition;</div>
-<div class="line"><span class="lineno">  283</span> </div>
-<div class="line"><span class="lineno">  284</span>            retreatHomeMicro(threat);</div>
+<p>Main update loop executed every frame. </p>
+<p>Controls state transitions and behavior including:</p><ul>
+<li>Moving to enemy natural</li>
+<li>Holding edge positions</li>
+<li>Avoiding enemy main base</li>
+<li>Repositioning under threat</li>
+<li>Proxy patrol routing </li>
+</ul>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00229">229</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  229</span>                             {</div>
+<div class="line"><span class="lineno">  230</span>    <span class="keywordflow">if</span> (!zealot || !zealot-&gt;exists() || state == State::Done) <span class="keywordflow">return</span>;</div>
+<div class="line"><span class="lineno">  231</span>    <span class="comment">/*</span></div>
+<div class="line"><span class="lineno">  232</span><span class="comment">    BWAPI::Broodwar-&gt;drawTextMap(zealot-&gt;getPosition(),</span></div>
+<div class="line"><span class="lineno">  233</span><span class="comment">        &quot;\x11Zealot[%d] %s&quot;, zealot-&gt;getID(),</span></div>
+<div class="line"><span class="lineno">  234</span><span class="comment">           (state == State::Idle ?              &quot;Idle&quot; :</span></div>
+<div class="line"><span class="lineno">  235</span><span class="comment">            state == State::ProxyPatrol ?       &quot;ProxyPatrol&quot; :</span></div>
+<div class="line"><span class="lineno">  236</span><span class="comment">            state == State::WaitEnemyMain ?     &quot;WaitEnemyMain&quot; :</span></div>
+<div class="line"><span class="lineno">  237</span><span class="comment">            state == State::MoveToNatural ?     &quot;MoveToNatural&quot; :</span></div>
+<div class="line"><span class="lineno">  238</span><span class="comment">            state == State::HoldEdge ?          &quot;HoldEdge&quot; :</span></div>
+<div class="line"><span class="lineno">  239</span><span class="comment">            state == State::Reposition ?        &quot;Reposition&quot; : &quot;Done&quot;));</span></div>
+<div class="line"><span class="lineno">  240</span><span class="comment">    */</span></div>
+<div class="line"><span class="lineno">  241</span> </div>
+<div class="line"><span class="lineno">  242</span>    <span class="comment">// --- hard avoid enemy main every frame ---</span></div>
+<div class="line"><span class="lineno">  243</span>    <span class="keywordflow">if</span> (enemyMainTile.has_value() &amp;&amp; zealot &amp;&amp; zealot-&gt;exists()) {</div>
+<div class="line"><span class="lineno">  244</span>        <span class="keyword">const</span> <span class="keyword">auto</span>* mainArea = BWEM::Map::Instance().GetArea(*enemyMainTile);</div>
+<div class="line"><span class="lineno">  245</span>        <span class="keyword">const</span> <span class="keyword">auto</span>* hereArea = BWEM::Map::Instance().GetArea(zealot-&gt;getTilePosition());</div>
+<div class="line"><span class="lineno">  246</span>        <span class="keywordflow">if</span> (mainArea &amp;&amp; hereArea == mainArea) {</div>
+<div class="line"><span class="lineno">  247</span>            <span class="comment">//BWAPI::Broodwar-&gt;drawTextMap(zealot-&gt;getPosition(), &quot;\x08[AVOID MAIN]&quot;);</span></div>
+<div class="line"><span class="lineno">  248</span>            issueMove(pickEdgeOfVisionSpot(), <span class="comment">/*force*/</span><span class="keyword">true</span>);</div>
+<div class="line"><span class="lineno">  249</span>            <span class="keywordflow">return</span>;</div>
+<div class="line"><span class="lineno">  250</span>        }</div>
+<div class="line"><span class="lineno">  251</span>    }</div>
+<div class="line"><span class="lineno">  252</span> </div>
+<div class="line"><span class="lineno">  253</span>    <span class="keywordflow">switch</span> (state) {</div>
+<div class="line"><span class="lineno">  254</span>    <span class="keywordflow">case</span> State::Idle:</div>
+<div class="line"><span class="lineno">  255</span>        <span class="comment">// wait until we know the main</span></div>
+<div class="line"><span class="lineno">  256</span>        <span class="keywordflow">if</span> (isProxyPatroller)</div>
+<div class="line"><span class="lineno">  257</span>        {</div>
+<div class="line"><span class="lineno">  258</span>            proxyRebuildReadyFrame = BWAPI::Broodwar-&gt;getFrameCount() + 1;</div>
+<div class="line"><span class="lineno">  259</span>            state = State::ProxyPatrol;</div>
+<div class="line"><span class="lineno">  260</span>        }</div>
+<div class="line"><span class="lineno">  261</span>        <span class="keywordflow">else</span></div>
+<div class="line"><span class="lineno">  262</span>        {</div>
+<div class="line"><span class="lineno">  263</span>            state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;</div>
+<div class="line"><span class="lineno">  264</span>        }</div>
+<div class="line"><span class="lineno">  265</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  266</span> </div>
+<div class="line"><span class="lineno">  267</span>    <span class="keywordflow">case</span> State::WaitEnemyMain:</div>
+<div class="line"><span class="lineno">  268</span>        <span class="comment">// commander will call setEnemyMain() once your Probe finds it</span></div>
+<div class="line"><span class="lineno">  269</span>        <span class="keywordflow">if</span> (commanderRef) </div>
+<div class="line"><span class="lineno">  270</span>        {</div>
+<div class="line"><span class="lineno">  271</span>            <span class="keyword">const</span> <span class="keyword">auto</span>&amp; e = commanderRef-&gt;enemy();</div>
+<div class="line"><span class="lineno">  272</span>            <span class="keywordflow">if</span> (e.main.has_value()) </div>
+<div class="line"><span class="lineno">  273</span>            {</div>
+<div class="line"><span class="lineno">  274</span>                <a class="code hl_function" href="#a15cf375bc3ef21212e13295c418e87dc">setEnemyMain</a>(*e.main);       </div>
+<div class="line"><span class="lineno">  275</span>                <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  276</span>            }</div>
+<div class="line"><span class="lineno">  277</span>        }</div>
+<div class="line"><span class="lineno">  278</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  279</span> </div>
+<div class="line"><span class="lineno">  280</span>    <span class="keywordflow">case</span> State::MoveToNatural:</div>
+<div class="line"><span class="lineno">  281</span>    {</div>
+<div class="line"><span class="lineno">  282</span>        <span class="keywordflow">if</span> (!enemyMainPos.isValid())</div>
+<div class="line"><span class="lineno">  283</span>        {</div>
+<div class="line"><span class="lineno">  284</span>            state = State::WaitEnemyMain;</div>
 <div class="line"><span class="lineno">  285</span>            <span class="keywordflow">break</span>;</div>
 <div class="line"><span class="lineno">  286</span>        }</div>
 <div class="line"><span class="lineno">  287</span> </div>
-<div class="line"><span class="lineno">  288</span> </div>
-<div class="line"><span class="lineno">  289</span> </div>
-<div class="line"><span class="lineno">  290</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  291</span>    }</div>
+<div class="line"><span class="lineno">  288</span>        <span class="keywordflow">if</span> (!enemyNaturalPos.isValid())</div>
+<div class="line"><span class="lineno">  289</span>        {</div>
+<div class="line"><span class="lineno">  290</span>            computeEnemyNatural();</div>
+<div class="line"><span class="lineno">  291</span>        }</div>
 <div class="line"><span class="lineno">  292</span> </div>
-<div class="line"><span class="lineno">  293</span>    <span class="keywordflow">case</span> State::Reposition:</div>
-<div class="line"><span class="lineno">  294</span>    {</div>
-<div class="line"><span class="lineno">  295</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> now = BWAPI::Broodwar-&gt;getFrameCount();</div>
-<div class="line"><span class="lineno">  296</span>        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
-<div class="line"><span class="lineno">  297</span> </div>
-<div class="line"><span class="lineno">  298</span>        <span class="keywordflow">if</span> (threat || zealot-&gt;isUnderAttack())</div>
-<div class="line"><span class="lineno">  299</span>        {</div>
-<div class="line"><span class="lineno">  300</span>            lastThreatFrame = now;</div>
+<div class="line"><span class="lineno">  293</span>        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
+<div class="line"><span class="lineno">  294</span> </div>
+<div class="line"><span class="lineno">  295</span>        <span class="keywordflow">if</span> (threat || zealot-&gt;isUnderAttack())</div>
+<div class="line"><span class="lineno">  296</span>        {</div>
+<div class="line"><span class="lineno">  297</span>            lastThreatFrame = BWAPI::Broodwar-&gt;getFrameCount();</div>
+<div class="line"><span class="lineno">  298</span>            returnStateAfterReposition = State::MoveToNatural;</div>
+<div class="line"><span class="lineno">  299</span>            state = State::Reposition;</div>
+<div class="line"><span class="lineno">  300</span> </div>
 <div class="line"><span class="lineno">  301</span>            retreatHomeMicro(threat);</div>
 <div class="line"><span class="lineno">  302</span>            <span class="keywordflow">break</span>;</div>
 <div class="line"><span class="lineno">  303</span>        }</div>
 <div class="line"><span class="lineno">  304</span> </div>
-<div class="line"><span class="lineno">  305</span>        <span class="keywordflow">if</span> (now - lastThreatFrame &gt;= kCalmFramesToReturn)</div>
+<div class="line"><span class="lineno">  305</span>        <span class="keywordflow">if</span> (enemyNaturalPos.isValid())</div>
 <div class="line"><span class="lineno">  306</span>        {</div>
-<div class="line"><span class="lineno">  307</span>            <span class="keywordflow">if</span> (returnStateAfterReposition == State::MoveToNatural)</div>
-<div class="line"><span class="lineno">  308</span>            {</div>
-<div class="line"><span class="lineno">  309</span>                issueMove(pickNaturalChokeSpot(), <span class="keyword">true</span>);</div>
-<div class="line"><span class="lineno">  310</span>                state = State::MoveToNatural;</div>
-<div class="line"><span class="lineno">  311</span>            }</div>
-<div class="line"><span class="lineno">  312</span>            <span class="keywordflow">else</span></div>
-<div class="line"><span class="lineno">  313</span>            {</div>
-<div class="line"><span class="lineno">  314</span>                issueMove(pickNaturalChokeSpot(), <span class="keyword">true</span>);</div>
-<div class="line"><span class="lineno">  315</span>                state = State::HoldEdge;</div>
-<div class="line"><span class="lineno">  316</span>            }</div>
-<div class="line"><span class="lineno">  317</span> </div>
-<div class="line"><span class="lineno">  318</span>            <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  319</span>        }</div>
-<div class="line"><span class="lineno">  320</span> </div>
-<div class="line"><span class="lineno">  321</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  322</span>    }</div>
-<div class="line"><span class="lineno">  323</span>    <span class="keywordflow">case</span> State::ProxyPatrol:</div>
-<div class="line"><span class="lineno">  324</span>    {</div>
-<div class="line"><span class="lineno">  325</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> now = Broodwar-&gt;getFrameCount();</div>
-<div class="line"><span class="lineno">  326</span> </div>
-<div class="line"><span class="lineno">  327</span>        <span class="comment">// If zealot is missing points, rebuild here.</span></div>
-<div class="line"><span class="lineno">  328</span>        <span class="keywordflow">if</span> (proxyPoints.empty() &amp;&amp; now &gt;= proxyRebuildReadyFrame)</div>
-<div class="line"><span class="lineno">  329</span>        {</div>
-<div class="line"><span class="lineno">  330</span>            rebuildProxyPoints();</div>
+<div class="line"><span class="lineno">  307</span>            <span class="keyword">const</span> BWAPI::Position perch = pickNaturalChokeSpot();</div>
+<div class="line"><span class="lineno">  308</span>            issueMove(perch);</div>
+<div class="line"><span class="lineno">  309</span> </div>
+<div class="line"><span class="lineno">  310</span>            <span class="keywordflow">if</span> (zealot-&gt;getDistance(perch) &lt; 96)</div>
+<div class="line"><span class="lineno">  311</span>            {</div>
+<div class="line"><span class="lineno">  312</span>                state = State::HoldEdge;</div>
+<div class="line"><span class="lineno">  313</span>            }</div>
+<div class="line"><span class="lineno">  314</span>        }</div>
+<div class="line"><span class="lineno">  315</span> </div>
+<div class="line"><span class="lineno">  316</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  317</span>    }</div>
+<div class="line"><span class="lineno">  318</span> </div>
+<div class="line"><span class="lineno">  319</span>    <span class="keywordflow">case</span> State::HoldEdge:</div>
+<div class="line"><span class="lineno">  320</span>    {</div>
+<div class="line"><span class="lineno">  321</span>        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
+<div class="line"><span class="lineno">  322</span> </div>
+<div class="line"><span class="lineno">  323</span>        <span class="keywordflow">if</span> (threat || zealot-&gt;isUnderAttack())</div>
+<div class="line"><span class="lineno">  324</span>        {</div>
+<div class="line"><span class="lineno">  325</span>            lastThreatFrame = BWAPI::Broodwar-&gt;getFrameCount();</div>
+<div class="line"><span class="lineno">  326</span>            returnStateAfterReposition = State::HoldEdge;</div>
+<div class="line"><span class="lineno">  327</span>            state = State::Reposition;</div>
+<div class="line"><span class="lineno">  328</span> </div>
+<div class="line"><span class="lineno">  329</span>            retreatHomeMicro(threat);</div>
+<div class="line"><span class="lineno">  330</span>            <span class="keywordflow">break</span>;</div>
 <div class="line"><span class="lineno">  331</span>        }</div>
 <div class="line"><span class="lineno">  332</span> </div>
-<div class="line"><span class="lineno">  333</span>        <span class="keywordflow">if</span> (proxyPoints.empty())</div>
-<div class="line"><span class="lineno">  334</span>        {</div>
-<div class="line"><span class="lineno">  335</span>            <span class="comment">// fallback: just stand</span></div>
-<div class="line"><span class="lineno">  336</span>            <span class="keywordflow">if</span> (!zealot-&gt;isMoving() &amp;&amp; !zealot-&gt;isAttacking())</div>
-<div class="line"><span class="lineno">  337</span>            {</div>
-<div class="line"><span class="lineno">  338</span>                zealot-&gt;holdPosition();</div>
-<div class="line"><span class="lineno">  339</span>            }</div>
-<div class="line"><span class="lineno">  340</span>            <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  341</span>        }</div>
+<div class="line"><span class="lineno">  333</span> </div>
+<div class="line"><span class="lineno">  334</span> </div>
+<div class="line"><span class="lineno">  335</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  336</span>    }</div>
+<div class="line"><span class="lineno">  337</span> </div>
+<div class="line"><span class="lineno">  338</span>    <span class="keywordflow">case</span> State::Reposition:</div>
+<div class="line"><span class="lineno">  339</span>    {</div>
+<div class="line"><span class="lineno">  340</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> now = BWAPI::Broodwar-&gt;getFrameCount();</div>
+<div class="line"><span class="lineno">  341</span>        BWAPI::Unit threat = findPrimaryThreat(kThreatRadiusPx);</div>
 <div class="line"><span class="lineno">  342</span> </div>
-<div class="line"><span class="lineno">  343</span>        <span class="comment">// advance target when reached</span></div>
-<div class="line"><span class="lineno">  344</span>        <span class="keywordflow">if</span> (!proxyCurTarget.isValid() || zealot-&gt;getDistance(proxyCurTarget) &lt;= 96)</div>
-<div class="line"><span class="lineno">  345</span>        {</div>
-<div class="line"><span class="lineno">  346</span>            <span class="keywordflow">if</span> (proxyPoints.empty())</div>
-<div class="line"><span class="lineno">  347</span>            {</div>
-<div class="line"><span class="lineno">  348</span>                proxyCurTarget = BWAPI::Positions::Invalid;</div>
-<div class="line"><span class="lineno">  349</span>                <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  350</span>            }</div>
-<div class="line"><span class="lineno">  351</span> </div>
-<div class="line"><span class="lineno">  352</span>            <span class="keywordflow">if</span> (proxyNextIdx &lt; 0 || proxyNextIdx &gt;= (<span class="keywordtype">int</span>)proxyPoints.size())</div>
+<div class="line"><span class="lineno">  343</span>        <span class="keywordflow">if</span> (threat || zealot-&gt;isUnderAttack())</div>
+<div class="line"><span class="lineno">  344</span>        {</div>
+<div class="line"><span class="lineno">  345</span>            lastThreatFrame = now;</div>
+<div class="line"><span class="lineno">  346</span>            retreatHomeMicro(threat);</div>
+<div class="line"><span class="lineno">  347</span>            <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  348</span>        }</div>
+<div class="line"><span class="lineno">  349</span> </div>
+<div class="line"><span class="lineno">  350</span>        <span class="keywordflow">if</span> (now - lastThreatFrame &gt;= kCalmFramesToReturn)</div>
+<div class="line"><span class="lineno">  351</span>        {</div>
+<div class="line"><span class="lineno">  352</span>            <span class="keywordflow">if</span> (returnStateAfterReposition == State::MoveToNatural)</div>
 <div class="line"><span class="lineno">  353</span>            {</div>
-<div class="line"><span class="lineno">  354</span>                proxyNextIdx = 0;</div>
-<div class="line"><span class="lineno">  355</span>            }</div>
-<div class="line"><span class="lineno">  356</span> </div>
-<div class="line"><span class="lineno">  357</span>            proxyCurTarget = proxyPoints[proxyNextIdx];</div>
-<div class="line"><span class="lineno">  358</span>            ++proxyNextIdx;</div>
-<div class="line"><span class="lineno">  359</span>        }</div>
-<div class="line"><span class="lineno">  360</span> </div>
-<div class="line"><span class="lineno">  361</span>        BWAPI::Position tgt = proxyCurTarget;</div>
+<div class="line"><span class="lineno">  354</span>                issueMove(pickNaturalChokeSpot(), <span class="keyword">true</span>);</div>
+<div class="line"><span class="lineno">  355</span>                state = State::MoveToNatural;</div>
+<div class="line"><span class="lineno">  356</span>            }</div>
+<div class="line"><span class="lineno">  357</span>            <span class="keywordflow">else</span></div>
+<div class="line"><span class="lineno">  358</span>            {</div>
+<div class="line"><span class="lineno">  359</span>                issueMove(pickNaturalChokeSpot(), <span class="keyword">true</span>);</div>
+<div class="line"><span class="lineno">  360</span>                state = State::HoldEdge;</div>
+<div class="line"><span class="lineno">  361</span>            }</div>
 <div class="line"><span class="lineno">  362</span> </div>
-<div class="line"><span class="lineno">  363</span>        <span class="keywordflow">if</span> (!isWalkablePx(tgt) || !hasGroundPath(zealot-&gt;getPosition(), tgt))</div>
-<div class="line"><span class="lineno">  364</span>        {</div>
-<div class="line"><span class="lineno">  365</span>            tgt = findReachableNearby(tgt);</div>
-<div class="line"><span class="lineno">  366</span>            proxyCurTarget = tgt;</div>
-<div class="line"><span class="lineno">  367</span>        }</div>
-<div class="line"><span class="lineno">  368</span> </div>
-<div class="line"><span class="lineno">  369</span>        issueMove(tgt, <span class="comment">/*force*/</span><span class="keyword">false</span>, <span class="comment">/*reissueDist*/</span>64);</div>
-<div class="line"><span class="lineno">  370</span> </div>
-<div class="line"><span class="lineno">  371</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  372</span>    }</div>
-<div class="line"><span class="lineno">  373</span> </div>
-<div class="line"><span class="lineno">  374</span>    <span class="keywordflow">case</span> State::Done:</div>
-<div class="line"><span class="lineno">  375</span>    <span class="keywordflow">default</span>:</div>
-<div class="line"><span class="lineno">  376</span>        <span class="keywordflow">break</span>;</div>
-<div class="line"><span class="lineno">  377</span>    }</div>
-<div class="line"><span class="lineno">  378</span> </div>
-<div class="line"><span class="lineno">  379</span>    <span class="comment">// tiny debug</span></div>
-<div class="line"><span class="lineno">  380</span>    <span class="comment">/*if (enemyNaturalPos.isValid())</span></div>
-<div class="line"><span class="lineno">  381</span><span class="comment">        Broodwar-&gt;drawCircleMap(enemyNaturalPos, 12, Colors::Cyan, true);</span></div>
-<div class="line"><span class="lineno">  382</span><span class="comment">        */</span></div>
-<div class="line"><span class="lineno">  383</span>}</div>
+<div class="line"><span class="lineno">  363</span>            <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  364</span>        }</div>
+<div class="line"><span class="lineno">  365</span> </div>
+<div class="line"><span class="lineno">  366</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  367</span>    }</div>
+<div class="line"><span class="lineno">  368</span>    <span class="keywordflow">case</span> State::ProxyPatrol:</div>
+<div class="line"><span class="lineno">  369</span>    {</div>
+<div class="line"><span class="lineno">  370</span>        <span class="keyword">const</span> <span class="keywordtype">int</span> now = Broodwar-&gt;getFrameCount();</div>
+<div class="line"><span class="lineno">  371</span> </div>
+<div class="line"><span class="lineno">  372</span>        <span class="comment">// If zealot is missing points, rebuild here.</span></div>
+<div class="line"><span class="lineno">  373</span>        <span class="keywordflow">if</span> (proxyPoints.empty() &amp;&amp; now &gt;= proxyRebuildReadyFrame)</div>
+<div class="line"><span class="lineno">  374</span>        {</div>
+<div class="line"><span class="lineno">  375</span>            rebuildProxyPoints();</div>
+<div class="line"><span class="lineno">  376</span>        }</div>
+<div class="line"><span class="lineno">  377</span> </div>
+<div class="line"><span class="lineno">  378</span>        <span class="keywordflow">if</span> (proxyPoints.empty())</div>
+<div class="line"><span class="lineno">  379</span>        {</div>
+<div class="line"><span class="lineno">  380</span>            <span class="comment">// fallback: just stand</span></div>
+<div class="line"><span class="lineno">  381</span>            <span class="keywordflow">if</span> (!zealot-&gt;isMoving() &amp;&amp; !zealot-&gt;isAttacking())</div>
+<div class="line"><span class="lineno">  382</span>            {</div>
+<div class="line"><span class="lineno">  383</span>                zealot-&gt;holdPosition();</div>
+<div class="line"><span class="lineno">  384</span>            }</div>
+<div class="line"><span class="lineno">  385</span>            <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  386</span>        }</div>
+<div class="line"><span class="lineno">  387</span> </div>
+<div class="line"><span class="lineno">  388</span>        <span class="comment">// advance target when reached</span></div>
+<div class="line"><span class="lineno">  389</span>        <span class="keywordflow">if</span> (!proxyCurTarget.isValid() || zealot-&gt;getDistance(proxyCurTarget) &lt;= 96)</div>
+<div class="line"><span class="lineno">  390</span>        {</div>
+<div class="line"><span class="lineno">  391</span>            <span class="keywordflow">if</span> (proxyPoints.empty())</div>
+<div class="line"><span class="lineno">  392</span>            {</div>
+<div class="line"><span class="lineno">  393</span>                proxyCurTarget = BWAPI::Positions::Invalid;</div>
+<div class="line"><span class="lineno">  394</span>                <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  395</span>            }</div>
+<div class="line"><span class="lineno">  396</span> </div>
+<div class="line"><span class="lineno">  397</span>            <span class="keywordflow">if</span> (proxyNextIdx &lt; 0 || proxyNextIdx &gt;= (<span class="keywordtype">int</span>)proxyPoints.size())</div>
+<div class="line"><span class="lineno">  398</span>            {</div>
+<div class="line"><span class="lineno">  399</span>                proxyNextIdx = 0;</div>
+<div class="line"><span class="lineno">  400</span>            }</div>
+<div class="line"><span class="lineno">  401</span> </div>
+<div class="line"><span class="lineno">  402</span>            proxyCurTarget = proxyPoints[proxyNextIdx];</div>
+<div class="line"><span class="lineno">  403</span>            ++proxyNextIdx;</div>
+<div class="line"><span class="lineno">  404</span>        }</div>
+<div class="line"><span class="lineno">  405</span> </div>
+<div class="line"><span class="lineno">  406</span>        BWAPI::Position tgt = proxyCurTarget;</div>
+<div class="line"><span class="lineno">  407</span> </div>
+<div class="line"><span class="lineno">  408</span>        <span class="keywordflow">if</span> (!isWalkablePx(tgt) || !hasGroundPath(zealot-&gt;getPosition(), tgt))</div>
+<div class="line"><span class="lineno">  409</span>        {</div>
+<div class="line"><span class="lineno">  410</span>            tgt = findReachableNearby(tgt);</div>
+<div class="line"><span class="lineno">  411</span>            proxyCurTarget = tgt;</div>
+<div class="line"><span class="lineno">  412</span>        }</div>
+<div class="line"><span class="lineno">  413</span> </div>
+<div class="line"><span class="lineno">  414</span>        issueMove(tgt, <span class="comment">/*force*/</span><span class="keyword">false</span>, <span class="comment">/*reissueDist*/</span>64);</div>
+<div class="line"><span class="lineno">  415</span> </div>
+<div class="line"><span class="lineno">  416</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  417</span>    }</div>
+<div class="line"><span class="lineno">  418</span> </div>
+<div class="line"><span class="lineno">  419</span>    <span class="keywordflow">case</span> State::Done:</div>
+<div class="line"><span class="lineno">  420</span>    <span class="keywordflow">default</span>:</div>
+<div class="line"><span class="lineno">  421</span>        <span class="keywordflow">break</span>;</div>
+<div class="line"><span class="lineno">  422</span>    }</div>
+<div class="line"><span class="lineno">  423</span> </div>
+<div class="line"><span class="lineno">  424</span>    <span class="comment">// tiny debug</span></div>
+<div class="line"><span class="lineno">  425</span>    <span class="comment">/*if (enemyNaturalPos.isValid())</span></div>
+<div class="line"><span class="lineno">  426</span><span class="comment">        Broodwar-&gt;drawCircleMap(enemyNaturalPos, 12, Colors::Cyan, true);</span></div>
+<div class="line"><span class="lineno">  427</span><span class="comment">        */</span></div>
+<div class="line"><span class="lineno">  428</span>}</div>
+<div class="ttc" id="aclass_scouting_zealot_html_a15cf375bc3ef21212e13295c418e87dc"><div class="ttname"><a href="#a15cf375bc3ef21212e13295c418e87dc">ScoutingZealot::setEnemyMain</a></div><div class="ttdeci">void setEnemyMain(const BWAPI::TilePosition &amp;tp)</div><div class="ttdoc">Sets the enemy main base location and updates scouting behavior.</div><div class="ttdef"><b>Definition</b> <a href="_scouting_zealot_8cpp_source.html#l00183">ScoutingZealot.cpp:183</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -596,15 +644,18 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00128">128</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  128</span>                             {</div>
-<div class="line"><span class="lineno">  129</span>    <span class="comment">// We only act when assigned + enemy main becomes known</span></div>
-<div class="line"><span class="lineno">  130</span>    state = State::Idle;</div>
-<div class="line"><span class="lineno">  131</span>    lastMoveIssueFrame = 0;</div>
-<div class="line"><span class="lineno">  132</span>    lastThreatFrame = -10000;</div>
-<div class="line"><span class="lineno">  133</span>    g_myMainPos = BWAPI::Position(BWAPI::Broodwar-&gt;self()-&gt;getStartLocation());</div>
-<div class="line"><span class="lineno">  134</span>    <span class="comment">//BWAPI::Broodwar-&gt;printf(&quot;[ZealotScout] onStart()&quot;);</span></div>
-<div class="line"><span class="lineno">  135</span>}</div>
+<p>Initializes the zealot scouting state. </p>
+<p>Sets initial state and tracking values, including home position and movement timers. </p>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00136">136</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  136</span>                             {</div>
+<div class="line"><span class="lineno">  137</span>    <span class="comment">// We only act when assigned + enemy main becomes known</span></div>
+<div class="line"><span class="lineno">  138</span>    state = State::Idle;</div>
+<div class="line"><span class="lineno">  139</span>    lastMoveIssueFrame = 0;</div>
+<div class="line"><span class="lineno">  140</span>    lastThreatFrame = -10000;</div>
+<div class="line"><span class="lineno">  141</span>    g_myMainPos = BWAPI::Position(BWAPI::Broodwar-&gt;self()-&gt;getStartLocation());</div>
+<div class="line"><span class="lineno">  142</span>    <span class="comment">//BWAPI::Broodwar-&gt;printf(&quot;[ZealotScout] onStart()&quot;);</span></div>
+<div class="line"><span class="lineno">  143</span>}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -623,13 +674,22 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00177">177</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  177</span>                                                 {</div>
-<div class="line"><span class="lineno">  178</span>    <span class="keywordflow">if</span> (zealot &amp;&amp; unit == zealot) {</div>
-<div class="line"><span class="lineno">  179</span>        zealot = <span class="keyword">nullptr</span>;</div>
-<div class="line"><span class="lineno">  180</span>        state = State::Done;</div>
-<div class="line"><span class="lineno">  181</span>    }</div>
-<div class="line"><span class="lineno">  182</span>}</div>
+<p>Handles cleanup when the scouting unit is destroyed. </p>
+<p>Clears references and marks behavior as complete.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">unit</td><td>Destroyed unit</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00211">211</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  211</span>                                                 {</div>
+<div class="line"><span class="lineno">  212</span>    <span class="keywordflow">if</span> (zealot &amp;&amp; unit == zealot) {</div>
+<div class="line"><span class="lineno">  213</span>        zealot = <span class="keyword">nullptr</span>;</div>
+<div class="line"><span class="lineno">  214</span>        state = State::Done;</div>
+<div class="line"><span class="lineno">  215</span>    }</div>
+<div class="line"><span class="lineno">  216</span>}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -648,27 +708,36 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00157">157</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  157</span>                                                        {</div>
-<div class="line"><span class="lineno">  158</span>    enemyMainTile = tp;</div>
-<div class="line"><span class="lineno">  159</span>    enemyMainPos = Position(tp);</div>
-<div class="line"><span class="lineno">  160</span> </div>
-<div class="line"><span class="lineno">  161</span>    <span class="comment">// If this zealot is the proxy patrol zealot,</span></div>
-<div class="line"><span class="lineno">  162</span>    <span class="comment">// do NOT switch state into enemy natural logic.</span></div>
-<div class="line"><span class="lineno">  163</span>    <span class="keywordflow">if</span> (state == State::ProxyPatrol)</div>
-<div class="line"><span class="lineno">  164</span>    {</div>
-<div class="line"><span class="lineno">  165</span>        <span class="keywordflow">return</span>;</div>
-<div class="line"><span class="lineno">  166</span>    }</div>
-<div class="line"><span class="lineno">  167</span> </div>
-<div class="line"><span class="lineno">  168</span>    computeEnemyNatural();</div>
-<div class="line"><span class="lineno">  169</span>    state = enemyNaturalPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;</div>
-<div class="line"><span class="lineno">  170</span> </div>
-<div class="line"><span class="lineno">  171</span>    <span class="comment">// Immediate course set to the natural edge perch (don’t step into main first)</span></div>
-<div class="line"><span class="lineno">  172</span>    <span class="keywordflow">if</span> (enemyNaturalPos.isValid()) {</div>
-<div class="line"><span class="lineno">  173</span>        issueMove(pickEdgeOfVisionSpot(), <span class="comment">/*force*/</span><span class="keyword">true</span>);</div>
-<div class="line"><span class="lineno">  174</span>        <span class="comment">//BWAPI::Broodwar-&gt;printf(&quot;[ZealotScout] setEnemyMain (%d,%d)&quot;, tp.x, tp.y);</span></div>
-<div class="line"><span class="lineno">  175</span>    }</div>
-<div class="line"><span class="lineno">  176</span>}</div>
+<p>Sets the enemy main base location and updates scouting behavior. </p>
+<p>Computes the enemy natural and transitions the unit to natural-edge scouting unless acting as a proxy patroller.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tp</td><td>Enemy main tile position</td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8cpp_source.html#l00183">183</a> of file <a class="el" href="_scouting_zealot_8cpp_source.html">ScoutingZealot.cpp</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  183</span>                                                        {</div>
+<div class="line"><span class="lineno">  184</span>    enemyMainTile = tp;</div>
+<div class="line"><span class="lineno">  185</span>    enemyMainPos = Position(tp);</div>
+<div class="line"><span class="lineno">  186</span> </div>
+<div class="line"><span class="lineno">  187</span>    <span class="comment">// If this zealot is the proxy patrol zealot,</span></div>
+<div class="line"><span class="lineno">  188</span>    <span class="comment">// do NOT switch state into enemy natural logic.</span></div>
+<div class="line"><span class="lineno">  189</span>    <span class="keywordflow">if</span> (state == State::ProxyPatrol)</div>
+<div class="line"><span class="lineno">  190</span>    {</div>
+<div class="line"><span class="lineno">  191</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><span class="lineno">  192</span>    }</div>
+<div class="line"><span class="lineno">  193</span> </div>
+<div class="line"><span class="lineno">  194</span>    computeEnemyNatural();</div>
+<div class="line"><span class="lineno">  195</span>    state = enemyNaturalPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;</div>
+<div class="line"><span class="lineno">  196</span> </div>
+<div class="line"><span class="lineno">  197</span>    <span class="comment">// Immediate course set to the natural edge perch (don’t step into main first)</span></div>
+<div class="line"><span class="lineno">  198</span>    <span class="keywordflow">if</span> (enemyNaturalPos.isValid()) {</div>
+<div class="line"><span class="lineno">  199</span>        issueMove(pickEdgeOfVisionSpot(), <span class="comment">/*force*/</span><span class="keyword">true</span>);</div>
+<div class="line"><span class="lineno">  200</span>        <span class="comment">//BWAPI::Broodwar-&gt;printf(&quot;[ZealotScout] setEnemyMain (%d,%d)&quot;, tp.x, tp.y);</span></div>
+<div class="line"><span class="lineno">  201</span>    }</div>
+<div class="line"><span class="lineno">  202</span>}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -695,10 +764,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00026">26</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   27</span>    {</div>
-<div class="line"><span class="lineno">   28</span>        isProxyPatroller = v;</div>
-<div class="line"><span class="lineno">   29</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="_scouting_zealot_8h_source.html#l00039">39</a> of file <a class="el" href="_scouting_zealot_8h_source.html">ScoutingZealot.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   40</span>    {</div>
+<div class="line"><span class="lineno">   41</span>        isProxyPatroller = v;</div>
+<div class="line"><span class="lineno">   42</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>

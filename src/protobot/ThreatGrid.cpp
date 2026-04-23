@@ -1,6 +1,15 @@
 #include "ThreatGrid.h"
 #include <cmath>
 
+/// <summary>
+/// Initializes threat grids based on map dimensions.
+/// 
+/// Creates walk-tile resolution grids for:
+/// - Ground threat
+/// - Air threat
+/// - Detection coverage
+/// </summary>
+
 void ThreatGrid::onStart()
 {
     const int walkW = BWAPI::Broodwar->mapWidth() * 4;
@@ -12,20 +21,43 @@ void ThreatGrid::onStart()
     stamps_.clear();
 }
 
+/// <summary>
+/// Updates the current frame reference for the grid.
+/// </summary>
+/// <param name="frame">Current game frame</param>
+
 void ThreatGrid::onFrameStart(int frame)
 {
     currentFrame_ = frame;
 }
+
+/// <summary>
+/// Returns the ground threat value at a given position.
+/// </summary>
+/// <param name="p">World position</param>
+/// <returns>Accumulated ground threat value</returns>
 
 int ThreatGrid::groundThreatAt(BWAPI::Position p) const
 {
     return groundThreat_.get(toWalkX(p), toWalkY(p));
 }
 
+/// <summary>
+/// Returns the detection threat value at a given position.
+/// </summary>
+/// <param name="p">World position</param>
+/// <returns>Detection intensity value</returns>
+
 int ThreatGrid::detectionAt(BWAPI::Position p) const
 {
     return detection_.get(toWalkX(p), toWalkY(p));
 }
+
+/// <summary>
+/// Returns the air threat value at a given position.
+/// </summary>
+/// <param name="p">World position</param>
+/// <returns>Accumulated air threat value</returns>
 
 int ThreatGrid::airThreatAt(BWAPI::Position p) const
 {
@@ -37,10 +69,27 @@ int ThreatGrid::getAirThreat(BWAPI::Position p) const
     return airThreatAt(p);
 }
 
+/// <summary>
+/// Wrapper for retrieving detection threat at a position.
+/// </summary>
+
 int ThreatGrid::getDetection(BWAPI::Position p) const
 {
     return detectionAt(p);
 }
+
+/// <summary>
+/// Adds or updates an enemy unit's contribution to the threat grid.
+/// 
+/// If the unit state has changed, its previous contribution
+/// is removed and recalculated.
+/// </summary>
+/// <param name="id">Unique unit ID</param>
+/// <param name="type">Unit type</param>
+/// <param name="pos">Unit position</param>
+/// <param name="completed">Whether the unit is complete</param>
+/// <param name="burrowed">Whether the unit is burrowed</param>
+/// <param name="immobile">Whether the unit is immobile</param>
 
 void ThreatGrid::addOrUpdateEnemy(int id, BWAPI::UnitType type, BWAPI::Position pos, bool completed, bool burrowed, bool immobile)
 {
@@ -77,6 +126,13 @@ void ThreatGrid::addOrUpdateEnemy(int id, BWAPI::UnitType type, BWAPI::Position 
     prev = next;
     stampEnemy(prev, +1);
 }
+
+/// <summary>
+/// Removes an enemy unit from the threat grid.
+/// 
+/// Clears its previously stamped threat values.
+/// </summary>
+/// <param name="id">Unit ID</param>
 
 void ThreatGrid::removeEnemy(int id)
 {

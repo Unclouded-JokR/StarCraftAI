@@ -4,6 +4,17 @@
 #include <unordered_map>
 #include <vector>
 
+/// <summary>
+/// ThreatGrid Maintains spatial threat information for enemy units.
+/// Uses a grid-based system to efficiently query danger levels
+/// at any position, allowing units to avoid unsafe areas.
+///
+/// Tracks and updates:
+/// - Ground threat values (damage potential vs ground units)
+/// - Air threat values (damage potential vs air units)
+/// - Detection coverage (invisible unit detection zones)
+/// </summary>
+
 class ThreatGrid
 {
 public:

@@ -1,3 +1,4 @@
+
 #include "ScoutingZealot.h"
 #include "ProtoBotCommander.h"
 #include <algorithm>
@@ -125,6 +126,13 @@ static bool canBeKitedByScoutUnit(BWAPI::Unit self, BWAPI::Unit enemy)
     return true;
 }
 
+/// <summary>
+/// Initializes the zealot scouting state.
+/// 
+/// Sets initial state and tracking values,
+/// including home position and movement timers.
+/// </summary>
+
 void ScoutingZealot::onStart() {
     // We only act when assigned + enemy main becomes known
     state = State::Idle;
@@ -133,6 +141,16 @@ void ScoutingZealot::onStart() {
     g_myMainPos = BWAPI::Position(BWAPI::Broodwar->self()->getStartLocation());
     //BWAPI::Broodwar->printf("[ZealotScout] onStart()");
 }
+
+
+/// <summary>
+/// Assigns a unit as a scouting zealot.
+/// 
+/// Initializes behavior based on role:
+/// - Proxy patrol zealots begin patrol setup
+/// - Standard scouts wait for or move toward enemy natural
+/// </summary>
+/// <param name="unit">Unit to assign as scout</param>
 
 void ScoutingZealot::assign(BWAPI::Unit unit) {
 
@@ -154,6 +172,14 @@ void ScoutingZealot::assign(BWAPI::Unit unit) {
     state = enemyMainPos.isValid() ? State::MoveToNatural : State::WaitEnemyMain;
 }
 
+/// <summary>
+/// Sets the enemy main base location and updates scouting behavior.
+/// 
+/// Computes the enemy natural and transitions the unit
+/// to natural-edge scouting unless acting as a proxy patroller.
+/// </summary>
+/// <param name="tp">Enemy main tile position</param>
+
 void ScoutingZealot::setEnemyMain(const TilePosition& tp) {
     enemyMainTile = tp;
     enemyMainPos = Position(tp);
@@ -174,12 +200,31 @@ void ScoutingZealot::setEnemyMain(const TilePosition& tp) {
         //BWAPI::Broodwar->printf("[ZealotScout] setEnemyMain (%d,%d)", tp.x, tp.y);
     }
 }
+
+/// <summary>
+/// Handles cleanup when the scouting unit is destroyed.
+/// 
+/// Clears references and marks behavior as complete.
+/// </summary>
+/// <param name="unit">Destroyed unit</param>
+
 void ScoutingZealot::onUnitDestroy(BWAPI::Unit unit) {
     if (zealot && unit == zealot) {
         zealot = nullptr;
         state = State::Done;
     }
 }
+
+/// <summary>
+/// Main update loop executed every frame.
+/// 
+/// Controls state transitions and behavior including:
+/// - Moving to enemy natural
+/// - Holding edge positions
+/// - Avoiding enemy main base
+/// - Repositioning under threat
+/// - Proxy patrol routing
+/// </summary>
 
 void ScoutingZealot::onFrame() {
     if (!zealot || !zealot->exists() || state == State::Done) return;
@@ -393,6 +438,13 @@ BWAPI::Position ScoutingZealot::homeRetreatPoint() const
     return ScoutingZealot::clampToMapPx(home, 32);
 }
 
+/// <summary>
+/// Determines the enemy natural expansion location.
+/// 
+/// Selects the closest reachable non-starting base
+/// outside of the enemy main area.
+/// </summary>
+
 void ScoutingZealot::computeEnemyNatural() {
     enemyNaturalTile = BWAPI::TilePositions::Invalid;
     enemyNaturalPos = BWAPI::Positions::Invalid;
@@ -431,6 +483,13 @@ void ScoutingZealot::computeEnemyNatural() {
     }
 
 }
+
+/// <summary>
+/// Selects a position near the edge of enemy vision at the natural.
+/// 
+/// Ensures the unit remains outside the enemy main
+/// while maintaining vision of key areas.
+/// </summary>
 
 BWAPI::Position ScoutingZealot::pickEdgeOfVisionSpot()
 {
@@ -672,6 +731,14 @@ BWAPI::Position ScoutingZealot::pickNaturalChokeSpot()
     return cachedPerch;
 }
 
+/// <summary>
+/// Finds a reachable nearby position if the desired location is invalid.
+/// 
+/// Searches surrounding positions for a walkable and pathable alternative.
+/// </summary>
+/// <param name="desired">Desired target position</param>
+/// <returns>Reachable position near the desired location</returns>
+
 BWAPI::Position ScoutingZealot::findReachableNearby(const BWAPI::Position& desired) const
 {
     if (!zealot || !zealot->exists())
@@ -810,6 +877,12 @@ double ScoutingZealot::groundPathLengthPx(const BWAPI::Position& from, const BWA
     return sum;
 }
 
+/// <summary>
+/// Checks whether the unit is currently threatened.
+/// 
+/// Considers nearby enemy combat units and attack status.
+/// </summary>
+/// <returns>True if under threat</returns>
 
 bool ScoutingZealot::threatenedNow() const {
     if (!zealot || !zealot->exists()) return false;
@@ -824,6 +897,18 @@ bool ScoutingZealot::threatenedNow() const {
     }
     return false;
 }
+
+/// <summary>
+/// Issues movement commands with anti-stuck handling.
+/// 
+/// Includes:
+/// - Movement throttling
+/// - Stuck detection and recovery
+/// - Goal tracking
+/// </summary>
+/// <param name="p">Target position</param>
+/// <param name="force">Force movement regardless of cooldown</param>
+/// <param name="reissueDist">Minimum distance to reissue command</param>
 
 void ScoutingZealot::issueMove(const BWAPI::Position& p, bool force, int reissueDist)
 {
@@ -944,6 +1029,18 @@ bool ScoutingZealot::isNear(const BWAPI::Position& a, const BWAPI::Position& b, 
 {
     return a.getApproxDistance(b) <= distPx;
 }
+
+/// <summary>
+/// Builds patrol points used for proxy scouting.
+/// 
+/// Generates positions around:
+/// - Main base chokes
+/// - Neighboring areas
+/// - Natural expansion
+/// - Map perimeter regions
+/// 
+/// Points are filtered for reachability and spacing.
+/// </summary>
 
 void ScoutingZealot::rebuildProxyPoints()
 {
@@ -1303,6 +1400,14 @@ BWAPI::Unit ScoutingZealot::findPrimaryThreat(int radiusPx) const
     return best;
 }
 
+/// <summary>
+/// Executes retreat and kiting behavior toward home base.
+/// 
+/// Attempts to attack if possible, otherwise moves away
+/// from threats while maintaining safe distance.
+/// </summary>
+/// <param name="threat">Primary threat unit</param>
+
 void ScoutingZealot::retreatHomeMicro(BWAPI::Unit threat)
 {
     if (!zealot || !zealot->exists())
@@ -1430,6 +1535,14 @@ int ScoutingZealot::attackCommitFrames() const
     return 2;
 }
 
+/// <summary>
+/// Attempts to attack a target and commit to the attack briefly.
+/// 
+/// Prevents attack cancellation during weapon windup.
+/// </summary>
+/// <param name="target">Target unit</param>
+/// <returns>True if attack was issued or committed</returns>
+
 bool ScoutingZealot::tryFireAndCommit(BWAPI::Unit target)
 {
     if (!zealot || !zealot->exists() || !target || !target->exists())
@@ -1489,6 +1602,16 @@ bool ScoutingZealot::isGoodKiteTarget(BWAPI::Unit u, int radiusPx) const
 
     return zealot->getDistance(u) <= radiusPx;
 }
+
+/// <summary>
+/// Draws debug information for the scouting unit.
+/// 
+/// Displays:
+/// - Current state
+/// - Target positions
+/// - Threats and attack targets
+/// - Proxy patrol routes
+/// </summary>
 
 void ScoutingZealot::drawDebug() const
 {

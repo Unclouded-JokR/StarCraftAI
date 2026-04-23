@@ -7,6 +7,19 @@
 class ProtoBotCommander;
 class ScoutingManager;
 
+/// <summary>
+/// ScoutingZealot Controls scouting behavior for Zealot and Dragoon units.
+/// Combines positioning, threat detection, and movement control
+/// to provide safe and consistent map scouting.
+/// 
+/// /// Uses a state-driven system to:
+/// - Move toward and hold the enemy natural edge
+/// - Avoid entering the enemy main base
+/// - React to threats using retreat and kiting logic
+/// - Patrol proxy locations to detect early enemy structures
+/// </summary>
+
+
 class ScoutingZealot
 {
 public:
