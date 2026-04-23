@@ -13,9 +13,9 @@
 
 class SquadState;
 
-/// <summary>
-/// Contains general information about a squad, such as its units, positions, and current state. 
-/// \n This class is used by the Squad class to store and manage squad information.
+/// \brief Contains squad information such as its units, positions, and current state.
+/// <summary> 
+/// Used to get a squad's information.
 /// </summary>
 class SquadInfo {
 public:
