@@ -20,6 +20,9 @@ struct unitCMHash {
     }
 };
 
+/// <summary>
+/// CombatManager handles the combat functionality of ProtoBot. It handles unit assignment, squad creation and destruction, as well as strategic actions sent by StrategyManager (attack, defend, reinforce)
+/// </summary>
 class CombatManager{
 public:
     ProtoBotCommander* commanderReference;
@@ -35,7 +38,6 @@ public:
     static vector<Squad*> IdleSquads;
     bool combat_debug_on = false;
 
-    // Functions for other systems to acceses CombatManager
     void onStart();
     void onFrame();
     void onUnitDestroy(BWAPI::Unit unit);

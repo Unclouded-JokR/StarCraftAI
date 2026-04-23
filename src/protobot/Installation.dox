@@ -1,0 +1,27 @@
+/** \mainpage Getting Started
+Installation
+==
+
+ProtoBot is completely open source and you can download ProtoBot's files here: https://github.com/Unclouded-JokR/StarCraftAI
+
+To start using ProtoBot, the game folder for StarCraft: Brood War is needed. This folder was not included in the GitHub repository to avoid taking up too much space.
+\n Dr. Dave Churchill, a pioneer of the StarCraft Brood War AI competitive scene, provided a starting folder for executing StarCraft: Brood War AI bots that also includes the game itself.
+\n Note: This was done with full permission from Blizzard Entertainment, the creator of StarCraft.
+
+Get the files here: https://davechurchill.ca/starcraft/files/startcraft/scbw_bwapi440.zip
+
+Once installation is done, you can replace the contents of StarCraftAI/starcraft with all the files from the zip folder.
+
+Running ProtoBot
+==
+
+Windows
+--
+
+To run ProtoBot on Windows, go to StarCraftAI/bin and execute RunProtoBotAndStarcraft.bat. This will launch up ProtoBot and StarCraft: Brood War
+
+Linux
+--
+
+To run ProtoBot on Linux, 
+*/

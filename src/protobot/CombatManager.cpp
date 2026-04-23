@@ -90,6 +90,10 @@ void CombatManager::onUnitDestroy(BWAPI::Unit unit) {
 	}
 }
 
+/// <summary>
+/// ALL squads have their state machines set to the state AttackingState
+/// </summary>
+/// <param name="position"></param>
 void CombatManager::attack(BWAPI::Position position) {	
 	for (const auto& squad : Squads) {
 		squad->info.commandPos = position;
@@ -97,6 +101,10 @@ void CombatManager::attack(BWAPI::Position position) {
 	}
 }
 
+/// <summary>
+/// Idle and attacking squads have their state machines set to DefendingState
+/// </summary>
+/// <param name="position"></param>
 void CombatManager::defend(BWAPI::Position position) {
 	for (auto& squad : IdleSquads) {
 		squad->info.currentDefensivePosition = position;
@@ -108,6 +116,11 @@ void CombatManager::defend(BWAPI::Position position) {
 	}
 }
 
+/// <summary>
+/// Affects squads in the DefendingState. If the squad is too far, less than MAX_REINFORCE_DIST (listed in SquadStateTypes.h), the squad will stay in DefendingState
+/// Also sends reinforce position to the current reinforcing squads to update their reinforce positions
+/// </summary>
+/// <param name="position"></param>
 void CombatManager::reinforce(BWAPI::Position position) {
 	for (const auto& squad : DefendingSquads) {
 		if (squad->info.currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
@@ -190,8 +203,13 @@ void CombatManager::removeSquad(Squad* squad) {
 	squad = nullptr;
 }
 
-// Function called by ProtoBot commander when unit is sent to combat manager
-
+/// <summary>
+/// Checks through available squads. 
+/// If squad exists that has space remaining, assigns unit to that squad.
+/// If no squad exists OR all squads are full, 
+/// </summary>
+/// <param name="unit"></param>
+/// <returns></returns>
 bool CombatManager::assignUnit(BWAPI::Unit unit)
 {
 	if (!unit->exists()) {
