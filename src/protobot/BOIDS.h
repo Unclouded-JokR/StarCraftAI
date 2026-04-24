@@ -23,6 +23,10 @@
 
 using namespace std;
 
+/// <summary>
+/// Structure for cell within the spatial grid used for BOIDS separation optimization. 
+/// \n Each cell has an x and y coordinate, as well as an operator+ for adding two SeparationCells together and an operator== for comparing two SeparationCells.
+/// </summary>
 struct SeparationCell {
 	int x, y;
 

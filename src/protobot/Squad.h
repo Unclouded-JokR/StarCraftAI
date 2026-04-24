@@ -22,14 +22,14 @@ public:
 	int squadId;
 	BWAPI::Color squadColor;
 	std::vector<BWAPI::Unit> units;
-	BWAPI::Position commandPos;
+	BWAPI::Position commandPos; ///< Initial position sent by StrategyManager. Used to compared against the current attacking, defending , and reinforcing positions to determine if the squad needs to update its position. ///<
 	BWAPI::Position currentDefensivePosition;
 	BWAPI::Position currentReinforcePosition;
 	BWAPI::Position currentAttackPosition;
 	BWAPI::Position kitePos;
 	Path currentPath;
 	int currentPathIdx;
-	SquadState* currentState = nullptr;
+	SquadState* currentState = nullptr; ///< Contains current state of the squad (See SquadState)
 
 	SquadInfo() {
 		squadId = 0;

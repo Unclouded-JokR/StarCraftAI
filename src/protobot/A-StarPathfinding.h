@@ -59,10 +59,13 @@ struct Node {
 	}
 };
 
+/// <summary>
+/// Class representing a path and its information (vector of positions, total distance, etc.)
+/// </summary>
 class Path {
 	public:
-		vector<BWAPI::Position> positions = vector<BWAPI::Position>();
-		int distance = 0;
+		vector<BWAPI::Position> positions = vector<BWAPI::Position>(); ///< A vector of BWAPI::Positions representing the waypoints along the path to follow ///<
+		int distance = 0; ///< The total distance of the path, calculated as the sum of the distances between each waypoint ///<
 
 		Path(vector<BWAPI::Position> positions, int distance) {
 			this->positions = positions;
@@ -73,7 +76,10 @@ class Path {
 			this->positions = vector<BWAPI::Position>();
 			this->distance = 0;
 		};
-
+		
+		/// <summary>
+		/// Reverses the vector of positions in the path. Used when we want to flip a path from A to B into a path from B to A.
+		/// </summary>
 		void flip() {
 			vector<BWAPI::Position> vec = this->positions;
 			reverse(vec.begin(), vec.end());
@@ -93,15 +99,50 @@ class Path {
 		}
 };
 
+/// <summary>
+/// AStar is a static utility class that any manager can call on to use A* pathfinding. It makes use of precaching and caching to optimize pathfinding, as well as some optimizations within the A* algorithm itself (using a priority queue for the open set, using an array for the closed set, etc.).
+/// </summary>
 class AStar {
 private:
 	static map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AreaPathCache;
 	static map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> ChokepointPathCache;
 	static vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> UncachedAreaPairs;
 
+	/// <summary>
+	/// Used for indexing BWAPI::TilePositions in arrays. Converts a BWAPI::TilePosition to an integer index based on the map width and height. The index is calculated as (tile.y * mapWidth + tile.x).
+	/// </summary>
+	/// <param name="tile">Tile position of the node</param>
+	/// <returns></returns>
 	static int TileToIndex(BWAPI::TilePosition tile);
+
+	/// <summary>
+	/// Using the unit's unit type, checks if the tile is walkable.
+	/// \n This is done by using the unit's dimensions to determine if they would overlap with any structures or terrain if the unit was placed in the tile.
+	/// </summary>
+	/// <param name="unitType">Unit's BWAPI unit type</param>
+	/// <param name="tile">Target tile</param>
+	/// <param name="end">The target tile of the path</param>
+	/// <param name="isInteractableEndpoint">Boolean flag set by user for if the point should be interactable (won't be walkable but shouldn't stop the path)</param>
+	/// <returns></returns>
 	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
+
+	/// <summary>
+	/// Almost identital to GeneratePath() except does not check for precache optimizations.
+	/// \n Used for when you want to find the path between two points without shortcuts that may change the returned waypoints.
+	/// </summary>
+	/// <param name="_start"></param>
+	/// <param name="unitType"></param>
+	/// <param name="_end"></param>
+	/// <param name="isInteractableEndpoint"></param>
+	/// <returns></returns>
 	static Path generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint = false);
+
+	/// <summary>
+	/// Loops through the precached paths between areas and chokepoints to find the closest path from start to end. This is used as an optimization for GeneratePath() when the start and end positions are in different areas.
+	/// </summary>
+	/// <param name="start"></param>
+	/// <param name="end"></param>
+	/// <returns></returns>
 	static Path closestCachedPath(BWAPI::Position start, BWAPI::Position end);
 
 public:
