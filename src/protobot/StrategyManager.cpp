@@ -1014,7 +1014,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 	const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
 	//Prevents construction of units outside Build Order.
-	const bool trainingBlock = false;
+	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
 	const std::vector<NexusEconomy>& nexusEconomies = commanderReference->getNexusEconomies();
 	const FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
 	std::vector<Squad*> ProtoBot_Squads = commanderReference->combatManager.Squads;
