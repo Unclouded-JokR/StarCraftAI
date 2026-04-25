@@ -101,22 +101,86 @@ public:
 
 	BuildingPlacer(BuildManager* buildReference);
 	PlacementInfo getPositionToBuild(BWAPI::UnitType, const BWEM::Base*);
+
+	/// <summary>
+	/// Checks if a location to place a building already has another unit ontop of it (will only consider buildings not combat units). 
+	/// </summary>
+	/// <param name="Top Left Tile Position to place building"></param>
+	/// <param name="Width"></param>
+	/// <param name="Height"></param>
+	/// <param name="isAssimilator"></param>
+	/// <returns>TilePosition to build</returns>
 	bool alreadyUsingTiles(BWAPI::TilePosition, int, int, bool assimilator);
 	bool checkPower(BWAPI::TilePosition, BWAPI::UnitType);
+
+	/// <summary>
+	/// Finda an available Block that has no power in the power tile location.
+	/// </summary>
+	/// <returns>TilePosition to build</returns>
 	BWAPI::TilePosition checkBuildingBlocks();
+
+	/// <summary>
+	/// Checks Blocks of size 2x2 (tiles) that can be used in order to place down pylons for supply.
+	/// </summary>
+	/// <returns>TilePosition to build</returns>
 	BWAPI::TilePosition checkPowerReserveBlocks();
+
+	/// <summary>
+	/// Checks BWEM expansion locations for possible place to construct resource depot.
+	/// </summary>
+	/// <returns>TilePosition to build</returns>
 	BWAPI::TilePosition findAvailableExpansion();
+
+	/// <summary>
+	/// Checks a base to place down an assimlator ontop of a vespene gyser.
+	/// </summary>
+	/// <param name="Base (expansion location)"></param>
+	/// <returns>TilePosition to build</returns>
 	BWAPI::TilePosition findAvailableGyser(const BWEM::Base*);
+
+	/// <summary>
+	/// Standard call for buildings to find a location to be placed other than refineries, resource depots, and supply units. 
+	/// </summary>
+	/// <param name="UnitType (building type to be constructed)"></param>
+	/// <returns>TilePosition to build</returns>
 	BWAPI::TilePosition findAvaliblePlacement(BWAPI::UnitType);
 	int numberOfFullPoweredLargePlacements();
 
 	void drawPoweredTiles();
 
+	/// <summary>
+	/// Update Block information to reflect generated BWEB Blocks and reset values to reflect a beggining game state.
+	/// </summary>
 	void onStart();
+
+	/// <summary>
+	/// Updates BWEM to reflect the current state of StarCraft game.
+	/// </summary>
+	/// <param name="Unit"></param>
 	void onUnitCreate(BWAPI::Unit);
+
+	/// <summary>
+	/// Updates BWEM to reflect the current state of StarCraft game.
+	/// </summary>
+	/// <param name="Unit"></param>
 	void onUnitComplete(BWAPI::Unit);
+
+	/// <summary>
+	/// Updates BWEM to reflect the current state of StarCraft game.
+	/// </summary>
+	/// <param name="Unit"></param>
 	void onUnitDestroy(BWAPI::Unit);
+
+	/// <summary>
+	/// Updates BWEM to reflect the current state of StarCraft game.
+	/// </summary>
+	/// <param name="Unit"></param>
 	void onUnitMorph(BWAPI::Unit);
+
+	/// <summary>
+	/// Updates BWEM to reflect the current state of StarCraft game.
+	/// </summary>
+	/// <param name="Unit"></param>
 	void onUnitDiscover(BWAPI::Unit);
 };
 

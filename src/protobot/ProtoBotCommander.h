@@ -37,6 +37,13 @@ struct EnemyLocations {
 	int frameLastUpdateNat = -1;
 };
 
+/// <summary>
+/// A ResourceRequest is a way to be able to keep an detailed decsription of what ProtoBot is wanting to make and is currently making.\n
+/// A resource request goes through 4 states and changes based on the type of ResourceRequest we are dealing with.\n
+/// The creation of units and upgrades is something that happenes almost instantly in StarCraft's game engine and doesnt require any other information expect the trainer that will service the ResourceRequest.
+/// \n However the construction of a building is more complicated. Due to the possibility of a worker being destroyed on its way to construct a building or the tiles where a building is going to be placed is already occupied. You can compare this type of request as something that is more asynchronous.\n
+/// This requires more information and fault tollerance from ProtoBot to be able to full service a ResourceRequest for buildings.
+/// </summary>
 struct ResourceRequest
 {
 	enum Type { Unit, Building, Upgrade, Tech };
@@ -87,6 +94,9 @@ struct ResourceRequest
 	size_t requestNumber = -1;
 };
 
+/// <summary>
+/// Counter of the amount of requests of a specific unit type are already in the list of ResourceRequests in ProtoBot.
+/// </summary>
 struct ProtoBotRequestCounter {
 	//Combat units
 	int worker_requests = 0;
@@ -115,6 +125,11 @@ struct ProtoBotRequestCounter {
 	int legEnhancements_requests = 0;
 };
 
+/// <summary>
+/// The ProtoBotCommander is the main way information and BWAPI events are passed to the managers of ProtoBot. The class holds no real intelligence besides passing ResourceRequests to the StrategyManager and BuildManager of ProtoBot. \n
+/// The main purpose of this class is to be able to provide a easy way for information to be passed around when needed and for each manager to process events in the defined order specified in each function, updating infromation along the way.
+/// 
+/// </summary>
 class ProtoBotCommander
 {
 
