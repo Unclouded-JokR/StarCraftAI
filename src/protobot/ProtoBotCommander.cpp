@@ -289,8 +289,6 @@ void ProtoBotCommander::onSendText(std::string text)
 		drawBWEBDebug = false;
 		drawToolsDebug = false;
 	}
-
-	combatManager.onSendText(text);
 }
 
 void ProtoBotCommander::onUnitCreate(BWAPI::Unit unit)

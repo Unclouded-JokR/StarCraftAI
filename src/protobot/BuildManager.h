@@ -17,16 +17,19 @@
 #include "BuildingPlacer.h"
 #include "Builder.h"
 #include "BuildOrder.h"
+
 #define FRAMES_BEFORE_TRYAGAIN 72
 #define MAX_ATTEMPTS 3
 #define LARGEST_GYSER_DIATNCE_TO_NEXUS 300
-
-//Units strategy manager cares about, details the units that are being requested and have not been placed yet.
 
 class ProtoBotCommander;
 class NexusEconomy;
 struct ResourceRequest;
 
+/// <summary>
+/// The BuildManagers responsibility is to be able to service the ResourceRequests passed to it and verify a unit is able to create the upgrade or combat unit. In the case of buildings more work is required to be able to find suitable locations to make sure that building can be constructed.\n
+/// The class is also responsible for defining and executing the openings for each race that StarCraft has, allowing ProtoBot to have openers similar to chess at the beginning stages of a StarCraft game.
+/// </summary>
 class BuildManager
 {
 public:
@@ -60,18 +63,8 @@ public:
 
     void runBuildOrderOnFrame();
     bool isBuildOrderActive() const;
-    void overrideBuildOrder(int buildOrderId);
-    void clearBuildOrder(bool clearPendingRequests = true);
 
     // Placement helpers
-    BWAPI::TilePosition findNaturalRampPlacement(BWAPI::UnitType type) const;
-    BWAPI::TilePosition resolveSpecialBuildTile(const ResourceRequest& request) const;
-    bool isTileCommittedToBuild(BWAPI::UnitType type, const BWAPI::TilePosition& tile) const;
-    bool enqueueSupplyAtNaturalRamp();
-    bool enqueueNaturalWallAtChoke();
-    bool requestNaturalWallBuild(bool resetPlan = false);
-    BWAPI::TilePosition findNaturalChokePylonTile() const;
-    void resetNaturalWallPlan();
     bool checkWorkerIsConstructing(BWAPI::Unit);
     bool isBuildOrderCompleted();
     bool checkUnitIsBeingWarpedIn(BWAPI::UnitType building, const BWEM::Base* nexus = nullptr);
@@ -79,34 +72,12 @@ public:
     BWAPI::Unit getUnitToBuild(BWAPI::Position);
     std::vector<NexusEconomy> getNexusEconomies();
 
-    void pumpUnit();
-    bool shouldPreventUnitTraining(int currentSupply) const;
 private:
     std::vector<BuildOrder> buildOrders;
     int activeBuildOrderIndex = -1;
     size_t activeBuildOrderStep = 0;
     bool buildOrderActive = false;
 
-    BWAPI::TilePosition naturalRampPlacementTile = BWAPI::TilePositions::Invalid;
-    const BWEM::ChokePoint* naturalChoke = nullptr;
-
-    // Natural wall planning cache
-    bool naturalWallPlanned = false;
-    bool naturalWallPylonEnqueued = false;
-    bool naturalWallGatewaysEnqueued = false;
-    bool naturalWallCannonsEnqueued = false;
-    BWAPI::TilePosition naturalWallPylonTile = BWAPI::TilePositions::Invalid;
-    std::vector<BWAPI::TilePosition> naturalWallPylonTiles;
-    BWAPI::TilePosition naturalWallOpeningTile = BWAPI::TilePositions::Invalid;
-    std::vector<BWAPI::TilePosition> naturalWallGapTiles;
-    BWAPI::TilePosition naturalWallChokeAnchorTile = BWAPI::TilePositions::Invalid;
-    std::vector<BWAPI::TilePosition> naturalWallForgeTiles;
-    std::vector<BWAPI::TilePosition> naturalWallGatewayTiles;
-    std::vector<BWAPI::TilePosition> naturalWallCannonTiles;
-    std::vector<BWAPI::TilePosition> naturalWallPathTiles;
-    bool naturalWallStartLogged = false;
-
-    bool isRestrictedTechBuilding(BWAPI::UnitType type) const;
     std::string buildOrderNameToString(int name) const;
     bool enqueueBuildOrderBuilding(BWAPI::UnitType type, int count);
     bool enqueueBuildOrderUnit(BWAPI::UnitType type, int count);

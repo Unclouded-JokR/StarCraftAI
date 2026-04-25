@@ -108,6 +108,7 @@ void CombatManager::defend(BWAPI::Position position) {
 	}
 }
 
+
 void CombatManager::reinforce(BWAPI::Position position) {
 	for (const auto& squad : DefendingSquads) {
 		if (squad->info.currentDefensivePosition.getApproxDistance(position) > MAX_REINFORCE_DIST) {
@@ -190,8 +191,13 @@ void CombatManager::removeSquad(Squad* squad) {
 	squad = nullptr;
 }
 
-// Function called by ProtoBot commander when unit is sent to combat manager
-
+/// <summary>
+/// Checks through available squads. 
+/// If squad exists that has space remaining, assigns unit to that squad.
+/// If no squad exists OR all squads are full, 
+/// </summary>
+/// <param name="unit"></param>
+/// <returns></returns>
 bool CombatManager::assignUnit(BWAPI::Unit unit)
 {
 	if (!unit->exists()) {
@@ -256,88 +262,6 @@ BWAPI::Unit CombatManager::getAvailableUnit(std::function<bool(BWAPI::Unit)> fil
 	return nullptr;
 }
 
-void CombatManager::onSendText(std::string text) {
-	// DEBUG TEXT COMMANDS
-	if (text == "/toggle_squadboxes") {
-		combat_debug_on = !combat_debug_on;
-	}
-
-	//PRESET POSITIONS FOR USE IN CUSTOM MAPS
-	BWAPI::Position leftPos = BWAPI::Position(0, 0);
-	BWAPI::Position rightPos = BWAPI::Position(0, 0);
-	BWAPI::Position upPos = BWAPI::Position(0, 0);
-	BWAPI::Position downPos = BWAPI::Position(0, 0);
-	BWAPI::Position centerPos = BWAPI::Position(0, 0);
-
-	if (BWAPI::Broodwar->mapName() == "pathMaze") {
-		leftPos = BWAPI::Position(705, 2626);
-		rightPos = BWAPI::Position(3000, 383);
-		upPos = BWAPI::Position(831, 450);
-		downPos = BWAPI::Position(2944, 2569);
-		centerPos = BWAPI::Position(1600, 1505);
-	}
-	if (BWAPI::Broodwar->mapName() == "pathBuildingTest") {
-		leftPos = BWAPI::Position(513, 508);
-		rightPos = BWAPI::Position(1056, 192);
-		centerPos = BWAPI::Position(690, 362);
-	}
-	if (BWAPI::Broodwar->mapName() == "BOIDSTesting") {
-		leftPos = BWAPI::Position(1481, 1842);
-		rightPos = BWAPI::Position(2654, 1822);
-		upPos = BWAPI::Position(2047, 1505);
-		downPos = BWAPI::Position(2047, 2302);
-		centerPos = BWAPI::Position(2047, 1855);
-	}
-
-	for (const auto& squad : Squads) {
-		const BWAPI::Position leaderPos = squad->leader->getPosition();
-		const BWAPI::UnitType leaderType = squad->leader->getType();
-		vector<BWAPI::Position> tiles;
-		if (text == "left") {
-			squad->leader->attack(leftPos);
-#ifdef ASTAR_COMMANDING
-			squad->currentPathIdx = 0;
-			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, leftPos);
-#endif
-		}
-		if (text == "right") {
-			squad->leader->attack(rightPos);
-#ifdef ASTAR_COMMANDING
-			squad->currentPathIdx = 0;
-			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, rightPos);
-#endif
-		}if (text == "up") {
-			squad->leader->attack(upPos);
-#ifdef ASTAR_COMMANDING
-			squad->currentPathIdx = 0;
-			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, upPos);
-#endif
-		}if (text == "down") {
-			squad->leader->attack(downPos);
-#ifdef ASTAR_COMMANDING
-			squad->currentPathIdx = 0;
-			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, downPos);
-#endif
-		}if (text == "center") {
-			squad->leader->attack(centerPos);
-#ifdef ASTAR_COMMANDING
-			squad->currentPathIdx = 0;
-			squad->currentPath = AStar::GeneratePath(leaderPos, leaderType, centerPos);
-#endif
-		}
-
-#ifdef ASTAR_COMMANDING
-		vector<BWAPI::Position> positions = squad->info.currentPath.positions;
-		const int dist = squad->info.currentPath.distance;
-		if (positions.size() > 1) {
-			BWAPI::Broodwar->printf("Current path: (%d, %d) %d", positions.at(positions.size() - 1).x, positions.at(positions.size() - 1).y, dist);
-		}
-#endif
-	}
-}
-
-
-// Adding this in to strip scout units from squads if they somehow make it in -Marshall
 bool CombatManager::detachUnit(BWAPI::Unit unit) {
 	if (!unit) {
 		return false;

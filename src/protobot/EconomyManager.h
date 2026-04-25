@@ -9,6 +9,9 @@
 
 class ProtoBotCommander;
 
+/// <summary>
+/// The EconomyManager is responsible for the assignment of workers to be able to farm optimally across the nexus's ProtoBot creates over the course of a game. Each nexus has a defined NexusEconomy that implements a resource farming algorithm to optimally schedule workers to gather resources. 
+/// </summary>
 class EconomyManager
 {
 public:

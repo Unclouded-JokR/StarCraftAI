@@ -15,6 +15,7 @@ vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::Uncach
 vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::failedAreaPairs;
 
 
+
 // Generates path from start to end using A* pathfinding algorithm
 // IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
 Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
@@ -214,7 +215,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 							}
 
 							toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
-							
+
 							finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
 #ifdef DEBUG_PATH
 							cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
@@ -572,7 +573,7 @@ void AStar::fillAreaPathCache() {
 
 	BWAPI::WalkPosition firstPos;
 	BWAPI::WalkPosition secondPos;
-	
+
 	bool tryingFailedPair = false;
 	if (UncachedAreaPairs.empty()) {
 		return;
@@ -653,7 +654,7 @@ void AStar::fillAreaPathCache() {
 			}
 			else {
 				try {
-				subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
+					subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
 				}
 				catch (const runtime_error& e) {
 #ifdef DEBUG_PATH
@@ -749,7 +750,7 @@ Path AStar::closestCachedPath(BWAPI::Position pos, BWAPI::Position goal) {
 		if (i == 0) {
 			continue;
 		}
-		finalDist += finalVec.at(i).getApproxDistance(finalVec.at(i-1));
+		finalDist += finalVec.at(i).getApproxDistance(finalVec.at(i - 1));
 	}
 
 	Path subPath = Path(finalVec, finalDist);

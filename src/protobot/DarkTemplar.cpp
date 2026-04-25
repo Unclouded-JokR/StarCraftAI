@@ -4,11 +4,25 @@
 
 using namespace BWAPI;
 
+/// <summary>
+/// Initializes the dark templar scouting state.
+/// 
+/// Resets movement timing and sets the initial state to Idle.
+/// </summary>
+
 void DarkTemplar::onStart()
 {
     state = State::Idle;
     lastMoveIssueFrame = 0;
 }
+
+/// <summary>
+/// Sets the enemy main base location and updates behavior state.
+/// 
+/// If the dark templar is already assigned, transitions into
+/// movement toward the enemy main. Otherwise waits for assignment.
+/// </summary>
+/// <param name="tp">Enemy main tile position</param>
 
 void DarkTemplar::setEnemyMain(const BWAPI::TilePosition& tp)
 {
@@ -24,6 +38,14 @@ void DarkTemplar::setEnemyMain(const BWAPI::TilePosition& tp)
         state = State::WaitEnemyMain;
     }
 }
+
+/// <summary>
+/// Assigns a unit as the dark templar scout.
+/// 
+/// Verifies the unit type and sets the initial movement state
+/// based on whether the enemy main is already known.
+/// </summary>
+/// <param name="unit">Unit to assign as scout</param>
 
 void DarkTemplar::assign(BWAPI::Unit unit)
 {
@@ -48,6 +70,14 @@ void DarkTemplar::assign(BWAPI::Unit unit)
         state = State::WaitEnemyMain;
     }
 }
+
+/// <summary>
+/// Handles cleanup when the dark templar is destroyed.
+/// 
+/// Clears the tracked unit, resets locked target state,
+/// and marks the behavior as complete.
+/// </summary>
+/// <param name="unit">Destroyed unit</param>
 
 void DarkTemplar::onUnitDestroy(BWAPI::Unit unit)
 {
@@ -84,7 +114,15 @@ static bool isValidDTTarget(BWAPI::Unit dt, BWAPI::Unit enemy)
     return true;
 }
 
-
+/// <summary>
+/// Main update loop executed every frame.
+/// 
+/// Controls state transitions and behavior including:
+/// - Waiting for enemy main information
+/// - Moving toward the enemy main
+/// - Approaching through the enemy natural
+/// - Attacking targets inside the enemy base
+/// </summary>
 
 void DarkTemplar::onFrame()
 {
@@ -276,6 +314,15 @@ void DarkTemplar::onFrame()
     }
 }
 
+/// <summary>
+/// Issues a movement command with cooldown control.
+/// 
+/// Prevents command spam by throttling repeated move orders.
+/// </summary>
+/// <param name="unit">Unit receiving the command</param>
+/// <param name="p">Target position</param>
+/// <param name="force">Force movement regardless of cooldown</param>
+
 void DarkTemplar::issueMove(BWAPI::Unit unit, const BWAPI::Position& p, bool force)
 {
     if (!unit || !unit->exists() || !p.isValid())
@@ -296,6 +343,11 @@ void DarkTemplar::issueMove(BWAPI::Unit unit, const BWAPI::Position& p, bool for
         lastMoveIssueFrame = now;
     }
 }
+
+/// <summary>
+/// Returns the currently locked target, if it still exists.
+/// </summary>
+/// <returns>Locked enemy unit, or nullptr if unavailable</returns>
 
 BWAPI::Unit DarkTemplar::getLockedTarget() const
 {
@@ -320,6 +372,13 @@ BWAPI::Unit DarkTemplar::getLockedTarget() const
     return nullptr;
 }
 
+/// <summary>
+/// Returns the preferred approach position near the enemy natural.
+/// 
+/// Falls back to the enemy main if no natural location is known.
+/// </summary>
+/// <returns>Approach position for the dark templar</returns>
+
 BWAPI::Position DarkTemplar::getNaturalApproachPosition() const
 {
     if (manager)
@@ -338,6 +397,15 @@ BWAPI::Position DarkTemplar::getNaturalApproachPosition() const
 
     return BWAPI::Positions::Invalid;
 }
+
+/// <summary>
+/// Finds a nearby target to attack while approaching the enemy base.
+/// 
+/// Used during movement states to opportunistically attack
+/// visible nearby targets without fully switching behavior.
+/// </summary>
+/// <param name="dt">Dark templar unit</param>
+/// <returns>Best nearby target, or nullptr if none found</returns>
 
 BWAPI::Unit DarkTemplar::findApproachTarget(BWAPI::Unit dt) const
 {
@@ -384,6 +452,12 @@ BWAPI::Unit DarkTemplar::findApproachTarget(BWAPI::Unit dt) const
     return best;
 }
 
+/// <summary>
+/// Checks whether a unit type is considered a detector building.
+/// </summary>
+/// <param name="type">Unit type to check</param>
+/// <returns>True if the type is a detector building</returns>
+
 bool DarkTemplar::isDetectorBuildingType(BWAPI::UnitType type)
 {
     return
@@ -411,15 +485,38 @@ bool DarkTemplar::isDetectorBuilding(BWAPI::Unit unit)
     return false;
 }
 
+/// <summary>
+/// Checks whether a unit is a worker.
+/// </summary>
+/// <param name="unit">Unit to check</param>
+/// <returns>True if the unit is a worker</returns>
+
 bool DarkTemplar::isWorker(BWAPI::Unit unit)
 {
     return unit && unit->exists() && unit->getType().isWorker();
 }
 
+/// <summary>
+/// Checks whether a unit is a building that is not specifically a detector.
+/// </summary>
+/// <param name="unit">Unit to check</param>
+/// <returns>True if the unit is a building</returns>
+
 bool DarkTemplar::isBuilding(BWAPI::Unit unit)
 {
     return unit && unit->exists() && unit->getType().isBuilding();
 }
+
+/// <summary>
+/// Selects the highest priority target inside the enemy base.
+/// 
+/// Priority order:
+/// - Detector buildings
+/// - Workers
+/// - Other buildings
+/// </summary>
+/// <param name="dt">Dark templar unit</param>
+/// <returns>Best target to attack, or nullptr if none found</returns>
 
 BWAPI::Unit DarkTemplar::pickTargetFor(BWAPI::Unit dt) const
 {
@@ -504,6 +601,16 @@ BWAPI::Unit DarkTemplar::pickTargetFor(BWAPI::Unit dt) const
 
     return nullptr;
 }
+
+/// <summary>
+/// Draws debug information for the dark templar scout.
+/// 
+/// Displays:
+/// - Current state
+/// - Locked target
+/// - Enemy main direction
+/// - Enemy natural direction
+/// </summary>
 
 void DarkTemplar::drawDebug() const
 {

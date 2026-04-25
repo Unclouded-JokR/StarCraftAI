@@ -62,7 +62,9 @@ enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
 enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
 enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
 
-//Different from the information managers friendly unit counter since this include "Created" units as well.
+/// <summary>
+/// Counter of the amount of units that are ProtoBot currently has created. Units in StarCraft have two states 'created' and 'completed', while the InformationManager has a counter for ProtoBot's units, the counter only considers completed units.
+/// </summary>
 struct ProtoBotProductionCount
 {
 	//Units
@@ -92,6 +94,9 @@ struct ProtoBotProductionCount
 	int legEnhancements_requests = 0;
 };
 
+/// <summary>
+/// Upgrades currently being made.
+/// </summary>
 struct UpgradesInProduction
 {
 	int singularity_charge = 0;
@@ -113,6 +118,9 @@ struct ProductionGoals
 	int templarArchivesCount = 0;
 };
 
+/// <summary>
+/// Buildings currently being constructed (not completed)
+/// </summary>
 struct IncompleteBuildingCounter
 {
 	int arbiterTribunal = 0;
@@ -133,6 +141,9 @@ struct IncompleteBuildingCounter
 	int templarArchives = 0;
 };
 
+/// <summary>
+/// Counter for the units ProtoBot has created over the course of a game.
+/// </summary>
 struct UnitProductionGameCounter {
 	int worker = 0;
 	int zealots = 0;
@@ -141,7 +152,9 @@ struct UnitProductionGameCounter {
 	int observers = 0;
 };
 
-//Need to check production of units to make sure we are not oversaturating farming.
+/// <summary>
+/// Types of units ProtoBot wants to focus on.
+/// </summary>
 enum UnitProductionGoals {
 	SATURATE_WORKERS, //Max 75 workers.
 	EARLY_ZEALOTS, //3 Zealots early.
@@ -155,6 +168,9 @@ enum UnitProductionGoals {
 	FLYING_UNIT_DETECTED_NEED_CANNONS //Build cannons at bases/spots where there are stations.
 };
 
+/// <summary>
+/// Different types of goals ProtoBot can change to research specific upgrades.
+/// </summary>
 enum UpgradeProductionGoals {
 	RESEARCH_SINGULARITY_CHARGE, //Should have this every game.
 	RESEARCH_GROUND_WEAPONS,
@@ -165,14 +181,9 @@ enum UpgradeProductionGoals {
 	SOMETHING_WENT_WRONG_RESEARCH_LEG_ENHANCEMENTS //Same reasoning as Zealots. Should make them stronger if we dont have gas.
 };
 
-struct PotentionalConstruct {
-	BWAPI::Unit buildingToTrain;
-
-	BWAPI::Unit unitToCreate;
-	BWAPI::UpgradeType upgradeToCreate = BWAPI::UpgradeTypes::Unknown;
-	BWAPI::Unit buildingToCreate;
-};
-
+/// <summary>
+/// Actions for squads to be able to perform
+/// </summary>
 struct Action {
 	enum ActionType { ACTION_SCOUT, ACTION_ATTACK, ACTION_DEFEND, ACTION_REINFORCE, ACTION_NONE };
 	ActionType type = ACTION_NONE;
@@ -216,6 +227,10 @@ struct PossibleBuildingRequest {
 	const BWEM::Base* base = nullptr;
 };
 
+/// <summary>
+/// When a unit is requested to be made, a couple checks need to be put in place to see if ProtoBot is making units at a expected amount. \n
+/// A PossibleRequests is a way to be able to consider the creation of the unit before actually making a request.
+/// </summary>
 struct PossibleRequests
 {
 	//When units is populated with things we can create it automatically orders them in a priority based on the UnitProductionGoals list.
@@ -228,11 +243,14 @@ struct PossibleRequests
 	PossibleBuildingRequest buildings;
 };
 
+/// <summary>
+/// The StrategyManager is way ProtoBot is able to make macro level decisions about what to do. Utilizing information stored in the InformationManager and data strcutres of its own. The StrategyManager is able to dictate production and manipulation of units.
+/// </summary>
 class StrategyManager
 {
 private:
 	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
-	std::vector<int> expansionTimes = { 5, 10, 15, 17, 20, 25, 30, 35, 40, 50};
+	std::vector<int> expansionTimes = { 5, 10, 15, 20, 30 ,40, 50};
 	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate };
 	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;

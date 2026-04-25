@@ -1,10 +1,37 @@
+/// <summary>
+/// Manages all scouting behavior in ProtoBot.
+/// 
+/// Responsibilities:
+/// - Assign scouting units and attach behaviors
+/// - Manage scouting state and unit roles
+/// - Track enemy main and natural locations
+/// - Coordinate transitions between scouting and combat
+/// 
+/// Uses a BehaviorVariant system to support multiple scout types:
+/// - Probe
+/// - Zealot / Dragoon
+/// - Observer
+/// - Dark Templar
+/// </summary>
+
 #include "ScoutingManager.h"
 #include "ProtoBotCommander.h"
 
+/// <summary>
+/// Initializes the ScoutingManager with a reference to the commander.
+/// </summary>
+/// <param name="commander">Pointer to ProtoBotCommander</param>
+/// 
 ScoutingManager::ScoutingManager(ProtoBotCommander* commander)
     : commanderRef(commander)
 {
 }
+
+/// <summary>
+/// Called once at game start.
+/// 
+/// Used to initialize scouting systems.
+/// </summary>
 
 void ScoutingManager::onStart() 
 {
@@ -58,6 +85,15 @@ static void visit_onUnitDestroy(BehaviorVariant& sb, BWAPI::Unit u)
 
 }
 
+/// <summary>
+/// Main update loop executed every frame.
+/// 
+/// Updates all active scouting behaviors and handles:
+/// - Deferred enemy main detection
+/// - Returning scouts to combat
+/// - Debug drawing
+/// </summary>
+
 void ScoutingManager::onFrame() 
 {
     // iterate all active behaviors; each owns its own state
@@ -82,6 +118,18 @@ void ScoutingManager::onFrame()
         drawDebug();
     }
 }
+
+/// <summary>
+/// Assigns a unit as a scout and attaches the appropriate behavior.
+/// 
+/// Handles different unit types:
+/// - Worker (Probe scout)
+/// - Observer (detector scouting)
+/// - Combat units (Zealot / Dragoon scouting)
+/// 
+/// Also removes the unit from combat control.
+/// </summary>
+/// <param name="unit">Unit to assign as a scout</param>
 
 void ScoutingManager::assignScout(BWAPI::Unit unit) 
 {
@@ -152,6 +200,11 @@ void ScoutingManager::assignScout(BWAPI::Unit unit)
     markScout(unit);
 }
 
+/// <summary>
+/// Checks if any scouting units are currently active.
+/// </summary>
+/// <returns>True if at least one scout exists</returns>
+
 bool ScoutingManager::hasScout() const 
 {
     if (workerScout_ && workerScout_->exists())
@@ -194,6 +247,14 @@ bool ScoutingManager::hasScout() const
     return false;
 }
 
+/// <summary>
+/// Sets the enemy main base location and broadcasts it to all scouts.
+/// 
+/// If called during a behavior frame, the update is deferred
+/// to avoid modifying state mid-iteration.
+/// </summary>
+/// <param name="tp">Enemy main tile position</param>
+
 void ScoutingManager::setEnemyMain(const BWAPI::TilePosition& tp) 
 {
     if (!tp.isValid())
@@ -228,11 +289,23 @@ void ScoutingManager::setEnemyMain(const BWAPI::TilePosition& tp)
     }
 }
 
+/// <summary>
+/// Sets the enemy natural expansion location.
+/// </summary>
+/// <param name="tp">Enemy natural tile position</param>
+
 void ScoutingManager::setEnemyNatural(const BWAPI::TilePosition& tp) 
 {
     enemyNaturalCache_ = tp;
     if (commanderRef) commanderRef->onEnemyNaturalFound(tp);
 }
+
+/// <summary>
+/// Handles cleanup when a unit is destroyed.
+/// 
+/// Removes scouting behavior and updates tracking structures.
+/// </summary>
+/// <param name="unit">Destroyed unit</param>
 
 void ScoutingManager::onUnitDestroy(BWAPI::Unit unit)
 {
@@ -286,6 +359,20 @@ void ScoutingManager::releaseObserverSlot(int unitId)
 {
     for (int i = 0; i < 4; ++i) if (observerSlotOwner_[i] == unitId) observerSlotOwner_[i] = -1;
 }
+
+/// <summary>
+/// Creates the appropriate scouting behavior for a unit.
+/// 
+/// Supports:
+/// - Probe
+/// - Zealot / Dragoon
+/// - Observer
+/// - Dark Templar
+/// 
+/// Falls back to Probe behavior if type is unsupported.
+/// </summary>
+/// <param name="unit">Unit to create behavior for</param>
+/// <returns>BehaviorVariant representing the unit's scouting logic</returns>
 
 BehaviorVariant ScoutingManager::constructBehaviorFor(BWAPI::Unit unit)
 {
@@ -343,6 +430,13 @@ BWAPI::Unit ScoutingManager::findUnitById(int id)
     return nullptr;
 }
 
+/// <summary>
+/// Marks a unit as a scout and tracks it by type.
+/// 
+/// Adds the unit to the appropriate scouting collection.
+/// </summary>
+/// <param name="u">Unit to mark as scout</param>
+
 void ScoutingManager::markScout(BWAPI::Unit u)
 {
     if (!u || !u->exists()) return;
@@ -387,6 +481,11 @@ void ScoutingManager::markScout(BWAPI::Unit u)
     }
 }
 
+/// <summary>
+/// Removes a unit from scout tracking structures.
+/// </summary>
+/// <param name="u">Unit to remove</param>
+
 void ScoutingManager::unmarkScout(BWAPI::Unit u)
 {
     if (!u) return;
@@ -425,6 +524,12 @@ void ScoutingManager::unmarkScout(BWAPI::Unit u)
         darkTemplarScouts_.end());
 }
 
+/// <summary>
+/// Checks whether a unit is currently assigned as a scout.
+/// </summary>
+/// <param name="u">Unit to check</param>
+/// <returns>True if the unit is a scout</returns>
+
 bool ScoutingManager::isScout(BWAPI::Unit u) const 
 {
     if (!u)                                                                                                 return false;
@@ -435,6 +540,12 @@ bool ScoutingManager::isScout(BWAPI::Unit u) const
     if (std::find(darkTemplarScouts_.begin(), darkTemplarScouts_.end(), u) != darkTemplarScouts_.end())     return true;
     return false;
 }
+
+/// <summary>
+/// Checks if a unit is a combat scout (Zealot or Dragoon).
+/// </summary>
+/// <param name="u">Unit to check</param>
+/// <returns>True if unit is a combat scout</returns>
 
 bool ScoutingManager::isCombatScout(BWAPI::Unit u) const
 {
@@ -477,6 +588,15 @@ namespace
         }
     };
 }
+
+/// <summary>
+/// Draws debug information for all scouting behaviors.
+/// 
+/// Includes:
+/// - Global scouting info
+/// - Enemy locations
+/// - Per-unit debug visuals
+/// </summary>
 
 void ScoutingManager::drawDebug() const
 {
@@ -682,6 +802,14 @@ void ScoutingManager::maybeReturnCombatScoutsToCombat()
     }
 }
 
+/// <summary>
+/// Returns a combat scout unit back to combat control.
+/// 
+/// Removes scouting behavior and reassigns the unit to CombatManager.
+/// </summary>
+/// <param name="unit">Unit to return</param>
+/// <returns>True if reassignment succeeded</returns>
+
 bool ScoutingManager::tryReturnScoutToCombat(BWAPI::Unit unit)
 {
     if (!unit || !unit->exists() || !commanderRef)
@@ -777,7 +905,12 @@ void ScoutingManager::lockCombatScoutAssignments(int frames)
     combatScoutLockUntilFrame_ = std::max(combatScoutLockUntilFrame_, now + frames);
 }
 
-// Unassign an observer if we have one to give to a squad
+/// <summary>
+/// Retrieves an available observer and removes it from scouting.
+/// 
+/// Transfers control back to combat systems.
+/// </summary>
+/// <returns>Observer unit if available, otherwise nullptr</returns>
 
 BWAPI::Unit ScoutingManager::getAvaliableDetectors()
 {

@@ -34,6 +34,13 @@ using BehaviorVariant = std::variant<
     */
 >;
 
+/// <summary>
+/// ScoutingManager Manages all scouting units and their behaviors.
+/// Assigns units to the appropriate scouting behavior,
+/// updates them each frame, tracks enemy locations,
+/// and coordinates transitions between scouting and combat.
+/// </summary>
+
 class ScoutingManager {
 public:
     bool scoutingDebugEnabled_ = false;

@@ -6,6 +6,18 @@
 class ProtoBotCommander;
 class ScoutingManager;
 
+/// <summary>
+/// DarkTemplar Controls scouting behavior for a Protoss Dark Templar.
+/// Combines movement, target prioritization, and stealth-based
+/// harassment to pressure the enemy while scouting.
+/// 
+/// /// Uses a state-driven system to:
+/// - Move toward the enemy natural and main base
+/// - Prioritize valuable targets while approaching
+/// - Attack key structures and workers inside the enemy base
+/// - Maintain target focus through locked target selection
+/// </summary>
+
 class DarkTemplar
 {
 public:

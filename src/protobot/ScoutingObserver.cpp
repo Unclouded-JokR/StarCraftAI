@@ -1,3 +1,17 @@
+/// <summary>
+/// Implements scouting behavior for a Protoss Observer.
+/// 
+/// Responsibilities:
+/// - Maintain vision at key enemy locations
+/// - Avoid enemy detection and threats
+/// - Monitor enemy main and nearby expansions
+/// - Support squads with detection when needed
+/// 
+/// Uses a slot-based system:
+/// - Slots 0–2: Fixed observation posts (main + expansions)
+/// - Slot 3: Dynamic roaming and expansion checking
+/// </summary>
+
 #include "ScoutingObserver.h"
 #include "ProtoBotCommander.h"
 #include "ScoutingManager.h"
@@ -28,12 +42,28 @@ namespace {
     static inline int mapHpx() { return Broodwar->mapHeight() * 32; }
 }
 
+/// <summary>
+/// Initializes the observer scouting state.
+/// 
+/// Resets movement tracking, threat tracking,
+/// and clears any existing observation posts.
+/// </summary>
+
 void ScoutingObserver::onStart() {
     lastMoveFrame = 0;
     lastThreatFrame = -10000;
     posts.clear();
     state = State::Idle;
 }
+
+/// <summary>
+/// Assigns a unit as the scouting observer.
+/// 
+/// Initializes behavior based on assigned slot:
+/// - Slot 3: roaming expansion checker
+/// - Other slots: fixed observation posts
+/// </summary>
+/// <param name="u">Observer unit</param>
 
 void ScoutingObserver::assign(BWAPI::Unit u) {
     if (!u || !u->exists()) return;
@@ -66,6 +96,14 @@ void ScoutingObserver::assign(BWAPI::Unit u) {
     }
 }
 
+/// <summary>
+/// Sets the enemy main base and recomputes observation posts.
+/// 
+/// Transitions the observer from Idle to active scouting
+/// if a valid slot is assigned.
+/// </summary>
+/// <param name="tp">Enemy main tile position</param>
+
 void ScoutingObserver::setEnemyMain(const TilePosition& tp) {
     enemyMainTile = tp;
     enemyMainPos = Position(tp);
@@ -73,12 +111,32 @@ void ScoutingObserver::setEnemyMain(const TilePosition& tp) {
     if (state == State::Idle && slotIndex >= 0) state = State::MoveToPost;
 }
 
+/// <summary>
+/// Handles observer destruction.
+/// 
+/// Clears the assigned unit and marks behavior as complete.
+/// </summary>
+/// <param name="u">Destroyed unit</param>
+
 void ScoutingObserver::onUnitDestroy(BWAPI::Unit u) {
     if (observer && u == observer) {
         observer = nullptr;
         state = State::Done;
     }
 }
+
+/// <summary>
+/// Main update loop executed every frame.
+/// 
+/// Handles:
+/// - Movement toward observation posts
+/// - Detection avoidance
+/// - Slot-based scouting behavior
+/// 
+/// Slot behavior:
+/// - Slots 0–2: move to and hold posts
+/// - Slot 3: roam and check expansions
+/// </summary>
 
 void ScoutingObserver::onFrame() {
     if (!observer || !observer->exists() || state == State::Done) return;
@@ -241,6 +299,17 @@ void ScoutingObserver::onFrame() {
 
 /* ------------ helpers ------------- */
 
+/// <summary>
+/// Computes observation posts around the enemy base.
+/// 
+/// Selects:
+/// - Enemy main
+/// - Natural expansion
+/// - Additional nearby expansions
+/// 
+/// Ensures posts are reachable and valid positions.
+/// </summary>
+
 void ScoutingObserver::computePosts()
 {
     posts.clear();
@@ -294,12 +363,27 @@ void ScoutingObserver::computePosts()
     if (posts.size() > 4) posts.resize(4);
 }
 
+
+/// <summary>
+/// Returns the current target position for this observer.
+/// </summary>
+/// <returns>Target position based on assigned slot</returns>
+/// 
 BWAPI::Position ScoutingObserver::postTarget() const 
 {
     if (slotIndex >= 0 && slotIndex < (int)posts.size())
         return posts[slotIndex];
     return enemyMainPos;
 }
+
+/// <summary>
+/// Issues a movement command to the observer.
+/// 
+/// Includes throttling to prevent excessive command spam.
+/// </summary>
+/// <param name="p">Target position</param>
+/// <param name="force">Force movement regardless of cooldown</param>
+/// <param name="reissueDist">Minimum distance to reissue move</param>
 
 void ScoutingObserver::issueMove(const BWAPI::Position& p, bool force, int reissueDist) 
 {
@@ -313,6 +397,12 @@ void ScoutingObserver::issueMove(const BWAPI::Position& p, bool force, int reiss
     }
    //Broodwar->drawLineMap(observer->getPosition(), p, Colors::White);
 }
+
+/// <summary>
+/// Detects nearby enemy detectors and computes a safe escape position.
+/// </summary>
+/// <param name="avoidTo">Output position to move away from detection</param>
+/// <returns>True if a detection threat exists</returns>
 
 bool ScoutingObserver::detectorThreat(BWAPI::Position& avoidTo) const 
 {
@@ -394,6 +484,12 @@ double ScoutingObserver::groundPathLengthPx(const BWAPI::Position& from, const B
     return sum;
 }
 
+/// <summary>
+/// Determines if a position is unsafe based on threat data.
+/// </summary>
+/// <param name="p">Position to evaluate</param>
+/// <returns>True if unsafe</returns>
+
 bool ScoutingObserver::isUnsafe(const BWAPI::Position& p) const
 {
     if (!commanderRef) return false;
@@ -412,6 +508,15 @@ bool ScoutingObserver::isUnsafe(const BWAPI::Position& p) const
 
     return false;
 }
+
+/// <summary>
+/// Selects a safe detour toward a target position.
+/// 
+/// Attempts alternative paths to avoid threats while
+/// still progressing toward the goal.
+/// </summary>
+/// <param name="target">Target position</param>
+/// <returns>Best safe position to move toward</returns>
 
 BWAPI::Position ScoutingObserver::pickDetourToward(const BWAPI::Position& target) const
 {
@@ -501,6 +606,13 @@ BWAPI::Position ScoutingObserver::pickDetourToward(const BWAPI::Position& target
     return bestPos;
 }
 
+/// <summary>
+/// Checks whether the bot currently has vision at a position.
+/// </summary>
+/// <param name="p">Position to check</param>
+/// <param name="radiusPx">Search radius</param>
+/// <returns>True if vision is available</returns>
+
 
 bool ScoutingObserver::haveVisionAt(const BWAPI::Position& p, int radiusPx) const
 {
@@ -551,6 +663,15 @@ namespace
         return false;
     }
 }
+
+/// <summary>
+/// Rebuilds roaming checkpoints for slot 3 observers.
+/// 
+/// Selects expansion locations to patrol while:
+/// - Avoiding friendly bases
+/// - Avoiding overlap with other observers
+/// - Avoiding unsafe areas
+/// </summary>
 
 void ScoutingObserver::rebuildSlot3Checkpoints()
 {
@@ -664,6 +785,16 @@ void ScoutingObserver::rebuildSlot3Checkpoints()
     slot3NextIdx = 0;
     slot3CurTarget = BWAPI::Positions::Invalid;
 }
+
+/// <summary>
+/// Draws debug information for the observer on the map.
+/// 
+/// Displays:
+/// - Current state
+/// - Assigned slot
+/// - Target positions
+/// - Observation posts and checkpoints
+/// </summary>
 
 void ScoutingObserver::drawDebug() const
 {

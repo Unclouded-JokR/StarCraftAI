@@ -1014,7 +1014,7 @@ void StrategyManager::planUnitProduction(PossibleRequests& possibleRequestList)
 	const int currentSupply = BWAPI::Broodwar->self()->supplyUsed() / 2;
 
 	//Prevents construction of units outside Build Order.
-	const bool trainingBlock = commanderReference->buildManager.shouldPreventUnitTraining(currentSupply);
+	const bool trainingBlock = false;
 	const std::vector<NexusEconomy>& nexusEconomies = commanderReference->getNexusEconomies();
 	const FriendlyUnitCounter ProtoBot_currentUnits = InformationManager::Instance().getFriendlyUnitCounter();
 	std::vector<Squad*> ProtoBot_Squads = commanderReference->combatManager.Squads;
@@ -1389,36 +1389,28 @@ void StrategyManager::planBuildingProduction(std::vector<ResourceRequest>& resou
 		}
 	}
 
-	//Nexus
 	if (buildOrderCompleted)
 	{
-		if (ProtoBot_ProductionFocus == ProductionFocus::UNIT_PRODUCTION && !(ProductionGoal_index >= ProtoBot_ProductionGoals.size()))
+		//Nexus
+		if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
 		{
-			if (timer + 1 >= (UNIT_PRODUCTION_TIME + (DELAY_PER_PRODUCTION * ProductionGoal_index)))
+			if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
 			{
-				ProtoBot_ProductionFocus = ProductionFocus::EXPANDING_INFLUENCE;
+				mineralExcessToExpand *= 2;
+				PossibleBuildingRequest nexus;
+				nexus.building = BWAPI::UnitTypes::Protoss_Nexus;
+
+				possibleRequestList.supplyBuildings.push_back(nexus);
 			}
 
-			if (checkAlreadyRequested(BWAPI::UnitTypes::Protoss_Nexus))
+			if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
 			{
-				if (BWAPI::Broodwar->self()->minerals() > mineralExcessToExpand)
-				{
-					mineralExcessToExpand *= 2;
-					PossibleBuildingRequest nexus;
-					nexus.building = BWAPI::UnitTypes::Protoss_Nexus;
+				//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
+				minutesPassedIndex++;
+				PossibleBuildingRequest nexus;
+				nexus.building = BWAPI::UnitTypes::Protoss_Nexus;
 
-					possibleRequestList.supplyBuildings.push_back(nexus);
-				}
-
-				if (!(minutesPassedIndex == expansionTimes.size()) && expansionTimes.at(minutesPassedIndex) <= minutes)
-				{
-					//std::cout << "EXPAND ACTION: Requesting to expand (expansion time " << expansionTimes.at(minutesPassedIndex) << ")\n";
-					minutesPassedIndex++;
-					PossibleBuildingRequest nexus;
-					nexus.building = BWAPI::UnitTypes::Protoss_Nexus;
-
-					possibleRequestList.supplyBuildings.push_back(nexus);
-				}
+				possibleRequestList.supplyBuildings.push_back(nexus);
 			}
 		}
 

@@ -11,6 +11,13 @@ class ProtoBotCommander;
 class ScoutingManager;
 
 
+/// <summary>
+/// ScoutingObserver Controls scouting behavior for a Protoss Observer.
+/// Maintains vision over key enemy locations, avoids detection threats,
+/// and monitors expansions using a slot-based system.
+/// Observers either hold fixed positions near the enemy base or
+/// dynamically patrol expansion locations to provide map awareness.
+/// </summary>
 
 class ScoutingObserver 
 {

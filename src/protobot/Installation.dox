@@ -1,0 +1,56 @@
+/** \mainpage Getting Started
+Installation
+==
+
+ProtoBot is completely open source and you can download ProtoBot's files here: https://github.com/Unclouded-JokR/StarCraftAI
+
+To start using ProtoBot, the game folder for StarCraft: Brood War is needed. This folder was not included in the GitHub repository to avoid taking up too much space.
+\n Dr. Dave Churchill, a pioneer of the StarCraft Brood War AI competitive scene, provided a starting folder for executing StarCraft: Brood War AI bots that also includes the game itself.
+\n Note: This was done with full permission from Blizzard Entertainment, the creator of StarCraft.
+
+Get the files here: https://davechurchill.ca/starcraft/files/startcraft/scbw_bwapi440.zip
+
+Once installation is done, you can replace the contents of StarCraftAI/starcraft with all the files from the zip folder.
+
+Running ProtoBot
+==
+
+Windows
+--
+
+To run ProtoBot on <b>Windows</b>, do the following:
+
+Navigate to <b>/StarCraftAI/bin</b> and execute <b>RunProtoBotAndStarcraft.bat</b>. 
+\n This will launch up ProtoBot and StarCraft: Brood War. 
+\n ProtoBot will automatically connect to the game lobby and begin playing!
+
+Linux
+--
+
+To run ProtoBot on <b>Linux</b>, run the following commands:
+<pre>
+  <code>
+    sudo apt update
+    sudo apt install build-essential mingw-w64 make
+  </code>
+</pre>
+
+This will install <b>make</b>, <b>linux g++</b> and a Windows cross-compiler <b>i686-w64-mingw32-g++</b>
+
+Once installed, navigate to the makefile in the base StarCraftAI folder.
+\n Edit the flag <b>BIN_DIR</b> to point to the path ./bin_linux.
+
+Once all packages are installed and the <b>BIN_DIR</b> flag has been changed, go to the directory where the makefile is located (should be <b>/StarCraftAI</b>) and run the commands:
+<pre>
+  <code>
+    make clean
+    make
+  </code>
+</pre>
+
+Additional Documentation
+==
+
+Functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
+\n It can be found here: https://bwapi.github.io/
+*/
