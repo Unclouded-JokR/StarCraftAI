@@ -26,6 +26,10 @@ class ProtoBotCommander;
 class NexusEconomy;
 struct ResourceRequest;
 
+/// <summary>
+/// The BuildManagers responsibility is to be able to service the ResourceRequests passed to it and verify a unit is able to create the upgrade or combat unit. In the case of buildings more work is required to be able to find suitable locations to make sure that building can be constructed.\n
+/// The class is also responsible for defining and executing the openings for each race that StarCraft has, allowing ProtoBot to have openers similar to chess at the beginning stages of a StarCraft game.
+/// </summary>
 class BuildManager
 {
 public:
