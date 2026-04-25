@@ -5,13 +5,19 @@
 // Global variables used to debug path generation
 vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 vector<std::pair<BWAPI::TilePosition, double>> closedTiles;
+vector<BWAPI::TilePosition> earlyExpansionTiles;
 vector<BWAPI::Position> precachedPositions;
 
 // Initializing static variables 
 map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AStar::AreaPathCache;
 map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> AStar::ChokepointPathCache;
 vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::UncachedAreaPairs;
+vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> AStar::failedAreaPairs;
 
+
+
+// Generates path from start to end using A* pathfinding algorithm
+// IF YOU WANT PATH TO AN INTERACTABLE UNIT (Constructing a geyser, mining minerals, etc.), SET isInteractableEndpoint AS TRUE
 Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI::Position _end, bool isInteractableEndpoint) {
 	Timer totalTimer = Timer();
 	totalTimer.start();
@@ -209,7 +215,7 @@ Path AStar::GeneratePath(BWAPI::Position _start, BWAPI::UnitType unitType, BWAPI
 							}
 
 							toEnd = generateSubPath(precachedPath.positions.at(precachedPath.positions.size() - 1), unitType, _end);
-							
+
 							finalPath = currentPath + toStartOfPrecache + precachedPath + toEnd;
 #ifdef DEBUG_PATH
 							cout << "Current node found cached path: " << "start size: " << currentPath.positions.size() + toStartOfPrecache.positions.size() << " | " << "precache size: " << precachedPath.positions.size() << " | " << "end size: " << toEnd.positions.size() << endl;
@@ -502,7 +508,18 @@ Path AStar::generateSubPath(BWAPI::Position _start, BWAPI::UnitType unitType, BW
 						const int hCost = neighbourTile.getApproxDistance(end) * ((x != 0 && y != 0) ? 14 : 10);
 						const double fCost = gCost + (HEURISTIC_WEIGHT * hCost);
 
+						//cout << "Tile costs: " << gCost << " | " << hCost << " | " << fCost << endl;
 						const Node neighbourNode = Node(neighbourTile, currentNode.tile, gCost, hCost, fCost);
+
+						//cout << "Comparing neighbour and current fCost: " << neighbourNode.fCost << " | " << currentNode.fCost << endl;
+// 
+						// NOTE: For now, not using early neighbour expansion. Having issues with how the algorithm explores neighbours.
+						/*if (neighbourNode.fCost < currentNode.fCost && earlyExpansion == false) {
+							earlyNode = neighbourNode;
+							cout << "Found early expansion" << endl;
+							earlyExpansionTiles.push_back(earlyNode.tile);
+							earlyExpansion = true;
+						}*/
 
 						if (!openSetNodes.contains(neighbourTile)) {
 							openSet.push(neighbourNode);
@@ -556,9 +573,20 @@ void AStar::fillAreaPathCache() {
 
 	BWAPI::WalkPosition firstPos;
 	BWAPI::WalkPosition secondPos;
-	
+
+	bool tryingFailedPair = false;
 	if (UncachedAreaPairs.empty()) {
 		return;
+		// If empty, try caching the failed pairs
+		/*if (failedAreaPairs.empty()) {
+			return;
+		}
+		else {
+			firstPos = failedAreaPairs.at(failedAreaPairs.size() - 1).first;
+			secondPos = failedAreaPairs.at(failedAreaPairs.size() - 1).second;
+			failedAreaPairs.pop_back();
+			tryingFailedPair = true;
+		}*/
 	}
 	else {
 		firstPos = UncachedAreaPairs.at(UncachedAreaPairs.size() - 1).first;
@@ -626,7 +654,7 @@ void AStar::fillAreaPathCache() {
 			}
 			else {
 				try {
-				subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
+					subPath = generateSubPath(BWAPI::Position(cp1->Center()), BWAPI::UnitTypes::Protoss_Probe, BWAPI::Position(cp2->Center()));
 				}
 				catch (const runtime_error& e) {
 #ifdef DEBUG_PATH
@@ -652,7 +680,14 @@ void AStar::fillAreaPathCache() {
 		const Path finalPath = Path(finalPositions, finalDistance);
 		AreaPathCache.insert(make_pair(finalPair, finalPath));
 	}
-}
+	else {
+		if (!tryingFailedPair) {
+			failedAreaPairs.push_back(make_pair(firstPos, secondPos));
+		}
+#ifdef DEBUG_PRECACHE
+		cout << "Failed precache stored" << endl;
+#endif
+	}
 
 #ifdef DEBUG_PRECACHE
 	pathCacheTimer.stop();
@@ -715,7 +750,7 @@ Path AStar::closestCachedPath(BWAPI::Position pos, BWAPI::Position goal) {
 		if (i == 0) {
 			continue;
 		}
-		finalDist += finalVec.at(i).getApproxDistance(finalVec.at(i-1));
+		finalDist += finalVec.at(i).getApproxDistance(finalVec.at(i - 1));
 	}
 
 	Path subPath = Path(finalVec, finalDist);
@@ -782,6 +817,25 @@ bool AStar::tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWA
 #endif
 
 	return true;
+}
+
+double AStar::squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
+	return pow((pos2.x - pos1.x), 2) + pow((pos2.y - pos1.y), 2);
+}
+double AStar::chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
+	double val = max(abs(pos2.x - pos1.x), abs(pos2.y - pos1.y));
+	/*if (pos1.x != pos2.x && pos1.y != pos2.y) {
+		return 1.414 * val;
+	}*/
+
+	return val;
+}
+double AStar::octileDistance(BWAPI::Position pos1, BWAPI::Position pos2) {
+	double dx = abs(pos2.x - pos1.x);
+	double dy = abs(pos2.y - pos1.y);
+	double D1 = 1.0;
+	double D2 = 1.414;
+	return (D1 * max(dx, dy)) + ((D2 - D1) * min(dx, dy));
 }
 
 void AStar::drawPath(Path path) {

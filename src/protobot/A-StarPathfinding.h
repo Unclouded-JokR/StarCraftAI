@@ -23,6 +23,7 @@ class Path;
 
 extern vector<std::pair<BWAPI::Position, BWAPI::Position>> rectCoordinates;
 extern vector<BWAPI::Position> precachedPositions;
+extern vector<BWAPI::TilePosition> earlyExpansionTiles;
 
 struct Node {
 	BWAPI::TilePosition tile, parent;
@@ -107,6 +108,7 @@ private:
 	static map<pair<const BWEM::Area::id, const BWEM::Area::id>, const Path> AreaPathCache;
 	static map<pair<const BWEM::ChokePoint*, const BWEM::ChokePoint*>, Path> ChokepointPathCache;
 	static vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> UncachedAreaPairs;
+	static vector<pair<const BWAPI::WalkPosition, const BWAPI::WalkPosition>> failedAreaPairs;
 
 	/// <summary>
 	/// Used for indexing BWAPI::TilePositions in arrays. Converts a BWAPI::TilePosition to an integer index based on the map width and height. The index is calculated as (tile.y * mapWidth + tile.x).
@@ -125,6 +127,10 @@ private:
 	/// <param name="isInteractableEndpoint">Boolean flag set by user for if the point should be interactable (won't be walkable but shouldn't stop the path)</param>
 	/// <returns></returns>
 	static bool tileWalkable(BWAPI::UnitType unitType, BWAPI::TilePosition tile, BWAPI::TilePosition end, bool isInteractableEndpoint);
+
+	static double squaredDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+	static double chebyshevDistance(BWAPI::Position pos1, BWAPI::Position pos2);
+	static double octileDistance(BWAPI::Position pos1, BWAPI::Position pos2);
 
 	/// <summary>
 	/// Almost identital to GeneratePath() except does not check for precache optimizations.
