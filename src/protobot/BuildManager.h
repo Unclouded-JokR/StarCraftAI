@@ -59,7 +59,6 @@ public:
 
     void runBuildOrderOnFrame();
     bool isBuildOrderActive() const;
-    void overrideBuildOrder(int buildOrderId);
 
     // Placement helpers
     bool checkWorkerIsConstructing(BWAPI::Unit);

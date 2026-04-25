@@ -437,33 +437,6 @@ void BuildManager::selectRandomBuildOrder()
     selectBuildOrderAgainstRace(enemyRace);
 }
 
-void BuildManager::overrideBuildOrder(int buildOrderId)
-{
-    // Current setup: clear current build order requests, then replace with another chosen build order ID
-    /*for (auto it = resourceRequests.begin(); it != resourceRequests.end();)
-    {
-        if (it->fromBuildOrder && it->state == ResourceRequest::State::PendingApproval)
-            it = resourceRequests.erase(it);
-        else
-            ++it;
-    }*/
-
-    for (int i = 0; i < (int)buildOrders.size(); i++)
-    {
-        if (buildOrders[i].id == buildOrderId)
-        {
-            activeBuildOrderIndex = i;
-            activeBuildOrderStep = 0;
-            buildOrderActive = true;
-            buildOrderCompleted = false;
-            //std::cout << "Overriding Build Order: " << buildOrderNameToString(buildOrders[i].name) << "\n";
-            return;
-        }
-    }
-
-    selectRandomBuildOrder();
-}
-
 bool BuildManager::enqueueBuildOrderBuilding(BWAPI::UnitType type, int count)
 {
     for (int i = 0; i < count; i++)
