@@ -35,11 +35,14 @@ struct BuildOrderStep
 
 /// <summary>
 /// BuildOrders are a similar line of thinking to opening you would see in chess. ProtoBot emulates oepnings that proffesional StarCraft players and the community have refined over the course of the games lifetime.
-/// \n
-/// \n ProtoBot performs 2 opening against all 3 races
-/// \n Protoss - 2 Gateway Dark Templar
-/// \n Terran - 2 Gateway Dark Templar
-/// \n Zerg - 2 Gateway Observer
+/// \n\n 
+/// ProtoBot performs 2 opening against all 3 races:
+/// \n 
+/// Protoss - 2 Gateway Dark Templar
+/// \n 
+/// Terran - 2 Gateway Dark Templar
+/// \n 
+/// Zerg - 2 Gateway Observer
 /// \n\n
 /// To see other oepning that have been created you can view them in the link below:
 /// \n https://liquipedia.net/starcraft/Protoss_Strategy
