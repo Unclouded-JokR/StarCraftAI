@@ -15,8 +15,6 @@ void StrategyManager::onStart()
 	//Reset Static Variables
 	minutesPassedIndex = 0;
 	frameSinceLastScout = 0;
-	ProductionGoal_index = 0;
-	timer = 0;
 	mineralExcessToExpand = 1000;
 	ProtoBot_Areas.clear();
 	ProtoBotArea_SquadPlacements.clear();
@@ -1472,25 +1470,6 @@ void StrategyManager::finalizeProductionPlan(std::vector<ResourceRequest>& resou
 bool StrategyManager::checkAlreadyRequested(BWAPI::UnitType type)
 {
 	return !(commanderReference->requestedBuilding(type) || commanderReference->checkUnitIsBeingWarpedIn(type) || commanderReference->checkUnitIsPlanned(type));
-}
-
-bool StrategyManager::metProductionGoal(FriendlyBuildingCounter buildings)
-{
-	const ProductionGoals proudctionGoal = ProtoBot_ProductionGoals.at(ProductionGoal_index);
-
-	if (buildings.nexus >= proudctionGoal.nexusCount &&
-		buildings.gateway >= proudctionGoal.gatewayCount &&
-		buildings.forge >= proudctionGoal.forgeCount &&
-		buildings.cyberneticsCore >= proudctionGoal.cyberneticsCount &&
-		buildings.roboticsFacility >= proudctionGoal.roboticsCount &&
-		buildings.observatory >= proudctionGoal.observatoryCount &&
-		buildings.citadelOfAdun >= proudctionGoal.citadelCount &&
-		buildings.templarArchives >= proudctionGoal.templarArchivesCount)
-	{
-		return true;
-	}
-
-	return false;
 }
 
 bool StrategyManager::canAfford(BWAPI::UnitType building, std::pair<int, int> resources)

@@ -58,10 +58,6 @@ struct FriendlyUnitCounter;
 struct FriendlyUpgradeCounter;
 struct ResourceRequest;
 
-enum ProductionFocus { EXPANDING_INFLUENCE, UNIT_PRODUCTION };
-enum ExpansionSate { CURRENTLY_EXPANDING, NO_EXPANSIONS_PLANNED };
-enum ProtoBotBlocks { NO_AVALIBLE_BLOCKS, HAVE_BLOCKS };
-
 /// <summary>
 /// Counter of the amount of units that are ProtoBot currently has created. Units in StarCraft have two states 'created' and 'completed', while the InformationManager has a counter for ProtoBot's units, the counter only considers completed units.
 /// </summary>
@@ -193,22 +189,6 @@ struct Action {
 	BWAPI::Position reinforcePosition = BWAPI::Positions::Invalid;
 };
 
-//Making gateway amount lower than I would like since the BWEB doesnt make a full 16 blocks for gateways sometimes.
-const ProductionGoals productionGoalEarly =
-{
-	2, 4, 1, 1, 2, 0, 0, 0
-};
-
-const ProductionGoals productionGoalMid =
-{
-	2, 8, 1, 1, 2, 1, 0, 0
-};
-
-const ProductionGoals productionGoalLate =
-{
-	3, 8, 2, 1, 2, 1, 1, 1
-};
-
 struct PossibleUnitRequest {
 	BWAPI::UnitType unit;
 	BWAPI::Unit trainer;
@@ -249,12 +229,8 @@ struct PossibleRequests
 class StrategyManager
 {
 private:
-	ProductionFocus ProtoBot_ProductionFocus = ProductionFocus::UNIT_PRODUCTION;
 	std::vector<int> expansionTimes = { 5, 10, 15, 20, 30 ,40, 50};
-	std::vector<ProductionGoals> ProtoBot_ProductionGoals = { productionGoalEarly, productionGoalMid, productionGoalLate };
-	size_t ProductionGoal_index = 0;
 	size_t minutesPassedIndex = 0;
-	int timer = 0;
 
 	IncompleteBuildingCounter incompleteBuildings;
 	SpenderManager spenderManager;
@@ -264,7 +240,6 @@ private:
 	int frameSinceLastScout = 0;
 	const BWEM::Area* mainArea;
 
-	bool metProductionGoal(FriendlyBuildingCounter);
 	bool canAfford(BWAPI::UnitType, std::pair<int, int> resources);
 
 	//New stuff I am adding 

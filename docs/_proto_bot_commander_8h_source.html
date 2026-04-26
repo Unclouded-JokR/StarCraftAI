@@ -267,54 +267,51 @@ $(function(){initNavTree('_proto_bot_commander_8h_source.html','',''); });
 <div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>    <span class="keywordtype">void</span> requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, <span class="keywordtype">bool</span> fromBuildOrder = <span class="keyword">false</span>);</div>
 <div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>    <span class="keywordtype">void</span> requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, <span class="keywordtype">bool</span> fromBuildOrder = <span class="keyword">false</span>);</div>
 <div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>    <span class="keywordtype">void</span> requestCheese(BWAPI::UnitType, BWAPI::Unit);</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <span class="keywordtype">void</span> checkBuildingAlreadyHasPlan(BWAPI::Unit); <span class="comment">//Might not need this if we already have the minerals to spend for units.</span></div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>    <span class="keywordtype">void</span> updateRequestCounter(BWAPI::UnitType unit);</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordtype">void</span> drawResourceRequestQueue(<span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">bool</span> background = <span class="keyword">true</span>);</div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    <span class="keywordtype">void</span> drawResouceRequestCount(<span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">bool</span> background = <span class="keyword">true</span>);</div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span> </div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="keywordtype">bool</span> upgradeAlreadyRequested(BWAPI::Unit building);</div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    <span class="keywordtype">bool</span> requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="keywordtype">bool</span> checkUnitIsBeingWarpedIn(BWAPI::UnitType type, <span class="keyword">const</span> BWEM::Base* nexus = <span class="keyword">nullptr</span>);</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    <span class="keywordtype">bool</span> checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    <span class="keywordtype">bool</span> checkCheeseRequest(BWAPI::Unit);</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    <span class="keywordtype">bool</span> alreadySentRequest(<span class="keywordtype">int</span> unitID);</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <span class="comment">//Ecconomy Manager Methods</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    std::vector&lt;NexusEconomy&gt; getNexusEconomies();</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span> </div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    <span class="comment">//Information Manager Methods</span></div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    <span class="keyword">const</span> std::set&lt;BWAPI::Unit&gt;&amp; getKnownEnemyUnits();</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <span class="keyword">const</span> std::map&lt;BWAPI::Unit, EnemyBuildingInfo&gt;&amp; getKnownEnemyBuildings();</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    <span class="keyword">const</span> <a class="code hl_struct" href="struct_enemy_locations.html">EnemyLocations</a>&amp; enemy()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> enemy_; }</div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <a class="code hl_struct" href="struct_enemy_locations.html">EnemyLocations</a>&amp; enemy() { <span class="keywordflow">return</span> enemy_; }</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    <span class="keywordtype">void</span> onEnemyMainFound(<span class="keyword">const</span> BWAPI::TilePosition&amp; tp);</div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>    <span class="keywordtype">void</span> onEnemyNaturalFound(<span class="keyword">const</span> BWAPI::TilePosition&amp; tp);</div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordtype">int</span> getEnemyGroundThreatAt(BWAPI::Position p) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    <span class="keywordtype">int</span> getEnemyDetectionAt(BWAPI::Position p) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>    <a class="code hl_struct" href="struct_threat_query_result.html">ThreatQueryResult</a> queryThreatAt(<span class="keyword">const</span> BWAPI::Position&amp; pos) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    <span class="keywordtype">bool</span> isAirThreatened(<span class="keyword">const</span> BWAPI::Position&amp; pos, <span class="keywordtype">int</span> threshold) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    <span class="keywordtype">bool</span> isDetectorThreatened(<span class="keyword">const</span> BWAPI::Position&amp; pos) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span> </div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>    <span class="comment">//Build Manager Methods</span></div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    <span class="keywordtype">bool</span> buildOrderCompleted();</div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    <span class="keywordtype">bool</span> checkWorkerIsConstructing(BWAPI::Unit);</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>    <span class="keywordtype">void</span> drawResourceRequestQueue(<span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">bool</span> background = <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    <span class="keywordtype">bool</span> upgradeAlreadyRequested(BWAPI::Unit building);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>    <span class="keywordtype">bool</span> requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>    <span class="keywordtype">bool</span> checkUnitIsBeingWarpedIn(BWAPI::UnitType type, <span class="keyword">const</span> BWEM::Base* nexus = <span class="keyword">nullptr</span>);</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>    <span class="keywordtype">bool</span> checkUnitIsPlanned(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>    <span class="keywordtype">bool</span> checkCheeseRequest(BWAPI::Unit);</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <span class="keywordtype">bool</span> alreadySentRequest(<span class="keywordtype">int</span> unitID);</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span> </div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    <span class="comment">//Ecconomy Manager Methods</span></div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    BWAPI::Unit getUnitToBuild(BWAPI::Position buildLocation);</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    std::vector&lt;NexusEconomy&gt; getNexusEconomies();</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span> </div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    <span class="comment">//Information Manager Methods</span></div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    <span class="keyword">const</span> std::set&lt;BWAPI::Unit&gt;&amp; getKnownEnemyUnits();</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    <span class="keyword">const</span> std::map&lt;BWAPI::Unit, EnemyBuildingInfo&gt;&amp; getKnownEnemyBuildings();</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    <span class="keyword">const</span> <a class="code hl_struct" href="struct_enemy_locations.html">EnemyLocations</a>&amp; enemy()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> enemy_; }</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    <a class="code hl_struct" href="struct_enemy_locations.html">EnemyLocations</a>&amp; enemy() { <span class="keywordflow">return</span> enemy_; }</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <span class="keywordtype">void</span> onEnemyMainFound(<span class="keyword">const</span> BWAPI::TilePosition&amp; tp);</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    <span class="keywordtype">void</span> onEnemyNaturalFound(<span class="keyword">const</span> BWAPI::TilePosition&amp; tp);</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keywordtype">int</span> getEnemyGroundThreatAt(BWAPI::Position p) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    <span class="keywordtype">int</span> getEnemyDetectionAt(BWAPI::Position p) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>    <a class="code hl_struct" href="struct_threat_query_result.html">ThreatQueryResult</a> queryThreatAt(<span class="keyword">const</span> BWAPI::Position&amp; pos) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>    <span class="keywordtype">bool</span> isAirThreatened(<span class="keyword">const</span> BWAPI::Position&amp; pos, <span class="keywordtype">int</span> threshold) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    <span class="keywordtype">bool</span> isDetectorThreatened(<span class="keyword">const</span> BWAPI::Position&amp; pos) <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span> </div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>    <span class="comment">//Build Manager Methods</span></div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>    <span class="keywordtype">bool</span> buildOrderCompleted();</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>    <span class="keywordtype">bool</span> checkWorkerIsConstructing(BWAPI::Unit);</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span> </div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    <span class="comment">// Scouting Manager Methods</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>    BWAPI::Unit getUnitToScout();</div>
 <div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span> </div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    <span class="comment">// Scouting Manager Methods</span></div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    BWAPI::Unit getUnitToScout();</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>    <span class="comment">// Strategy Manager Methods</span></div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>    <span class="keywordtype">bool</span> shouldGasSteal();</div>
 <div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span> </div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>    <span class="comment">// Strategy Manager Methods</span></div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <span class="keywordtype">bool</span> shouldGasSteal();</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span> </div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>    <a class="code hl_struct" href="struct_enemy_locations.html">EnemyLocations</a> enemy_;</div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>};</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <a class="code hl_struct" href="struct_enemy_locations.html">EnemyLocations</a> enemy_;</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>};</div>
 </div>
 <div class="ttc" id="aclass_build_manager_html"><div class="ttname"><a href="class_build_manager.html">BuildManager</a></div><div class="ttdoc">The BuildManagers responsibility is to be able to service the ResourceRequests passed to it and verif...</div><div class="ttdef"><b>Definition</b> <a href="_build_manager_8h_source.html#l00033">BuildManager.h:34</a></div></div>
 <div class="ttc" id="aclass_combat_manager_html"><div class="ttname"><a href="class_combat_manager.html">CombatManager</a></div><div class="ttdoc">Combat module of ProtoBot.</div><div class="ttdef"><b>Definition</b> <a href="_combat_manager_8h_source.html#l00026">CombatManager.h:26</a></div></div>
 <div class="ttc" id="aclass_economy_manager_html"><div class="ttname"><a href="class_economy_manager.html">EconomyManager</a></div><div class="ttdoc">The EconomyManager is responsible for the assignment of workers to be able to farm optimally across t...</div><div class="ttdef"><b>Definition</b> <a href="_economy_manager_8h_source.html#l00015">EconomyManager.h:16</a></div></div>
 <div class="ttc" id="aclass_scouting_manager_html"><div class="ttname"><a href="class_scouting_manager.html">ScoutingManager</a></div><div class="ttdoc">ScoutingManager Manages all scouting units and their behaviors. Assigns units to the appropriate scou...</div><div class="ttdef"><b>Definition</b> <a href="_scouting_manager_8h_source.html#l00044">ScoutingManager.h:44</a></div></div>
-<div class="ttc" id="aclass_strategy_manager_html"><div class="ttname"><a href="class_strategy_manager.html">StrategyManager</a></div><div class="ttdoc">The StrategyManager is way ProtoBot is able to make macro level decisions about what to do....</div><div class="ttdef"><b>Definition</b> <a href="_strategy_manager_8h_source.html#l00249">StrategyManager.h:250</a></div></div>
+<div class="ttc" id="aclass_strategy_manager_html"><div class="ttname"><a href="class_strategy_manager.html">StrategyManager</a></div><div class="ttdoc">The StrategyManager is way ProtoBot is able to make macro level decisions about what to do....</div><div class="ttdef"><b>Definition</b> <a href="_strategy_manager_8h_source.html#l00229">StrategyManager.h:230</a></div></div>
 <div class="ttc" id="aclass_timer_manager_html"><div class="ttname"><a href="class_timer_manager.html">TimerManager</a></div><div class="ttdef"><b>Definition</b> <a href="_timer_manager_8h_source.html#l00008">TimerManager.h:9</a></div></div>
 <div class="ttc" id="astruct_enemy_locations_html"><div class="ttname"><a href="struct_enemy_locations.html">EnemyLocations</a></div><div class="ttdef"><b>Definition</b> <a href="#l00033">ProtoBotCommander.h:33</a></div></div>
 <div class="ttc" id="astruct_friendly_building_counter_html"><div class="ttname"><a href="struct_friendly_building_counter.html">FriendlyBuildingCounter</a></div><div class="ttdef"><b>Definition</b> <a href="_information_manager_8h_source.html#l00042">InformationManager.h:43</a></div></div>

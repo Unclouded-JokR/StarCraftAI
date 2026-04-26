@@ -182,10 +182,7 @@ public:
 	void requestUnit(BWAPI::UnitType unit, BWAPI::Unit buildingToTrain, bool fromBuildOrder = false);
 	void requestUpgrade(BWAPI::Unit unit, BWAPI::UpgradeType upgrade, bool fromBuildOrder = false);
 	void requestCheese(BWAPI::UnitType, BWAPI::Unit);
-	void checkBuildingAlreadyHasPlan(BWAPI::Unit); //Might not need this if we already have the minerals to spend for units.
-	void updateRequestCounter(BWAPI::UnitType unit);
 	void drawResourceRequestQueue(int x, int y, bool background = true);
-	void drawResouceRequestCount(int x, int y, bool background = true);
 
 	bool upgradeAlreadyRequested(BWAPI::Unit building);
 	bool requestedBuilding(BWAPI::UnitType building, BWAPI::Position nexusPosition = BWAPI::Positions::Invalid);

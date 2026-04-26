@@ -12,6 +12,12 @@
 
 class EconomyManager;
 
+/// <summary>
+/// A NexusEconomy is a the way we are able to assign workers to a specific Nexus to farm resources at the Resource Depots that ProtoBot has created.\n
+/// \n
+/// [Note]\n
+/// I have to admit the code structure for this is honestly terrible and is not great the way it is set up. If you are reading this and wanting to create a SC BW bot, make Workers a class on their own. It makes the handling of workers from different states easier and makes crashing less likely to happen if you dont have them as references else where.
+/// </summary>
 class NexusEconomy
 {
 public:
