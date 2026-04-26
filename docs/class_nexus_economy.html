@@ -95,7 +95,7 @@ $(function(){initNavTree('class_nexus_economy.html','','class_nexus_economy-memb
 <p>A <a class="el" href="class_nexus_economy.html" title="A NexusEconomy is a the way we are able to assign workers to a specific Nexus to farm resources at th...">NexusEconomy</a> is a the way we are able to assign workers to a specific Nexus to farm resources at the Resource Depots that ProtoBot has created.<br  />
 <br  />
 [Note]<br  />
-I have to admit the code structure for this is honestly terrible and is not great the way it is set up. If you are reading this and wanting to create a SC BW bot, make Workers a class on their own. It makes the handling of workers from different states easier and makes crashing less likely to happen if you dont have them as references else where.  
+I have to admit the code structure for this is honestly terrible and is not great the way to be able to assign workers. If you are reading this and wanting to create a SC BW bot, make workers a class on their own and define a state machine for their specific behaviour and create components that are able to find optimal ways to farm, scout, and build given some extra arguments. It makes the handling of workers from different states easier and makes crashing less likely to happen if you dont have them as references else where.  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>&gt;</code></p>
@@ -150,9 +150,9 @@ Public Attributes</h2></td></tr>
 <div class="textblock"><p>A <a class="el" href="class_nexus_economy.html" title="A NexusEconomy is a the way we are able to assign workers to a specific Nexus to farm resources at th...">NexusEconomy</a> is a the way we are able to assign workers to a specific Nexus to farm resources at the Resource Depots that ProtoBot has created.<br  />
 <br  />
 [Note]<br  />
-I have to admit the code structure for this is honestly terrible and is not great the way it is set up. If you are reading this and wanting to create a SC BW bot, make Workers a class on their own. It makes the handling of workers from different states easier and makes crashing less likely to happen if you dont have them as references else where. </p>
+I have to admit the code structure for this is honestly terrible and is not great the way to be able to assign workers. If you are reading this and wanting to create a SC BW bot, make workers a class on their own and define a state machine for their specific behaviour and create components that are able to find optimal ways to farm, scout, and build given some extra arguments. It makes the handling of workers from different states easier and makes crashing less likely to happen if you dont have them as references else where. </p>
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00021">21</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00023">23</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a1f1cb78e6aa231ee8075bd01e91c832a" name="a1f1cb78e6aa231ee8075bd01e91c832a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1f1cb78e6aa231ee8075bd01e91c832a">&#9670;&#160;</a></span>NexusEconomy()</h2>
@@ -1185,7 +1185,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00048">48</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00050">50</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1201,7 +1201,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00046">46</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00048">48</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1217,7 +1217,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00037">37</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00039">39</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1233,7 +1233,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00043">43</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00045">45</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1249,7 +1249,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00029">29</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00031">31</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1265,7 +1265,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00030">30</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00032">32</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1281,7 +1281,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00024">24</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00026">26</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1297,7 +1297,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00027">27</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00029">29</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1313,7 +1313,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00032">32</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00034">34</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1329,7 +1329,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00026">26</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00028">28</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1345,7 +1345,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00054">54</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00056">56</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1361,7 +1361,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00042">42</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00044">44</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1377,7 +1377,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00038">38</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00040">40</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1393,7 +1393,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00040">40</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00042">42</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1409,7 +1409,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00025">25</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00027">27</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1425,7 +1425,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00034">34</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00036">36</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1441,7 +1441,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00053">53</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00055">55</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1457,7 +1457,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00047">47</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00049">49</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1473,7 +1473,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00031">31</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00033">33</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1489,7 +1489,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00028">28</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00030">30</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1505,7 +1505,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00033">33</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00035">35</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1521,7 +1521,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00044">44</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00046">46</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1537,7 +1537,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00036">36</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00038">38</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1553,7 +1553,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00049">49</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00051">51</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1569,7 +1569,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00057">57</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00059">59</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1585,7 +1585,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00050">50</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00052">52</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
@@ -1601,7 +1601,7 @@ I have to admit the code structure for this is honestly terrible and is not grea
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00041">41</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_nexus_economy_8h_source.html#l00043">43</a> of file <a class="el" href="_nexus_economy_8h_source.html">NexusEconomy.h</a>.</p>
 
 </div>
 </div>
