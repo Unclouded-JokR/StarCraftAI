@@ -12,7 +12,7 @@ To start using ProtoBot, the game folder for StarCraft: Brood War is needed. Thi
 Note: StarCraft: Brood War has been approved for research and projects like this one with full permission from Blizzard Entertainment, the creator of StarCraft. 
 
 Please watch the following video on how learn to use BWAPI and change the config file, STARTCraft was the repository we used as a base for ProtoBot and provides alot of key knowledge of StarCraft Programming.
-STARTCraft Tutoiral Video: https://www.youtube.com/watch?v=FEEkO6__GKw
+STARTCraft Tutoiral Video:\n https://www.youtube.com/watch?v=FEEkO6__GKw
 
 Get the files here: https://davechurchill.ca/starcraft/files/startcraft/scbw_bwapi440.zip
 
@@ -66,7 +66,9 @@ To inspect and run the source code of ProtoBot through Visual Studio, all you wi
 
 For some reason Release 64 does not compile and I could not figure out why. It is most likely due to a project configuration setting specifically for that mode. 
 \n 
-Make sure to also set the ProtoBot project as the start up project. In the Solution explorer window (View -> Solution Explorer Window or (Ctrl + Alt + L)) right click the ProtoBot project (not the 'solution' ProtoBot) and set it as the start up project.
+\n
+<b>Note<b>
+\nMake sure to also set the ProtoBot project as the start up project. In the Solution Explorer Window (View -> Solution Explorer Window or (Ctrl + Alt + L)) right click the ProtoBot project (not the 'solution' ProtoBot) and set it as the start up project.
 \n\n When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the ./StarCraftAI/starcraft directory and dobule click the RunStarcraftWithBWAPI.bat batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the bwapi configuration file in the ./StarCraftAI/starcraft/bwapi-data using a text editor of your choice.
 \n I highly reccomend watching the STARTCraft video at the top of this webpage as a tutorial to BWAPI.
 
@@ -76,5 +78,5 @@ Additional Documentation
 Functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
 \n It can be found here: https://bwapi.github.io/
 
-For a list of useful links and things our team learned during the course of the project, look in the senior design blog post for the "Document of All Things StarCraft: Brood War Programming".
+For a list of usefull links and things our team learned during the course of the project, look in the senior design blog post for the "Document of All Things StarCraft: Brood War Programming".
 */
