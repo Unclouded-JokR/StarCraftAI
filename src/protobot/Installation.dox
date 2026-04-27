@@ -73,4 +73,6 @@ Additional Documentation
 
 Functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
 \n It can be found here: https://bwapi.github.io/
+
+For a list of useful links and things our team learned during the course of the project, look in the senior design blog post for the "Document of All Things StarCraft: Brood War Programming".
 */
