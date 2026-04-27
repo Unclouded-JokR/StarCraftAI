@@ -69,12 +69,13 @@ For some reason Release 64 does not compile and I could not figure out why. It i
 <b>Note</b>
 \n Make sure to also set the ProtoBot project as the start up project. In the Solution Explorer Window (View -> Solution Explorer Window or (Ctrl + Alt + L)) right click the ProtoBot project (not the 'solution' ProtoBot) and set it as the start up project.
 \n\n When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the <b>./StarCraftAI/starcraft</b> directory and dobule click the <b>RunStarcraftWithBWAPI.bat</b> batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the <b>bwapi.ini</b> configuration file in the <b>./StarCraftAI/starcraft/bwapi-data</b> using a text editor of your choice.
-\n I highly reccomend watching the STARTCraft video at the top of this webpage as a tutorial to BWAPI.
+\n I highly recommend watching the STARTCraft video at the top of this webpage as a tutorial to BWAPI.
 
 Additional Documentation
 ==
 
 Explanation of functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
+\n\n BWAPI documentation:
 \n https://bwapi.github.io/
 
 For a list of usefull links and things our team learned during the course of the project, look in the senior design blog post for the "Document of All Things StarCraft: Brood War Programming".
