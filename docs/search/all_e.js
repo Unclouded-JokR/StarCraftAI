@@ -16,8 +16,9 @@ var searchData=
   ['posttarget_13',['postTarget',['../class_scouting_observer.html#a65d180758a6f21ce7c26da53e2484056',1,'ScoutingObserver']]],
   ['previousboidsmap_14',['previousBOIDSMap',['../class_b_o_i_d_s.html#a99cd6a8344664d660b8e9caf6953b2eb',1,'BOIDS']]],
   ['productiongoals_15',['ProductionGoals',['../struct_production_goals.html',1,'']]],
-  ['protobot_16',['Running ProtoBot',['../index.html#autotoc_md1',1,'']]],
-  ['protobotcommander_17',['ProtoBotCommander',['../class_proto_bot_commander.html',1,'']]],
-  ['protobotproductioncount_18',['ProtoBotProductionCount',['../struct_proto_bot_production_count.html',1,'']]],
-  ['protobotrequestcounter_19',['ProtoBotRequestCounter',['../struct_proto_bot_request_counter.html',1,'']]]
+  ['protobot_16',['Running Final Executable Version of ProtoBot',['../index.html#autotoc_md1',1,'']]],
+  ['protobot_20through_20visual_20studio_17',['Running ProtoBot Through Visual Studio',['../index.html#autotoc_md4',1,'']]],
+  ['protobotcommander_18',['ProtoBotCommander',['../class_proto_bot_commander.html',1,'']]],
+  ['protobotproductioncount_19',['ProtoBotProductionCount',['../struct_proto_bot_production_count.html',1,'']]],
+  ['protobotrequestcounter_20',['ProtoBotRequestCounter',['../struct_proto_bot_request_counter.html',1,'']]]
 ];

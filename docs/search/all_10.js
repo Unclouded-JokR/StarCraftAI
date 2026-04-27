@@ -16,5 +16,6 @@ var searchData=
   ['squadstate_13',['SquadState',['../class_squad_state.html',1,'']]],
   ['started_14',['Getting Started',['../index.html',1,'']]],
   ['state_15',['State',['../class_scouting_probe.html#ad0f2fadae2cb85e4b445cc7322b9bf25',1,'ScoutingProbe']]],
-  ['strategymanager_16',['StrategyManager',['../class_strategy_manager.html',1,'']]]
+  ['strategymanager_16',['StrategyManager',['../class_strategy_manager.html',1,'']]],
+  ['studio_17',['Running ProtoBot Through Visual Studio',['../index.html#autotoc_md4',1,'']]]
 ];

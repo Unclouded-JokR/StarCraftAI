@@ -227,6 +227,7 @@ var NAVTREEINDEX0 =
 "index.html#autotoc_md2":[0,1,0],
 "index.html#autotoc_md3":[0,1,1],
 "index.html#autotoc_md4":[0,2],
+"index.html#autotoc_md5":[0,3],
 "pages.html":[],
 "struct_action.html":[1,0,0],
 "struct_area_id_hash.html":[1,0,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX0 =
 "struct_node.html":[1,0,32],
 "struct_placement_info.html":[1,0,34],
 "struct_position_hash.html":[1,0,35],
-"struct_possible_building_request.html":[1,0,36],
-"struct_possible_requests.html":[1,0,37]
+"struct_possible_building_request.html":[1,0,36]
 };

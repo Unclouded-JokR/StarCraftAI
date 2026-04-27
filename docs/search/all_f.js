@@ -8,5 +8,6 @@ var searchData=
   ['resourcerequest_5',['ResourceRequest',['../struct_resource_request.html',1,'']]],
   ['retreathomemicro_6',['retreatHomeMicro',['../class_scouting_zealot.html#a9e004448a666d89290414613b0f77fd5',1,'ScoutingZealot']]],
   ['returningcargo_7',['ReturningCargo',['../class_scouting_probe.html#ad0f2fadae2cb85e4b445cc7322b9bf25a68312302a2af7d0f52c26119493b9887',1,'ScoutingProbe']]],
-  ['running_20protobot_8',['Running ProtoBot',['../index.html#autotoc_md1',1,'']]]
+  ['running_20final_20executable_20version_20of_20protobot_8',['Running Final Executable Version of ProtoBot',['../index.html#autotoc_md1',1,'']]],
+  ['running_20protobot_20through_20visual_20studio_9',['Running ProtoBot Through Visual Studio',['../index.html#autotoc_md4',1,'']]]
 ];

@@ -46,7 +46,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_a-_star_pathfinding_8cpp_source.html",
-"struct_possible_unit_request.html"
+"struct_possible_requests.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

@@ -93,14 +93,18 @@ $(function(){initNavTree('index.html','',''); });
 <div class="contents">
 <div class="textblock"><h1 class="doxsection"><a class="anchor" id="autotoc_md0"></a>
 Installation</h1>
-<p>ProtoBot is completely open source and you can download ProtoBot's files here: <a href="https://github.com/Unclouded-JokR/StarCraftAI">https://github.com/Unclouded-JokR/StarCraftAI</a></p>
+<p>ProtoBot is completely open source and you can download ProtoBot's files here: <a href="https://github.com/Unclouded-JokR/StarCraftAI/tree/main/src">https://github.com/Unclouded-JokR/StarCraftAI/tree/main/src</a></p>
 <p>To start using ProtoBot, the game folder for StarCraft: Brood War is needed. This folder was not included in the GitHub repository to avoid taking up too much space. <br  />
  Dr. Dave Churchill, a pioneer of the StarCraft Brood War AI competitive scene, provided a starting folder for executing StarCraft: Brood War AI bots that also includes the game itself. <br  />
+ If you installed the source code through the senior design blog post, everything BWAPI and StarCraft Related will be installed already.</p>
+<p>Please watch the following video on how learn to use BWAPI and change the config file: <a href="https://www.youtube.com/watch?v=FEEkO6__GKw">https://www.youtube.com/watch?v=FEEkO6__GKw</a></p>
+<p><br  />
  Note: This was done with full permission from Blizzard Entertainment, the creator of StarCraft.</p>
 <p>Get the files here: <a href="https://davechurchill.ca/starcraft/files/startcraft/scbw_bwapi440.zip">https://davechurchill.ca/starcraft/files/startcraft/scbw_bwapi440.zip</a></p>
+<p>Tutorial on STARTCraft (The project we used as a base for ProtoBot): <a href="https://www.youtube.com/watch?v=czhNqUxmLks">https://www.youtube.com/watch?v=czhNqUxmLks</a></p>
 <p>Once installation is done, you can replace the contents of StarCraftAI/starcraft with all the files from the zip folder.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md1"></a>
-Running ProtoBot</h1>
+Running Final Executable Version of ProtoBot</h1>
 <h2 class="doxsection"><a class="anchor" id="autotoc_md2"></a>
 Windows</h2>
 <p>To run ProtoBot on <b>Windows</b>, do the following:</p>
@@ -121,6 +125,21 @@ Linux</h2>
     make clean
     make
   </code> </pre><h1 class="doxsection"><a class="anchor" id="autotoc_md4"></a>
+Running ProtoBot Through Visual Studio</h1>
+<p>To inspect and run the source code of ProtoBot through Visual Studio, all you will need to do is make sure you have Visual Studio 22 already installed and to open a solution. <br  />
+ To find the solution for ProtoBot look in the ./StarCraftAI/visualstudio/ file and select the ProtoBot.sln file. This will automatically set up everything related to the project for you. <br  />
+ To compile and run the bot click the Local Windows Debugger button at the top of the window on any of the following modes:</p><ul>
+<li>Debug 32</li>
+<li>Debug 64</li>
+<li>Release 32 <br  />
+ For some reason Release 64 does not compile and I could not figure out why. It is most likely due to a project configuration setting specifically for that mode. <br  />
+<br  />
+ Make sure to also set the ProtoBot project as the start up project. In the Solution explorer window (View -&gt; Solution Explorer Window (Ctrl + Alt + L)) right click the ProtoBot project (not the 'solution' ProBot) and set it as the start up project. <br  />
+<br  />
+ When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the ./StarCraftAI/starcraft directory and dobule click the RunStarcraftWithBWAPI batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the bwapi configuration file in the ./StarCraftAI/starcraft/bwapi-data using a text editor of your choice. <br  />
+ I highly reccomend watching the STARTCraft video at the top of this webpage as a tutorial to BWAPI.</li>
+</ul>
+<h1 class="doxsection"><a class="anchor" id="autotoc_md5"></a>
 Additional Documentation</h1>
 <p>Functions, classes, and namespaces such as <b>BWAPI::Broodwar-&gt;draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation. <br  />
  It can be found here: <a href="https://bwapi.github.io/">https://bwapi.github.io/</a> </p>

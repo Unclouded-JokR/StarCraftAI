@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['linux_0',['Linux',['../index.html#autotoc_md3',1,'']]]
+  ['getting_20started_0',['Getting Started',['../index.html',1,'']]]
 ];

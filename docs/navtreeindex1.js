@@ -1,5 +1,6 @@
 var NAVTREEINDEX1 =
 {
+"struct_possible_requests.html":[1,0,37],
 "struct_possible_unit_request.html":[1,0,38],
 "struct_possible_upgrade_request.html":[1,0,39],
 "struct_production_goals.html":[1,0,40],
