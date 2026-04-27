@@ -4,6 +4,8 @@ Installation
 
 ProtoBot is completely open source and you can download ProtoBot's files here: https://github.com/Unclouded-JokR/StarCraftAI/tree/main/src
 
+While the documentation for our project is lackluster at best, ProtoBot does provide a good idea on how you need to structure an agent to play StarCraft. Look at the DDS for a more detailed view of how ProtoBot works or inspect the visual studio project with the docmentation to help explain alittle of the purpose of each class/struct.
+
 To start using ProtoBot, the game folder for StarCraft: Brood War is needed. This folder was not included in the GitHub repository to avoid taking up too much space.
 \n Dr. Dave Churchill, a pioneer of the StarCraft Brood War AI competitive scene, provided a starting folder for executing StarCraft: Brood War AI bots that also includes the game itself. 
 \n If you installed the source code through the senior design blog post, everything BWAPI and StarCraft Related will be installed already. 
