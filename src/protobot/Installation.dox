@@ -65,10 +65,10 @@ To inspect and run the source code of ProtoBot through Visual Studio, all you wi
 - Release 32
 
 For some reason Release 64 does not compile and I could not figure out why. It is most likely due to a project configuration setting specifically for that mode. 
-\n 
+\n\n 
 <b>Note</b>
 \n Make sure to also set the ProtoBot project as the start up project. In the Solution Explorer Window (View -> Solution Explorer Window or (Ctrl + Alt + L)) right click the ProtoBot project (not the 'solution' ProtoBot) and set it as the start up project.
-\n\n When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the <b>./StarCraftAI/starcraft</b> directory and dobule click the <b>RunStarcraftWithBWAPI.bat</b> batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the bwapi configuration file in the ./StarCraftAI/starcraft/bwapi-data using a text editor of your choice.
+\n\n When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the <b>./StarCraftAI/starcraft</b> directory and dobule click the <b>RunStarcraftWithBWAPI.bat</b> batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the <b>bwapi.ini</b> configuration file in the <b>./StarCraftAI/starcraft/bwapi-data</b> using a text editor of your choice.
 \n I highly reccomend watching the STARTCraft video at the top of this webpage as a tutorial to BWAPI.
 
 Additional Documentation
