@@ -58,7 +58,7 @@ Running ProtoBot Through Visual Studio
 ==
 
 To inspect and run the source code of ProtoBot through Visual Studio, all you will need to do is make sure you have Visual Studio 22 already installed and to open a solution. 
-\n To find the solution for ProtoBot look in the ./StarCraftAI/visualstudio/ directory and select the ProtoBot.sln file. This will automatically set up everything related to the project for you.
+\n To find the solution for ProtoBot look in the <b>./StarCraftAI/visualstudio/</b> directory and select the <b>ProtoBot.sln</b> file. This will automatically set up everything related to the project for you.
 \n To compile and run the bot, click the Local Windows Debugger button at the top of the window on any of the following modes:
 - Debug 32
 - Debug 64
@@ -68,7 +68,7 @@ For some reason Release 64 does not compile and I could not figure out why. It i
 \n 
 <b>Note</b>
 \n Make sure to also set the ProtoBot project as the start up project. In the Solution Explorer Window (View -> Solution Explorer Window or (Ctrl + Alt + L)) right click the ProtoBot project (not the 'solution' ProtoBot) and set it as the start up project.
-\n\n When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the ./StarCraftAI/starcraft directory and dobule click the RunStarcraftWithBWAPI.bat batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the bwapi configuration file in the ./StarCraftAI/starcraft/bwapi-data using a text editor of your choice.
+\n\n When you run, a terminal window will pop up saying "Game table mapping not found", naviagte to the <b>./StarCraftAI/starcraft</b> directory and dobule click the <b>RunStarcraftWithBWAPI.bat</b> batch file. This will automatically start up the game if you downloaded the source code from the senior design blog post otherwise you will need to change the bwapi configuration file in the ./StarCraftAI/starcraft/bwapi-data using a text editor of your choice.
 \n I highly reccomend watching the STARTCraft video at the top of this webpage as a tutorial to BWAPI.
 
 Additional Documentation
