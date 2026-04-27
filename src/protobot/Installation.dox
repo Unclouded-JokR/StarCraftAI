@@ -74,7 +74,7 @@ For some reason Release 64 does not compile and I could not figure out why. It i
 Additional Documentation
 ==
 
-Functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
+Explanation of functions, classes, and namespaces such as <b>BWAPI::Broodwar->draw...()</b>, <b>BWAPI::Position</b>, <b>BWAPI::Broodwar</b>, etc. are documented in the BWAPI documentation.
 \n https://bwapi.github.io/
 
 For a list of usefull links and things our team learned during the course of the project, look in the senior design blog post for the "Document of All Things StarCraft: Brood War Programming".
