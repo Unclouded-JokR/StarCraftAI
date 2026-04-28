@@ -7,9 +7,10 @@ ProtoBot is a student made *StarCraft: Brood War* bot made almost entirely from 
 If you are interested in how ProtoBot works, take a look at the CSE Blog post to get a high level overview of the scope and functionality of ProtoBot.
 
 Additonally the blog post also has doccumentation of ProtoBot that gives a more detailed information about how ProtoBot Functions. 
-I recommend looking at the "Detailed Design Specification" for the best description of how ProtoBot works and the "Document of All things StarCraft: Brood War Programming" for useful advice plus links to resources we accumulated during the course of the project. 
+I recommend looking at the "Detailed Design Specification" for the best description of how ProtoBot works.
 
-*If the blog post for whatever reason does not exist or there is some error, the documents are in the senior_design_documentation folder of this repository.*
+For useful advice plus links to resources we accumulated during the course of the project. 
+Refer to the document in the senior_design_documentation/ folder in this repository.
 
 If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Doxygen Documentation to learn how to install and run ProtoBot. Adtionally, watching the "Intro to STARTCraft" video also gives good prerequisite knowledge of BWAPI and how the visual studio project functions.
 
@@ -19,7 +20,7 @@ Link to ProtoBot BASIL profile: <br />
 https://www.basil-ladder.net/bot.html?bot=UTAProtoBot
 
 Link to ProtoBot UTA CSE Blog Post: <br />
-*Will be linked once created*
+https://websites.uta.edu/cseseniordesign/2026/04/28/starcraft-brood-war-game-playing-agent/
 
 Link to ProtoBot Doxygen Documentation: <br />
 https://unclouded-jokr.github.io/StarCraftAI/
