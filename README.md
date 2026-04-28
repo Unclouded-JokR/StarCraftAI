@@ -36,7 +36,7 @@ https://www.youtube.com/watch?v=czhNqUxmLks&t
 Video to learn about STARTCraft: <br />
 https://www.youtube.com/watch?v=FEEkO6__GKw&t
 
-*The STARTCraft repository link to download StarCraft: Brood War 1.16.1 throws a not found, so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry of this repository (please do not distribute and use responsibly).*
+*The link in the STARTCraft repository to download StarCraft: Brood War 1.16.1 throws a not found, so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry of this repository (please do not distribute and use responsibly).*
 
 Special thanks to the StarCraft bot authors that helped during the development of ProtoBot:
 * Dave Churchill 
