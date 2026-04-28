@@ -24,7 +24,7 @@ Link to STARTCraft:  <br />
 https://github.com/davechurchill/STARTcraft
 
 Links to useful videos to learn about StarCraft: Brood War programming:
-https://www.youtube.com/watch?v=czhNqUxmLks&t  <br />
+ <br /> https://www.youtube.com/watch?v=czhNqUxmLks&t 
  <br /> <br />
 https://www.youtube.com/watch?v=FEEkO6__GKw&t
 
