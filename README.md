@@ -48,3 +48,53 @@ Special thanks to the StarCraft bot authors that helped during the development 
 * Stardust (Bruce Nielsen)
 * NiteKat (Daniel Maize)
 
+# StarCraft AI Resources
+Here is a list of useful resoucres for things StarCraft AI programming, I cant guarentee that all the links will work in the future but I hope this will be useful as a starting point for anyone that sees this.
+
+- Brood War AI Community
+[Brood War AI Discord](https://discord.gg/RKrwjmF2vq)
+
+- StarCraft AI and General AI programming tutorials
+[SSCAIT Tutorial](https://sscaitournament.com/index.php?action=tutorial)
+[Intro To STARTCraft AI](https://www.youtube.com/watch?v=czhNqUxmLks)
+[StarCraft AI Programming Tutorial](https://www.youtube.com/watch?v=FEEkO6__GKw)
+[Introduction to Prismata AI](https://www.youtube.com/watch?v=uJtduCR9PNI)
+
+- BWAPI Resources
+[BWAPI Documentation](github.com/bwapi/bwapi)
+
+- SC-Docker (Used to play multiplayer agent vs agent games)
+[SC-Docker](https://github.com/basil-ladder/sc-docker/tree/master)
+[PotatoPeeler](https://github.com/dgant/PotatoPeeler)
+
+- Map Editor
+[ScmDraft](http://www.stormcoast-fortress.net/cntt/software/scmdraft/gallery/)
+[Tutorial Video on how to install](https://www.youtube.com/watch?v=pgFmyyldtDo)
+[Download for map that is BWEM Compatible](https://drive.google.com/file/d/1bdf6dG-911mjDPEoHK8P0p9F5hOKD0hF/view?usp=sharing)
+
+- Other Bots
+[UAlbertaBot](https://github.com/davechurchill/ualbertabot)
+[SteamHammer](https://satirist.org/ai/starcraft/steamhammer/)
+[PurpleWave](https://github.com/dgant/PurpleWave)
+[StarDust](https://github.com/dgant/PurpleWave)
+[McRave](https://github.com/Cmccrave/McRave)
+*The Awesome Broodwar Resources link has more bots that are open source available, optionally you can also go to the [Bots & Results](https://sscaitournament.com/index.php?action=scores) section of SSCAIT to get the binaries and possibly source code of other agents* 
+
+- StarCraft: Brood War AI Tournoments
+[BASIL](https://www.basil-ladder.net/)
+[SSCAIT](https://sscaitournament.com/)
+[AIIDE](https://davechurchill.ca/starcraft/aiide/)
+[COG](https://davechurchill.ca/starcraft/cog/)
+
+- General StarCraft AI resources
+[Dr.Churchill list of useful resources](https://davechurchill.ca/starcraft/resources/)
+[Awesome Broodwar Resources](github.com/TheEngineeringBay/Awesome-Broodwar-Resources?tab=readme-ov-file#terrain-analysis)
+[StarCraft AI Wiki](https://www.starcraftai.com/wiki/Main_Page)
+[Misc. StarCraft Research Papers](https://drive.google.com/drive/folders/1RhSmISOzgPfA4WXsEM1mor-v58Q3EQvJ?usp=sharing)
+
+- Other AI Programming resources for other games
+[StarCraft 2 AI resources](https://github.com/aiarena/awesome-sc2-ai)
+[StarCraft 2 API for Python 3](https://github.com/BurnySc2/python-sc2)
+[Celeste Instrumentation](https://github.com/hdrien0/Celeste-Instrumentation)
+
+
