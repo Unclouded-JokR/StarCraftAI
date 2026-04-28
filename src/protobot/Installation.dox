@@ -2,7 +2,7 @@
 Installation
 ==
 
-ProtoBot is completely open source and you can download ProtoBot's files here:\n https://github.com/Unclouded-JokR/StarCraftAI/tree/main/src
+ProtoBot is completely open source and you can download ProtoBot's files here:\n https://github.com/Unclouded-JokR/StarCraftAI/
 
 While the documentation for our project is lackluster at best, ProtoBot does provide a good idea on how you need to structure an agent to play StarCraft. Look at the DDS for a more detailed view of how ProtoBot works or inspect the visual studio project with the docmentation to help explain alittle of the purpose of each class/struct.
 
