@@ -11,7 +11,7 @@ I recommend looking at the "Detailed Design Specification" for the best descript
 
 *If the blog post for whatever reason does not exist or there is some error, the documents are in the senior_design_documentation folder of this repository.*
 
-If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Doxygen Documentation to learn how to install and run ProtoBot. Watching the "Intro to STARTCraft" also gives good prerequisite knowledge of BWAPI and how the visual studio project functions.
+If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Doxygen Documentation to learn how to install and run ProtoBot. Adtionally, watching the "Intro to STARTCraft" video also gives good prerequisite knowledge of BWAPI and how the visual studio project functions.
 
 # ProtoBot Links and Resources
 
