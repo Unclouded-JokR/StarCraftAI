@@ -12,21 +12,21 @@ I recommend looking at the "Detailed Design Specification" for the best descript
 If you are wanting to run ProtoBot on your own computer, looking at the ProtoBot Doxygen Documentation to learn how to install and run ProtoBot. Watching the "Intro to STARTCraft" also gives good prerequisite knowledge of BWAPI and how the visual studio project functions.
 
 Link to ProtoBot BASIL profile:
-https://www.basil-ladder.net/bot.html?bot=UTAProtoBot
+\n https://www.basil-ladder.net/bot.html?bot=UTAProtoBot
 
 Link to ProtoBot UTA CSE Blog Post:
-*Will be linked once created*
+\n *Will be linked once created*
 
 Link to ProtoBot Doxygen Documentation:
-(https://unclouded-jokr.github.io/StarCraftAI/)
+\n https://unclouded-jokr.github.io/StarCraftAI/
 
 Link to STARTCraft:
-https://github.com/davechurchill/STARTcraft
+\n https://github.com/davechurchill/STARTcraft
 
 Links to useful videos to learn about StarCraft: Brood War programming:
-https://www.youtube.com/watch?v=czhNqUxmLks&t
-
-https://www.youtube.com/watch?v=FEEkO6__GKw&t
+\n https://www.youtube.com/watch?v=czhNqUxmLks&t
+\n
+\n https://www.youtube.com/watch?v=FEEkO6__GKw&t
 
 Special thanks to the StarCraft bot authors that helped during the development of ProtoBot:
 * Dave Churchill 
