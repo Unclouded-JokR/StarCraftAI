@@ -9,7 +9,7 @@ If you are interested in how ProtoBot works, take a look at the CSE Blog post to
 Additonally the blog post also has doccumentation of ProtoBot that gives a more detailed information about how ProtoBot Functions. 
 I recommend looking at the "Detailed Design Specification" for the best description of how ProtoBot works and the "Document of All things StarCraft: Brood War Programming" for useful advice plus links to resources we accumulated during the course of the project. 
 
-*If the blog post for whatever reason does not exist or there is some error, the documents are in the senior_design_documentation folder of this repository*
+*If the blog post for whatever reason does not exist or there is some error, the documents are in the senior_design_documentation folder of this repository.*
 
 If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Doxygen Documentation to learn how to install and run ProtoBot. Watching the "Intro to STARTCraft" also gives good prerequisite knowledge of BWAPI and how the visual studio project functions.
 
@@ -36,7 +36,7 @@ https://www.youtube.com/watch?v=czhNqUxmLks&t
 Video to learn about STARTCraft: <br />
 https://www.youtube.com/watch?v=FEEkO6__GKw&t
 
-*The STARTCraft Repository link to download StarCraft: Brood War 1.16.1 does not link so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry (please do not distrubute and use responsibly)*
+*The STARTCraft repository link to download StarCraft: Brood War 1.16.1 does throws a not found so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry of this repository as well (please do not distribute and use responsibly).*
 
 Special thanks to the StarCraft bot authors that helped during the development of ProtoBot:
 * Dave Churchill 
