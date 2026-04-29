@@ -69,7 +69,7 @@ Here is a list of useful resources for things StarCraft AI programming, I cant g
 [PotatoPeeler](https://github.com/dgant/PotatoPeeler)
 <br />
 ### Replay Viewers
-[PurpleWave created replay viewer](dgant.github.io/openbw-replay-viewer/) <br />
+[PurpleWave created replay viewer](https://dgant.github.io/openbw-replay-viewer/) <br />
 [StarDust created replay viewer](https://bmnielsen.github.io/openbw-replay-viewer/)
 <br />
 
