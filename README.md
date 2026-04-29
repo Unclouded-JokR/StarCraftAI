@@ -68,6 +68,11 @@ Here is a list of useful resources for things StarCraft AI programming, I cant g
 [SC-Docker](https://github.com/basil-ladder/sc-docker/tree/master) <br />
 [PotatoPeeler](https://github.com/dgant/PotatoPeeler)
 <br />
+### Replay Viewers
+[PurpleWave created replay viewer](dgant.github.io/openbw-replay-viewer/) <br />
+[StarDust created replay viewer](https://bmnielsen.github.io/openbw-replay-viewer/)
+<br />
+
 ### Map Editor
 [ScmDraft](http://www.stormcoast-fortress.net/cntt/software/scmdraft/gallery/) <br />
 [Tutorial Video on how to install](https://www.youtube.com/watch?v=pgFmyyldtDo) <br />
