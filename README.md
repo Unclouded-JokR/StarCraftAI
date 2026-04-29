@@ -16,25 +16,25 @@ If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Do
 
 ## ProtoBot Links and Resources
 
-Link to ProtoBot BASIL profile: <br />
+### ProtoBot BASIL profile: 
 https://www.basil-ladder.net/bot.html?bot=UTAProtoBot
 
-Link to ProtoBot UTA CSE Blog Post: <br />
+### ProtoBot UTA CSE Blog Post:
 https://websites.uta.edu/cseseniordesign/2026/04/28/starcraft-brood-war-game-playing-agent/
 
-Link to ProtoBot Doxygen Documentation: <br />
+### ProtoBot Doxygen Documentation:
 https://unclouded-jokr.github.io/StarCraftAI/
 
-Link to ProtoBot Demo Video: <br />
+### ProtoBot Demo Video:
 https://www.youtube.com/watch?v=2BLtU8EJ5N8&t
 
-Link to STARTCraft: <br />
+### Link to STARTCraft:
 https://github.com/davechurchill/STARTcraft
 
-Video to learn about *StarCraft: Brood War* programming: <br /> 
+### Video to learn about *StarCraft: Brood War* programming:
 https://www.youtube.com/watch?v=czhNqUxmLks&t 
 
-Video to learn about STARTCraft: <br />
+### Video to learn about STARTCraft:
 https://www.youtube.com/watch?v=FEEkO6__GKw&t
 
 *The link in the STARTCraft repository to download StarCraft: Brood War 1.16.1 throws a not found, so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry of this repository (please do not distribute and use responsibly).*
@@ -49,7 +49,7 @@ Special thanks to the StarCraft bot authors that helped during the development 
 * NiteKat (Daniel Maize)
 
 ## StarCraft AI Resources 
-Here is a list of useful resoucres for things StarCraft AI programming, I cant guarentee that all the links will work in the future but I hope this will be useful as a starting point for anyone that sees this.
+Here is a list of useful resources for things StarCraft AI programming, I cant guarentee that all the links will work in the future but I hope this will be useful as a starting point for anyone that sees this.
 
 ### Brood War AI Community
 [Brood War AI Discord](https://discord.gg/RKrwjmF2vq)
