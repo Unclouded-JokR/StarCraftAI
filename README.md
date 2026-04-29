@@ -89,7 +89,7 @@ Here is a list of useful resources for things StarCraft AI programming, I cant g
 
 ### General StarCraft AI resources
 [Dr.Churchill list of useful resources](https://davechurchill.ca/starcraft/resources/) <br />
-[Awesome Broodwar Resources](github.com/TheEngineeringBay/Awesome-Broodwar-Resources?tab=readme-ov-file#terrain-analysis) <br />
+[Awesome Broodwar Resources](https://github.com/TheEngineeringBay/Awesome-Broodwar-Resources?tab=readme-ov-file#terrain-analysis) <br />
 [StarCraft AI Wiki](https://www.starcraftai.com/wiki/Main_Page) <br />
 [Misc. StarCraft Research Papers](https://drive.google.com/drive/folders/1RhSmISOzgPfA4WXsEM1mor-v58Q3EQvJ?usp=sharing)
 
