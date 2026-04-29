@@ -61,7 +61,8 @@ Here is a list of useful resources for things StarCraft AI programming, I cant g
 [Introduction to Prismata AI](https://www.youtube.com/watch?v=uJtduCR9PNI)
 <br />
 ### BWAPI Resources
-[BWAPI Documentation](https://github.com/bwapi/bwapi)
+[BWAPI](https://github.com/bwapi/bwapi)
+[BWAPI Documentation](https://bwapi.github.io/)
 <br />
 ### SC-Docker (Used to play multiplayer agent vs agent games)
 [SC-Docker](https://github.com/basil-ladder/sc-docker/tree/master) <br />
