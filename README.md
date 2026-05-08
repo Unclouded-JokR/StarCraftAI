@@ -18,6 +18,7 @@ If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Do
 <img width="300" height="340" alt="finalLogo(1)" src="https://github.com/user-attachments/assets/abb38fc6-9094-47db-860a-0f268bf7c410" />
 </p>
 <br />
+
 ## ProtoBot Links and Resources 🧾
 
 ### ProtoBot BASIL profile leaf: 
