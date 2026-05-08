@@ -30,7 +30,9 @@ https://websites.uta.edu/cseseniordesign/2026/04/28/starcraft-brood-war-game-pla
 https://unclouded-jokr.github.io/StarCraftAI/
 
 ### ProtoBot Demo Video:
-https://www.youtube.com/watch?v=2BLtU8EJ5N8&t
+<p align="center">
+[<img width="1280" height="720" alt="ProtoBotDemoVideo_Thumbnail" src="https://github.com/user-attachments/assets/25f403a1-6898-4469-acc1-ed9f6428d5d7" />](https://www.youtube.com/watch?v=2BLtU8EJ5N8&t)
+<p/>
 
 Special thanks to the StarCraft bot authors that helped during the development of ProtoBot:
 * Dave Churchill 
