@@ -85,7 +85,7 @@ Here is a list of useful resources for things StarCraft AI programming, I cant g
 [StarDust](https://github.com/dgant/PurpleWave) <br />
 [McRave](https://github.com/Cmccrave/McRave) <br />
 <br />
-*The Awesome Broodwar Resources link has more bots that are open source available, optionally you can also go to the [Bots & Results](https://sscaitournament.com/index.php?action=scores) section of SSCAIT to get the binaries and possibly source code of other agents* 
+*The Awesome Broodwar Resources link has more bots that are open source, optionally you can also go to the [Bots & Results](https://sscaitournament.com/index.php?action=scores) section of SSCAIT to get the binaries and possibly source code of other agents* 
 
 ### StarCraft: Brood War AI Tournaments
 [BASIL](https://www.basil-ladder.net/) <br />
