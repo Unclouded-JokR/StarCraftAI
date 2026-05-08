@@ -18,7 +18,7 @@ If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Do
 <img width="300" height="340" alt="finalLogo(1)" src="https://github.com/user-attachments/assets/abb38fc6-9094-47db-860a-0f268bf7c410" />
 </p>
 
-## ProtoBot Links and Resources
+## ProtoBot Links and Resources 🧾
 
 ### ProtoBot BASIL profile: 
 https://www.basil-ladder.net/bot.html?bot=UTAProtoBot
@@ -32,17 +32,6 @@ https://unclouded-jokr.github.io/StarCraftAI/
 ### ProtoBot Demo Video:
 https://www.youtube.com/watch?v=2BLtU8EJ5N8&t
 
-### Link to STARTCraft:
-https://github.com/davechurchill/STARTcraft
-
-### Video to learn about *StarCraft: Brood War* programming:
-https://www.youtube.com/watch?v=czhNqUxmLks&t 
-
-### Video to learn about STARTCraft:
-https://www.youtube.com/watch?v=FEEkO6__GKw&t
-
-*The link in the STARTCraft repository to download StarCraft: Brood War 1.16.1 throws a not found, so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry of this repository (please do not distribute and use responsibly).*
-
 Special thanks to the StarCraft bot authors that helped during the development of ProtoBot:
 * Dave Churchill 
 * Purplewave (Dan Gant)
@@ -52,17 +41,19 @@ Special thanks to the StarCraft bot authors that helped during the development 
 * Stardust (Bruce Nielsen)
 * NiteKat (Daniel Maize)
 
-## StarCraft AI Resources 
-Here is a list of useful resources for things StarCraft AI programming, I cant guarentee that all the links will work in the future but I hope this will be useful as a starting point for anyone that sees this.
+## StarCraft AI Resources 🧾
+Here is a list of useful resources for things StarCraft AI programming, I cant guarentee that all the links will work in the future but I hope this will be useful as a starting point for anyone that sees this. For getting started with StarCraft AI programming, I highly recommend watching the "Intro To STARTCraft AI" and "StarCraft AI Programming Tutorial".
 
 ### Brood War AI Community
 [Brood War AI Discord](https://discord.gg/RKrwjmF2vq)
 <br />
 ### StarCraft AI and General AI programming tutorials
 [SSCAIT Tutorial](https://sscaitournament.com/index.php?action=tutorial) <br />
-[Intro To STARTCraft AI](https://www.youtube.com/watch?v=czhNqUxmLks) <br />
 [StarCraft AI Programming Tutorial](https://www.youtube.com/watch?v=FEEkO6__GKw) <br />
-[Introduction to Prismata AI](https://www.youtube.com/watch?v=uJtduCR9PNI)
+[Introduction to Prismata AI](https://www.youtube.com/watch?v=uJtduCR9PNI) <br />
+[Intro To STARTCraft AI](https://www.youtube.com/watch?v=czhNqUxmLks) <br />
+
+*The link in the STARTCraft repository to download StarCraft: Brood War 1.16.1 throws a not found, so the zip file that would've been downloaded is in the starcraft_broodwar_1.16.1 direcotry of this repository (please do not distribute and use responsibly).*
 <br />
 ### BWAPI Resources
 [BWAPI](https://github.com/bwapi/bwapi) <br />
