@@ -21,16 +21,16 @@ If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Do
 
 ## ProtoBot Links and Resources 🧾 
 
-### ProtoBot BASIL profile:
+### BASIL profile:
 https://www.basil-ladder.net/bot.html?bot=UTAProtoBot 
 
-### ProtoBot UTA CSE Blog Post: 
+### UTA CSE Blog Post: 
 https://websites.uta.edu/cseseniordesign/2026/04/28/starcraft-brood-war-game-playing-agent/ 
 
-### ProtoBot Doxygen Documentation: 
+### Doxygen Documentation: 
 https://unclouded-jokr.github.io/StarCraftAI/
 
-### ProtoBot Demo Video:
+### Demo Video:
 <p align="center">
 <a href="https://www.youtube.com/watch?v=2BLtU8EJ5N8&t">
 <img width="1280" height="720" alt="ProtoBotDemoVideo_Thumbnail" src="https://github.com/user-attachments/assets/25f403a1-6898-4469-acc1-ed9f6428d5d7" />
