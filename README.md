@@ -36,6 +36,7 @@ https://unclouded-jokr.github.io/StarCraftAI/
 <img width="1280" height="720" alt="ProtoBotDemoVideo_Thumbnail" src="https://github.com/user-attachments/assets/25f403a1-6898-4469-acc1-ed9f6428d5d7" />
 <a/>
 <p/>
+  
 Special thanks to the StarCraft bot authors that helped during the development of ProtoBot:
 * Dave Churchill 
 * Purplewave (Dan Gant)
