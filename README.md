@@ -87,7 +87,7 @@ Here is a list of useful resources for things StarCraft AI programming, I cant g
 <br />
 *The Awesome Broodwar Resources link has more bots that are open source available, optionally you can also go to the [Bots & Results](https://sscaitournament.com/index.php?action=scores) section of SSCAIT to get the binaries and possibly source code of other agents* 
 
-### StarCraft: Brood War AI Tournoments
+### StarCraft: Brood War AI Tournaments
 [BASIL](https://www.basil-ladder.net/) <br />
 [SSCAIT](https://sscaitournament.com/) <br />
 [AIIDE](https://davechurchill.ca/starcraft/aiide/) <br />
