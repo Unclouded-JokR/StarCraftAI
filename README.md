@@ -19,18 +19,18 @@ If you are wanting to run ProtoBot on your own computer, look at the ProtoBot Do
 </p>
 <br />
 
-## ProtoBot Links and Resources 🧾 
+## 🧾 ProtoBot Links and Resources
 
-### BASIL profile 🌿
+### 🌿 BASIL profile
 [UTAProtoBot](https://www.basil-ladder.net/bot.html?bot=UTAProtoBot)
 
-### UTA CSE Blog Post 📰 
+### 📰 UTA CSE Blog Post 
 [StarCraft: Brood War Game-Playing Agent](https://websites.uta.edu/cseseniordesign/2026/04/28/starcraft-brood-war-game-playing-agent/)
 
-### Documentation 📚
+### 📚 Documentation 
 [ProtoBot Doxygen](https://unclouded-jokr.github.io/StarCraftAI/)
 
-### Demo Video 📽
+### 📽 Demo Video
 <p align="center">
 <a href="https://www.youtube.com/watch?v=2BLtU8EJ5N8&t">
 <img width="1280" height="720" alt="ProtoBotDemoVideo_Thumbnail" src="https://github.com/user-attachments/assets/25f403a1-6898-4469-acc1-ed9f6428d5d7" />
@@ -46,7 +46,7 @@ Special thanks to the StarCraft bot authors that helped during the development 
 * Stardust (Bruce Nielsen)
 * NiteKat (Daniel Maize)
 
-## StarCraft AI Resources 🧾
+## 🧾 StarCraft AI Resources
 Here is a list of useful resources for things StarCraft AI programming, I cant guarentee that all the links will work in the future but I hope this will be useful as a starting point for anyone that sees this. A good starting point to begin to understand StarCraft AI programming, I recommend watching the "Intro To STARTCraft AI" and "StarCraft AI Programming Tutorial" videos.
 
 ### Brood War AI Community
